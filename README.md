@@ -68,12 +68,45 @@ The bootstrap script:
 - runs the interactive installer;
 - lets you choose an adoption profile (minimal, wiki, decisions, full, adopt, refresh, custom);
 - creates `AGENTS.md`, `package.json` scripts, `pom.config.json`, and governance folders based on the chosen profile.
+- installs or updates `.git/hooks/pre-commit` with POM checks when the project is a Git repository.
 
 You can also pass a profile directly:
 
 ```bash
 node bootstrap-pom.mjs --profile full
 ```
+
+To refresh an existing POM installation from the target project root:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
+node bootstrap-pom.mjs --profile refresh
+```
+
+Refresh updates `pom/`, the POM section in `AGENTS.md`, package scripts, and the pre-commit hook. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
+
+If you customized or translated templates, keep them outside `pom/` before refreshing, for example:
+
+```text
+project-templates/
+  ADR_TEMPLATE.md
+  WIKI_PAGE_TEMPLATE.md
+  PROJECT_STATE_TEMPLATE.md
+```
+
+Then point `pom.config.json` to those project-owned templates:
+
+```json
+"templates": {
+  "adr": "project-templates/ADR_TEMPLATE.md",
+  "wikiPage": "project-templates/WIKI_PAGE_TEMPLATE.md",
+  "projectState": "project-templates/PROJECT_STATE_TEMPLATE.md"
+}
+```
+
+Template paths in `pom.config.json` are relative to the target project root, where `pom.config.json`, `AGENTS.md`, `package.json`, and `pom/` live. For example, `project-templates/ADR_TEMPLATE.md` means `<project-root>/project-templates/ADR_TEMPLATE.md`, not `<project-root>/pom/project-templates/ADR_TEMPLATE.md`.
+
+Do not customize files directly under `pom/`: updates may overwrite them or create Git conflicts.
 
 The bootstrap itself requires only Node ≥20. The installer it launches requires Node ≥22.6.
 
@@ -126,6 +159,29 @@ If the project does not use npm, copy the POM section manually into the agent in
 ### Start working
 
 Use the skill that matches your situation (see Quickstart table above). The agent will read the skill card, then the linked prompt, then the relevant templates.
+
+### Pre-commit hook
+
+When `.git/hooks/` exists, `pom:init` installs a managed POM block in `.git/hooks/pre-commit`.
+
+The hook:
+
+- runs `npm run pom:lint`;
+- blocks the commit if lint fails;
+- if `PROJECT_STATE.md` exists and governed project-memory files are staged, prints a non-blocking reminder to update it when the restart context changed.
+
+The hook does not synthesize or rewrite `PROJECT_STATE.md`: that remains the agent's responsibility, because it requires project understanding.
+
+Update `PROJECT_STATE.md` when the project restart context changes:
+
+- substantial ADR change;
+- substantial spec change;
+- roadmap, priority, dependency, or current-plan change;
+- important task/phase closed;
+- new relevant risk, blocker, or open decision;
+- explicit end-of-session or end-of-day handoff request.
+
+Do not update it for typo fixes, regenerated indexes, small link fixes, or changes that do not affect how the next session should restart.
 
 ## Origin And Attribution
 
@@ -381,9 +437,23 @@ Rules:
 - `pom.config.json` contains project-specific rules;
 - `pom/templates/POM_CONFIG_TEMPLATE.json` assumes POM is installed in the target project as `pom/`;
 - if POM is installed in a different path, adapt template paths before running lint;
+- do not customize files directly under `pom/` for a target project, because POM updates may overwrite them or create Git conflicts;
+- if a project needs localized or customized templates, place them outside `pom/`, for example in `project-templates/` or `templates/`, and point `pom.config.json.templates` to those files;
 - lint should use conservative defaults when the config is missing;
 - if the config exists but is invalid, lint should produce clear `config-invalid` errors;
 - project-specific categories must live in config, not be hardcoded in the script.
+
+Example project-specific template override:
+
+```json
+"templates": {
+  "adr": "project-templates/ADR_TEMPLATE.md",
+  "wikiPage": "project-templates/WIKI_PAGE_TEMPLATE.md",
+  "projectState": "project-templates/PROJECT_STATE_TEMPLATE.md"
+}
+```
+
+With this model, `pom/` remains updatable while the project's real templates stay stable and owned by the project.
 
 ### Adoption Profile
 

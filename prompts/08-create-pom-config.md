@@ -19,6 +19,8 @@ Rules:
 - configure `adoption` first, because it tells the agent which POM modules are active;
 - keep base POM rules generic;
 - put only project-specific rules in `pom.config.json`;
+- do not customize files directly under `pom/` for a target project;
+- if the project needs localized or customized templates, place them outside `pom/`, for example in `project-templates/` or `templates/`, and point `templates.*` in `pom.config.json` to those files;
 - do not copy categories from other projects;
 - do not require folders or sections that the project does not use;
 - if unsure, leave the rule empty or propose it as a warning, not a hard constraint;

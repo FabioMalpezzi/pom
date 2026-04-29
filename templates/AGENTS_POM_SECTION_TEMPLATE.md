@@ -160,9 +160,30 @@ Run it:
 
 If the command is missing, state that automatic POM checks are not configured and use the relevant POM skill/prompt manually.
 
+## Pre-commit Hook
+
+If `pom:init` installed the POM pre-commit hook, commits run `npm run pom:lint`.
+
+If `PROJECT_STATE.md` exists and governed project-memory files are staged, the hook prints a non-blocking reminder to update `PROJECT_STATE.md` when the restart context changed. The hook does not update `PROJECT_STATE.md` automatically.
+
+Update `PROJECT_STATE.md` when:
+
+- an ADR changes substantially;
+- a spec changes substantially;
+- roadmap, priority, dependency, or current plan changes;
+- an important task or phase is closed;
+- a relevant risk, blocker, or open decision is introduced;
+- the user explicitly asks for an end-of-session, end-of-day, handoff, or restart-status update.
+
+Do not update it for typos, regenerated indexes, link-only fixes, or changes that do not affect how the next session should restart.
+
 ## Templates
 
 Before creating governed documents, read and use the relevant template in `pom/templates/`.
+
+If the project has customized or localized templates configured in `pom.config.json.templates`, use those project templates instead of the defaults in `pom/templates/`.
+
+Do not customize files directly under `pom/` for project-specific needs. POM updates may overwrite them or create Git conflicts. Put project-owned templates outside `pom/`, for example in `project-templates/` or `templates/`, and map them in `pom.config.json.templates`.
 
 | Document | Template |
 |---|---|

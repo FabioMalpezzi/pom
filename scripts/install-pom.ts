@@ -2,12 +2,14 @@
 
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 const ROOT = process.cwd();
 const START_MARKER = "<!-- POM:START -->";
 const END_MARKER = "<!-- POM:END -->";
+const HOOK_START_MARKER = "# POM:START pre-commit";
+const HOOK_END_MARKER = "# POM:END pre-commit";
 const TODAY = new Date().toISOString().slice(0, 10);
 
 type ProfileName = "minimal" | "wiki" | "decisions" | "full" | "adopt" | "refresh" | "custom";
@@ -255,6 +257,48 @@ function upsertPackageScripts(): void {
   console.log("Updated package.json with pom:init and pom:lint scripts.");
 }
 
+function installPreCommitHook(): void {
+  if (!pathExists(".git/hooks")) {
+    console.log("Git hooks not installed: .git/hooks not found. Run git init first if you want the POM pre-commit hook.");
+    return;
+  }
+
+  const hookPath = ".git/hooks/pre-commit";
+  const current = pathExists(hookPath) ? readText(hookPath) : "#!/bin/sh\n";
+  const hookBlock = `${HOOK_START_MARKER}
+echo "POM pre-commit: running npm run pom:lint"
+npm run pom:lint
+pom_lint_status=$?
+if [ "$pom_lint_status" -ne 0 ]; then
+  echo "POM pre-commit: pom:lint failed. Fix findings and rerun npm run pom:lint."
+  exit "$pom_lint_status"
+fi
+
+if [ -f "PROJECT_STATE.md" ]; then
+  pom_changed="$(git diff --cached --name-only -- wiki decisions docs analysis mockups pom.config.json CURRENT_PLAN.md specs 2>/dev/null)"
+  pom_state_changed="$(git diff --cached --name-only -- PROJECT_STATE.md 2>/dev/null)"
+  if [ -n "$pom_changed" ] && [ -z "$pom_state_changed" ]; then
+    echo "POM pre-commit reminder: governed project-memory files are staged, but PROJECT_STATE.md is not staged."
+    echo "Update PROJECT_STATE.md only if restart context changed: substantial ADR/spec change, roadmap/current-plan change, closed important task, new risk/blocker/open decision, or explicit end-of-session handoff request."
+  fi
+fi
+${HOOK_END_MARKER}`;
+
+  const markerRegex = new RegExp(`${escapeRegex(HOOK_START_MARKER)}[\\s\\S]*?${escapeRegex(HOOK_END_MARKER)}`);
+  const next = markerRegex.test(current)
+    ? current.replace(markerRegex, hookBlock)
+    : `${current.trimEnd()}\n\n${hookBlock}\n`;
+
+  if (next !== current) {
+    writeText(hookPath, next);
+    chmodSync(join(ROOT, hookPath), 0o755);
+    console.log("Installed or updated .git/hooks/pre-commit with POM checks.");
+  } else {
+    chmodSync(join(ROOT, hookPath), 0o755);
+    console.log(".git/hooks/pre-commit already contains the current POM block.");
+  }
+}
+
 function createOrUpdateConfig(adoption: AdoptionConfig): void {
   const configPath = "pom.config.json";
   if (!pathExists(configPath)) {
@@ -476,6 +520,7 @@ async function main(): Promise<void> {
 
   upsertAgentsSection();
   upsertPackageScripts();
+  installPreCommitHook();
 
   if (adoption.profile !== "refresh") {
     createOrUpdateConfig(adoption);
