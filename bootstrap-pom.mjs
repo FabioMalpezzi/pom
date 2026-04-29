@@ -14,9 +14,24 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import { basename, resolve } from "node:path";
 
 const DEFAULT_REPO = "https://github.com/FabioMalpezzi/pom.git";
 const POM_DIR = "pom";
+
+// Detect if running from inside pom/ and move to the parent directory
+const cwd = process.cwd();
+if (
+  basename(cwd) === "pom" &&
+  existsSync("WIKI_METHOD.md") &&
+  existsSync("templates") &&
+  existsSync("prompts") &&
+  existsSync("skills")
+) {
+  const parent = resolve(cwd, "..");
+  console.log(`Detected: running from inside pom/. Moving to parent directory: ${parent}`);
+  process.chdir(parent);
+}
 
 function readArg(name) {
   const index = process.argv.findIndex((arg) => arg === `--${name}`);
