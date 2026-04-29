@@ -158,7 +158,10 @@ function ensureDir(path: string): void {
 }
 
 function copyTemplateIfMissing(templatePath: string, targetPath: string): void {
-  if (pathExists(targetPath)) return;
+  if (pathExists(targetPath)) {
+    console.log(`${targetPath} already exists, skipped.`);
+    return;
+  }
   const text = readText(templatePath).replaceAll("YYYY-MM-DD", TODAY);
   mkdirSync(dirname(join(ROOT, targetPath)), { recursive: true });
   writeText(targetPath, text);
@@ -271,6 +274,7 @@ function createOrUpdateConfig(adoption: AdoptionConfig): void {
 function createProfileFiles(adoption: AdoptionConfig): void {
   if (adoption.wiki === "enabled") {
     ensureDir("wiki");
+    console.log("Ensured wiki/ exists.");
     copyTemplateIfMissing(resolveTemplate("WIKI_INDEX_TEMPLATE.md"), "wiki/index.md");
     copyTemplateIfMissing(resolveTemplate("WIKI_LOG_TEMPLATE.md"), "wiki/log.md");
     createWikiOverviewIfMissing();
