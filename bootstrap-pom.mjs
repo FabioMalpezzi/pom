@@ -48,7 +48,7 @@ function run(cmd, args, options = {}) {
 
 function main() {
   const repo = readArg("repo") || DEFAULT_REPO;
-  const profile = process.argv.filter((a) => a.startsWith("--profile")).join(" ");
+  const profile = readArg("profile");
 
   if (existsSync(POM_DIR)) {
     console.log(`${POM_DIR}/ already exists. Updating...`);
@@ -80,7 +80,7 @@ function main() {
   }
 
   const installArgs = ["--experimental-strip-types", installScript];
-  if (profile) installArgs.push(...profile.split(" "));
+  if (profile) installArgs.push("--profile", profile);
 
   run("node", installArgs);
 }
