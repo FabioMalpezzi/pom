@@ -1,0 +1,91 @@
+{
+  "pomVersion": "0.1.0",
+  "installation": {
+    "pomRoot": "pom",
+    "note": "Template paths assume POM is installed in the target project as pom/. Adapt paths if using a different installation layout."
+  },
+  "adoption": {
+    "profile": "minimal",
+    "wiki": "disabled",
+    "decisions": "disabled",
+    "analysis": "optional",
+    "docs": "optional",
+    "mockups": "disabled",
+    "planning": "light",
+    "tasks": "light",
+    "tests": "disabled"
+  },
+  "root": {
+    "allowedMarkdown": ["README.md", "AGENTS.md", "AGENTS.MD", "CLAUDE.md", "GEMINI.md", "PROJECT_STATE.md", "CURRENT_PLAN.md"]
+  },
+  "analysis": {
+    "allowedDirs": [],
+    "allowMarkdownAtRoot": false
+  },
+  "templates": {
+    "adr": "pom/templates/ADR_TEMPLATE.md",
+    "currentPlan": "pom/templates/CURRENT_PLAN_TEMPLATE.md",
+    "doc": "pom/templates/DOC_TEMPLATE.md",
+    "experiment": "pom/templates/EXPERIMENT_TEMPLATE.md",
+    "mockManifest": "pom/templates/MOCK_MANIFEST_TEMPLATE.md",
+    "reconciliation": "pom/templates/RECONCILIATION_TEMPLATE.md",
+    "taskPlan": "pom/templates/TASK_PLAN_TEMPLATE.md",
+    "wikiIndex": "pom/templates/WIKI_INDEX_TEMPLATE.md",
+    "wikiLog": "pom/templates/WIKI_LOG_TEMPLATE.md",
+    "wikiPage": "pom/templates/WIKI_PAGE_TEMPLATE.md"
+  },
+  "documentation": {
+    "officialRoot": "docs",
+    "existingRoots": [],
+    "knownRootCandidates": ["docs", "doc"],
+    "preferExistingStructure": true,
+    "requireApprovalBeforeMigratingDocs": true,
+    "severity": "warning"
+  },
+  "source": {
+    "roots": [],
+    "knownRootCandidates": ["src", "apps", "packages", "services", "frontend", "backend"],
+    "preferExistingStructure": true,
+    "requireApprovalBeforeMigratingSources": true,
+    "severity": "warning"
+  },
+  "wiki": {
+    "baseIndexSections": ["## Overview"],
+    "categorySections": {},
+    "projectIndexSections": [],
+    "logEntryPattern": "^## \\[\\d{4}-\\d{2}-\\d{2}\\] [a-z0-9_-]+ \\| .+",
+    "minPageLength": 120
+  },
+  "decisions": {
+    "adrPathPattern": "^decisions/ADR-\\d{4}-.+\\.md$",
+    "datePattern": "\\| Date \\|\\s*\\d{4}-\\d{2}-\\d{2}\\s*\\|",
+    "indexPath": "decisions/ADR_INDEX.md",
+    "categoryField": "Category",
+    "areaField": "Area"
+  },
+  "mockups": {
+    "packagesDir": "mockups/packages",
+    "manifestName": "MOCK_MANIFEST.md",
+    "manifestTypePattern": "## Type\\s+[\\s\\S]*?(Complete|Partial)",
+    "manifestDatePattern": "## Date\\s+[\\s\\S]*?\\d{4}-\\d{2}-\\d{2}",
+    "reconciliationSearchDir": "analysis",
+    "reconciliationFilePattern": "mock.*reconciliation.*\\.md$",
+    "skipReconciliationText": "Does not require functional reconciliation"
+  },
+  "tests": {
+    "root": "tests",
+    "areas": [],
+    "recommendedLayout": ["e2e", "integration", "fixtures", "evidence"],
+    "crossSystemDir": "cross-system",
+    "preferExistingStructure": true,
+    "requireApprovalBeforeMigratingExistingTests": true,
+    "severity": "warning"
+  },
+  "handoff": {
+    "projectStatePath": "PROJECT_STATE.md",
+    "severity": "warning",
+    "maxLines": 180,
+    "triggerPaths": [],
+    "forbiddenHeadings": ["## Log", "## Timeline", "## Changelog", "## History"]
+  }
+}

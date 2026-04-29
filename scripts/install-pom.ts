@@ -1,0 +1,489 @@
+#!/usr/bin/env node
+
+import { createInterface } from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+
+const ROOT = process.cwd();
+const START_MARKER = "<!-- POM:START -->";
+const END_MARKER = "<!-- POM:END -->";
+const TODAY = new Date().toISOString().slice(0, 10);
+
+type ProfileName = "minimal" | "wiki" | "decisions" | "full" | "adopt" | "refresh" | "custom";
+
+type AdoptionConfig = {
+  profile: ProfileName;
+  wiki: "enabled" | "disabled";
+  decisions: "enabled" | "disabled";
+  analysis: "enabled" | "optional" | "disabled";
+  docs: "enabled" | "optional" | "disabled";
+  mockups: "enabled" | "disabled";
+  planning: "light" | "structured";
+  tasks: "light" | "structured";
+  tests: "disabled" | "existing" | "pom";
+};
+
+type PackageJson = {
+  scripts?: Record<string, string>;
+  [key: string]: unknown;
+};
+
+const profiles: Record<ProfileName, { label: string; description: string; adoption: AdoptionConfig }> = {
+  minimal: {
+    label: "Minimal",
+    description: "Installs only AGENTS.md/AGENTS.MD, package scripts, and pom.config.json. No wiki, docs, analysis, mockups, or tests.",
+    adoption: {
+      profile: "minimal",
+      wiki: "disabled",
+      decisions: "disabled",
+      analysis: "optional",
+      docs: "optional",
+      mockups: "disabled",
+      planning: "light",
+      tasks: "light",
+      tests: "disabled",
+    },
+  },
+  wiki: {
+    label: "Wiki",
+    description: "Minimal + persistent wiki memory. Creates wiki/index.md and wiki/log.md.",
+    adoption: {
+      profile: "wiki",
+      wiki: "enabled",
+      decisions: "disabled",
+      analysis: "optional",
+      docs: "optional",
+      mockups: "disabled",
+      planning: "light",
+      tasks: "light",
+      tests: "disabled",
+    },
+  },
+  decisions: {
+    label: "Decisions",
+    description: "Minimal + ADR governance. Enables decisions/ and generated decisions/ADR_INDEX.md.",
+    adoption: {
+      profile: "decisions",
+      wiki: "disabled",
+      decisions: "enabled",
+      analysis: "optional",
+      docs: "optional",
+      mockups: "disabled",
+      planning: "light",
+      tasks: "light",
+      tests: "disabled",
+    },
+  },
+  full: {
+    label: "Full",
+    description: "Wiki + decisions + PROJECT_STATE.md + CURRENT_PLAN.md. Use for long-running projects.",
+    adoption: {
+      profile: "full",
+      wiki: "enabled",
+      decisions: "enabled",
+      analysis: "optional",
+      docs: "optional",
+      mockups: "disabled",
+      planning: "structured",
+      tasks: "structured",
+      tests: "existing",
+    },
+  },
+  adopt: {
+    label: "Adopt Existing Project",
+    description: "Preserves existing structure and maps POM to it. Does not impose folders.",
+    adoption: {
+      profile: "adopt",
+      wiki: "disabled",
+      decisions: "disabled",
+      analysis: "optional",
+      docs: "optional",
+      mockups: "disabled",
+      planning: "light",
+      tasks: "light",
+      tests: "existing",
+    },
+  },
+  refresh: {
+    label: "Refresh Existing POM",
+    description: "Updates only AGENTS.md/AGENTS.MD and package scripts. Does not change pom.config.json or create governance folders.",
+    adoption: {
+      profile: "refresh",
+      wiki: "disabled",
+      decisions: "disabled",
+      analysis: "optional",
+      docs: "optional",
+      mockups: "disabled",
+      planning: "light",
+      tasks: "light",
+      tests: "disabled",
+    },
+  },
+  custom: {
+    label: "Custom",
+    description: "Starts from Minimal and asks which POM modules to enable.",
+    adoption: {
+      profile: "custom",
+      wiki: "disabled",
+      decisions: "disabled",
+      analysis: "optional",
+      docs: "optional",
+      mockups: "disabled",
+      planning: "light",
+      tasks: "light",
+      tests: "disabled",
+    },
+  },
+};
+
+function pathExists(path: string): boolean {
+  return existsSync(join(ROOT, path));
+}
+
+function rootHasExactEntry(name: string): boolean {
+  return readdirSync(ROOT).includes(name);
+}
+
+function readText(path: string): string {
+  return readFileSync(join(ROOT, path), "utf8");
+}
+
+function writeText(path: string, content: string): void {
+  writeFileSync(join(ROOT, path), content);
+}
+
+function ensureDir(path: string): void {
+  mkdirSync(join(ROOT, path), { recursive: true });
+}
+
+function copyTemplateIfMissing(templatePath: string, targetPath: string): void {
+  if (pathExists(targetPath)) return;
+  const text = readText(templatePath).replaceAll("YYYY-MM-DD", TODAY);
+  mkdirSync(dirname(join(ROOT, targetPath)), { recursive: true });
+  writeText(targetPath, text);
+  console.log(`Created ${targetPath}.`);
+}
+
+function resolveTemplate(path: string): string {
+  const candidates = [`pom/templates/${path}`, `templates/${path}`];
+  for (const candidate of candidates) {
+    if (pathExists(candidate)) return candidate;
+  }
+  throw new Error(`Cannot find template ${path}. Run this command from the project root.`);
+}
+
+function resolvePomSectionTemplate(): string {
+  return resolveTemplate("AGENTS_POM_SECTION_TEMPLATE.md");
+}
+
+function resolveLintScript(): string {
+  if (pathExists("pom/scripts/lint-doc-governance.ts")) return "pom/scripts/lint-doc-governance.ts";
+  if (pathExists("scripts/lint-doc-governance.ts")) return "scripts/lint-doc-governance.ts";
+  return "pom/scripts/lint-doc-governance.ts";
+}
+
+function upsertAgentsSection(): void {
+  const templatePath = resolvePomSectionTemplate();
+  const section = `${START_MARKER}\n${readText(templatePath).trim()}\n${END_MARKER}`;
+  const agentsPath = rootHasExactEntry("AGENTS.md") ? "AGENTS.md" : rootHasExactEntry("AGENTS.MD") ? "AGENTS.MD" : "AGENTS.md";
+  const current = pathExists(agentsPath) ? readText(agentsPath) : "# Project Instructions\n";
+
+  const markerRegex = new RegExp(`${escapeRegex(START_MARKER)}[\\s\\S]*?${escapeRegex(END_MARKER)}`);
+  const next = markerRegex.test(current)
+    ? current.replace(markerRegex, section)
+    : `${current.trimEnd()}\n\n${section}\n`;
+
+  if (next !== current) {
+    writeText(agentsPath, next);
+    console.log(`Updated ${agentsPath} with the POM section.`);
+  } else {
+    console.log(`${agentsPath} already contains the current POM section.`);
+  }
+}
+
+function upsertPackageScripts(): void {
+  const packagePath = "package.json";
+  if (!pathExists(packagePath)) {
+    const lintScript = resolveLintScript();
+    const content: PackageJson = {
+      private: true,
+      type: "module",
+      scripts: {
+        "pom:init": "node --experimental-strip-types pom/scripts/install-pom.ts",
+        "pom:lint": `node --experimental-strip-types ${lintScript}`,
+      },
+    };
+    writeText(packagePath, `${JSON.stringify(content, null, 2)}\n`);
+    console.log("Created package.json with pom:init and pom:lint scripts.");
+    return;
+  }
+
+  let parsed: PackageJson;
+  try {
+    parsed = JSON.parse(readText(packagePath)) as PackageJson;
+  } catch (error) {
+    throw new Error(`package.json is not valid JSON: ${String(error)}`);
+  }
+
+  const scripts = { ...(parsed.scripts ?? {}) };
+  const lintScript = resolveLintScript();
+  const initCommand = pathExists("pom/scripts/install-pom.ts")
+    ? "node --experimental-strip-types pom/scripts/install-pom.ts"
+    : "node --experimental-strip-types scripts/install-pom.ts";
+
+  let changed = false;
+  if (!scripts["pom:init"]) {
+    scripts["pom:init"] = initCommand;
+    changed = true;
+  }
+  if (!scripts["pom:lint"]) {
+    scripts["pom:lint"] = `node --experimental-strip-types ${lintScript}`;
+    changed = true;
+  }
+
+  if (!changed) {
+    console.log("package.json already contains pom:init and pom:lint.");
+    return;
+  }
+
+  parsed.scripts = scripts;
+  writeText(packagePath, `${JSON.stringify(parsed, null, 2)}\n`);
+  console.log("Updated package.json with pom:init and pom:lint scripts.");
+}
+
+function createOrUpdateConfig(adoption: AdoptionConfig): void {
+  const configPath = "pom.config.json";
+  if (!pathExists(configPath)) {
+    const template = JSON.parse(readText(resolveTemplate("POM_CONFIG_TEMPLATE.json"))) as Record<string, unknown>;
+    template.adoption = adoption;
+    writeText(configPath, `${JSON.stringify(template, null, 2)}\n`);
+    console.log(`Created ${configPath} with ${adoption.profile} adoption profile.`);
+    return;
+  }
+
+  const config = JSON.parse(readText(configPath)) as Record<string, unknown>;
+  config.adoption = adoption;
+  writeText(configPath, `${JSON.stringify(config, null, 2)}\n`);
+  console.log(`Updated ${configPath} adoption profile to ${adoption.profile}.`);
+}
+
+function createProfileFiles(adoption: AdoptionConfig): void {
+  if (adoption.wiki === "enabled") {
+    ensureDir("wiki");
+    copyTemplateIfMissing(resolveTemplate("WIKI_INDEX_TEMPLATE.md"), "wiki/index.md");
+    copyTemplateIfMissing(resolveTemplate("WIKI_LOG_TEMPLATE.md"), "wiki/log.md");
+    createWikiOverviewIfMissing();
+  }
+
+  if (adoption.decisions === "enabled") {
+    ensureDir("decisions");
+    console.log("Ensured decisions/ exists.");
+  }
+
+  if (adoption.mockups === "enabled") {
+    ensureDir("mockups/packages");
+    console.log("Ensured mockups/packages/ exists.");
+  }
+
+  if (adoption.profile === "full" || (adoption.profile === "custom" && adoption.planning === "structured")) {
+    copyTemplateIfMissing(resolveTemplate("PROJECT_STATE_TEMPLATE.md"), "PROJECT_STATE.md");
+    copyTemplateIfMissing(resolveTemplate("CURRENT_PLAN_TEMPLATE.md"), "CURRENT_PLAN.md");
+  }
+}
+
+function createWikiOverviewIfMissing(): void {
+  if (pathExists("wiki/overview.md")) return;
+
+  const content = `# Overview
+
+## Summary
+
+Initial project overview page created by POM. Replace this placeholder with the current consolidated project knowledge when the wiki is first built.
+
+## Current State
+
+The project wiki has been initialized, but the project overview still needs to be compiled from actual sources, code, decisions, mockups, analysis, or user input.
+
+## Details
+
+- Main project purpose: to be defined.
+- Key users or stakeholders: to be defined.
+- Main modules or processes: to be defined.
+- Current constraints or risks: to be defined.
+
+## Sources
+
+| Source | Use |
+|---|---|
+| Project initialization | Initial placeholder |
+
+## Linked Decisions
+
+| Decision | Impact |
+|---|---|
+|  |  |
+
+## Open Questions
+
+| Question | Status |
+|---|---|
+| What is the concise project purpose? | Open |
+
+## Related Links
+
+- [[index]]
+`;
+
+  writeText("wiki/overview.md", content);
+  console.log("Created wiki/overview.md.");
+}
+
+async function chooseProfile(): Promise<ProfileName> {
+  const argProfile = readProfileArg();
+  if (argProfile) return argProfile;
+
+  if (!process.stdin.isTTY) return "refresh";
+
+  printLogo();
+  printProfiles();
+
+  const rl = createInterface({ input, output });
+  try {
+    const answer = (await rl.question("Choose profile [minimal/wiki/decisions/full/adopt/refresh/custom]: ")).trim().toLowerCase();
+    if (isProfileName(answer)) return answer;
+    if (answer === "1") return "minimal";
+    if (answer === "2") return "wiki";
+    if (answer === "3") return "decisions";
+    if (answer === "4") return "full";
+    if (answer === "5") return "adopt";
+    if (answer === "6") return "refresh";
+    if (answer === "7") return "custom";
+    console.log("Unknown profile. Using refresh.");
+    return "refresh";
+  } finally {
+    rl.close();
+  }
+}
+
+async function customizeAdoption(base: AdoptionConfig): Promise<AdoptionConfig> {
+  if (base.profile !== "custom" || !process.stdin.isTTY) return base;
+
+  const rl = createInterface({ input, output });
+  try {
+    const wiki = await askYesNo(rl, "Enable persistent wiki memory?", false);
+    const decisions = await askYesNo(rl, "Enable ADR decisions governance?", true);
+    const handoff = await askYesNo(rl, "Enable handoff memory and current planning files?", false);
+    const mockups = await askYesNo(rl, "Enable mockup governance?", false);
+    const tests = await askChoice(rl, "Tests governance [disabled/existing/pom]", ["disabled", "existing", "pom"], "disabled");
+    const planning = handoff ? "structured" : "light";
+
+    return {
+      profile: "custom",
+      wiki: wiki ? "enabled" : "disabled",
+      decisions: decisions ? "enabled" : "disabled",
+      analysis: "optional",
+      docs: "optional",
+      mockups: mockups ? "enabled" : "disabled",
+      planning,
+      tasks: planning,
+      tests,
+    };
+  } finally {
+    rl.close();
+  }
+}
+
+async function askYesNo(rl: ReturnType<typeof createInterface>, question: string, defaultValue: boolean): Promise<boolean> {
+  const suffix = defaultValue ? " [Y/n]: " : " [y/N]: ";
+  const answer = (await rl.question(`${question}${suffix}`)).trim().toLowerCase();
+  if (!answer) return defaultValue;
+  return ["y", "yes"].includes(answer);
+}
+
+async function askChoice<T extends string>(
+  rl: ReturnType<typeof createInterface>,
+  question: string,
+  allowed: T[],
+  defaultValue: T,
+): Promise<T> {
+  const answer = (await rl.question(`${question} (${defaultValue}): `)).trim().toLowerCase();
+  if (!answer) return defaultValue;
+  return allowed.includes(answer as T) ? (answer as T) : defaultValue;
+}
+
+function readProfileArg(): ProfileName | undefined {
+  const profileIndex = process.argv.findIndex((arg) => arg === "--profile");
+  const value = profileIndex >= 0 ? process.argv[profileIndex + 1] : undefined;
+  if (value && isProfileName(value)) return value;
+
+  const inline = process.argv.find((arg) => arg.startsWith("--profile="))?.split("=").at(1);
+  if (inline && isProfileName(inline)) return inline;
+
+  return undefined;
+}
+
+function isProfileName(value: string): value is ProfileName {
+  return Object.prototype.hasOwnProperty.call(profiles, value);
+}
+
+function printLogo(): void {
+  console.log("");
+  console.log("POM - Project Operating Memory");
+  console.log("================================");
+  console.log("");
+}
+
+function printProfiles(): void {
+  const ordered: ProfileName[] = ["minimal", "wiki", "decisions", "full", "adopt", "refresh", "custom"];
+  ordered.forEach((name, index) => {
+    const profile = profiles[name];
+    console.log(`${index + 1}. ${profile.label}`);
+    console.log(`   ${profile.description}`);
+  });
+  console.log("");
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function isPomRepositoryRoot(): boolean {
+  return (
+    pathExists("WIKI_METHOD.md") &&
+    pathExists("templates/AGENTS_POM_SECTION_TEMPLATE.md") &&
+    pathExists("prompts") &&
+    pathExists("skills") &&
+    pathExists("scripts/install-pom.ts") &&
+    !pathExists("pom")
+  );
+}
+
+async function main(): Promise<void> {
+  if (isPomRepositoryRoot()) {
+    console.log("This appears to be the POM repository root.");
+    console.log("pom:init is intended to run from a target project root where POM is installed as pom/.");
+    console.log("Example: node --experimental-strip-types pom/scripts/install-pom.ts --profile minimal");
+    return;
+  }
+
+  const profileName = await chooseProfile();
+  const adoption = await customizeAdoption(profiles[profileName].adoption);
+
+  upsertAgentsSection();
+  upsertPackageScripts();
+
+  if (adoption.profile !== "refresh") {
+    createOrUpdateConfig(adoption);
+    createProfileFiles(adoption);
+  } else {
+    console.log("Refresh profile selected: pom.config.json and governance folders were not changed.");
+  }
+
+  console.log("POM init complete.");
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+});

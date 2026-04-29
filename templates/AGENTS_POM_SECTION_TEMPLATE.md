@@ -1,0 +1,237 @@
+# Project Operating Memory
+
+This project uses **POM - Project Operating Memory** to keep current knowledge, decisions, tasks, mockups, code, and documentation aligned.
+
+## Origin
+
+POM's wiki model is inspired by Andrej Karpathy's **LLM Wiki** pattern:
+
+```text
+https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
+```
+
+The pattern is used as a conceptual reference. Operating rules, templates, and local adaptations are part of the project's POM method.
+
+If available, read `pom/WIKI_METHOD.md` as the LLM Wiki reference copy and keep only project-specific rules in the target project's `AGENTS.md`/`AGENTS.MD`.
+
+## Language Policy
+
+POM is documented in English for portability. When applying POM to this project, use the project/user language for conversation and generated artifacts unless the user asks otherwise.
+
+## Principle
+
+There is no single source of truth for everything. Each domain has its own authoritative source:
+
+| Question | Authoritative Source |
+|---|---|
+| What does the system currently do? | code and tests, when present |
+| What do we currently know about the project? | `wiki/` |
+| Why did we decide this? | `decisions/` |
+| What analysis supports or challenges a choice? | `analysis/` |
+| What does the intended experience show? | `mockups/`, when present |
+| What can be shared as official documentation? | `docs/`, when present |
+| Where do I restart after a pause? | `PROJECT_STATE.md` or current plan |
+
+If sources diverge, do not hide the divergence: surface it, analyze it, and propose a decision or reconciliation.
+
+## Git And History
+
+POM requires Git for history, rollback, and comparison between versions.
+
+Rules:
+
+- check `git status` before structural changes or experiments;
+- if the project is not under Git, propose `git init` before applying POM structurally;
+- leave fine-grained history of specs, ADRs, wiki pages, and code to Git;
+- do not add manual changelogs to specs/ADRs unless explicitly requested;
+- after structural changes, run available lint/tests and create a descriptive commit if required by the workflow.
+
+## ADR And Specs
+
+Specs are living documents: edit them directly and let Git keep fine-grained history.
+
+ADRs represent decisions. If a decision changes substantially, create a new ADR that replaces or supersedes the previous one. Do not retroactively rewrite an approved decision except for minor corrections.
+
+## Temporary Experiments
+
+For experiments, research, spikes, external repository trials, or immature analysis, use `pom/prompts/09-run-temporary-experiment.md`.
+
+Rules:
+
+- prefer branch `exp/<topic>`, `/tmp`, or `experiments/<topic>/` depending on the case;
+- do not contaminate stable codebase, wiki, specs, or docs before evaluation;
+- do not import heavy artifacts or external repositories without approval;
+- at the end, propose consolidation: discard, synthesis in `analysis/`, wiki/spec update, new ADR, or task plan.
+
+## Persistent Wiki
+
+The wiki is persistent and cumulative memory, not a temporary research output.
+
+Rules:
+
+- keep the wiki as the current synthesis of the project;
+- keep decision rationale history in `decisions/`;
+- update `wiki/index.md` when wiki pages are added or changed;
+- update `wiki/log.md` when the wiki changes materially;
+- create new wiki pages when an answer, analysis, or synthesis becomes reusable knowledge;
+- check missing links, contradictions, stale claims, and orphan pages.
+
+For wiki creation or maintenance, use `pom/skills/wiki.md`:
+
+- `build`: initial wiki creation;
+- `stale`: changed file -> wiki pages that cite it -> stale candidates;
+- `query`: answer from wiki pages and optionally archive useful answers;
+- `lint`: lightweight wiki health report.
+
+## Operating Cycle
+
+```text
+Inputs / Code / Mockups / Analysis / Conversation
+        -> Wiki
+        -> Decisions
+        -> Delivery Plan
+        -> Docs
+        -> Project State
+```
+
+## Session Handoff Memory
+
+At the end of a significant session, before final handoff, update `PROJECT_STATE.md` if the project operating context changed.
+
+`PROJECT_STATE.md` is the minimum restart memory for the user and the next AI agent. It must include:
+
+- current state;
+- latest relevant decisions or commits;
+- recommended next actions;
+- open decisions;
+- risks or blockers;
+- files to read when resuming;
+- what not to do without new approval.
+
+Do not update it for tiny edits with no operational impact. If method, governance, priorities, lint, task plans, wiki, or decisions changed, update it before the final response.
+
+## POM Commands
+
+If the target project has `package.json`, use these commands when available:
+
+```text
+npm run pom:init   # install or refresh the POM section and package scripts
+npm run pom:lint   # run POM documentation governance checks
+```
+
+`pom:init` must update only the delimited POM section in the target project's `AGENTS.md`/`AGENTS.MD`. It must not copy `pom/AGENTS.MD` into the target project.
+
+`pom:lint` is project-specific and optional. If it is not configured, state that automatic POM checks are not active.
+
+## Adoption Profile
+
+Read `pom.config.json` before applying POM conventions. If it contains an `adoption` section, respect it:
+
+- `profile`: `minimal`, `wiki`, `decisions`, `full`, `adopt`, `refresh`, or `custom`;
+- `wiki`: `enabled` or `disabled`;
+- `decisions`: `enabled` or `disabled`;
+- `analysis`: `enabled`, `optional`, or `disabled`;
+- `docs`: `enabled`, `optional`, or `disabled`;
+- `mockups`: `enabled` or `disabled`;
+- `planning`: `light` or `structured`;
+- `tasks`: `light` or `structured`;
+- `tests`: `disabled`, `existing`, or `pom`.
+
+Semantics:
+
+- `disabled` means POM must not create or require that module;
+- if a disabled module's folder already exists, lint may still check it to prevent silent decay;
+- `optional` means ask before creating the module unless immediate project work clearly requires it;
+- `enabled` means the module is part of the active project method and should be maintained.
+
+## POM Lint Workflow
+
+When POM is installed and `package.json` exposes `pom:lint`, run:
+
+```bash
+npm run pom:lint
+```
+
+Run it:
+
+- after changes to `wiki/`, `decisions/`, `docs/`, `analysis/`, `mockups/`, `PROJECT_STATE.md`, `pom.config.json`, or POM templates;
+- before committing documentation/governance changes;
+- after applying fixes suggested by a previous POM lint run.
+
+If the command is missing, state that automatic POM checks are not configured and use the relevant POM skill/prompt manually.
+
+## Templates
+
+Before creating governed documents, read and use the relevant template in `pom/templates/`.
+
+| Document | Template |
+|---|---|
+| AGENTS / agent instructions section | `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` |
+| wiki page | `pom/templates/WIKI_PAGE_TEMPLATE.md` |
+| wiki index | `pom/templates/WIKI_INDEX_TEMPLATE.md` |
+| wiki log | `pom/templates/WIKI_LOG_TEMPLATE.md` |
+| decision | `pom/templates/ADR_TEMPLATE.md` |
+| task plan | `pom/templates/TASK_PLAN_TEMPLATE.md` |
+| current plan / short roadmap | `pom/templates/CURRENT_PLAN_TEMPLATE.md` |
+| spec | `pom/templates/SPEC_TEMPLATE.md` |
+| versioned experiment | `pom/templates/EXPERIMENT_TEMPLATE.md` |
+| official documentation | `pom/templates/DOC_TEMPLATE.md` |
+| mock manifest | `pom/templates/MOCK_MANIFEST_TEMPLATE.md` |
+| reconciliation | `pom/templates/RECONCILIATION_TEMPLATE.md` |
+| project state | `pom/templates/PROJECT_STATE_TEMPLATE.md` |
+
+If a template does not fit the concrete case, propose a template update first. Do not silently invent a parallel structure.
+
+## POM Skills
+
+If `pom/skills/` exists, use it as the operating index for POM workflows. Each skill points to a canonical prompt in `pom/prompts/` and relevant templates.
+
+Rules:
+
+- read the skill card first when the request matches a skill;
+- read `pom.config.json` before applying conventions for docs, source, tests, wiki, analysis, or handoff;
+- then read the linked canonical prompt;
+- do not treat a skill as a replacement for prompts or templates;
+- if no suitable skill exists, use POM prompts directly and propose a new skill only if the workflow becomes recurring.
+
+## Planning
+
+Use this logical hierarchy for planned work (it organizes work, not folders):
+
+```text
+Roadmap
+  -> Phase          (closes with acceptance review)
+    -> Workstream   (closes with cross-functional E2E / user-flow tests)
+      -> Task       (closes with integration tests / single-feature E2E)
+        -> Step     (closes with atomic verification: unit test, lint, check)
+```
+
+Verification happens at every level, not only at the bottom. Place E2E and user-flow tests at Task or Workstream level, not at Step level.
+
+Every spec or decision that generates work must produce verifiable tasks. Every phase must close with concrete verification: user or technical tests for code, lint and critical analysis for documents.
+
+When E2E or user-flow tests are possible, verification should include at least 2 positive user use cases and at least 1 handled-error user use case. If this is not possible, state the reason explicitly.
+
+## Test Convention
+
+POM proposes this optional structure:
+
+```text
+tests/
+  <module-or-area>/
+    e2e/
+    integration/
+    fixtures/
+    evidence/
+  cross-system/
+```
+
+Use it for E2E tests, integration tests, fixtures, and evidence when the project does not already have an established test convention. Unit tests may remain next to code if the framework expects that.
+
+If an existing test structure differs, the agent must ask whether to adapt to the existing structure or introduce/adapt the POM proposal. Do not move existing tests without approval.
+
+## Docs And Source Conventions
+
+POM proposes `docs/` for official documentation and `src/` as the minimal source root for new projects, but it must not impose them on existing projects.
+
+If the project already uses `doc/`, `docs/`, `apps/`, `packages/`, `services/`, `frontend/`, `backend/`, or other structures, ask whether to adapt to the existing structure or introduce/adapt the POM proposal. Do not move documents or source files without approval.

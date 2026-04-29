@@ -1,0 +1,13 @@
+{
+  "name": "project-operating-memory",
+  "version": "0.1.0",
+  "type": "module",
+  "private": false,
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "scripts": {
+    "pom:init": "node --experimental-strip-types scripts/install-pom.ts",
+    "pom:lint": "node --experimental-strip-types scripts/lint-doc-governance.ts"
+  }
+}
