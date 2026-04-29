@@ -36,8 +36,23 @@ function main() {
   const profile = process.argv.filter((a) => a.startsWith("--profile")).join(" ");
 
   if (existsSync(POM_DIR)) {
-    console.log(`${POM_DIR}/ already exists. Pulling latest changes...`);
-    run("git", ["-C", POM_DIR, "pull", "--ff-only"]);
+    console.log(`${POM_DIR}/ already exists. Updating...`);
+    try {
+      // Try regular pull first (works for clones)
+      execFileSync("git", ["-C", POM_DIR, "checkout", "main"], { stdio: "pipe" });
+    } catch {
+      // Ignore checkout errors (may already be on main)
+    }
+    try {
+      run("git", ["-C", POM_DIR, "pull", "origin", "main", "--ff-only"]);
+    } catch {
+      console.log("Pull failed. Trying submodule update...");
+      try {
+        run("git", ["submodule", "update", "--remote", POM_DIR]);
+      } catch {
+        console.log(`Warning: could not update ${POM_DIR}/. Continuing with existing version.`);
+      }
+    }
   } else {
     console.log(`Cloning POM from ${repo}...`);
     run("git", ["clone", repo, POM_DIR]);
