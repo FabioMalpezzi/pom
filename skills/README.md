@@ -65,4 +65,10 @@ Existing project structures should be mapped first, not moved by default.
 
 When a request matches a skill, the agent must read the skill card and then the linked canonical prompt.
 
+The agent should also state the selected skill and reason in the conversation, for example:
+
+```text
+Using `pom/skills/defer.md` because this work is being preserved without implementation.
+```
+
 If no skill fits the case, adapt the closest prompt only after checking README, AGENTS, `PROJECT_STATE.md`, and `pom.config.json`.
