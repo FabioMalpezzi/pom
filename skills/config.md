@@ -4,7 +4,7 @@
 
 - Create or update `pom.config.json`.
 - Adapt lint to a new or existing project.
-- Reconcile docs/source/tests/wiki with local preferences.
+- Reconcile decisions/docs/source/tests/task plans/wiki/analysis/mockups/handoff with local preferences.
 
 ## Canonical Prompt
 
@@ -23,4 +23,4 @@ This skill creates or updates `pom.config.json`. If the file exists, preserve lo
 - `pom.config.json` consistent with the project;
 - base POM rules separated from project-specific rules;
 - lint run and result;
-- tests/docs/source choices explained.
+- mapped roots and conventions explained for decisions/docs/source/tests/task plans/wiki/analysis/mockups/handoff.

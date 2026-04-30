@@ -37,8 +37,8 @@ Rules:
 - if no test structure exists, propose `tests/<module-or-area>/{e2e,integration,fixtures,evidence}` and `tests/cross-system/`, without creating unnecessary empty folders.
 
 Recommended output:
-- docs/delivery/CURRENT_PLAN.md or equivalent;
-- docs/delivery/tasks/TASK-xxxx-title.md or equivalent.
+- `CURRENT_PLAN.md` or the configured current-plan equivalent for the short active focus;
+- task files under `pom.config.json.taskPlans.root` when configured, otherwise `tasks/` or the approved project equivalent.
 
 Do not modify an existing plan without highlighting what you are changing.
 ```

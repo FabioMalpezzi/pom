@@ -29,9 +29,11 @@ Rules:
 - if `tests/` exists, detect the real structure and ask whether to adapt lint to it or use/adapt the POM proposal;
 - if `tests/` does not exist, ask whether the user prefers the POM proposal or a different structure;
 - do not move tests without approval;
+- if ADRs already exist outside `decisions/`, ask whether to enable `adoption.decisions` against the existing ADR root (for example `doc/architecture`) instead of migrating files immediately;
 - if `doc/`, `docs/`, or other documentation folders exist, ask which one to map as official documentation and which ones to leave as legacy/existing;
 - if `src/`, `apps/`, `packages/`, `services/`, `frontend/`, `backend/`, or other source folders exist, ask which to declare as source roots;
-- do not move documents or source files without approval.
+- if tests, wiki, analysis, mockups, planning, or handoff files already exist in non-POM locations, prefer mapping or documenting the existing convention before proposing moves;
+- do not move documents, source files, tests, mockups, wiki, analysis, or planning files without approval.
 
 Adoption values:
 - `profile`: `minimal`, `wiki`, `decisions`, `full`, `adopt`, `refresh`, or `custom`;
@@ -60,17 +62,16 @@ Module semantics:
 
 The configuration should cover, when applicable:
 - Markdown allowed in root;
-- `analysis/` taxonomy;
-- POM template paths;
-- base sections of `wiki/index.md`;
-- project-specific wiki categories/sections;
-- `wiki/log.md` format;
-- ADR patterns;
-- mock manifest rules;
-- mockup reconciliation document search;
+- analysis taxonomy and whether analysis root files are allowed;
+- POM template paths and any project-owned template overrides;
+- wiki index/log expectations and project-specific wiki categories/sections;
+- ADR root, patterns, index path, and whether existing ADRs must follow the POM ADR template exactly;
+- task-plan root, task file pattern, index path, and whether task files must follow the POM task template exactly;
+- mockup package root, manifest rules, and reconciliation document search;
 - test preferences and structure: `tests.root`, `tests.areas`, `tests.recommendedLayout`, `tests.crossSystemDir`, `tests.severity`;
-- documentation: `documentation.officialRoot`, `documentation.existingRoots`, `documentation.knownRootCandidates`, `documentation.severity`;
-- source roots: `source.roots`, `source.knownRootCandidates`, `source.severity`;
+- documentation: `documentation.officialRoot`, `documentation.existingRoots`, `documentation.knownRootCandidates`, migration flags, and `documentation.severity`;
+- source roots: `source.roots`, `source.knownRootCandidates`, migration flags, and `source.severity`;
+- handoff path and trigger paths;
 - minimum length threshold for wiki pages.
 
 After approval:

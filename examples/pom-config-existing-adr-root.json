@@ -1,0 +1,50 @@
+{
+  "adoption": {
+    "profile": "adopt",
+    "wiki": "enabled",
+    "decisions": "enabled",
+    "analysis": "optional",
+    "docs": "optional",
+    "mockups": "enabled",
+    "planning": "light",
+    "tasks": "light",
+    "tests": "existing"
+  },
+  "documentation": {
+    "officialRoot": "docs",
+    "existingRoots": ["doc"],
+    "preferExistingStructure": true,
+    "requireApprovalBeforeMigratingDocs": true,
+    "severity": "warning"
+  },
+  "decisions": {
+    "root": "doc/architecture",
+    "adrPathPattern": "^doc/architecture/ADR-\\d{3}-.+\\.md$",
+    "datePattern": "\\*\\*Date\\*\\*:?\\s*\\d{4}-\\d{2}-\\d{2}|\\*\\*Date:\\*\\*\\s*\\d{4}-\\d{2}-\\d{2}",
+    "indexPath": "doc/architecture/ADR_INDEX.md",
+    "categoryField": "Category",
+    "areaField": "Area",
+    "requireTemplateSections": false
+  },
+  "source": {
+    "roots": ["frontend", "backend"],
+    "knownRootCandidates": ["src", "apps", "packages", "services", "frontend", "backend"],
+    "preferExistingStructure": true,
+    "requireApprovalBeforeMigratingSources": true,
+    "severity": "warning"
+  },
+  "tests": {
+    "root": "tests",
+    "areas": [],
+    "recommendedLayout": ["e2e", "integration", "fixtures", "evidence"],
+    "crossSystemDir": "cross-system",
+    "preferExistingStructure": true,
+    "requireApprovalBeforeMigratingExistingTests": true,
+    "severity": "warning"
+  },
+  "mockups": {
+    "packagesDir": "mockups/packages",
+    "manifestName": "MOCK_MANIFEST.md",
+    "reconciliationSearchDir": "analysis"
+  }
+}

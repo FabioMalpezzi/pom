@@ -2,7 +2,7 @@
 
 **POM** is a lightweight method for keeping a project's operating memory alive by connecting sources, code, mockups, wiki pages, decisions, verifiable tasks, roadmap context, and official documentation.
 
-POM is designed to be reused on new or existing projects. It does not impose a single application structure and does not assume that every project has mockups, source code, tests, or official docs.
+POM is designed to be reused on new or existing projects. It does not impose a single application structure and does not assume that every project has mockups, source code, tests, or official docs. For existing projects, POM should first map the current structure in `pom.config.json`; migration to canonical folders is a later explicit decision, not a prerequisite.
 
 Version: `0.1.0`
 
@@ -374,7 +374,7 @@ Lint reads the `tests` section of `pom.config.json`. See `prompts/05-create-task
 
 POM proposes `docs/` for official documentation and `src/` as the minimal source root, but existing projects should keep their real structure unless the user approves a change. Do not move documents or source files without approval.
 
-Lint reads the `documentation` and `source` sections of `pom.config.json`. See `prompts/08-create-pom-config.md` for configuration details.
+Lint reads the `documentation` and `source` sections of `pom.config.json`. Existing roots such as `doc/`, `apps/`, `packages/`, `services/`, `frontend/`, or `backend/` should be mapped there before any migration is proposed. See `prompts/08-create-pom-config.md` for configuration details.
 
 ## POM Folders
 
@@ -486,6 +486,8 @@ Allowed values:
 | `mockups` | `enabled`, `disabled` |
 | `planning` | `light`, `structured` |
 | `tasks` | `light`, `structured` |
+
+Task-plan location is configured separately under `taskPlans`. This keeps `adoption.tasks` as the planning style while allowing each project to place operational task files where they fit best.
 | `tests` | `disabled`, `existing`, `pom` |
 
 Profile meanings:
@@ -508,6 +510,17 @@ Semantics:
 - `enabled` means the module is part of the active project method and should be maintained.
 
 POM lint may also generate derived artifacts when the rule is explicit and the generated file is not an autonomous source. Example: `decisions/ADR_INDEX.md` is generated from ADRs and is only used for navigation/search. Generated files must declare that they should not be edited manually.
+
+For existing projects, existing structures do not have to be moved into canonical POM folders immediately. Configure the relevant roots and patterns to map the active convention:
+
+- decisions: `decisions.root`, `decisions.adrPathPattern`, `decisions.indexPath`, and `decisions.requireTemplateSections`;
+- documentation: `documentation.officialRoot`, `documentation.existingRoots`, and migration policy flags;
+- source: `source.roots`, `source.knownRootCandidates`, and migration policy flags;
+- tests: `tests.root`, `tests.areas`, `tests.recommendedLayout`, and migration policy flags;
+- task plans: `taskPlans.root`, `taskPlans.taskPathPattern`, `taskPlans.indexPath`, and template strictness;
+- mockups, wiki, and analysis: their configured roots, patterns, and enabled/optional/disabled adoption state.
+
+Example: a project can enable decisions while keeping ADRs under `doc/architecture/ADR-###-*.md`. If existing documents use a legacy format, relax only the necessary checks, such as `decisions.requireTemplateSections: false`, while preserving or gradually improving the documents.
 
 If generators increase or become expensive, split them into dedicated commands later. In version `0.1.0`, the supported commands are `pom:init` and `pom:lint`.
 

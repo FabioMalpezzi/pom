@@ -16,12 +16,17 @@ Before applying a skill, read `pom.config.json` when present.
 
 The config defines project-specific conventions, including:
 
+- decisions/ADR roots and patterns (`decisions`);
 - documentation roots (`documentation`);
 - source roots (`source`);
 - test structure (`tests`);
+- task-plan roots and patterns (`taskPlans`);
 - wiki/analysis taxonomies;
+- mockup package roots and reconciliation search;
 - warning severity;
 - handoff rules for `PROJECT_STATE.md`.
+
+For existing projects, prefer mapping current folders and file patterns in config before proposing a migration to POM's canonical examples.
 
 If a skill proposes a convention that differs from `pom.config.json`, ask for confirmation before proceeding and update the config if approved.
 

@@ -12,13 +12,13 @@ Before modifying files:
 4. wait for approval.
 
 The method must include:
-- wiki as persistent memory and consolidated current state;
-- wiki/index.md as content index;
-- wiki/log.md as append-only chronological register;
-- decisions as rationale history;
-- docs as official output;
-- analysis as bridge documents;
+- wiki as persistent memory and consolidated current state, using configured wiki paths when present;
+- wiki/index.md and wiki/log.md, or the approved project equivalents if the project maps them explicitly;
+- decisions as rationale history, mapped to `decisions/` or to the existing ADR root declared in `pom.config.json.decisions.root`;
+- docs as official output, mapped through `documentation.officialRoot` and `documentation.existingRoots`;
+- analysis as bridge documents, respecting configured analysis taxonomy;
 - mockups as autonomous packages with MOCK_MANIFEST.md, if the project uses mockups;
+- tests/source roots as project-owned structures, not folders imposed by POM;
 - project state as quick restart point;
 - POM templates as reusable document rules;
 - `pom.config.json` as project-specific lint configuration;

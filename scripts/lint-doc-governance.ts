@@ -61,11 +61,13 @@ type LintConfig = {
     minPageLength: number;
   };
   decisions: {
+    root: string;
     adrPathPattern: string;
     datePattern: string;
     indexPath: string;
     categoryField: string;
     areaField: string;
+    requireTemplateSections: boolean;
   };
   mockups: {
     packagesDir: string;
@@ -159,11 +161,13 @@ const defaultConfig: LintConfig = {
     minPageLength: 120,
   },
   decisions: {
+    root: "decisions",
     adrPathPattern: String.raw`^decisions/ADR-\d{4}-.+\.md$`,
     datePattern: String.raw`\| Date \|\s*\d{4}-\d{2}-\d{2}\s*\|`,
     indexPath: "decisions/ADR_INDEX.md",
     categoryField: "Category",
     areaField: "Area",
+    requireTemplateSections: true,
   },
   mockups: {
     packagesDir: "mockups/packages",
@@ -302,11 +306,17 @@ function mergeConfig(base: LintConfig, raw: Record<string, unknown>): LintConfig
       minPageLength: readNumber(raw, "wiki.minPageLength", base.wiki.minPageLength),
     },
     decisions: {
+      root: readString(raw, "decisions.root", base.decisions.root),
       adrPathPattern: readString(raw, "decisions.adrPathPattern", base.decisions.adrPathPattern),
       datePattern: readString(raw, "decisions.datePattern", base.decisions.datePattern),
       indexPath: readString(raw, "decisions.indexPath", base.decisions.indexPath),
       categoryField: readString(raw, "decisions.categoryField", base.decisions.categoryField),
       areaField: readString(raw, "decisions.areaField", base.decisions.areaField),
+      requireTemplateSections: readBoolean(
+        raw,
+        "decisions.requireTemplateSections",
+        base.decisions.requireTemplateSections,
+      ),
     },
     mockups: {
       packagesDir: readString(raw, "mockups.packagesDir", base.mockups.packagesDir),
@@ -588,13 +598,29 @@ function parseMetadataTable(text: string): Map<string, string> {
     fields.set(cells[0].toLowerCase(), cells[1]);
   }
 
+  for (const match of text.matchAll(/^\*\*([^*:\n]+):?\*\*\s*:?\s*(.+)$/gm)) {
+    const key = match[1]?.trim().toLowerCase();
+    const value = match[2]?.trim();
+    if (key && value && !fields.has(key)) {
+      fields.set(key, value);
+    }
+  }
+
   return fields;
+}
+
+function stripDecisionRoot(file: string): string {
+  const root = config.decisions.root.replace(/\\/g, "/").replace(/\/$/, "");
+  if (root && file.startsWith(`${root}/`)) {
+    return file.slice(root.length + 1);
+  }
+  return file.replace(/^decisions\//, "");
 }
 
 function parseAdrTitle(text: string, file: string): string {
   const firstHeading = text.match(/^#\s+(.+)$/m)?.[1]?.trim();
   if (firstHeading) return firstHeading;
-  return file.replace(/^decisions\//, "").replace(/\.md$/, "");
+  return stripDecisionRoot(file).replace(/\.md$/, "");
 }
 
 function isUsableMetadata(value: string): boolean {
@@ -614,7 +640,12 @@ function truncateSummary(value: string): string {
 }
 
 function adrLink(entry: AdrIndexEntry): string {
-  return `[${markdownCell(entry.title)}](./${entry.file.replace(/^decisions\//, "")})`;
+  const indexDir = dirname(config.decisions.indexPath);
+  let link = relative(indexDir, entry.file).replace(/\\/g, "/");
+  if (!link.startsWith(".") && !link.startsWith("/")) {
+    link = `./${link}`;
+  }
+  return `[${markdownCell(entry.title)}](${link})`;
 }
 
 function writeAdrIndex(entries: AdrIndexEntry[]): void {
@@ -685,10 +716,11 @@ function writeAdrIndex(entries: AdrIndexEntry[]): void {
 }
 
 function checkDecisions(): void {
-  if (!pathExists("decisions")) return;
+  const decisionsRoot = config.decisions.root || "decisions";
+  if (!pathExists(decisionsRoot)) return;
 
   const adrFiles = walkFiles(
-    "decisions",
+    decisionsRoot,
     (path) => path.endsWith(".md") && new RegExp(config.decisions.adrPathPattern).test(path),
   );
 
@@ -704,9 +736,11 @@ function checkDecisions(): void {
     const summary = fields.get("summary") ?? "";
     const supersededBy = fields.get("replaced by") ?? fields.get("superseded by") ?? fields.get("sostituita da") ?? "";
 
-    for (const section of requiredAdrSections) {
-      if (!text.includes(section)) {
-        add("error", "adr-required-section", `ADR is missing required section: ${section}`, file);
+    if (config.decisions.requireTemplateSections) {
+      for (const section of requiredAdrSections) {
+        if (!text.includes(section)) {
+          add("error", "adr-required-section", `ADR is missing required section: ${section}`, file);
+        }
       }
     }
 
@@ -1069,14 +1103,20 @@ function checkGitWorkflow(): void {
 
   const changedWiki = [...changed].filter((path) => path.startsWith("wiki/") && path.endsWith(".md"));
   const changedDocs = [...changed].filter((path) => path.startsWith("docs/") && path.endsWith(".md"));
-  const changedDecisions = [...changed].filter((path) => path.startsWith("decisions/") && new RegExp(config.decisions.adrPathPattern).test(path));
+  const decisionsRoot = (config.decisions.root || "decisions").replace(/\/$/, "");
+  const changedDecisions = [...changed].filter((path) => path.startsWith(`${decisionsRoot}/`) && new RegExp(config.decisions.adrPathPattern).test(path));
 
   if (changedWiki.length > 0 && !changed.has("wiki/log.md")) {
     add("warning", "wiki-log-changed", "There are wiki changes without an update to wiki/log.md.", "wiki/log.md");
   }
 
   if (changedDocs.length > 0 && changedDecisions.length === 0) {
-    add("warning", "docs-without-adr", "There are docs/ changes without a modified or added ADR.", "decisions/");
+    add(
+      "warning",
+      "docs-without-adr",
+      `There are ${config.documentation.officialRoot}/ changes without a modified or added ADR.`,
+      `${decisionsRoot}/`,
+    );
   }
 
   checkProjectStateHandoff(changed);

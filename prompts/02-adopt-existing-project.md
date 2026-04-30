@@ -36,6 +36,8 @@ Adoption profiles:
 
 For existing projects, prefer `adopt` or `custom` unless the user explicitly wants a stronger profile. Save the selected profile in `pom.config.json` under `adoption`. Do not create folders for disabled modules, and do not create optional folders unless they are immediately needed or approved.
 
+General mapping rule: map existing project structures first, then propose migrations separately only when the user asks for cleanup. This applies to decisions, docs, source, tests, wiki, analysis, mockups, planning, and handoff files.
+
 The wiki, when present, must become the project's persistent and consolidated memory. It must not replace decisions, code, tests, or official documentation.
 
 If introducing POM for the first time, cite the conceptual origin of the wiki model:
@@ -47,7 +49,11 @@ Do not rename folders, move files, or impose a standard structure until I approv
 
 If you find an existing test structure different from `tests/<module-or-area>/...`, ask whether to adapt to the existing structure or introduce/adapt the POM proposal. Do not move tests without approval. The user's choice must guide the `tests` section of `pom.config.json`.
 
+If you find existing ADRs or architecture decisions outside `decisions/`, prefer mapping `decisions.root`, `decisions.adrPathPattern`, and `decisions.indexPath` to the existing convention before proposing a migration. Do not move decision files without approval.
+
 If you find documentation or source structures different from `docs/` and `src/`, ask whether to adapt to the existing structure or introduce/adapt the POM proposal. Do not move documents or source files without approval. The user's choice must guide the `documentation` and `source` sections of `pom.config.json`.
+
+If you find existing test, wiki, analysis, mockup, planning, or handoff structures, map them in `pom.config.json` where supported and record unresolved conventions as open decisions. Do not normalize folders by default.
 
 After approval:
 - create only missing files/folders;

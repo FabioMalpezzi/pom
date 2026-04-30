@@ -19,7 +19,7 @@
 
 ## Config
 
-Governance and lint must be consistent with `pom.config.json`. If a project rule changes, update the config before or together with the rule.
+Governance and lint must be consistent with `pom.config.json`. If a project rule changes, update the config before or together with the rule. For existing projects, encode approved mappings to current structures before proposing folder migrations.
 
 ## Output
 
