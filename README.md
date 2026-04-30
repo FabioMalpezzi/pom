@@ -27,6 +27,7 @@ Use the smallest workflow that matches your situation:
 | Extend POM | `skills/extend.md` |
 | Defer work without implementing | `skills/defer.md` |
 | Sync POM source to a project | `skills/sync.md` |
+| See available commands | `npm run pom:help` |
 
 ### How to talk to the agent
 
@@ -90,6 +91,16 @@ node bootstrap-pom.mjs --profile refresh
 ```
 
 Refresh updates `pom/`, the POM section in every existing supported agent instruction file, package scripts, and the pre-commit hook. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
+
+After installation, show the command guide with:
+
+```bash
+npm run pom:help
+```
+
+In an interactive terminal it can launch common commands such as refresh, lint,
+or skill reference display. In non-interactive contexts it prints the guide and
+exits.
 
 Supported instruction targets are deliberately conservative:
 

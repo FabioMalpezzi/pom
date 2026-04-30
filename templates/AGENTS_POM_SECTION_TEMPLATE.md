@@ -116,10 +116,13 @@ If the target project has `package.json`, use these commands when available:
 
 ```text
 npm run pom:init   # install or refresh the POM section and package scripts
+npm run pom:help   # show POM commands, skills, and optional interactive launcher
 npm run pom:lint   # run POM documentation governance checks
 ```
 
 `pom:init` must update only the delimited POM section in every existing supported target agent instruction file or rule folder. If none exists, it creates `AGENTS.md`. It must not copy `pom/AGENTS.MD` into the target project.
+
+`pom:help` is a lightweight command guide. When run in an interactive terminal it may offer to launch common commands such as refresh, lint, or skill reference display. When run in non-interactive contexts it prints the command guide and exits.
 
 `pom:lint` is project-specific and optional. If it is not configured, state that automatic POM checks are not active.
 

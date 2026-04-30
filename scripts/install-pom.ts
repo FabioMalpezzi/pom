@@ -259,6 +259,12 @@ function resolveLintScript(): string {
   return "pom/scripts/lint-doc-governance.ts";
 }
 
+function resolveHelpScript(): string {
+  if (pathExists("pom/scripts/pom-help.ts")) return "pom/scripts/pom-help.ts";
+  if (pathExists("scripts/pom-help.ts")) return "scripts/pom-help.ts";
+  return "pom/scripts/pom-help.ts";
+}
+
 function resolvePomAsset(path: string): string | undefined {
   const candidates = [`pom/${path}`, path];
   return candidates.find((candidate) => pathExists(candidate));
@@ -349,11 +355,13 @@ function upsertPackageScripts(): void {
   const packagePath = "package.json";
   if (!pathExists(packagePath)) {
     const lintScript = resolveLintScript();
+    const helpScript = resolveHelpScript();
     const content: PackageJson = {
       private: true,
       type: "module",
       scripts: {
         "pom:init": "node --experimental-strip-types pom/scripts/install-pom.ts",
+        "pom:help": `node --experimental-strip-types ${helpScript}`,
         "pom:lint": `node --experimental-strip-types ${lintScript}`,
       },
     };
@@ -371,6 +379,7 @@ function upsertPackageScripts(): void {
 
   const scripts = { ...(parsed.scripts ?? {}) };
   const lintScript = resolveLintScript();
+  const helpScript = resolveHelpScript();
   const initCommand = pathExists("pom/scripts/install-pom.ts")
     ? "node --experimental-strip-types pom/scripts/install-pom.ts"
     : "node --experimental-strip-types scripts/install-pom.ts";
@@ -380,19 +389,23 @@ function upsertPackageScripts(): void {
     scripts["pom:init"] = initCommand;
     changed = true;
   }
+  if (!scripts["pom:help"]) {
+    scripts["pom:help"] = `node --experimental-strip-types ${helpScript}`;
+    changed = true;
+  }
   if (!scripts["pom:lint"]) {
     scripts["pom:lint"] = `node --experimental-strip-types ${lintScript}`;
     changed = true;
   }
 
   if (!changed) {
-    console.log("package.json already contains pom:init and pom:lint.");
+    console.log("package.json already contains pom:init, pom:help, and pom:lint.");
     return;
   }
 
   parsed.scripts = scripts;
   writeText(packagePath, `${JSON.stringify(parsed, null, 2)}\n`);
-  console.log("Updated package.json with pom:init and pom:lint scripts.");
+  console.log("Updated package.json with pom:init, pom:help, and pom:lint scripts.");
 }
 
 function installPreCommitHook(): void {
