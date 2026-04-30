@@ -25,6 +25,7 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `15-classify-document-status.md` | choose the right document type and status before writing |
 | `16-defer-work.md` | preserve future work as Deferred without implementing it |
 | `17-sync-pom-framework.md` | commit POM source changes and align a target project's `pom/` |
+| `18-post-action-validator.md` | read-only audit of POM governance after significant actions |
 
 ## Work Planning Hierarchy
 

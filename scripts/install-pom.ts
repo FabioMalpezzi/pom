@@ -2,8 +2,8 @@
 
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { basename, dirname, join } from "node:path";
 
 const ROOT = process.cwd();
 const START_MARKER = "<!-- POM:START -->";
@@ -69,6 +69,13 @@ const DIRECTORY_AGENT_INSTRUCTION_TARGETS = [
     directory: ".clinerules",
     file: ".clinerules/pom.md",
     header: "",
+  },
+];
+
+const CLAUDE_AGENT_TEMPLATES = [
+  {
+    source: "agents/claude/pom-post-action-validator.md",
+    target: ".claude/agents/pom-post-action-validator.md",
   },
 ];
 
@@ -252,6 +259,11 @@ function resolveLintScript(): string {
   return "pom/scripts/lint-doc-governance.ts";
 }
 
+function resolvePomAsset(path: string): string | undefined {
+  const candidates = [`pom/${path}`, path];
+  return candidates.find((candidate) => pathExists(candidate));
+}
+
 type AgentInstructionTarget = {
   path: string;
   header: string;
@@ -297,6 +309,39 @@ function upsertAgentInstructionSections(): void {
     } else {
       console.log(`${target.path} already contains the current POM section.`);
     }
+  }
+}
+
+function installCodingAgentFiles(): void {
+  installClaudeAgentFiles();
+}
+
+function installClaudeAgentFiles(): void {
+  const shouldInstall = pathIsDirectory(".claude") || pathIsDirectory(".claude/agents");
+  if (!shouldInstall) {
+    console.log("Claude agent files not installed: .claude/ not found.");
+    return;
+  }
+
+  ensureDir(".claude/agents");
+
+  for (const agent of CLAUDE_AGENT_TEMPLATES) {
+    const source = resolvePomAsset(agent.source);
+    if (!source) {
+      console.log(`Claude agent template missing: ${agent.source}. Skipped.`);
+      continue;
+    }
+
+    const current = pathExists(agent.target) ? readText(agent.target) : "";
+    const next = readText(source);
+
+    if (current === next) {
+      console.log(`${agent.target} already contains the current ${basename(agent.target)}.`);
+      continue;
+    }
+
+    copyFileSync(join(ROOT, source), join(ROOT, agent.target));
+    console.log(`Installed or updated ${agent.target}.`);
   }
 }
 
@@ -612,6 +657,7 @@ async function main(): Promise<void> {
   const adoption = await customizeAdoption(profiles[profileName].adoption);
 
   upsertAgentInstructionSections();
+  installCodingAgentFiles();
   upsertPackageScripts();
   installPreCommitHook();
 

@@ -60,6 +60,7 @@ Existing project structures should be mapped first, not moved by default.
 | `status` | classify document type and choose the least misleading status | `prompts/15-classify-document-status.md` |
 | `defer` | park important work without implementing it | `prompts/16-defer-work.md` |
 | `sync` | align POM source changes with a target project's `pom/` | `prompts/17-sync-pom-framework.md` |
+| `validate` | audit POM governance after significant actions | `prompts/18-post-action-validator.md` |
 
 ## Rule
 
