@@ -572,6 +572,7 @@ function checkAnalysisLayout(): void {
 type AdrIndexEntry = {
   file: string;
   title: string;
+  status: string;
   date: string;
   category: string;
   area: string;
@@ -675,11 +676,11 @@ function writeAdrIndex(entries: AdrIndexEntry[]): void {
 
     for (const [group, groupEntries] of [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b))) {
       lines.push(`### ${group}`, "");
-      lines.push("| ADR | Date | Summary | Replaced by |");
-      lines.push("|---|---|---|---|");
+      lines.push("| ADR | Status | Date | Summary | Replaced by |");
+      lines.push("|---|---|---|---|---|");
       for (const entry of groupEntries.sort((a, b) => a.file.localeCompare(b.file))) {
         lines.push(
-          `| ${adrLink(entry)} | ${markdownCell(entry.date)} | ${markdownCell(truncateSummary(entry.summary))} | ${markdownCell(entry.supersededBy)} |`,
+          `| ${adrLink(entry)} | ${markdownCell(entry.status)} | ${markdownCell(entry.date)} | ${markdownCell(truncateSummary(entry.summary))} | ${markdownCell(entry.supersededBy)} |`,
         );
       }
       lines.push("");
@@ -690,11 +691,11 @@ function writeAdrIndex(entries: AdrIndexEntry[]): void {
   if (unclassified.length === 0) {
     lines.push("_No unclassified ADRs._", "");
   } else {
-    lines.push("| ADR | Date | Summary | Category | Area |");
-    lines.push("|---|---|---|---|---|");
+    lines.push("| ADR | Status | Date | Summary | Category | Area |");
+    lines.push("|---|---|---|---|---|---|");
     for (const entry of unclassified.sort((a, b) => a.file.localeCompare(b.file))) {
       lines.push(
-        `| ${adrLink(entry)} | ${markdownCell(entry.date)} | ${markdownCell(truncateSummary(entry.summary))} | ${markdownCell(entry.category)} | ${markdownCell(entry.area)} |`,
+        `| ${adrLink(entry)} | ${markdownCell(entry.status)} | ${markdownCell(entry.date)} | ${markdownCell(truncateSummary(entry.summary))} | ${markdownCell(entry.category)} | ${markdownCell(entry.area)} |`,
       );
     }
     lines.push("");
@@ -730,6 +731,7 @@ function checkDecisions(): void {
     const text = readText(file);
     const fields = parseMetadataTable(text);
     const title = parseAdrTitle(text, file);
+    const status = fields.get("status") ?? fields.get("stato") ?? "";
     const date = fields.get("date") ?? fields.get("data") ?? "";
     const category = fields.get(config.decisions.categoryField.toLowerCase()) ?? "";
     const area = fields.get(config.decisions.areaField.toLowerCase()) ?? "";
@@ -756,7 +758,7 @@ function checkDecisions(): void {
       add("warning", "adr-area", `ADR is missing a classifiable ${config.decisions.areaField} in the opening metadata table.`, file);
     }
 
-    indexEntries.push({ file, title, date, category, area, summary, supersededBy });
+    indexEntries.push({ file, title, status, date, category, area, summary, supersededBy });
   }
 
   writeAdrIndex(indexEntries);
