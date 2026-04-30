@@ -67,7 +67,7 @@ The bootstrap script:
 - clones POM into `pom/` (or pulls if it already exists);
 - runs the interactive installer;
 - lets you choose an adoption profile (minimal, wiki, decisions, full, adopt, refresh, custom);
-- updates the POM section in every existing supported agent instruction file (`AGENTS.md`, `AGENTS.MD`, `CLAUDE.md`, `GEMINI.md`), or creates `AGENTS.md` if none exists;
+- updates the POM section in every existing supported agent instruction file, or creates `AGENTS.md` if none exists;
 - creates `package.json` scripts, `pom.config.json`, and governance folders based on the chosen profile.
 - installs or updates `.git/hooks/pre-commit` with POM checks when the project is a Git repository.
 
@@ -85,6 +85,14 @@ node bootstrap-pom.mjs --profile refresh
 ```
 
 Refresh updates `pom/`, the POM section in every existing supported agent instruction file, package scripts, and the pre-commit hook. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
+
+Supported instruction targets are deliberately conservative:
+
+- existing root files: `AGENTS.md`, `AGENTS.MD`, `agents.md`, `CLAUDE.md`, `GEMINI.md`, `CONVENTIONS.md`, `.cursorrules`, `.clinerules`, `.windsurfrules`;
+- existing nested files: `.github/copilot-instructions.md`, `.junie/guidelines.md`, `.junie/instructions.md`, `.junie/AGENTS.md`;
+- existing rule folders, where POM creates or updates a dedicated file: `.claude/rules/pom.md`, `.github/instructions/pom.instructions.md`, `.cursor/rules/pom.mdc`, `.windsurf/rules/pom.md`, `.kiro/steering/pom.md`, `.continue/rules/pom.md`, `.roo/rules/pom.md`, `.clinerules/pom.md`.
+
+POM does not create tool-specific folders just because the tool exists. It only writes into a tool-specific folder when that folder is already part of the project.
 
 If you customized or translated templates, keep them outside `pom/` before refreshing, for example:
 
@@ -155,7 +163,12 @@ If the project does not use npm, copy the POM section manually into every agent 
 | OpenAI Codex | `AGENTS.md` | Copy `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` into `AGENTS.md` |
 | Claude Code | `CLAUDE.md` | Copy `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` into `CLAUDE.md` |
 | Gemini | `GEMINI.md` | Copy `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` into `GEMINI.md` |
+| GitHub Copilot | `.github/copilot-instructions.md` or `.github/instructions/pom.instructions.md` | Copy the template content into the project instructions |
+| Cursor | `.cursor/rules/pom.mdc` or `.cursorrules` | Copy the template content into a project rule |
+| Windsurf | `.windsurf/rules/pom.md`, `.windsurfrules`, or `AGENTS.md` | Copy the template content into a project rule |
 | Kiro | `.kiro/steering/pom.md` | Copy the template content as a steering file |
+| Junie | `.junie/AGENTS.md` or `.junie/guidelines.md` | Copy the template content into the project guidelines |
+| Cline / Roo / Continue | tool-specific rules file or folder | Copy the template content into a POM-specific rule file |
 | Other agents | Agent-specific config | Adapt the template to the agent's instructions format |
 
 ### Start working
@@ -217,7 +230,7 @@ If the project already has a dominant documentation language, follow it. If the 
 
 This repository has its own `AGENTS.MD`. That file governs work on the POM repository itself. Do not copy it verbatim into target projects.
 
-For a target project, use `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` as the source for the project's agent instructions. The installer updates every existing supported file (`AGENTS.md`, `AGENTS.MD`, `CLAUDE.md`, `GEMINI.md`) so different coding agents see the same POM rules. If none exists, it creates `AGENTS.md`.
+For a target project, use `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` as the source for the project's agent instructions. The installer updates every existing supported agent instruction target so different coding agents see the same POM rules. If none exists, it creates `AGENTS.md`.
 
 Supported installation styles:
 
@@ -309,7 +322,7 @@ Small projects can start with a minimal POM setup. Mockups, official docs, struc
 Recommended minimum:
 
 ```text
-AGENTS.md / AGENTS.MD or equivalent
+agent instruction file or rule
 PROJECT_STATE.md
 wiki/index.md
 wiki/log.md
@@ -533,7 +546,7 @@ Canonical templates:
 | Template | Use |
 |---|---|
 | `ADR_TEMPLATE.md` | decision record |
-| `AGENTS_POM_SECTION_TEMPLATE.md` | POM section for `AGENTS.md`/`AGENTS.MD` or equivalent |
+| `AGENTS_POM_SECTION_TEMPLATE.md` | POM section for agent instruction files |
 | `CURRENT_PLAN_TEMPLATE.md` | short roadmap and current activities |
 | `POM_CONFIG_TEMPLATE.json` | portable documentation lint config |
 | `EXPERIMENT_TEMPLATE.md` | versioned experiment or one-shot work |

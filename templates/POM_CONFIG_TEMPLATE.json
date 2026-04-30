@@ -16,7 +16,7 @@
     "tests": "disabled"
   },
   "root": {
-    "allowedMarkdown": ["README.md", "AGENTS.md", "AGENTS.MD", "CLAUDE.md", "GEMINI.md", "PROJECT_STATE.md", "CURRENT_PLAN.md"]
+    "allowedMarkdown": ["README.md", "AGENTS.md", "AGENTS.MD", "agents.md", "CLAUDE.md", "GEMINI.md", "CONVENTIONS.md", "PROJECT_STATE.md", "CURRENT_PLAN.md"]
   },
   "analysis": {
     "allowedDirs": [],

@@ -9,7 +9,7 @@ Purpose: let me and the AI resume the project after days or weeks without reread
 
 First read only the essential files:
 - README.md;
-- `AGENTS.md`/`AGENTS.MD` or equivalent;
+- supported agent instruction files, if present;
 - existing PROJECT_STATE.md, if present;
 - roadmap/current plan, if present;
 - latest relevant ADRs;

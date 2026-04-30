@@ -119,7 +119,7 @@ npm run pom:init   # install or refresh the POM section and package scripts
 npm run pom:lint   # run POM documentation governance checks
 ```
 
-`pom:init` must update only the delimited POM section in every existing supported target agent instruction file (`AGENTS.md`, `AGENTS.MD`, `CLAUDE.md`, `GEMINI.md`). If none exists, it creates `AGENTS.md`. It must not copy `pom/AGENTS.MD` into the target project.
+`pom:init` must update only the delimited POM section in every existing supported target agent instruction file or rule folder. If none exists, it creates `AGENTS.md`. It must not copy `pom/AGENTS.MD` into the target project.
 
 `pom:lint` is project-specific and optional. If it is not configured, state that automatic POM checks are not active.
 

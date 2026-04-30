@@ -7,7 +7,7 @@ I want to create or update `pom.config.json` to configure POM documentation lint
 
 Before modifying files:
 1. read `pom/templates/POM_CONFIG_TEMPLATE.json`;
-2. read `README.md`, `AGENTS.md`/`AGENTS.MD` or equivalent, if present;
+2. read `README.md` and supported agent instruction files, if present;
 3. read the main folder structure without analyzing all content;
 4. check whether `wiki/`, `analysis/`, `decisions/`, `docs/`, `doc/`, `mockups/`, `tests/`, `src/`, `apps/`, `packages/`, `services/`, `frontend/`, `backend/`, and `PROJECT_STATE.md` exist;
 5. propose or preserve an `adoption` profile;

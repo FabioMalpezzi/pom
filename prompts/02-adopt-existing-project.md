@@ -41,7 +41,7 @@ The wiki, when present, must become the project's persistent and consolidated me
 If introducing POM for the first time, cite the conceptual origin of the wiki model:
 - Andrej Karpathy's LLM Wiki pattern;
 - URL: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f;
-- if available, use `pom/WIKI_METHOD.md` as the method reference copy and do not duplicate the full text in the project's `AGENTS.md`/`AGENTS.MD`.
+- if available, use `pom/WIKI_METHOD.md` as the method reference copy and do not duplicate the full text in project agent instruction files.
 
 Do not rename folders, move files, or impose a standard structure until I approve.
 
@@ -52,7 +52,7 @@ If you find documentation or source structures different from `docs/` and `src/`
 After approval:
 - create only missing files/folders;
 - add useful templates;
-- update README/AGENTS using `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md`;
+- update README and supported agent instruction files using `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md`;
 - if lint is enabled, use `pom/prompts/08-create-pom-config.md` to create or update `pom.config.json` from `pom/templates/POM_CONFIG_TEMPLATE.json`;
 - configure `tests.root`, `tests.areas`, `tests.recommendedLayout`, and `tests.severity` according to the existing test structure or the user's approved preference;
 - configure `documentation.officialRoot`, `documentation.existingRoots`, and `source.roots` according to the existing structure or the user's approved preference;

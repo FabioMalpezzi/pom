@@ -6,7 +6,7 @@ Use this prompt to set documentation governance, lint, and decisions.
 Set or update project documentation governance.
 
 Before modifying files:
-1. read README.md, `AGENTS.md`/`AGENTS.MD`, and the folder structure;
+1. read README.md, supported agent instruction files, and the folder structure;
 2. identify whether wiki, docs, analysis, decisions, mockups, and scripts already exist;
 3. propose what to add or change;
 4. wait for approval.
@@ -35,5 +35,5 @@ If implementing lint:
 - run lint at least once before proposing a pre-commit hook;
 - document how to install any pre-commit hook.
 
-Update `AGENTS.md`/`AGENTS.MD` with agent operating rules starting from `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md`.
+Update supported agent instruction files with agent operating rules starting from `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md`.
 ```

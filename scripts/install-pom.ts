@@ -2,7 +2,7 @@
 
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 const ROOT = process.cwd();
@@ -11,7 +11,66 @@ const END_MARKER = "<!-- POM:END -->";
 const HOOK_START_MARKER = "# POM:START pre-commit";
 const HOOK_END_MARKER = "# POM:END pre-commit";
 const TODAY = new Date().toISOString().slice(0, 10);
-const AGENT_INSTRUCTION_FILES = ["AGENTS.md", "AGENTS.MD", "CLAUDE.md", "GEMINI.md"];
+const FALLBACK_AGENT_INSTRUCTION_FILE = "AGENTS.md";
+
+const EXISTING_AGENT_INSTRUCTION_FILES = [
+  "AGENTS.md",
+  "AGENTS.MD",
+  "agents.md",
+  "CLAUDE.md",
+  "GEMINI.md",
+  "CONVENTIONS.md",
+  ".cursorrules",
+  ".clinerules",
+  ".windsurfrules",
+  ".github/copilot-instructions.md",
+  ".junie/guidelines.md",
+  ".junie/instructions.md",
+  ".junie/AGENTS.md",
+];
+
+const DIRECTORY_AGENT_INSTRUCTION_TARGETS = [
+  {
+    directory: ".claude/rules",
+    file: ".claude/rules/pom.md",
+    header: "",
+  },
+  {
+    directory: ".github/instructions",
+    file: ".github/instructions/pom.instructions.md",
+    header: "---\napplyTo: \"**\"\n---\n\n",
+  },
+  {
+    directory: ".cursor/rules",
+    file: ".cursor/rules/pom.mdc",
+    header: "---\ndescription: Project Operating Memory rules\nalwaysApply: true\n---\n\n",
+  },
+  {
+    directory: ".windsurf/rules",
+    file: ".windsurf/rules/pom.md",
+    header: "",
+  },
+  {
+    directory: ".kiro/steering",
+    file: ".kiro/steering/pom.md",
+    header: "",
+  },
+  {
+    directory: ".continue/rules",
+    file: ".continue/rules/pom.md",
+    header: "",
+  },
+  {
+    directory: ".roo/rules",
+    file: ".roo/rules/pom.md",
+    header: "",
+  },
+  {
+    directory: ".clinerules",
+    file: ".clinerules/pom.md",
+    header: "",
+  },
+];
 
 type ProfileName = "minimal" | "wiki" | "decisions" | "full" | "adopt" | "refresh" | "custom";
 
@@ -144,6 +203,10 @@ function pathExists(path: string): boolean {
   return existsSync(join(ROOT, path));
 }
 
+function pathIsDirectory(path: string): boolean {
+  return pathExists(path) && statSync(join(ROOT, path)).isDirectory();
+}
+
 function rootHasExactEntry(name: string): boolean {
   return readdirSync(ROOT).includes(name);
 }
@@ -189,28 +252,50 @@ function resolveLintScript(): string {
   return "pom/scripts/lint-doc-governance.ts";
 }
 
-function discoverAgentInstructionFiles(): string[] {
-  const existing = AGENT_INSTRUCTION_FILES.filter((file) => rootHasExactEntry(file));
-  return existing.length > 0 ? existing : ["AGENTS.md"];
+type AgentInstructionTarget = {
+  path: string;
+  header: string;
+};
+
+function discoverAgentInstructionTargets(): AgentInstructionTarget[] {
+  const existingFiles = EXISTING_AGENT_INSTRUCTION_FILES.filter((file) => {
+    if (file.includes("/")) return pathExists(file) && !pathIsDirectory(file);
+    return rootHasExactEntry(file) && !pathIsDirectory(file);
+  }).map((file) => ({ path: file, header: "" }));
+
+  const directoryFiles = DIRECTORY_AGENT_INSTRUCTION_TARGETS.filter((target) => pathIsDirectory(target.directory)).map((target) => ({
+    path: target.file,
+    header: target.header,
+  }));
+
+  const unique = new Map<string, AgentInstructionTarget>();
+  for (const target of [...existingFiles, ...directoryFiles]) unique.set(target.path, target);
+
+  if (unique.size === 0) {
+    unique.set(FALLBACK_AGENT_INSTRUCTION_FILE, { path: FALLBACK_AGENT_INSTRUCTION_FILE, header: "" });
+  }
+
+  return [...unique.values()];
 }
 
 function upsertAgentInstructionSections(): void {
   const templatePath = resolvePomSectionTemplate();
   const section = `${START_MARKER}\n${readText(templatePath).trim()}\n${END_MARKER}`;
   const markerRegex = new RegExp(`${escapeRegex(START_MARKER)}[\\s\\S]*?${escapeRegex(END_MARKER)}`);
-  const instructionFiles = discoverAgentInstructionFiles();
+  const instructionTargets = discoverAgentInstructionTargets();
 
-  for (const instructionPath of instructionFiles) {
-    const current = pathExists(instructionPath) ? readText(instructionPath) : "# Project Instructions\n";
+  for (const target of instructionTargets) {
+    const current = pathExists(target.path) ? readText(target.path) : target.header;
     const next = markerRegex.test(current)
       ? current.replace(markerRegex, section)
       : `${current.trimEnd()}\n\n${section}\n`;
 
     if (next !== current) {
-      writeText(instructionPath, next);
-      console.log(`Updated ${instructionPath} with the POM section.`);
+      mkdirSync(dirname(join(ROOT, target.path)), { recursive: true });
+      writeText(target.path, next);
+      console.log(`Updated ${target.path} with the POM section.`);
     } else {
-      console.log(`${instructionPath} already contains the current POM section.`);
+      console.log(`${target.path} already contains the current POM section.`);
     }
   }
 }

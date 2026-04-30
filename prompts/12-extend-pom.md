@@ -15,7 +15,7 @@ Before modifying files:
    - agent procedure -> `prompts/`;
    - recurring workflow -> `skills/`;
    - automatic check -> lint/script;
-5. report impacts on AGENTS, README, PROJECT_STATE, and lint;
+5. report impacts on agent instruction files, README, PROJECT_STATE, and lint;
 6. propose changes and wait for approval if the extension changes structure, workflow, or operating rules.
 
 Rules:

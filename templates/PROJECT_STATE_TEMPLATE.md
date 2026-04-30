@@ -33,7 +33,7 @@ Operational objective to complete now.
 ## Files To Read When Resuming
 
 - `README.md`
-- `AGENTS.md`/`AGENTS.MD`
+- supported agent instruction files
 - `PROJECT_STATE.md`
 
 ## Do Not Do Without Decision

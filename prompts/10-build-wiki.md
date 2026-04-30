@@ -6,7 +6,7 @@ Use this prompt to build or complete a project's initial wiki.
 I want to create or complete the initial project wiki.
 
 Before modifying files:
-1. read `PROJECT_STATE.md`, `README.md`, `AGENTS.md`/`AGENTS.MD` or equivalent, if present;
+1. read `PROJECT_STATE.md`, `README.md`, and supported agent instruction files, if present;
 2. read `WIKI_METHOD.md` and `skills/wiki.md`, if present;
 3. read `pom.config.json`, if present;
 4. detect available sources without analyzing everything deeply:

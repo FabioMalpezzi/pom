@@ -22,7 +22,7 @@ Then update, when present and relevant:
 - wiki/index.md;
 - wiki pages impacted by new knowledge;
 - ADRs in decisions/;
-- README/AGENTS if the method changed.
+- README and agent instruction files if the method changed.
 
 Git:
 - use Git for fine-grained change history;

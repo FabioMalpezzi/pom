@@ -15,12 +15,12 @@ Before modifying files:
 7. wait for my approval.
 
 Adoption profiles:
-- minimal: AGENTS hook + package scripts + `pom.config.json`; no wiki, docs, analysis, mockups, or tests.
+- minimal: agent instruction hook + package scripts + `pom.config.json`; no wiki, docs, analysis, mockups, or tests.
 - wiki: minimal + `wiki/index.md` and `wiki/log.md` for persistent project knowledge.
 - decisions: minimal + `decisions/` and ADR index generation from ADR metadata.
 - full: wiki + decisions + `PROJECT_STATE.md` + current planning support for long-running projects.
 - adopt: preserve an existing structure and map POM to it.
-- refresh: update only the POM AGENTS section and package scripts.
+- refresh: update only the POM section in supported agent instruction targets and package scripts.
 - custom: ask which POM modules to enable.
 
 If using the CLI, explain that these profiles map to:
@@ -70,10 +70,10 @@ The method must distinguish:
 
 The wiki must be treated as cumulative project memory, not as temporary information retrieval.
 
-In README/AGENTS, cite the conceptual origin of the wiki model:
+In README and agent instruction files, cite the conceptual origin of the wiki model:
 - Andrej Karpathy's LLM Wiki pattern;
 - URL: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f;
-- if available, use `pom/WIKI_METHOD.md` as the method reference copy and do not duplicate the full text in the project's `AGENTS.md`/`AGENTS.MD`.
+- if available, use `pom/WIKI_METHOD.md` as the method reference copy and do not duplicate the full text in project agent instruction files.
 
 Use POM templates:
 - pom/templates/AGENTS_POM_SECTION_TEMPLATE.md;
@@ -89,11 +89,11 @@ If documentation lint should be enabled:
 - if the user prefers a structure other than `tests/<module-or-area>/...`, configure lint accordingly;
 - collect the user's preferences for `docs/doc` and source roots (`src`, `apps`, `packages`, `services`, etc.) before configuring `documentation` and `source`;
 - if `npm run pom:lint` does not exist and POM is installed as `pom/`, run or propose `node --experimental-strip-types pom/scripts/install-pom.ts`;
-- if lint is installed, document the command in `package.json`, `README.md`, and `AGENTS.md`/`AGENTS.MD`;
+- if lint is installed, document the command in `package.json`, `README.md`, and project agent instruction files;
 - propose a pre-commit hook only after lint passes at least once.
 
 When I approve, create only the minimum necessary structure and document:
-- operating rules in `AGENTS.md`/`AGENTS.MD` or equivalent;
+- operating rules in supported project agent instruction files;
 - method README;
 - pom.config.json copied from the POM template and adapted to the project, if lint is enabled;
 - wiki/index.md and wiki/log.md, if the wiki is enabled;
