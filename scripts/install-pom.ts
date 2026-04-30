@@ -11,6 +11,7 @@ const END_MARKER = "<!-- POM:END -->";
 const HOOK_START_MARKER = "# POM:START pre-commit";
 const HOOK_END_MARKER = "# POM:END pre-commit";
 const TODAY = new Date().toISOString().slice(0, 10);
+const AGENT_INSTRUCTION_FILES = ["AGENTS.md", "AGENTS.MD", "CLAUDE.md", "GEMINI.md"];
 
 type ProfileName = "minimal" | "wiki" | "decisions" | "full" | "adopt" | "refresh" | "custom";
 
@@ -34,7 +35,7 @@ type PackageJson = {
 const profiles: Record<ProfileName, { label: string; description: string; adoption: AdoptionConfig }> = {
   minimal: {
     label: "Minimal",
-    description: "Installs only AGENTS.md/AGENTS.MD, package scripts, and pom.config.json. No wiki, docs, analysis, mockups, or tests.",
+    description: "Installs only agent instruction file sections, package scripts, and pom.config.json. No wiki, docs, analysis, mockups, or tests.",
     adoption: {
       profile: "minimal",
       wiki: "disabled",
@@ -109,7 +110,7 @@ const profiles: Record<ProfileName, { label: string; description: string; adopti
   },
   refresh: {
     label: "Refresh Existing POM",
-    description: "Updates only AGENTS.md/AGENTS.MD and package scripts. Does not change pom.config.json or create governance folders.",
+    description: "Updates only agent instruction file sections and package scripts. Does not change pom.config.json or create governance folders.",
     adoption: {
       profile: "refresh",
       wiki: "disabled",
@@ -188,22 +189,29 @@ function resolveLintScript(): string {
   return "pom/scripts/lint-doc-governance.ts";
 }
 
-function upsertAgentsSection(): void {
+function discoverAgentInstructionFiles(): string[] {
+  const existing = AGENT_INSTRUCTION_FILES.filter((file) => rootHasExactEntry(file));
+  return existing.length > 0 ? existing : ["AGENTS.md"];
+}
+
+function upsertAgentInstructionSections(): void {
   const templatePath = resolvePomSectionTemplate();
   const section = `${START_MARKER}\n${readText(templatePath).trim()}\n${END_MARKER}`;
-  const agentsPath = rootHasExactEntry("AGENTS.md") ? "AGENTS.md" : rootHasExactEntry("AGENTS.MD") ? "AGENTS.MD" : "AGENTS.md";
-  const current = pathExists(agentsPath) ? readText(agentsPath) : "# Project Instructions\n";
-
   const markerRegex = new RegExp(`${escapeRegex(START_MARKER)}[\\s\\S]*?${escapeRegex(END_MARKER)}`);
-  const next = markerRegex.test(current)
-    ? current.replace(markerRegex, section)
-    : `${current.trimEnd()}\n\n${section}\n`;
+  const instructionFiles = discoverAgentInstructionFiles();
 
-  if (next !== current) {
-    writeText(agentsPath, next);
-    console.log(`Updated ${agentsPath} with the POM section.`);
-  } else {
-    console.log(`${agentsPath} already contains the current POM section.`);
+  for (const instructionPath of instructionFiles) {
+    const current = pathExists(instructionPath) ? readText(instructionPath) : "# Project Instructions\n";
+    const next = markerRegex.test(current)
+      ? current.replace(markerRegex, section)
+      : `${current.trimEnd()}\n\n${section}\n`;
+
+    if (next !== current) {
+      writeText(instructionPath, next);
+      console.log(`Updated ${instructionPath} with the POM section.`);
+    } else {
+      console.log(`${instructionPath} already contains the current POM section.`);
+    }
   }
 }
 
@@ -518,7 +526,7 @@ async function main(): Promise<void> {
   const profileName = await chooseProfile();
   const adoption = await customizeAdoption(profiles[profileName].adoption);
 
-  upsertAgentsSection();
+  upsertAgentInstructionSections();
   upsertPackageScripts();
   installPreCommitHook();
 

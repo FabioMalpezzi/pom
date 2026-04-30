@@ -12,7 +12,7 @@ https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
 
 The pattern is used as a conceptual reference. Operating rules, templates, and local adaptations are part of the project's POM method.
 
-If available, read `pom/WIKI_METHOD.md` as the LLM Wiki reference copy and keep only project-specific rules in the target project's `AGENTS.md`/`AGENTS.MD`.
+If available, read `pom/WIKI_METHOD.md` as the LLM Wiki reference copy and keep only project-specific rules in the target project's agent instruction files.
 
 ## Language Policy
 
@@ -119,7 +119,7 @@ npm run pom:init   # install or refresh the POM section and package scripts
 npm run pom:lint   # run POM documentation governance checks
 ```
 
-`pom:init` must update only the delimited POM section in the target project's `AGENTS.md`/`AGENTS.MD`. It must not copy `pom/AGENTS.MD` into the target project.
+`pom:init` must update only the delimited POM section in every existing supported target agent instruction file (`AGENTS.md`, `AGENTS.MD`, `CLAUDE.md`, `GEMINI.md`). If none exists, it creates `AGENTS.md`. It must not copy `pom/AGENTS.MD` into the target project.
 
 `pom:lint` is project-specific and optional. If it is not configured, state that automatic POM checks are not active.
 

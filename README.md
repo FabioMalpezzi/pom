@@ -67,7 +67,8 @@ The bootstrap script:
 - clones POM into `pom/` (or pulls if it already exists);
 - runs the interactive installer;
 - lets you choose an adoption profile (minimal, wiki, decisions, full, adopt, refresh, custom);
-- creates `AGENTS.md`, `package.json` scripts, `pom.config.json`, and governance folders based on the chosen profile.
+- updates the POM section in every existing supported agent instruction file (`AGENTS.md`, `AGENTS.MD`, `CLAUDE.md`, `GEMINI.md`), or creates `AGENTS.md` if none exists;
+- creates `package.json` scripts, `pom.config.json`, and governance folders based on the chosen profile.
 - installs or updates `.git/hooks/pre-commit` with POM checks when the project is a Git repository.
 
 You can also pass a profile directly:
@@ -83,7 +84,7 @@ curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-po
 node bootstrap-pom.mjs --profile refresh
 ```
 
-Refresh updates `pom/`, the POM section in `AGENTS.md`, package scripts, and the pre-commit hook. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
+Refresh updates `pom/`, the POM section in every existing supported agent instruction file, package scripts, and the pre-commit hook. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
 
 If you customized or translated templates, keep them outside `pom/` before refreshing, for example:
 
@@ -104,7 +105,7 @@ Then point `pom.config.json` to those project-owned templates:
 }
 ```
 
-Template paths in `pom.config.json` are relative to the target project root, where `pom.config.json`, `AGENTS.md`, `package.json`, and `pom/` live. For example, `project-templates/ADR_TEMPLATE.md` means `<project-root>/project-templates/ADR_TEMPLATE.md`, not `<project-root>/pom/project-templates/ADR_TEMPLATE.md`.
+Template paths in `pom.config.json` are relative to the target project root, where `pom.config.json`, agent instruction files, `package.json`, and `pom/` live. For example, `project-templates/ADR_TEMPLATE.md` means `<project-root>/project-templates/ADR_TEMPLATE.md`, not `<project-root>/pom/project-templates/ADR_TEMPLATE.md`.
 
 Do not customize files directly under `pom/`: updates may overwrite them or create Git conflicts.
 
@@ -137,7 +138,8 @@ my-project/
     skills/
     templates/
     scripts/
-  AGENTS.md             <- project agent instructions (references pom/)
+  AGENTS.md             <- project agent instructions, when used (references pom/)
+  CLAUDE.md             <- also updated when already present
   pom.config.json       <- project-specific config
   wiki/                 <- if wiki profile enabled
   decisions/            <- if decisions profile enabled
@@ -146,7 +148,7 @@ my-project/
 
 ### Non-npm projects
 
-If the project does not use npm, copy the POM section manually into the agent instructions file:
+If the project does not use npm, copy the POM section manually into every agent instruction file used by the project:
 
 | Agent | Instructions file | What to do |
 |---|---|---|
@@ -215,7 +217,7 @@ If the project already has a dominant documentation language, follow it. If the 
 
 This repository has its own `AGENTS.MD`. That file governs work on the POM repository itself. Do not copy it verbatim into target projects.
 
-For a target project, use `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` as the source for the project's agent instructions. Add or adapt that section inside the target project's existing `AGENTS.md`/`AGENTS.MD`, or create a new `AGENTS.md` if none exists.
+For a target project, use `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` as the source for the project's agent instructions. The installer updates every existing supported file (`AGENTS.md`, `AGENTS.MD`, `CLAUDE.md`, `GEMINI.md`) so different coding agents see the same POM rules. If none exists, it creates `AGENTS.md`.
 
 Supported installation styles:
 
