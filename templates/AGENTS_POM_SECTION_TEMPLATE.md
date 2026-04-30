@@ -228,6 +228,16 @@ Rules:
 - do not treat a skill as a replacement for prompts or templates;
 - if no suitable skill exists, use POM prompts directly and propose a new skill only if the workflow becomes recurring.
 
+Common entry points:
+
+| Need | Skill |
+|---|---|
+| Query, build, or maintain wiki memory | `pom/skills/wiki.md` |
+| Classify or set document status | `pom/skills/status.md` |
+| Defer or park future work | `pom/skills/defer.md` |
+| Sync POM framework changes into this project | `pom/skills/sync.md` |
+| Validate governance after significant work | `pom/skills/validate.md` |
+
 ## Planning
 
 Use this logical hierarchy for planned work (it organizes work, not folders):
