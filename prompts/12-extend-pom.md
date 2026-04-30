@@ -15,6 +15,7 @@ Before modifying files:
    - agent procedure -> `prompts/`;
    - recurring workflow -> `skills/`;
    - automatic check -> lint/script;
+   - source/project alignment -> `prompts/17-sync-pom-framework.md`;
 5. report impacts on agent instruction files, README, PROJECT_STATE, and lint;
 6. propose changes and wait for approval if the extension changes structure, workflow, or operating rules.
 
@@ -25,6 +26,7 @@ Rules:
 - a prompt must describe what to read, what to propose, when to ask for approval, and what to verify;
 - a template must remain the starting point for real documents;
 - lint should automate only stable and verifiable rules;
+- when changing POM itself for a project that uses POM as a submodule or vendored folder, use the sync workflow after the source POM change;
 - if a change affects project restart, update `PROJECT_STATE.md`;
 - if a structural decision changes, evaluate whether an ADR is needed.
 

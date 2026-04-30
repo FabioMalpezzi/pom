@@ -14,6 +14,11 @@
 
 `templates/TASK_PLAN_TEMPLATE.md`
 
+## Related Skills
+
+- Use `skills/status.md` first when the artifact might be a spec, ADR, wiki page, or deferred work instead of an executable task.
+- Use `skills/defer.md` when the work should be preserved but not implemented now.
+
 ## Config
 
 Read `pom.config.json` to respect analysis/task/test structure, source roots, official docs, and control severities before proposing verifications or paths.

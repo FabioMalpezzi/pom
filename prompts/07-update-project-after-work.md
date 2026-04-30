@@ -29,6 +29,12 @@ Git:
 - do not add manual changelogs to specs/ADRs/PROJECT_STATE unless explicitly requested;
 - if structural changes were made, suggest or create a descriptive commit according to the project workflow.
 
+Lint-driven closeout:
+- run `npm run pom:lint` when available after governed document changes;
+- if lint reports errors or warnings, fix them before declaring the work complete;
+- if a warning is intentionally accepted, document the reason and next action;
+- do not hide divergence between code, docs, tasks, ADRs, and project state.
+
 Do not update everything automatically: update only what is actually impacted. If an answer, analysis, or decision has reusable value, consider archiving it in the wiki instead of leaving it only in chat.
 
 The final summary must include:

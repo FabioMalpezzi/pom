@@ -16,6 +16,7 @@
 - Use Git for fine-grained history.
 - Do not update everything automatically.
 - Run available lint/tests.
+- Treat lint findings as work to resolve before closing. If a finding is intentionally accepted, document why.
 
 ## Config
 

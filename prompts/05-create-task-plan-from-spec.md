@@ -5,6 +5,15 @@ Use this prompt to turn a spec, decision, or analysis into verifiable work.
 ```text
 Read the indicated spec/ADR/analysis and create an operational task plan.
 
+Before creating a task, classify the artifact:
+- decision or boundary -> ADR;
+- intended behavior without immediate implementation -> spec;
+- reusable knowledge -> wiki;
+- work to execute and verify -> task plan.
+
+If the user explicitly wants to preserve work without implementing it, use
+`prompts/16-defer-work.md` instead of creating an active task.
+
 Use this logical hierarchy (it organizes work, not folders):
 
 Roadmap
@@ -16,6 +25,7 @@ Roadmap
 Verification happens at every level, not only at the bottom. Place E2E and user-flow tests at Task or Workstream level, not at Step level.
 
 For each task, include:
+- status;
 - origin: spec, ADR, wiki, analysis, mockup, stakeholder decision;
 - objective;
 - phase;
@@ -29,6 +39,7 @@ For each task, include:
 
 Rules:
 - do not create generic tasks that cannot be verified;
+- do not create an active task for deliberately postponed work; mark it Deferred or use the defer workflow;
 - every phase must close with concrete verification;
 - if the work is documentation-only, include lint + critical analysis for contradictions, gaps, and security/privacy risks;
 - if the work is implementation, include technical tests and a user scenario;

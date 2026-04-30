@@ -7,6 +7,7 @@
 - Create a new POM skill.
 - Modify POM prompts, templates, or configuration.
 - Automate a check through lint or scripts.
+- Apply a POM framework improvement to both the source POM repository and a target project's `pom/`.
 
 ## Canonical Prompt
 
@@ -15,6 +16,7 @@
 ## Key Rules
 
 - Choose the smallest necessary level: config, template, prompt, skill, or lint.
+- Use `skills/sync.md` after a framework-level change when a target project must be aligned to the new POM commit.
 - Do not turn local adaptations into general rules without a reason.
 - A skill must stay short and point to a canonical prompt.
 - After methodological extensions, update `PROJECT_STATE.md` if the operating context changes.

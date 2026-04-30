@@ -25,6 +25,8 @@ Use the smallest workflow that matches your situation:
 | Resume after a pause | `skills/pulse.md` |
 | Ask or maintain the wiki | `skills/wiki.md` |
 | Extend POM | `skills/extend.md` |
+| Defer work without implementing | `skills/defer.md` |
+| Sync POM source to a project | `skills/sync.md` |
 
 ### How to talk to the agent
 
@@ -42,6 +44,9 @@ Read pom/skills/pulse.md and update PROJECT_STATE.md.
 
 # Turn a spec into tasks
 Read pom/skills/plan.md and create a task plan from specs/my-feature.md.
+
+# Defer future work
+Read pom/skills/defer.md and park this topic without implementing it.
 
 # End-of-session handoff
 Read pom/skills/handoff.md and update the project state.
