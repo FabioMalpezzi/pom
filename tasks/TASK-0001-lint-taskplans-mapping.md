@@ -1,5 +1,9 @@
 # TASK-0001 - Lint taskPlans Mapping
 
+## Status
+
+Planned
+
 ## Origin
 
 | Type | Reference |

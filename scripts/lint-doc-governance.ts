@@ -69,6 +69,12 @@ type LintConfig = {
     areaField: string;
     requireTemplateSections: boolean;
   };
+  taskPlans: {
+    root: string;
+    taskPathPattern: string;
+    indexPath: string;
+    requireTemplateSections: boolean;
+  };
   mockups: {
     packagesDir: string;
     manifestName: string;
@@ -169,6 +175,12 @@ const defaultConfig: LintConfig = {
     areaField: "Area",
     requireTemplateSections: true,
   },
+  taskPlans: {
+    root: "tasks",
+    taskPathPattern: String.raw`^tasks/.+\.md$`,
+    indexPath: "tasks/README.md",
+    requireTemplateSections: false,
+  },
   mockups: {
     packagesDir: "mockups/packages",
     manifestName: "MOCK_MANIFEST.md",
@@ -217,6 +229,7 @@ const templatePaths = {
 const requiredAdrSections = sectionsFromTemplate(templatePaths.adr);
 const requiredDocsSections = sectionsFromTemplate(templatePaths.doc);
 const requiredMockManifestSections = sectionsFromTemplate(templatePaths.mockManifest);
+const requiredTaskPlanSections = sectionsFromTemplate(templatePaths.taskPlan);
 
 const wikiCategorySections = config.wiki.categorySections;
 
@@ -316,6 +329,16 @@ function mergeConfig(base: LintConfig, raw: Record<string, unknown>): LintConfig
         raw,
         "decisions.requireTemplateSections",
         base.decisions.requireTemplateSections,
+      ),
+    },
+    taskPlans: {
+      root: readString(raw, "taskPlans.root", base.taskPlans.root),
+      taskPathPattern: readString(raw, "taskPlans.taskPathPattern", base.taskPlans.taskPathPattern),
+      indexPath: readString(raw, "taskPlans.indexPath", base.taskPlans.indexPath),
+      requireTemplateSections: readBoolean(
+        raw,
+        "taskPlans.requireTemplateSections",
+        base.taskPlans.requireTemplateSections,
       ),
     },
     mockups: {
@@ -443,6 +466,7 @@ function validateConfig(current: LintConfig): void {
     "wiki.logEntryPattern": current.wiki.logEntryPattern,
     "decisions.adrPathPattern": current.decisions.adrPathPattern,
     "decisions.datePattern": current.decisions.datePattern,
+    "taskPlans.taskPathPattern": current.taskPlans.taskPathPattern,
     "mockups.manifestTypePattern": current.mockups.manifestTypePattern,
     "mockups.manifestDatePattern": current.mockups.manifestDatePattern,
     "mockups.reconciliationFilePattern": current.mockups.reconciliationFilePattern,
@@ -610,6 +634,15 @@ function parseMetadataTable(text: string): Map<string, string> {
   return fields;
 }
 
+function parseDocumentStatus(text: string): string {
+  const fields = parseMetadataTable(text);
+  const metadataStatus = fields.get("status") ?? fields.get("stato") ?? "";
+  if (isUsableMetadata(metadataStatus)) return metadataStatus;
+
+  const statusSection = text.match(/^## Status\s*\n+([^\n#]+)/m)?.[1]?.trim() ?? "";
+  return statusSection;
+}
+
 function stripDecisionRoot(file: string): string {
   const root = config.decisions.root.replace(/\\/g, "/").replace(/\/$/, "");
   if (root && file.startsWith(`${root}/`)) {
@@ -750,6 +783,10 @@ function checkDecisions(): void {
       add("warning", "adr-date", "ADR is missing a YYYY-MM-DD date in the opening metadata table.", file);
     }
 
+    if (!isUsableMetadata(status)) {
+      add("warning", "adr-status", "ADR is missing a Status field in the opening metadata.", file);
+    }
+
     if (!isUsableMetadata(category)) {
       add("warning", "adr-category", `ADR is missing a classifiable ${config.decisions.categoryField} in the opening metadata table.`, file);
     }
@@ -762,6 +799,35 @@ function checkDecisions(): void {
   }
 
   writeAdrIndex(indexEntries);
+}
+
+function checkTaskPlans(): void {
+  const taskRoot = config.taskPlans.root || "tasks";
+  if (!pathExists(taskRoot)) return;
+
+  const taskPattern = new RegExp(config.taskPlans.taskPathPattern);
+  const indexPath = normalize(config.taskPlans.indexPath || join(taskRoot, "README.md")).replace(/\\/g, "/");
+  const taskFiles = walkFiles(taskRoot, (path) => path.endsWith(".md") && taskPattern.test(path));
+
+  for (const file of taskFiles) {
+    const normalizedFile = normalize(file).replace(/\\/g, "/");
+    if (normalizedFile === indexPath) continue;
+
+    const text = readText(file);
+    const status = parseDocumentStatus(text);
+
+    if (!isUsableMetadata(status)) {
+      add("warning", "task-status", "Task plan is missing a Status section or metadata field.", file);
+    }
+
+    if (config.taskPlans.requireTemplateSections) {
+      for (const section of requiredTaskPlanSections) {
+        if (!text.includes(section)) {
+          add("error", "task-required-section", `Task plan is missing required section: ${section}`, file);
+        }
+      }
+    }
+  }
 }
 
 function checkDocs(): void {
@@ -1229,6 +1295,7 @@ checkAnalysisLayout();
 checkDocumentationRoots();
 checkSourceRoots();
 checkDecisions();
+checkTaskPlans();
 checkDocs();
 checkMockReconciliation();
 checkWikiDocuments();
