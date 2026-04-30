@@ -19,8 +19,11 @@
     "allowedMarkdown": ["README.md", "AGENTS.md", "AGENTS.MD", "agents.md", "CLAUDE.md", "GEMINI.md", "CONVENTIONS.md", "PROJECT_STATE.md", "CURRENT_PLAN.md"]
   },
   "analysis": {
+    "root": "analysis",
     "allowedDirs": [],
-    "allowMarkdownAtRoot": false
+    "allowMarkdownAtRoot": false,
+    "recommendedPath": "analysis/<analysis-or-workstream>/<analysis>.md",
+    "namespaceConvention": "Use the same analysis-or-workstream segment used by related task plans, tests, fixtures, and evidence where practical. Existing imported analysis namespaces should be preserved unless a migration is explicitly approved."
   },
   "templates": {
     "adr": "pom/templates/ADR_TEMPLATE.md",
@@ -68,6 +71,8 @@
   "taskPlans": {
     "root": "tasks",
     "taskPathPattern": "^tasks/.+\\.md$",
+    "recommendedPath": "tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md",
+    "namespaceConvention": "Reuse the same analysis-or-workstream segment for related analysis, tasks, tests, fixtures, and evidence where practical.",
     "indexPath": "tasks/README.md",
     "requireTemplateSections": true
   },
@@ -83,6 +88,8 @@
   "tests": {
     "root": "tests",
     "areas": [],
+    "recommendedPath": "tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}",
+    "namespaceConvention": "Keep existing framework/service-local tests where the project expects them. Use analysis/workstream namespaces for new cross-system tests, E2E tests, fixtures, and evidence tied to task plans.",
     "recommendedLayout": ["e2e", "integration", "fixtures", "evidence"],
     "crossSystemDir": "cross-system",
     "preferExistingStructure": true,

@@ -24,7 +24,8 @@ Make `scripts/lint-doc-governance.ts` understand the `taskPlans` configuration s
 ## Steps
 
 - [ ] Add `taskPlans` to the lint config type and default config.
-- [ ] Merge `taskPlans.root`, `taskPlans.taskPathPattern`, `taskPlans.indexPath`, and `taskPlans.requireTemplateSections` from `pom.config.json`.
+- [ ] Merge `taskPlans.root`, `taskPlans.taskPathPattern`, optional `taskPlans.recommendedPath`, optional `taskPlans.namespaceConvention`, `taskPlans.indexPath`, and `taskPlans.requireTemplateSections` from `pom.config.json`.
+- [ ] Merge `analysis.root`, optional `analysis.recommendedPath`, and optional `analysis.namespaceConvention` from `pom.config.json` for namespace guidance.
 - [ ] Validate task-plan files under `taskPlans.root` when `adoption.tasks` is `light` or `structured`.
 - [ ] If `requireTemplateSections=true`, check task files against `templates/TASK_PLAN_TEMPLATE.md`.
 - [ ] Ensure lint never assumes `tasks/` when a project maps task plans elsewhere.
@@ -34,7 +35,7 @@ Make `scripts/lint-doc-governance.ts` understand the `taskPlans` configuration s
 ## Verification
 
 - [ ] `npm run pom:lint` passes in `/Users/fabio/WA/pom`.
-- [ ] A sample config with `taskPlans.root = "tasks"` is accepted.
+- [ ] A sample config with `taskPlans.root = "tasks"` and `recommendedPath = "tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md"` is accepted.
 - [ ] A sample config with a different root, for example `docs/delivery/tasks`, is accepted.
 - [ ] Missing or malformed task plans produce warnings, not hard failures, unless the rule is objective.
 

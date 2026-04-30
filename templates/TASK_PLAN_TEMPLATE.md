@@ -35,7 +35,7 @@ Task-level verification (integration / single-feature E2E):
 
 - [ ] Integration or E2E test for this task's scope
 - [ ] At least 2 positive user use cases and at least 1 handled-error user use case, where possible
-- [ ] Test location consistent with the project structure or the POM-proposed `tests/<module-or-area>/...`
+- [ ] Test location consistent with the project structure or the POM-proposed `tests/<analysis-or-workstream-or-module>/...`, reusing the task analysis/workstream namespace where practical
 
 Step-level verification (atomic checks, tracked within each step):
 

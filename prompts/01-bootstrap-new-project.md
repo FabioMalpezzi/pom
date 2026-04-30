@@ -65,7 +65,8 @@ The method must distinguish:
 - src/source: project source code, only if the project has code;
 - mockups: mockup packages with manifests, only if the project uses mockups;
 - scripts: lint and automation;
-- tests: optional operational verification, organized by module/area if the project has code or tests;
+- analysis: optional synthesis, organized by analysis/workstream namespace when enabled or needed;
+- tests: optional operational verification, organized by analysis, workstream, or module if the project has code or tests;
 - project state / roadmap / current plan: quick restart point.
 
 The wiki must be treated as cumulative project memory, not as temporary information retrieval.
@@ -86,7 +87,7 @@ Use POM templates:
 If documentation lint should be enabled:
 - use `pom/prompts/08-create-pom-config.md` to create `pom.config.json`;
 - collect the user's test-structure preferences before configuring the `tests` section of `pom.config.json`;
-- if the user prefers a structure other than `tests/<module-or-area>/...`, configure lint accordingly;
+- if the user prefers a structure other than `tests/<analysis-or-workstream-or-module>/...`, configure lint accordingly;
 - collect the user's preferences for `docs/doc` and source roots (`src`, `apps`, `packages`, `services`, etc.) before configuring `documentation` and `source`;
 - if `npm run pom:lint` does not exist and POM is installed as `pom/`, run or propose `node --experimental-strip-types pom/scripts/install-pom.ts`;
 - if lint is installed, document the command in `package.json`, `README.md`, and project agent instruction files;
@@ -104,7 +105,7 @@ When I approve, create only the minimum necessary structure and document:
 After creation:
 - run `npm run pom:lint`, if available;
 - if lint is not installed yet, clearly state that automatic checking is not active;
-- if automated tests are needed, propose `tests/<module-or-area>/{e2e,integration,fixtures,evidence}` and `tests/cross-system/`, but adapt `pom.config.json` to user preferences;
+- if automated tests are needed, propose `tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}` and `tests/cross-system/`, but adapt `pom.config.json` to user preferences;
 - do not create empty test folders if they are not needed immediately;
 - do not create `src/`, `docs/`, or `doc/` if they are not needed immediately or if the user prefers another structure;
 - update `PROJECT_STATE.md`, if it was created or if the operating method changed.

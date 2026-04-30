@@ -19,11 +19,19 @@
 
 ## Config
 
-Read `pom.config.json` to know approved test/docs/source roots and which warnings should be treated as errors.
+Read `pom.config.json` to know approved analysis/task/test/docs/source roots and which warnings should be treated as errors.
+
+For analysis/task/test artifacts, verify that either:
+
+- they follow the configured namespace convention, for example `analysis/<analysis-or-workstream>/...`, `tasks/<analysis-or-workstream>/P<priority-or-phase>/...`, and `tests/<analysis-or-workstream-or-module>/...`; or
+- they intentionally follow an existing service/framework structure recorded in config or local project rules.
+
+Do not request folder moves as part of verification unless the task explicitly includes migration.
 
 ## Output
 
 - result;
 - evidence;
 - issues;
+- namespace/config consistency notes;
 - follow-up.

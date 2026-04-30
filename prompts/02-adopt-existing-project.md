@@ -36,7 +36,7 @@ Adoption profiles:
 
 For existing projects, prefer `adopt` or `custom` unless the user explicitly wants a stronger profile. Save the selected profile in `pom.config.json` under `adoption`. Do not create folders for disabled modules, and do not create optional folders unless they are immediately needed or approved.
 
-General mapping rule: map existing project structures first, then propose migrations separately only when the user asks for cleanup. This applies to decisions, docs, source, tests, wiki, analysis, mockups, planning, and handoff files.
+General mapping rule: map existing project structures first, then propose migrations separately only when the user asks for cleanup. This applies to decisions, docs, source, tests, wiki, analysis, mockups, planning, and handoff files. For new POM-owned analysis/task/test material, prefer a shared analysis/workstream namespace such as `analysis/governance-core/...`, `tasks/governance-core/P0/...`, and `tests/governance-core/...`.
 
 The wiki, when present, must become the project's persistent and consolidated memory. It must not replace decisions, code, tests, or official documentation.
 
@@ -47,7 +47,7 @@ If introducing POM for the first time, cite the conceptual origin of the wiki mo
 
 Do not rename folders, move files, or impose a standard structure until I approve.
 
-If you find an existing test structure different from `tests/<module-or-area>/...`, ask whether to adapt to the existing structure or introduce/adapt the POM proposal. Do not move tests without approval. The user's choice must guide the `tests` section of `pom.config.json`.
+If you find an existing test structure different from `tests/<analysis-or-workstream-or-module>/...`, ask whether to adapt to the existing structure or introduce/adapt the POM proposal. Do not move tests without approval. The user's choice must guide the `tests` section of `pom.config.json`. When configuring new POM-owned analysis/task/test material, prefer `analysis/<analysis-or-workstream>/...`, `tasks/<analysis-or-workstream>/P<priority-or-phase>/...`, and reuse the same namespace for related tests/evidence where practical.
 
 If you find existing ADRs or architecture decisions outside `decisions/`, prefer mapping `decisions.root`, `decisions.adrPathPattern`, and `decisions.indexPath` to the existing convention before proposing a migration. Do not move decision files without approval.
 

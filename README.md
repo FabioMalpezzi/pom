@@ -366,7 +366,7 @@ Use `Roadmap` only when the project needs multi-phase direction or coordination 
 
 ## Test Convention
 
-POM proposes an optional test structure: `tests/<module-or-area>/{e2e,integration,fixtures,evidence}` and `tests/cross-system/`. It must not be imposed if the project already has a different convention. If the agent finds an existing structure, it must ask before changing anything.
+POM proposes matching namespaces for analysis, task plans, and verification evidence. For new synthesis, prefer `analysis/<analysis-or-workstream>/<analysis>.md`; for task plans, prefer `tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md`; for cross-system verification, prefer `tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}` and `tests/cross-system/`. When tests or evidence validate a specific analysis/workstream, reuse the same namespace, for example `analysis/governance-core/...`, `tasks/governance-core/P0/...`, and `tests/governance-core/...`. Existing project conventions must not be moved automatically; if the agent finds an existing structure, it must ask before changing anything.
 
 Lint reads the `tests` section of `pom.config.json`. See `prompts/05-create-task-plan-from-spec.md` and `prompts/06-review-task-phase.md` for test planning and verification rules.
 
@@ -486,9 +486,9 @@ Allowed values:
 | `mockups` | `enabled`, `disabled` |
 | `planning` | `light`, `structured` |
 | `tasks` | `light`, `structured` |
+| `tests` | `disabled`, `existing`, `pom` |
 
 Task-plan location is configured separately under `taskPlans`. This keeps `adoption.tasks` as the planning style while allowing each project to place operational task files where they fit best.
-| `tests` | `disabled`, `existing`, `pom` |
 
 Profile meanings:
 
@@ -516,9 +516,10 @@ For existing projects, existing structures do not have to be moved into canonica
 - decisions: `decisions.root`, `decisions.adrPathPattern`, `decisions.indexPath`, and `decisions.requireTemplateSections`;
 - documentation: `documentation.officialRoot`, `documentation.existingRoots`, and migration policy flags;
 - source: `source.roots`, `source.knownRootCandidates`, and migration policy flags;
-- tests: `tests.root`, `tests.areas`, `tests.recommendedLayout`, and migration policy flags;
-- task plans: `taskPlans.root`, `taskPlans.taskPathPattern`, `taskPlans.indexPath`, and template strictness;
-- mockups, wiki, and analysis: their configured roots, patterns, and enabled/optional/disabled adoption state.
+- tests: `tests.root`, `tests.areas`, optional `tests.recommendedPath`, optional `tests.namespaceConvention`, `tests.recommendedLayout`, and migration policy flags;
+- task plans: `taskPlans.root`, `taskPlans.taskPathPattern`, optional `taskPlans.recommendedPath`, optional `taskPlans.namespaceConvention`, `taskPlans.indexPath`, and template strictness;
+- analysis: `analysis.root`, optional `analysis.recommendedPath`, optional `analysis.namespaceConvention`, allowed dirs, and enabled/optional/disabled adoption state;
+- mockups and wiki: their configured roots, patterns, and enabled/optional/disabled adoption state.
 
 Example: a project can enable decisions while keeping ADRs under `doc/architecture/ADR-###-*.md`. If existing documents use a legacy format, relax only the necessary checks, such as `decisions.requireTemplateSections: false`, while preserving or gradually improving the documents.
 

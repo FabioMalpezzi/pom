@@ -10,6 +10,13 @@
     "tasks": "light",
     "tests": "existing"
   },
+  "analysis": {
+    "root": "analysis",
+    "allowedDirs": [],
+    "allowMarkdownAtRoot": false,
+    "recommendedPath": "analysis/<analysis-or-workstream>/<analysis>.md",
+    "namespaceConvention": "Use the same analysis-or-workstream segment used by related task plans, tests, fixtures, and evidence where practical. Existing imported analysis namespaces should be preserved unless a migration is explicitly approved."
+  },
   "documentation": {
     "officialRoot": "docs",
     "existingRoots": ["doc"],
@@ -33,9 +40,19 @@
     "requireApprovalBeforeMigratingSources": true,
     "severity": "warning"
   },
+  "taskPlans": {
+    "root": "tasks",
+    "taskPathPattern": "^tasks/.+\\.md$",
+    "recommendedPath": "tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md",
+    "namespaceConvention": "Reuse the same analysis-or-workstream segment for related analysis, tasks, tests, fixtures, and evidence where practical.",
+    "indexPath": "tasks/README.md",
+    "requireTemplateSections": false
+  },
   "tests": {
     "root": "tests",
     "areas": [],
+    "recommendedPath": "tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}",
+    "namespaceConvention": "Keep existing framework/service-local tests where the project expects them. Use analysis/workstream namespaces for new cross-system tests, E2E tests, fixtures, and evidence tied to task plans.",
     "recommendedLayout": ["e2e", "integration", "fixtures", "evidence"],
     "crossSystemDir": "cross-system",
     "preferExistingStructure": true,

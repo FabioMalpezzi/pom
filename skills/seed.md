@@ -22,10 +22,20 @@
 
 Create or adapt `pom.config.json` according to project preferences. Do not apply POM docs/source/tests conventions without reflecting them in config.
 
+For new projects, use the template namespace convention unless the user chooses another structure:
+
+```text
+analysis/<analysis-or-workstream>/<analysis>.md
+tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md
+tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}
+```
+
+If a module is disabled in `adoption`, do not create that folder. If a module is optional, create it only when the current work needs it or the user approves it.
+
 ## Output
 
 - approved minimal structure;
 - agent rules;
-- optional `pom.config.json`;
+- optional `pom.config.json` with analysis/task/test namespace guidance;
 - wiki index/log when enabled;
 - lint/tests run when available.

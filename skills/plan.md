@@ -16,11 +16,28 @@
 
 ## Config
 
-Read `pom.config.json` to respect test structure, source roots, official docs, and control severities before proposing verifications or paths.
+Read `pom.config.json` to respect analysis/task/test structure, source roots, official docs, and control severities before proposing verifications or paths.
+
+Use these fields when present:
+
+- `taskPlans.recommendedPath` for task file placement;
+- `analysis.recommendedPath` for supporting analysis;
+- `tests.recommendedPath` and `tests.namespaceConvention` for verification evidence.
+
+Default namespace guidance:
+
+```text
+analysis/<analysis-or-workstream>/<analysis>.md
+tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md
+tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}
+```
+
+Keep service-local or framework-required tests in their existing locations unless the config or user says otherwise.
 
 ## Output
 
-- verifiable task plan;
+- verifiable task plan in the configured task-plan location;
+- linked origin ADR/spec/wiki/analysis/mockup/stakeholder decision;
 - user scenarios;
-- expected tests or lint;
+- expected tests, evidence, or lint in approved locations;
 - done criteria.

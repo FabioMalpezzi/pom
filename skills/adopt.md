@@ -4,7 +4,7 @@
 
 - Existing project.
 - Need to introduce POM without breaking local conventions.
-- Existing docs, source, tests, wiki, or decision structures.
+- Existing docs, source, tests, wiki, analysis, task plans, or decision structures.
 
 ## Canonical Prompt
 
@@ -20,11 +20,22 @@
 
 ## Config
 
-Read `pom.config.json` if it exists. The mapping to POM must respect or explicitly update `decisions`, `documentation`, `source`, `tests`, `wiki`, `analysis`, `mockups`, and `handoff`.
+Read `pom.config.json` if it exists. The mapping to POM must respect or explicitly update `decisions`, `documentation`, `source`, `tests`, `taskPlans`, `wiki`, `analysis`, `mockups`, and `handoff`.
+
+For new POM-owned analysis/task/test material, prefer a shared namespace:
+
+```text
+analysis/<analysis-or-workstream>/<analysis>.md
+tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md
+tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}
+```
+
+Preserve imported or service-local structures unless the user explicitly approves a migration. Record approved exceptions in `pom.config.json` through roots, recommended paths, namespace conventions, or project notes.
 
 ## Output
 
 - mapping from existing structure to POM;
 - highlighted conflicts/ambiguities;
 - approved minimal changes;
+- configured analysis/task/test namespace guidance;
 - lint run if available.

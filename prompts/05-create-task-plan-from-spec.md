@@ -33,12 +33,15 @@ Rules:
 - if the work is documentation-only, include lint + critical analysis for contradictions, gaps, and security/privacy risks;
 - if the work is implementation, include technical tests and a user scenario;
 - when E2E or user-flow tests are possible, plan at least 2 positive user cases and at least 1 handled-error user case;
-- if the project already has a test structure, use it only after identifying it; if it differs from the POM proposal, ask whether to adapt to the existing structure or use/adapt `tests/<module-or-area>/...`;
-- if no test structure exists, propose `tests/<module-or-area>/{e2e,integration,fixtures,evidence}` and `tests/cross-system/`, without creating unnecessary empty folders.
+- if the project already has a test structure, use it only after identifying it; if it differs from the POM proposal, ask whether to adapt to the existing structure or use/adapt `tests/<analysis-or-workstream-or-module>/...`;
+- if no test structure exists, propose `tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}` and `tests/cross-system/`, without creating unnecessary empty folders;
+- when `pom.config.json.taskPlans.recommendedPath` is present, follow it; otherwise prefer `tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md` for new task plans;
+- when creating new supporting analysis, follow `pom.config.json.analysis.recommendedPath` when present, otherwise prefer `analysis/<analysis-or-workstream>/<analysis>.md`;
+- keep the analysis/workstream namespace congruent across related analysis, task plans, tests, fixtures, and evidence where practical.
 
 Recommended output:
 - `CURRENT_PLAN.md` or the configured current-plan equivalent for the short active focus;
-- task files under `pom.config.json.taskPlans.root` when configured, otherwise `tasks/` or the approved project equivalent.
+- task files under `pom.config.json.taskPlans.root` when configured, following `taskPlans.recommendedPath` when present, otherwise `tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md` or the approved project equivalent.
 
 Do not modify an existing plan without highlighting what you are changing.
 ```

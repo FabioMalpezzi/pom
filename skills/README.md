@@ -19,9 +19,10 @@ The config defines project-specific conventions, including:
 - decisions/ADR roots and patterns (`decisions`);
 - documentation roots (`documentation`);
 - source roots (`source`);
-- test structure (`tests`);
-- task-plan roots and patterns (`taskPlans`);
-- wiki/analysis taxonomies;
+- analysis roots, recommended paths, and namespace conventions (`analysis`);
+- task-plan roots, patterns, recommended paths, and namespace conventions (`taskPlans`);
+- test structure, recommended paths, and namespace conventions (`tests`);
+- wiki taxonomies;
 - mockup package roots and reconciliation search;
 - warning severity;
 - handoff rules for `PROJECT_STATE.md`.
@@ -29,6 +30,16 @@ The config defines project-specific conventions, including:
 For existing projects, prefer mapping current folders and file patterns in config before proposing a migration to POM's canonical examples.
 
 If a skill proposes a convention that differs from `pom.config.json`, ask for confirmation before proceeding and update the config if approved.
+
+For new POM-owned analysis/task/test material, the portable default is:
+
+```text
+analysis/<analysis-or-workstream>/<analysis>.md
+tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md
+tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}
+```
+
+Existing project structures should be mapped first, not moved by default.
 
 ## Available Skills
 

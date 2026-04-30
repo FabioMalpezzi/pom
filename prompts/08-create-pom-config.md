@@ -62,13 +62,15 @@ Module semantics:
 
 The configuration should cover, when applicable:
 - Markdown allowed in root;
-- analysis taxonomy and whether analysis root files are allowed;
+- analysis taxonomy, root, optional recommended path, namespace convention, and whether analysis root files are allowed;
 - POM template paths and any project-owned template overrides;
 - wiki index/log expectations and project-specific wiki categories/sections;
 - ADR root, patterns, index path, and whether existing ADRs must follow the POM ADR template exactly;
 - task-plan root, task file pattern, index path, and whether task files must follow the POM task template exactly;
+- analysis preferences and structure: `analysis.root`, optional `analysis.recommendedPath`, optional `analysis.namespaceConvention`, allowed dirs, and whether existing analysis namespaces should be preserved;
 - mockup package root, manifest rules, and reconciliation document search;
-- test preferences and structure: `tests.root`, `tests.areas`, `tests.recommendedLayout`, `tests.crossSystemDir`, `tests.severity`;
+- task-plan preferences and structure: `taskPlans.root`, `taskPlans.taskPathPattern`, optional `taskPlans.recommendedPath`, optional `taskPlans.namespaceConvention`, `taskPlans.indexPath`, `taskPlans.requireTemplateSections`;
+- test preferences and structure: `tests.root`, `tests.areas`, optional `tests.recommendedPath`, optional `tests.namespaceConvention`, `tests.recommendedLayout`, `tests.crossSystemDir`, `tests.severity`;
 - documentation: `documentation.officialRoot`, `documentation.existingRoots`, `documentation.knownRootCandidates`, migration flags, and `documentation.severity`;
 - source roots: `source.roots`, `source.knownRootCandidates`, migration flags, and `source.severity`;
 - handoff path and trigger paths;
@@ -84,6 +86,8 @@ After approval:
 In the final summary, state:
 - which rules are base POM rules;
 - which rules are project-specific;
+- how the `analysis` section was configured and whether new analysis should follow `analysis/<analysis-or-workstream>/<analysis>.md`;
+- how the `taskPlans` section was configured and whether task paths should follow `tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md`;
 - how the `tests` section was configured and why;
 - how `documentation` and `source` were configured and why;
 - which checks are intentionally not configured;

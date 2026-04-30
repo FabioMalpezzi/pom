@@ -233,19 +233,23 @@ Every spec or decision that generates work must produce verifiable tasks. Every 
 
 When E2E or user-flow tests are possible, verification should include at least 2 positive user use cases and at least 1 handled-error user use case. If this is not possible, state the reason explicitly.
 
+Task-plan and analysis locations are configurable. When `pom.config.json.taskPlans.root` is `tasks`, the suggested task structure is `tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md`. For new synthesis, prefer `analysis/<analysis-or-workstream>/<analysis>.md`. Use the same analysis/workstream namespace for related analysis, tasks, tests, fixtures, and evidence where practical. If another project stores task plans or analysis elsewhere, map those paths in `pom.config.json` instead of moving files by default.
+
 ## Test Convention
 
 POM proposes this optional structure:
 
 ```text
 tests/
-  <module-or-area>/
+  <analysis-or-workstream-or-module>/
     e2e/
     integration/
     fixtures/
     evidence/
   cross-system/
 ```
+
+When tests or evidence validate a specific analysis/workstream, prefer the same namespace used by analysis and task plans, for example `analysis/governance-core/...`, `tasks/governance-core/P0/...`, and `tests/governance-core/...`.
 
 Use it for E2E tests, integration tests, fixtures, and evidence when the project does not already have an established test convention. Unit tests may remain next to code if the framework expects that.
 
