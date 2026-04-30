@@ -185,6 +185,18 @@ If the project has customized or localized templates configured in `pom.config.j
 
 Do not customize files directly under `pom/` for project-specific needs. POM updates may overwrite them or create Git conflicts. Put project-owned templates outside `pom/`, for example in `project-templates/` or `templates/`, and map them in `pom.config.json.templates`.
 
+## Suggested Document Statuses
+
+| Status | Meaning | Use when |
+|---|---|---|
+| Waiting | Waiting for something or someone | Blocked by external input |
+| Blocked | Cannot proceed because of a concrete impediment | Missing dependency or error |
+| Deferred | Deliberately postponed | Decided to do it later |
+| Planned | Expected but not started yet | In the active plan |
+| Backlog | Future candidate, not yet planned | Parked idea or need |
+| Draft | Still being written or reviewed | Spec or task not consolidated |
+| Accepted | Approved decision | ADR, not an operational task |
+
 | Document | Template |
 |---|---|
 | AGENTS / agent instructions section | `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` |
