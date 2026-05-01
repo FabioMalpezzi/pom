@@ -268,6 +268,18 @@ Rules:
 - if the project is not under Git, propose `git init` before applying POM structurally;
 - after structural changes, run available lint/tests and create a descriptive commit.
 
+### Branching Policy
+
+Specs, task plans, ADRs, wiki pages, and other documentation can be committed directly to the main branch. They are governed documents, not executable code, and do not risk breaking the build.
+
+Create a feature branch (`feat/<topic>`) only when the first task plan step modifies executable code, configuration, prompts consumed at runtime, or test fixtures. The branch isolates changes that could break the build or alter runtime behavior.
+
+| Artifact | Branch needed? |
+|---|---|
+| Spec, task plan, ADR, wiki page, analysis | No — commit on main |
+| Source code, runtime config, prompts, test fixtures | Yes — feature branch |
+| Experiment or spike | Yes — `exp/<topic>` or temporary branch |
+
 ## ADR And Spec Changes
 
 Specs are living documents: edit them directly and let Git keep fine-grained history.
