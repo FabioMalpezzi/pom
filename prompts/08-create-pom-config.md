@@ -66,6 +66,7 @@ The configuration should cover, when applicable:
 - project-specific wiki categories/sections;
 - `wiki/log.md` format;
 - ADR patterns;
+- `decisions.docsPathsRequiringAdr`: list of `docs/` path prefixes that trigger the `docs-without-adr` warning. When empty (default), any change under `docs/` triggers the warning. When populated, only changes matching at least one prefix trigger it. Example: `["docs/server-canonical/requirements/"]` means only requirement changes require an ADR, not plans or working notes;
 - mock manifest rules;
 - mockup reconciliation document search;
 - test preferences and structure: `tests.root`, `tests.areas`, `tests.recommendedLayout`, `tests.crossSystemDir`, `tests.severity`;
