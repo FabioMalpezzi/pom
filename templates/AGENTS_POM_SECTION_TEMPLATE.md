@@ -234,6 +234,35 @@ Rules:
 - do not treat a skill as a replacement for prompts or templates;
 - if no suitable skill exists, use POM prompts directly and propose a new skill only if the workflow becomes recurring.
 
+### Skill Usage Tracking
+
+When you read a skill card, update `pom.config.json` under `skillUsage`:
+
+- if the skill entry does not exist, create it with `count: 1` and `lastUsed` set to the current ISO timestamp;
+- if the skill entry exists, increment `count` by 1 and update `lastUsed`.
+
+Example:
+
+```json
+{
+  "skillUsage": {
+    "wiki": { "count": 3, "lastUsed": "2026-05-01T18:30:00Z" },
+    "plan": { "count": 1, "lastUsed": "2026-05-01T14:00:00Z" }
+  }
+}
+```
+
+The key is the skill filename without extension (e.g., `wiki` for `pom/skills/wiki.md`).
+
+### Prompt Usage Tracking
+
+When you read a canonical prompt from `pom/prompts/`, update `pom.config.json` under `promptUsage` with the same structure:
+
+- if the prompt entry does not exist, create it with `count: 1` and `lastUsed`;
+- if the prompt entry exists, increment `count` by 1 and update `lastUsed`.
+
+The key is the prompt filename without extension (e.g., `09-run-temporary-experiment` for `pom/prompts/09-run-temporary-experiment.md`).
+
 ## Planning
 
 Use this logical hierarchy for planned work (it organizes work, not folders):

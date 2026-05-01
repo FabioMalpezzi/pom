@@ -418,6 +418,23 @@ POM skills are short operational aliases for the main prompts. They do not repla
 | `wiki` | build, query, lightweight lint, and stale wiki maintenance |
 | `extend` | controlled POM extension |
 
+### Skill Usage Tracking
+
+When the agent reads a skill card, it updates `pom.config.json` under `skillUsage` with a counter and timestamp. This provides lightweight observability on which skills are actually used and how often.
+
+```json
+{
+  "skillUsage": {
+    "wiki": { "count": 3, "lastUsed": "2026-05-01T18:30:00Z" },
+    "plan": { "count": 1, "lastUsed": "2026-05-01T14:00:00Z" }
+  }
+}
+```
+
+The schema is extensible: additional fields can be added without breaking existing entries.
+
+The same tracking applies to canonical prompts (`pom/prompts/*.md`) under `promptUsage`. This lets you see both which skills are invoked (entry points) and which prompts are actually executed (procedures).
+
 ## Extending POM
 
 Use `skills/extend.md` when POM needs to be extended.
