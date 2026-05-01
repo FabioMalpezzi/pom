@@ -18,6 +18,8 @@
 
 This skill creates or updates `pom.config.json`. If the file exists, preserve local choices and propose only motivated changes.
 
+The config includes `skillUsage` and `promptUsage` sections that are updated automatically by the agent when skills or prompts are read. Do not reset these counters unless explicitly requested.
+
 ## Output
 
 - `pom.config.json` consistent with the project;

@@ -268,6 +268,18 @@ Rules:
 - if the project is not under Git, propose `git init` before applying POM structurally;
 - after structural changes, run available lint/tests and create a descriptive commit.
 
+### Branching Policy
+
+Specs, task plans, ADRs, wiki pages, and other documentation can be committed directly to the main branch. They are governed documents, not executable code, and do not risk breaking the build.
+
+Create a feature branch (`feat/<topic>`) only when the first task plan step modifies executable code, configuration, prompts consumed at runtime, or test fixtures. The branch isolates changes that could break the build or alter runtime behavior.
+
+| Artifact | Branch needed? |
+|---|---|
+| Spec, task plan, ADR, wiki page, analysis | No — commit on main |
+| Source code, runtime config, prompts, test fixtures | Yes — feature branch |
+| Experiment or spike | Yes — `exp/<topic>` or temporary branch |
+
 ## ADR And Spec Changes
 
 Specs are living documents: edit them directly and let Git keep fine-grained history.
@@ -405,6 +417,23 @@ POM skills are short operational aliases for the main prompts. They do not repla
 | `spike` | temporary experiments |
 | `wiki` | build, query, lightweight lint, and stale wiki maintenance |
 | `extend` | controlled POM extension |
+
+### Skill Usage Tracking
+
+When the agent reads a skill card, it updates `pom.config.json` under `skillUsage` with a counter and timestamp. This provides lightweight observability on which skills are actually used and how often.
+
+```json
+{
+  "skillUsage": {
+    "wiki": { "count": 3, "lastUsed": "2026-05-01T18:30:00Z" },
+    "plan": { "count": 1, "lastUsed": "2026-05-01T14:00:00Z" }
+  }
+}
+```
+
+The schema is extensible: additional fields can be added without breaking existing entries.
+
+The same tracking applies to canonical prompts (`pom/prompts/*.md`) under `promptUsage`. This lets you see both which skills are invoked (entry points) and which prompts are actually executed (procedures).
 
 ## Extending POM
 
