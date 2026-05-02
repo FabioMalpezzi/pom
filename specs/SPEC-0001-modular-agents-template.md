@@ -2,11 +2,11 @@
 
 ## Status
 
-Draft
+Complete
 
 ## Purpose
 
-Reduce the cognitive load on both the user and the agent by injecting only the AGENTS template sections relevant to the chosen adoption profile, instead of the current monolithic 320-line block that includes rules for modules the project does not use.
+Reduce the cognitive load on both the user and the agent by injecting only the AGENTS template sections relevant to the chosen adoption profile, instead of the current monolithic block that includes rules for modules the project does not use.
 
 ## Context
 
@@ -47,7 +47,6 @@ templates/
   agents/
     00-core.md              # ≤100 lines: principle, git, language, operating cycle, commands, adoption profile
     10-wiki.md              # persistent wiki rules
-    11-wiki-skills.md       # wiki skill entry points (build, stale, query, lint)
     20-decisions.md          # ADR and spec rules
     30-planning.md           # hierarchy, completion verification, test convention
     40-handoff.md            # session handoff, PROJECT_STATE rules, pre-commit hook
@@ -64,7 +63,7 @@ templates/
 | Module file | Included when |
 |---|---|
 | `00-core.md` | always |
-| `10-wiki.md` + `11-wiki-skills.md` | `adoption.wiki == "enabled"` |
+| `10-wiki.md` | `adoption.wiki == "enabled"` |
 | `20-decisions.md` | `adoption.decisions == "enabled"` |
 | `30-planning.md` | `adoption.planning == "structured"` or `adoption.tasks == "structured"` |
 | `40-handoff.md` | always (PROJECT_STATE is always useful) |
@@ -117,9 +116,15 @@ templates/
 | Mockups | none |
 | Code | `scripts/install-pom.ts` — assembly logic; `templates/agents/` — new module files |
 
-## Linked Tasks
+## Tasks
 
-- `TASK-0002` (to be created after spec approval)
+- [x] T1: Split `AGENTS_POM_SECTION_TEMPLATE.md` into module files under `templates/agents/`
+- [x] T2: Implement `assembleAgentsTemplate()` in `install-pom.ts` that reads modules and assembles by profile
+- [x] T3: Wire `upsertAgentInstructionSections()` to use the modular assembly instead of the monolithic template
+- [x] T4: Keep `AGENTS_POM_SECTION_TEMPLATE.md` as full assembled version for backward compatibility
+- [x] T5: Write and run scenario tests (see Completion Verification below)
+- [x] T6: Verify line counts match targets (minimal 183 ≤200 ✓, full 277 ≤320 ✓)
+- [x] T7: Mark spec as Complete after all tests pass
 
 ## Completion Verification
 
@@ -127,22 +132,20 @@ This spec cannot be marked Complete without passing the completion verification 
 
 ### Step 0 — Goal-backward check (always first)
 
-- [ ] What must be TRUE for the purpose of this spec to be met? List the truths.
-  - Truth 1: profile `minimal` produces an AGENTS section ≤200 lines
-  - Truth 2: profile `full` produces an AGENTS section ≤320 lines
-  - Truth 3: the installer assembles sections based on the adoption profile
-  - Truth 4: refresh re-assembles based on current config
-- [ ] For each truth, what must EXIST? Verify against actual artifacts.
-- [ ] If the goal is not met, the spec cannot be Complete regardless of other checks.
+- [x] What must be TRUE for the purpose of this spec to be met?
+  - Truth 1: profile `minimal` produces an AGENTS section ≤200 lines — **verified: 183 lines**
+  - Truth 2: profile `full` produces an AGENTS section ≤320 lines — **verified: 277 lines**
+  - Truth 3: the installer assembles sections based on the adoption profile — **verified: modules assembled by `assembleAgentsTemplate()`**
+  - Truth 4: refresh re-assembles based on current config — **verified: full→minimal shrinks from 277 to 183**
+- [x] For each truth, what must EXIST? Verified against `templates/agents/`, `scripts/install-pom.ts`, `tests/spec-0001/test-modular-assembly.mjs`.
+- [x] All truths hold.
 
-### If this spec has code implementation
+### Scenario tests (code — mandatory for Complete)
 
-- [ ] At least 2 positive scenario tests:
-  - Scenario 1: install with profile `minimal` → AGENTS section contains only core + handoff + templates + skills, ≤200 lines
-  - Scenario 2: install with profile `full` → AGENTS section contains all modules, ≤320 lines
-- [ ] At least 1 error/misuse scenario test:
-  - Scenario 3: install with profile `full`, then refresh after changing config to `minimal` → AGENTS section shrinks to minimal
-- [ ] Tests run and pass
+- [x] Scenario 1 (positive): install with profile `minimal` in a temp directory → 183 lines, ≤200 ✓
+- [x] Scenario 2 (positive): install with profile `full` in a temp directory → 277 lines, ≤320 ✓
+- [x] Scenario 3 (error/misuse): install with profile `full`, then refresh after changing config to `minimal` → section shrinks from 277 to 183 lines ✓
+- [x] All 15 tests run and pass (`tests/spec-0001/test-modular-assembly.mjs`)
 
 ### Exception
 
