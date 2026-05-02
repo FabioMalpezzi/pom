@@ -13,8 +13,11 @@
 ## Key Rules
 
 - Do not limit the review to the file diff.
+- Start with goal-backward check: is the declared goal actually achieved, not just the steps executed?
 - Verify real user scenarios when possible.
-- For E2E, check 2 positive cases and 1 handled-error case when applicable.
+- For tech work, check at least 2 positive scenario tests and 1 error/misuse test.
+- For non-tech work, check thesis/antithesis validation — every antithesis must be confuted.
+- Verification is mandatory and automatic when marking Complete — the agent does not ask, it verifies.
 - Report contradictions, gaps, and security/privacy risks.
 
 ## Config

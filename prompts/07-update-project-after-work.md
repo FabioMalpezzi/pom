@@ -7,6 +7,14 @@ Update the project state after the completed work.
 
 First summarize what changed.
 
+Completion verification:
+- before handoff, verify that any work marked Complete or Accepted during this session has passed the completion verification gate;
+- goal-backward check: is the declared goal actually achieved?
+- tech work: scenario tests (2 positive + 1 error/misuse) run and pass?
+- non-tech work: thesis/antithesis validated, every antithesis confuted?
+- if verification was not done, do it now before closing the session;
+- when the environment supports it, use a separate agent or fresh context for verification.
+
 Handoff rule:
 - always update `PROJECT_STATE.md` if the project operating context changed;
 - do not update it for tiny changes with no impact;

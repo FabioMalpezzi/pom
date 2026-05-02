@@ -64,6 +64,38 @@ List rejected alternatives and why they were rejected.
 - [ ] Page to update
 - [ ] Decision to validate
 
+## Completion Verification
+
+This ADR cannot be marked Accepted without passing semantic validation. Verification is mandatory and automatic.
+
+### Step 0 — Goal-backward check (always first)
+
+- [ ] What must be TRUE for this decision to be valid? List the truths.
+- [ ] For each truth, does supporting evidence or reasoning EXIST?
+- [ ] If the goal is not met, the ADR cannot be Accepted.
+
+### Thesis (at least 1 required)
+
+Argument or evidence proving this decision is valid, based on use cases it generates or is involved in:
+
+- Thesis 1:
+
+### Antithesis (at least 1 required — each must be confuted)
+
+Cases of incorrect or improper usage demonstrated to be false or inferior to the thesis:
+
+| Antithesis | Confutation |
+|---|---|
+|  |  |
+
+The ADR cannot be marked Accepted if any antithesis is not confuted.
+
+### Exception
+
+If semantic validation is not possible, document the reason here and mark as "Accepted with exceptions":
+
+Exception reason: _none_
+
 ## Evolution Rule
 
 Fine-grained history lives in Git. If this decision changes substantially, create a new ADR that supersedes or replaces it instead of retroactively rewriting the decision.

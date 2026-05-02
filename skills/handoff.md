@@ -12,6 +12,7 @@
 
 ## Key Rules
 
+- Before handoff, verify that any work marked Complete during this session has passed the completion verification gate (goal-backward + scenario tests or thesis/antithesis).
 - Update `PROJECT_STATE.md` if the operating context changes.
 - Use Git for fine-grained history.
 - Do not update everything automatically.

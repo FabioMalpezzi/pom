@@ -19,6 +19,8 @@
 - Bias toward NEEDS REVIEW over OK when uncertain.
 - Produce the punch list in the exact output format specified.
 - The caller or main agent fixes the issues, not the validator.
+- When the environment supports it (sub-agents, hooks, multi-agent), run this as a separate agent or fresh context to avoid confirmation bias.
+- When a separate agent is not available, the working agent must re-read files from disk instead of relying on session memory.
 
 ## The 6 Rules (summary)
 
@@ -26,7 +28,7 @@
 2. **Wiki reflects completed work** — new knowledge is captured, no contradictions.
 3. **Task plan status is accurate** — checkboxes and status fields match reality.
 4. **Decisions not contradicted** — implementation aligns with approved decisions.
-5. **Tests cover verification criteria** — defined test cases exist and pass.
+5. **Completion verification gate** — goal-backward check first (is the declared goal met?), then scenario tests (tech) or thesis/antithesis (non-tech). Mandatory and automatic.
 6. **No orphan artifacts** — no untracked files, stale refs, or leftover TODOs.
 
 ## Config

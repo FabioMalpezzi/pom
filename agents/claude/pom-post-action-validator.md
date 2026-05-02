@@ -131,20 +131,44 @@ Check:
 
 Status: `OK`, `CONTRADICTION`, `NEEDS REVIEW`, or `N/A`.
 
-### Rule 5 - Verification Exists And Is Credible
+### Rule 5 - Completion Verification Gate Is Satisfied
 
-Completed work should have verification proportional to risk.
+Every completed spec, task, or ADR must pass the completion verification gate. This gate is mandatory and automatic.
+
+Step 0 — Goal-backward check (always first):
+
+- what must be TRUE for the declared goal to be met?
+- for each truth, does the artifact/implementation satisfy it?
+- if the goal is not met → **GOAL NOT MET**, regardless of checkbox status.
+
+For work with code (scenario tests):
+
+- at least 2 positive scenario tests based on real user use cases;
+- at least 1 error/misuse scenario test;
+- tests run and pass.
+
+For work without code (semantic validation):
+
+- at least 1 thesis proving validity based on use cases;
+- at least 1 antithesis (incorrect/improper usage) confuted;
+- cannot be Complete if any antithesis is not confuted.
 
 Check:
 
-- task verification criteria are covered by tests, lint, smoke checks, or
-  documented evidence;
-- user-flow/E2E criteria include positive and handled-error cases when the task
-  calls for them;
-- failed or skipped verification is explicitly reported;
-- validation commands are appropriate to the project.
+- read the "Verification" or "Completion Verification" section;
+- for code: verify scenario tests exist, cover required cases, and pass;
+- for non-code: verify thesis/antithesis are documented and each antithesis
+  has a confutation;
+- if "Complete with exceptions", verify the reason is explicit and credible;
+- if verification missing or incomplete → **VERIFICATION MISSING**;
+- if exceptions documented → **EXCEPTIONS NOTED**;
+- if satisfied → **OK**.
 
-Status: `OK`, `TESTS MISSING`, `NEEDS EVIDENCE`, or `N/A`.
+Status: `OK`, `GOAL NOT MET`, `VERIFICATION MISSING`, `EXCEPTIONS NOTED`, or `N/A`.
+
+**Agent separation:** when the environment supports it, this verification should
+be performed by a separate agent or fresh context, not by the agent that did the
+work. When not possible, the working agent must re-read files from disk.
 
 ### Rule 6 - No Orphan Or Stale Artifacts
 
@@ -191,7 +215,7 @@ Assumption: <only if inferred; otherwise "none">
 | 2 | Wiki/docs capture knowledge | OK / NEEDS REVIEW / N/A | <one-line action or "-"> |
 | 3 | Task/plan status accurate | OK / INCONSISTENT / N/A | <one-line action or "-"> |
 | 4 | Decisions not contradicted | OK / CONTRADICTION / NEEDS REVIEW / N/A | <one-line action or "-"> |
-| 5 | Verification credible | OK / TESTS MISSING / NEEDS EVIDENCE / N/A | <one-line action or "-"> |
+| 5 | Completion verification gate | OK / GOAL NOT MET / VERIFICATION MISSING / EXCEPTIONS NOTED / N/A | <one-line action or "-"> |
 | 6 | No orphan/stale artifacts | OK / CLEANUP NEEDED | <one-line action or "-"> |
 
 ### Detail

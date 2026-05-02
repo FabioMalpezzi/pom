@@ -643,6 +643,60 @@ function parseDocumentStatus(text: string): string {
   return statusSection;
 }
 
+function isCompleteStatus(status: string): boolean {
+  const normalized = status.toLowerCase().trim();
+  return normalized === "complete" || normalized === "completed" || normalized === "done" || normalized.startsWith("complete with exceptions");
+}
+
+function isAcceptedStatus(status: string): boolean {
+  const normalized = status.toLowerCase().trim();
+  return normalized === "accepted" || normalized.startsWith("accepted with exceptions");
+}
+
+function hasCompletionVerificationSection(text: string): boolean {
+  return /## Completion Verification/i.test(text) || /## Verification/i.test(text);
+}
+
+function hasGoalBackwardCheck(text: string): boolean {
+  return /goal-backward/i.test(text) || /what must be true/i.test(text);
+}
+
+function hasThesisAntithesis(text: string): boolean {
+  return /### Thesis/i.test(text) && /### Antithesis/i.test(text);
+}
+
+function hasScenarioTests(text: string): boolean {
+  return /scenario test/i.test(text) || /positive scenario/i.test(text) || /error\/misuse/i.test(text);
+}
+
+function hasExceptionReason(text: string): boolean {
+  const match = text.match(/Exception reason:\s*(.+)/i);
+  if (!match) return false;
+  const reason = match[1].trim();
+  return reason !== "_none_" && reason !== "none" && reason.length > 0;
+}
+
+function checkCompletionVerification(text: string, file: string, docType: "task" | "adr" | "spec"): void {
+  if (!hasCompletionVerificationSection(text)) {
+    add("warning", "completion-verification-missing",
+      `${docType === "adr" ? "ADR" : "Document"} is marked ${docType === "adr" ? "Accepted" : "Complete"} but has no Completion Verification section.`, file);
+    return;
+  }
+
+  if (hasExceptionReason(text)) {
+    add("warning", "completion-verification-exception",
+      `${docType === "adr" ? "ADR" : "Document"} is ${docType === "adr" ? "Accepted" : "Complete"} with exceptions. Review the exception reason.`, file);
+    return;
+  }
+
+  if (docType === "adr") {
+    if (!hasThesisAntithesis(text)) {
+      add("warning", "completion-verification-thesis",
+        "ADR is marked Accepted but Thesis/Antithesis sections are empty or missing.", file);
+    }
+  }
+}
+
 function stripDecisionRoot(file: string): string {
   const root = config.decisions.root.replace(/\\/g, "/").replace(/\/$/, "");
   if (root && file.startsWith(`${root}/`)) {
@@ -787,6 +841,10 @@ function checkDecisions(): void {
       add("warning", "adr-status", "ADR is missing a Status field in the opening metadata.", file);
     }
 
+    if (isAcceptedStatus(status)) {
+      checkCompletionVerification(text, file, "adr");
+    }
+
     if (!isUsableMetadata(category)) {
       add("warning", "adr-category", `ADR is missing a classifiable ${config.decisions.categoryField} in the opening metadata table.`, file);
     }
@@ -818,6 +876,10 @@ function checkTaskPlans(): void {
 
     if (!isUsableMetadata(status)) {
       add("warning", "task-status", "Task plan is missing a Status section or metadata field.", file);
+    }
+
+    if (isCompleteStatus(status)) {
+      checkCompletionVerification(text, file, "task");
     }
 
     if (config.taskPlans.requireTemplateSections) {

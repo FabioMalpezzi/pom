@@ -74,16 +74,33 @@ one, or as an explicit note in the task.
 - If aligned → **OK**.
 - If no relevant decision → **N/A**.
 
-### Rule 5 — Tests cover the verification criteria
+### Rule 5 — Completion verification gate is satisfied
 
-Every task plan defines verification criteria (positive cases + error case). After closure, those tests should exist.
+Every completed spec, task, or ADR must pass the completion verification gate. This gate is mandatory and automatic.
+
+**Step 0 — Goal-backward check (always first):**
+- What must be TRUE for the declared goal/objective to be met?
+- For each truth, does the artifact/implementation actually satisfy it?
+- If the goal is not met, the work cannot be Complete regardless of checkbox status.
+
+**For work with code (scenario tests):**
+- At least 2 positive scenario tests based on real user use cases the spec/task generates or is involved in.
+- At least 1 error/misuse scenario test validating incorrect or improper usage.
+- Tests must run and pass.
+
+**For work without code (semantic validation):**
+- At least 1 thesis: argument or evidence proving the spec/ADR is valid, based on use cases it generates or is involved in.
+- At least 1 antithesis: a case of incorrect or improper usage demonstrated to be false or inferior to the thesis.
+- Every antithesis must be confuted. If any antithesis is not confuted, the work cannot be Complete.
 
 **How to verify:**
-- Read the task's "Verification" section.
-- Check if the listed test cases exist in the test suite.
-- If verification criteria exist but tests are missing → **TESTS MISSING**.
-- If tests exist and pass → **OK**.
-- If no verification criteria defined → **N/A**.
+- Read the task/spec/ADR "Verification" or "Completion Verification" section.
+- For code: check that scenario tests exist in the test suite, cover the required cases, and pass.
+- For non-code: check that thesis and antithesis are documented and each antithesis has a confutation.
+- If "Complete with exceptions" is used, verify the exception reason is explicit and credible → **EXCEPTIONS NOTED**.
+- If verification is missing or incomplete → **VERIFICATION MISSING**.
+- If satisfied → **OK**.
+- If not applicable → **N/A**.
 
 ### Rule 6 — No orphan artifacts
 
@@ -113,7 +130,7 @@ Scope: <task/phase/decision/wiki>
 | 2 | Wiki reflects work | OK / NEEDS REVIEW / N/A | <missing page or "—"> |
 | 3 | Task plan status accurate | OK / INCONSISTENT | <detail or "—"> |
 | 4 | Decision not contradicted | OK / CONTRADICTION / N/A | <detail or "—"> |
-| 5 | Tests cover verification | OK / TESTS MISSING / N/A | <detail or "—"> |
+| 5 | Completion verification gate | OK / GOAL NOT MET / VERIFICATION MISSING / EXCEPTIONS NOTED / N/A | <detail or "—"> |
 | 6 | No orphan artifacts | OK / CLEANUP NEEDED | <detail or "—"> |
 
 ### Detail

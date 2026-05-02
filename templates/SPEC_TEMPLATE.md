@@ -47,6 +47,34 @@ Sources, constraints, mockups, code, or linked decisions.
 
 - `TASK-0000`
 
+## Completion Verification
+
+This spec cannot be marked Complete without passing the completion verification gate. Verification is mandatory and automatic.
+
+### Step 0 — Goal-backward check (always first)
+
+- [ ] What must be TRUE for the purpose of this spec to be met? List the truths.
+- [ ] For each truth, what must EXIST? Verify against actual artifacts.
+- [ ] If the goal is not met, the spec cannot be Complete regardless of other checks.
+
+### If this spec has code implementation
+
+- [ ] At least 2 positive scenario tests based on real user use cases this spec generates or is involved in
+- [ ] At least 1 error/misuse scenario test validating incorrect or improper usage (more is better)
+- [ ] Tests run and pass
+
+### If this spec has no code implementation
+
+- [ ] At least 1 thesis: argument or evidence proving this spec is valid, based on use cases it generates or is involved in
+- [ ] At least 1 antithesis: a case of incorrect or improper usage demonstrated to be false or inferior (more is better)
+- [ ] Every antithesis is confuted
+
+### Exception
+
+If verification is not possible, document the reason here and close as "Complete with exceptions":
+
+Exception reason: _none_
+
 ## Sources And Decisions
 
 - Source:

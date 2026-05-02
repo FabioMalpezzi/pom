@@ -45,22 +45,43 @@ Describe what must be implemented or clarified.
 
 ## Verification
 
-Verification level depends on the planning hierarchy level of this task.
+A task cannot be marked Complete without passing the completion verification gate. This verification is mandatory and automatic — the agent executes it when marking Complete.
 
-Task-level verification (integration / single-feature E2E):
+### Step 0 — Goal-backward check (mandatory, always first)
 
-- [ ] Integration or E2E test for this task's scope
-- [ ] At least 2 positive user use cases and at least 1 handled-error user use case, where possible
-- [ ] Test location consistent with the project structure or the POM-proposed `tests/<analysis-or-workstream-or-module>/...`, reusing the task analysis/workstream namespace where practical
+Before checking tests or theses, verify that the declared objective has been achieved:
 
-Step-level verification (atomic checks, tracked within each step):
+- [ ] What must be TRUE for the objective to be met? List the truths.
+- [ ] For each truth, what must EXIST? Verify against actual artifacts.
+- [ ] If the goal is not met, the task cannot be Complete regardless of checkbox status.
+
+### For tasks with code (scenario tests — mandatory for Complete)
+
+- [ ] At least 2 positive scenario tests based on real user use cases the task generates or is involved in
+- [ ] At least 1 error/misuse scenario test validating incorrect or improper usage (more is better)
+- [ ] Tests run and pass
+- [ ] Test location consistent with the project structure or `tests/<analysis-or-workstream-or-module>/...`
+
+### For tasks without code (semantic validation — mandatory for Complete)
+
+- [ ] At least 1 thesis: argument or evidence proving the task outcome is valid, based on use cases it generates or is involved in
+- [ ] At least 1 antithesis: a case of incorrect or improper usage demonstrated to be false or inferior (more is better)
+- [ ] Every antithesis is confuted — the task cannot close Complete otherwise
+
+### Step-level verification (atomic checks, tracked within each step)
 
 - [ ] Unit test, lint, or single check per step
 
-Cross-cutting checks:
+### Cross-cutting checks
 
 - [ ] Critical analysis of contradictions and gaps
 - [ ] Security/privacy check, if relevant
+
+### Exception
+
+If verification is not possible, document the reason here and close as "Complete with exceptions":
+
+Exception reason: _none_
 
 ## Test Structure
 

@@ -41,9 +41,14 @@ Rules:
 - do not create generic tasks that cannot be verified;
 - do not create an active task for deliberately postponed work; mark it Deferred or use the defer workflow;
 - every phase must close with concrete verification;
+- a task or spec cannot be marked Complete without passing the completion verification gate:
+  - first: goal-backward check — verify the declared objective is actually achieved, not just that steps were executed;
+  - tasks with code: at least 2 positive scenario tests based on real user use cases + at least 1 error/misuse scenario test; tests must run and pass;
+  - tasks without code: at least 1 thesis proving validity based on use cases + at least 1 antithesis (incorrect/improper usage) demonstrated false or inferior; cannot close if an antithesis is not confuted;
+  - if verification is not possible, document the reason and close as "Complete with exceptions";
+  - verification is mandatory and automatic: the agent executes it when marking Complete, without asking;
 - if the work is documentation-only, include lint + critical analysis for contradictions, gaps, and security/privacy risks;
 - if the work is implementation, include technical tests and a user scenario;
-- when E2E or user-flow tests are possible, plan at least 2 positive user cases and at least 1 handled-error user case;
 - if the project already has a test structure, use it only after identifying it; if it differs from the POM proposal, ask whether to adapt to the existing structure or use/adapt `tests/<analysis-or-workstream-or-module>/...`;
 - if no test structure exists, propose `tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}` and `tests/cross-system/`, without creating unnecessary empty folders;
 - when `pom.config.json.taskPlans.recommendedPath` is present, follow it; otherwise prefer `tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md` for new task plans;
