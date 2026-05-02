@@ -92,6 +92,14 @@ node bootstrap-pom.mjs --profile refresh
 
 Refresh updates `pom/`, the POM section in every existing supported agent instruction file, package scripts, and the pre-commit hook. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
 
+If POM is already installed and `package.json` has the scripts, you can also refresh with:
+
+```bash
+npm run pom:init -- --profile refresh
+```
+
+This auto-pulls `pom/` to the latest version before updating.
+
 After installation, show the command guide with:
 
 ```bash
