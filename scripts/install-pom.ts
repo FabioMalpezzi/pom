@@ -297,9 +297,49 @@ function discoverAgentInstructionTargets(): AgentInstructionTarget[] {
   return [...unique.values()];
 }
 
-function upsertAgentInstructionSections(): void {
-  const templatePath = resolvePomSectionTemplate();
-  const section = `${START_MARKER}\n${readText(templatePath).trim()}\n${END_MARKER}`;
+function assembleAgentsTemplate(adoption: AdoptionConfig): string {
+  const modulesDir = resolveModulesDir();
+  if (!modulesDir) {
+    // Fallback: use the monolithic template
+    return readText(resolvePomSectionTemplate()).trim();
+  }
+
+  const modules: Array<{ file: string; condition: boolean }> = [
+    { file: "00-core.md", condition: true },
+    { file: "10-wiki.md", condition: adoption.wiki === "enabled" },
+    { file: "20-decisions.md", condition: adoption.decisions === "enabled" },
+    { file: "30-planning.md", condition: adoption.planning === "structured" || adoption.tasks === "structured" },
+    { file: "40-handoff.md", condition: true },
+    { file: "50-templates.md", condition: true },
+    { file: "60-skills.md", condition: true },
+    { file: "70-experiments.md", condition: adoption.analysis !== "disabled" },
+    { file: "80-docs-source.md", condition: adoption.docs !== "disabled" },
+    { file: "90-mockups.md", condition: adoption.mockups === "enabled" },
+  ];
+
+  const parts: string[] = [];
+  for (const mod of modules) {
+    if (!mod.condition) continue;
+    const modPath = join(modulesDir, mod.file);
+    if (existsSync(join(ROOT, modPath))) {
+      parts.push(readText(modPath).trim());
+    }
+  }
+
+  return parts.join("\n\n");
+}
+
+function resolveModulesDir(): string | undefined {
+  const candidates = ["pom/templates/agents", "templates/agents"];
+  for (const candidate of candidates) {
+    if (pathExists(candidate) && statSync(join(ROOT, candidate)).isDirectory()) return candidate;
+  }
+  return undefined;
+}
+
+function upsertAgentInstructionSections(adoption: AdoptionConfig): void {
+  const assembled = assembleAgentsTemplate(adoption);
+  const section = `${START_MARKER}\n${assembled}\n${END_MARKER}`;
   const markerRegex = new RegExp(`${escapeRegex(START_MARKER)}[\\s\\S]*?${escapeRegex(END_MARKER)}`);
   const instructionTargets = discoverAgentInstructionTargets();
 
@@ -691,7 +731,7 @@ async function main(): Promise<void> {
     pullPomIfGitRepo();
   }
 
-  upsertAgentInstructionSections();
+  upsertAgentInstructionSections(adoption);
   installCodingAgentFiles();
   upsertPackageScripts();
   installPreCommitHook();
