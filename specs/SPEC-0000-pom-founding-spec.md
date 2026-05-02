@@ -89,7 +89,7 @@ These are the design choices through which POM realizes the requirements above. 
 
 | ID | Decision | Realizes |
 |---|---|---|
-| D1 | Template as form, lint as enforcement: templates are the normative source for governed document structure; lint reads from templates, not from hardcoded rules | R5, R6, R10 |
+| D1 | Template as form, lint as enforcement: templates are the normative source for governed document structure; they are a starting point, not a constraint — projects can adapt, extend, or translate them by placing customized versions outside pom/ and mapping them in pom.config.json; lint reads required sections from templates, not from hardcoded rules | R5, R6, R10 |
 | D2 | Extensibility by levels: every adaptation chooses the smallest possible level — pom.config.json → templates/ → prompts/ → skills/ → lint script | R9, R10, R14 |
 | D3 | Agent-agnostic injection: POM updates every existing agent instruction file in the project (AGENTS.md, CLAUDE.md, GEMINI.md, Cursor/Windsurf/Copilot rules, etc.) and does not create tool-specific folders unless already present | R0, R10, R12 |
 | D4 | Reversible separation: POM lives in pom/; memory products live outside pom/ and belong to the project | R0, R10, R13 |
