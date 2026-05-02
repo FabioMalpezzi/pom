@@ -1,8 +1,11 @@
 # Spec - Modular AGENTS Template By Adoption Profile
 
-## Status
-
-Complete
+| Field | Value |
+|---|---|
+| Date | 2026-05-02 |
+| Status | Complete |
+| Area | architecture |
+| Summary | Inject only the AGENTS template sections relevant to the chosen adoption profile instead of the monolithic block |
 
 ## Purpose
 

@@ -1,8 +1,11 @@
 # Spec — POM, Project Operating Memory
 
-## Status
-
-Draft
+| Field | Value |
+|---|---|
+| Date | 2026-05-02 |
+| Status | Draft |
+| Area | governance |
+| Summary | Founding spec: declares what POM is, why it exists, and which requirements all other specs, decisions, and prompts must respect |
 
 ## Role Of This Document
 

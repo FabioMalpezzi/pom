@@ -1,20 +1,11 @@
 # Spec - Title
 
-## Status
-
-Draft
-
-Suggested statuses:
-
-| Status | Meaning | Use when |
-|---|---|---|
-| Waiting | Waiting for something or someone | Blocked by external input |
-| Blocked | Cannot proceed because of a concrete impediment | Missing dependency or error |
-| Deferred | Deliberately postponed | Decided to do it later |
-| Planned | Expected but not started yet | In the active plan |
-| Backlog | Future candidate, not yet planned | Parked idea or need |
-| Draft | Still being written or reviewed | Spec or task not consolidated |
-| Accepted | Approved decision | ADR, not an operational task |
+| Field | Value |
+|---|---|
+| Date | YYYY-MM-DD |
+| Status | Draft |
+| Area | wiki / docs / mockups / analysis / architecture / functional / AI / integrations |
+| Summary | one-line spec summary |
 
 ## Purpose
 
