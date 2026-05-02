@@ -6,4 +6,4 @@ Lightweight task plans for the POM framework itself.
 
 | Task | Status | Area |
 |---|---|---|
-| [TASK-0001 - Lint taskPlans mapping](TASK-0001-lint-taskplans-mapping.md) | Planned | lint/config |
+| [TASK-0001 - Lint taskPlans mapping](TASK-0001-lint-taskplans-mapping.md) | Complete | lint/config |
