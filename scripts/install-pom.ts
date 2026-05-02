@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { execFileSync } from "node:child_process";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
@@ -658,6 +659,23 @@ function isPomRepositoryRoot(): boolean {
   );
 }
 
+function pullPomIfGitRepo(): void {
+  const pomGit = join(ROOT, "pom", ".git");
+  if (!existsSync(pomGit)) return;
+
+  console.log("Pulling latest POM changes...");
+  try {
+    execFileSync("git", ["-C", join(ROOT, "pom"), "checkout", "main"], { stdio: "pipe" });
+  } catch {
+    // may already be on main
+  }
+  try {
+    execFileSync("git", ["-C", join(ROOT, "pom"), "pull", "origin", "main", "--ff-only"], { stdio: "inherit" });
+  } catch {
+    console.log("Warning: could not pull pom/. Continuing with existing version.");
+  }
+}
+
 async function main(): Promise<void> {
   if (isPomRepositoryRoot()) {
     console.log("This appears to be the POM repository root.");
@@ -668,6 +686,10 @@ async function main(): Promise<void> {
 
   const profileName = await chooseProfile();
   const adoption = await customizeAdoption(profiles[profileName].adoption);
+
+  if (adoption.profile === "refresh") {
+    pullPomIfGitRepo();
+  }
 
   upsertAgentInstructionSections();
   installCodingAgentFiles();
