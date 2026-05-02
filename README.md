@@ -513,6 +513,25 @@ With this model, `pom/` remains updatable while the project's real templates sta
 
 Lint reads required sections (`##` headings) from the configured templates, not from hardcoded rules. If a project uses translated templates (e.g., `## Contesto` instead of `## Context`), lint automatically adapts because it reads the project's template, not the English default in `pom/`.
 
+### Translating Templates
+
+When the project uses a language other than English, translate the POM templates and place them outside `pom/`:
+
+1. Copy the templates you need from `pom/templates/` to a project-owned folder (e.g., `project-templates/`).
+2. Translate the `##` section headings and placeholder text.
+3. Keep the same section structure — lint checks that documents contain the `##` headings from the configured template.
+4. Map the translated templates in `pom.config.json`:
+
+```json
+"templates": {
+  "adr": "project-templates/ADR_TEMPLATE_IT.md",
+  "spec": "project-templates/SPEC_TEMPLATE_IT.md",
+  "taskPlan": "project-templates/TASK_PLAN_TEMPLATE_IT.md"
+}
+```
+
+Lint will then check documents against the translated headings. The `pom/skills/config.md` workflow handles this during project configuration.
+
 ### Adoption Profile
 
 `pom.config.json` may include an `adoption` section. It tells the agent which POM modules are active for the project.

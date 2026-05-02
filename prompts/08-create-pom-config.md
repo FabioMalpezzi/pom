@@ -21,6 +21,7 @@ Rules:
 - put only project-specific rules in `pom.config.json`;
 - do not customize files directly under `pom/` for a target project;
 - if the project needs localized or customized templates, place them outside `pom/`, for example in `project-templates/` or `templates/`, and point `templates.*` in `pom.config.json` to those files;
+- if the project uses a language other than English for its documents, propose translating the POM templates into the project language, placing them outside `pom/`, and mapping them in `pom.config.json`; lint reads `##` headings from the configured templates, so translated templates work automatically;
 - do not copy categories from other projects;
 - do not require folders or sections that the project does not use;
 - if unsure, leave the rule empty or propose it as a warning, not a hard constraint;
