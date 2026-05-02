@@ -511,6 +511,8 @@ Example project-specific template override:
 
 With this model, `pom/` remains updatable while the project's real templates stay stable and owned by the project.
 
+Lint reads required sections (`##` headings) from the configured templates, not from hardcoded rules. If a project uses translated templates (e.g., `## Contesto` instead of `## Context`), lint automatically adapts because it reads the project's template, not the English default in `pom/`.
+
 ### Adoption Profile
 
 `pom.config.json` may include an `adoption` section. It tells the agent which POM modules are active for the project.
