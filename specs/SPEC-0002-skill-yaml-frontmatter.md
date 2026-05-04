@@ -5,26 +5,17 @@
 | Date | 2026-05-05 |
 | Status | Draft |
 | Area | architecture |
-| Summary | Add YAML frontmatter to POM skill files so agents can discover and invoke them automatically, following the pattern established by Supermemory and the Claude Skills Marketplace |
+| Summary | Add YAML frontmatter to POM skill files so agents can discover and invoke them automatically, following the standard for agent skill files in the Claude ecosystem |
 
 ## Purpose
 
-Make POM skills machine-readable by adding a YAML frontmatter block to each skill file. This enables agents to discover which skill to use automatically — without requiring the user to name the skill explicitly — and aligns POM with the emerging standard for agent skill files.
+Make POM skills machine-readable by adding a YAML frontmatter block to each skill file. This enables agents to discover which skill to use automatically — without requiring the user to name the skill explicitly — and aligns POM with the standard for agent skill files.
 
 ## Context
 
 POM skills are currently plain Markdown files with a `## When To Use` section written in prose. An agent must read the file to understand when to apply it. This works when the user explicitly says "use the wiki skill" but fails when the user says "check if the wiki is stale" — the agent has no machine-readable signal to match the request to the right skill.
 
-Supermemory's `SKILL.md` uses YAML frontmatter:
-
-```yaml
----
-name: supermemory
-description: Use this skill when building applications that need persistent memory, user personalization, long-term context retention, or semantic search across knowledge bases.
----
-```
-
-The Claude Skills Marketplace and Claude Code's skill discovery mechanism both rely on this frontmatter to:
+The Claude Skills Marketplace and Claude Code's skill discovery mechanism rely on YAML frontmatter to:
 - identify the skill by name;
 - match user requests to skills via the description;
 - enable automatic invocation without explicit user instruction.
@@ -33,10 +24,9 @@ POM skills have the same structure as Claude skills but lack the frontmatter. Ad
 
 Sources:
 
-- `supermemory/skills/supermemory/SKILL.md` — reference implementation
 - `pom/skills/` — current POM skill files (16 skills, no frontmatter)
 - `pom/skills/README.md` — current skill index
-- Analysis: "Frontmatter YAML nelle skill — Alto impatto, Basso sforzo"
+- Claude Skills standard: YAML frontmatter with `name` and `description` fields
 
 ## Requirements
 
@@ -44,7 +34,7 @@ Sources:
 |---|---|---|---|
 | R1 | Every POM skill file must have a YAML frontmatter block with `name` and `description` fields | High | Analysis |
 | R2 | `name` must be the skill filename without extension (e.g., `wiki` for `skills/wiki.md`) | High | Consistency |
-| R3 | `description` must be a single sentence that enables automatic invocation: it must describe when to use the skill, not what it does | High | Supermemory pattern |
+| R3 | `description` must be a single sentence that enables automatic invocation: it must describe when to use the skill, not what it does | High | Claude Skills standard |
 | R4 | The frontmatter must not break existing Markdown rendering or agent reading | High | Compatibility |
 | R5 | The `## When To Use` section must be kept — it provides human-readable detail that the frontmatter description summarizes | Medium | Backward compatibility |
 | R6 | The skills/README.md index must remain the authoritative list of available skills | Medium | Existing convention |
@@ -162,9 +152,8 @@ Exception reason: _none_
 
 ## Sources And Decisions
 
-- Source: `supermemory/skills/supermemory/SKILL.md` — reference frontmatter pattern
 - Source: `pom/skills/` — 16 current skill files
-- Source: analysis session comparing POM with Supermemory (2026-05-05)
+- Source: Claude Skills standard — YAML frontmatter with `name` and `description`
 - ADR: none needed — this is an additive change with no structural decision
 
 ## Evolution Rule
