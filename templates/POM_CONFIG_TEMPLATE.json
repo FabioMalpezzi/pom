@@ -103,5 +103,7 @@
     "maxLines": 180,
     "triggerPaths": [],
     "forbiddenHeadings": ["## Log", "## Timeline", "## Changelog", "## History"]
-  }
+  },
+  "skillUsage": {},
+  "promptUsage": {}
 }

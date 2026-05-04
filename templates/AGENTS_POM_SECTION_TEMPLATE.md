@@ -46,6 +46,25 @@ Rules:
 - do not add manual changelogs to specs/ADRs unless explicitly requested;
 - after structural changes, run available lint/tests and create a descriptive commit if required by the workflow.
 
+## Branching Policy
+
+Specs, task plans, ADRs, wiki pages, and other documentation can be committed
+directly to the main branch. They are governed documents, not executable code,
+and do not risk breaking the build.
+
+Create a feature branch (`feat/<topic>`) only when the first task plan step
+modifies executable code, configuration, prompts consumed at runtime, or test
+fixtures. The branch isolates changes that could break the build or alter
+runtime behavior.
+
+Summary:
+
+| Artifact | Branch needed? |
+|---|---|
+| Spec, task plan, ADR, wiki page, analysis | No — commit on main |
+| Source code, runtime config, prompts, test fixtures | Yes — feature branch |
+| Experiment or spike | Yes — `exp/<topic>` or temporary branch |
+
 ## ADR And Specs
 
 Specs are living documents: edit them directly and let Git keep fine-grained history.
@@ -240,6 +259,35 @@ Common entry points:
 | Defer or park future work | `pom/skills/defer.md` |
 | Sync POM framework changes into this project | `pom/skills/sync.md` |
 | Validate governance after significant work | `pom/skills/validate.md` |
+
+### Skill Usage Tracking
+
+When you read a skill card, update `pom.config.json` under `skillUsage`:
+
+- if the skill entry does not exist, create it with `count: 1` and `lastUsed` set to the current ISO timestamp;
+- if the skill entry exists, increment `count` by 1 and update `lastUsed`.
+
+Example:
+
+```json
+{
+  "skillUsage": {
+    "wiki": { "count": 3, "lastUsed": "2026-05-01T18:30:00Z" },
+    "plan": { "count": 1, "lastUsed": "2026-05-01T14:00:00Z" }
+  }
+}
+```
+
+The key is the skill filename without extension (e.g., `wiki` for `pom/skills/wiki.md`).
+
+### Prompt Usage Tracking
+
+When you read a canonical prompt from `pom/prompts/`, update `pom.config.json` under `promptUsage` with the same structure:
+
+- if the prompt entry does not exist, create it with `count: 1` and `lastUsed`;
+- if the prompt entry exists, increment `count` by 1 and update `lastUsed`.
+
+The key is the prompt filename without extension (e.g., `09-run-temporary-experiment` for `pom/prompts/09-run-temporary-experiment.md`).
 
 ## Planning
 
