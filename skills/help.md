@@ -14,7 +14,7 @@ description: Use this skill when the request is ambiguous or the user asks which
 
 ## Sources To Read
 
-- `skills/README.md`
+- `pom/skills/README.md` — read this first: it lists all available skills with their prompts
 - `pom.config.json`, when present
 - `README.md`, when general context is needed
 - `PROJECT_STATE.md`, when the request concerns project state

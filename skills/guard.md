@@ -15,6 +15,16 @@ description: Use this skill to set up or update documentation governance — inc
 
 `prompts/04-create-doc-governance.md`
 
+## Quick Start
+
+The installer sets up the pre-commit hook and package scripts automatically:
+
+```bash
+npm run pom:init
+```
+
+Use this skill when governance rules, lint configuration, or agent operating rules need to be reviewed or changed beyond what the installer covers.
+
 ## Main Templates
 
 - `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md`

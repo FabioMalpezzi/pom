@@ -18,9 +18,11 @@ description: Use this skill to build, query, maintain, or health-check the proje
 | Mode | Use | Prompt |
 |---|---|---|
 | `build` | build the initial wiki from existing sources | `prompts/10-build-wiki.md` |
-| `stale` | find and update potentially stale wiki pages | `prompts/11-review-stale-wiki.md` |
+| `stale` | find wiki pages that may be outdated after recent file changes — starts from `git status` | `prompts/11-review-stale-wiki.md` |
 | `query` | answer from the wiki and propose archiving the answer | `prompts/13-query-wiki.md` |
-| `lint` | check links, orphan candidates, weak sources, and produce a health report | `prompts/14-lint-wiki.md` |
+| `lint` | check wiki structure: broken links, orphan pages, missing index entries, short pages — does not require recent changes | `prompts/14-lint-wiki.md` |
+
+Use `stale` when files changed and you want to find which wiki pages cite them. Use `lint` for a periodic health check regardless of recent changes.
 
 ## Key Rules
 

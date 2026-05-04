@@ -28,6 +28,10 @@ description: Use this skill when a document type or status field is ambiguous â€
 Choose the least misleading status. In particular, use `Deferred` for deliberate
 postponement and reserve `Waiting` for external input or dependency wait.
 
+Use `skills/status.md` when the document type or status field is ambiguous. Once the type and status are clear:
+- if the work should be parked without implementing it, use `skills/defer.md`;
+- if the work should become a task plan, use `skills/plan.md`.
+
 ## Output
 
 - document type;

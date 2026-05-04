@@ -15,6 +15,18 @@ description: Use this skill to introduce POM into an existing project without br
 
 `prompts/02-adopt-existing-project.md`
 
+## Quick Start
+
+If the project has Node.js available, the installer handles the mapping automatically:
+
+```bash
+node bootstrap-pom.mjs --profile adopt
+# or, if pom/ is already installed:
+npm run pom:init
+```
+
+Use this skill when you need guided adoption, want to review the mapping before applying it, or the project does not use npm.
+
 ## Key Rules
 
 - Detect the real structure first.

@@ -11,6 +11,10 @@ description: Use this skill at the end of a significant session to update projec
 - Before leaving the AI agent.
 - After changes to governance, wiki, lint, tasks, decisions, or project state.
 
+## Related Skills
+
+- Use `skills/validate.md` as part of handoff to run the full governance punch list before closing the session.
+
 ## Canonical Prompt
 
 `prompts/07-update-project-after-work.md`

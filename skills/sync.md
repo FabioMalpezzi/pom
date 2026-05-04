@@ -15,6 +15,18 @@ description: Use this skill to align a target project's pom/ folder with the lat
 
 `prompts/17-sync-pom-framework.md`
 
+## Quick Start
+
+To refresh an existing installation to the latest POM version:
+
+```bash
+npm run pom:init -- --profile refresh
+# or, from the target project root:
+node bootstrap-pom.mjs --profile refresh
+```
+
+Use this skill when a framework-level change must be applied to both the POM source repository and a target project's `pom/`, or when the refresh command alone is not sufficient.
+
 ## Rules
 
 - Commit the POM source repository first.

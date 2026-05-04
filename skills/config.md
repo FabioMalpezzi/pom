@@ -13,7 +13,7 @@ description: Use this skill to create or update pom.config.json — configuring 
 
 ## Canonical Prompt
 
-`pom/prompts/08-create-pom-config.md`
+`prompts/08-create-pom-config.md`
 
 ## Main Template
 

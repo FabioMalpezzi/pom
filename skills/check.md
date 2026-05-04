@@ -25,7 +25,9 @@ description: Use this skill to verify a completed phase, workstream, or task —
 - Verification is mandatory and automatic when marking Complete — the agent does not ask, it verifies.
 - Report contradictions, gaps, and security/privacy risks.
 
-## Config
+## Related Skills
+
+- Use `skills/validate.md` after check to run the full governance audit (PROJECT_STATE, wiki, task status, decisions, orphan artifacts).
 
 Read `pom.config.json` to know approved analysis/task/test/docs/source roots and which warnings should be treated as errors.
 

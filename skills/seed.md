@@ -15,6 +15,18 @@ description: Use this skill to set up POM from scratch on a new or empty project
 
 `prompts/01-bootstrap-new-project.md`
 
+## Quick Start
+
+If the project has Node.js available, the installer handles most of this automatically:
+
+```bash
+node bootstrap-pom.mjs --profile minimal
+# or, if pom/ is already installed:
+npm run pom:init
+```
+
+Use this skill when you need guided setup, want to review the structure before creating files, or the project does not use npm.
+
 ## Main Templates
 
 - `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md`
