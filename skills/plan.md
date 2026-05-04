@@ -1,3 +1,8 @@
+---
+name: plan
+description: Use this skill to turn a spec, ADR, or analysis into a verifiable task plan with phases, steps, user scenarios, and done criteria.
+---
+
 # Skill - plan
 
 ## When To Use

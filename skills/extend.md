@@ -1,3 +1,8 @@
+---
+name: extend
+description: Use this skill to extend POM by adding or modifying a config rule, template, prompt, skill, or lint check — choosing the smallest necessary level.
+---
+
 # Skill - extend
 
 ## When To Use

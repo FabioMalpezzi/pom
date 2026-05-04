@@ -1,3 +1,8 @@
+---
+name: status
+description: Use this skill when a document type or status field is ambiguous — classifying whether the artifact is a spec, ADR, task, wiki page, or plan, and choosing the least misleading status.
+---
+
 # Skill - status
 
 ## When To Use

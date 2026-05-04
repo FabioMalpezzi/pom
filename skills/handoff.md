@@ -1,3 +1,8 @@
+---
+name: handoff
+description: Use this skill at the end of a significant session to update project state, run lint, verify completed work, and leave a clear restart point.
+---
+
 # Skill - handoff
 
 ## When To Use

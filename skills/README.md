@@ -10,6 +10,8 @@ Purpose:
 
 Skills do not replace prompts. Each skill points to the canonical prompt and relevant templates.
 
+Each skill file includes a YAML frontmatter block with `name` and `description` fields. Agents that support skill discovery can use this to invoke skills automatically when the user's request matches the description. Agents that do not support frontmatter continue to read the `## When To Use` section as before.
+
 ## Configuration
 
 Before applying a skill, read `pom.config.json` when present.

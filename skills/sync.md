@@ -1,3 +1,8 @@
+---
+name: sync
+description: Use this skill to align a target project's pom/ folder with the latest POM source repository after a framework-level change.
+---
+
 # Skill - sync
 
 ## When To Use

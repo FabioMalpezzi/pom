@@ -1,3 +1,8 @@
+---
+name: check
+description: Use this skill to verify a completed phase, workstream, or task — including goal-backward check, scenario tests, thesis/antithesis validation, and consistency with specs, ADRs, and wiki.
+---
+
 # Skill - check
 
 ## When To Use

@@ -1,3 +1,8 @@
+---
+name: spike
+description: Use this skill to run a temporary experiment, spike, or exploratory one-shot work — isolating it from the stable codebase and consolidating only after evaluation.
+---
+
 # Skill - spike
 
 ## When To Use

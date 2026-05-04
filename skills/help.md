@@ -1,3 +1,8 @@
+---
+name: help
+description: Use this skill when the request is ambiguous or the user asks which POM skill, prompt, or template to use for a given task.
+---
+
 # Skill - help
 
 ## When To Use

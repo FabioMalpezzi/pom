@@ -1,3 +1,8 @@
+---
+name: wiki
+description: Use this skill to build, query, maintain, or health-check the project wiki — including initial creation, stale page detection, wiki queries with optional archival, and link/orphan checks.
+---
+
 # Skill - wiki
 
 ## When To Use

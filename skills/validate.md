@@ -1,3 +1,8 @@
+---
+name: validate
+description: Use this skill to audit POM governance after closing a task, approving a decision, completing a wiki update, deferring work, or before a session handoff.
+---
+
 # Skill - validate
 
 ## When To Use

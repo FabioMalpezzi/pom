@@ -1,3 +1,8 @@
+---
+name: guard
+description: Use this skill to set up or update documentation governance — including lint configuration, decision records, mock manifests, and agent operating rules.
+---
+
 # Skill - guard
 
 ## When To Use
