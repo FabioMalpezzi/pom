@@ -66,6 +66,7 @@
     "indexPath": "decisions/ADR_INDEX.md",
     "categoryField": "Category",
     "areaField": "Area",
+    "docsPathsRequiringAdr": [],
     "requireTemplateSections": true
   },
   "taskPlans": {

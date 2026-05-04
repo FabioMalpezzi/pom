@@ -67,6 +67,7 @@ The configuration should cover, when applicable:
 - POM template paths and any project-owned template overrides;
 - wiki index/log expectations and project-specific wiki categories/sections;
 - ADR root, patterns, index path, and whether existing ADRs must follow the POM ADR template exactly;
+- `decisions.docsPathsRequiringAdr`: list of `docs/` path prefixes that trigger the `docs-without-adr` warning. When empty (default), any change under `docs/` triggers the warning. When populated, only changes matching at least one prefix trigger it. Example: `["docs/server-canonical/requirements/"]` means only requirement changes require an ADR, not plans or working notes;
 - task-plan root, task file pattern, index path, and whether task files must follow the POM task template exactly;
 - analysis preferences and structure: `analysis.root`, optional `analysis.recommendedPath`, optional `analysis.namespaceConvention`, allowed dirs, and whether existing analysis namespaces should be preserved;
 - mockup package root, manifest rules, and reconciliation document search;

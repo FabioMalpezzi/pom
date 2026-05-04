@@ -67,6 +67,7 @@ type LintConfig = {
     indexPath: string;
     categoryField: string;
     areaField: string;
+    docsPathsRequiringAdr: string[];
     requireTemplateSections: boolean;
   };
   taskPlans: {
@@ -173,6 +174,7 @@ const defaultConfig: LintConfig = {
     indexPath: "decisions/ADR_INDEX.md",
     categoryField: "Category",
     areaField: "Area",
+    docsPathsRequiringAdr: [],
     requireTemplateSections: true,
   },
   taskPlans: {
@@ -325,6 +327,7 @@ function mergeConfig(base: LintConfig, raw: Record<string, unknown>): LintConfig
       indexPath: readString(raw, "decisions.indexPath", base.decisions.indexPath),
       categoryField: readString(raw, "decisions.categoryField", base.decisions.categoryField),
       areaField: readString(raw, "decisions.areaField", base.decisions.areaField),
+      docsPathsRequiringAdr: readStringArray(raw, "decisions.docsPathsRequiringAdr", base.decisions.docsPathsRequiringAdr),
       requireTemplateSections: readBoolean(
         raw,
         "decisions.requireTemplateSections",
@@ -1241,12 +1244,19 @@ function checkGitWorkflow(): void {
   }
 
   if (changedDocs.length > 0 && changedDecisions.length === 0) {
-    add(
-      "warning",
-      "docs-without-adr",
-      `There are ${config.documentation.officialRoot}/ changes without a modified or added ADR.`,
-      `${decisionsRoot}/`,
-    );
+    const requiringAdr = config.decisions.docsPathsRequiringAdr;
+    const needsAdr =
+      requiringAdr.length === 0
+        ? changedDocs.length > 0
+        : changedDocs.some((path) => requiringAdr.some((prefix) => path.startsWith(prefix)));
+    if (needsAdr) {
+      add(
+        "warning",
+        "docs-without-adr",
+        `There are ${config.documentation.officialRoot}/ changes without a modified or added ADR.`,
+        `${decisionsRoot}/`,
+      );
+    }
   }
 
   checkProjectStateHandoff(changed);
