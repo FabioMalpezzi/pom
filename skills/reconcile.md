@@ -30,15 +30,16 @@ description: Use this skill when a divergence between a source and project memor
 
 | Type | When | Resolution |
 |---|---|---|
-| Obsolescence | Source updated, memory cites old version | Update wiki page |
-| Contradiction | Two authoritative sources disagree | Create ADR, then update wiki |
+| Obsolescence | Source updated, memory cites old version | Update wiki page (only if `adoption.wiki` is enabled and wiki exists) |
+| Contradiction | Two authoritative sources disagree | Create ADR; then update wiki if enabled and exists |
 | Expiry | Fact no longer relevant | Archive or remove memory |
-| Gap | Expected knowledge missing | Create wiki page or open question |
+| Gap | Expected knowledge missing | Create wiki page or open question (only if wiki enabled and exists) |
 
 ## Key Rules
 
 - Classify the divergence type before proposing any resolution.
 - Contradictions require an ADR — do not resolve them with a wiki update alone.
+- Wiki updates apply only when `adoption.wiki` is `enabled` in `pom.config.json` and `wiki/` exists.
 - Do not modify memory without explicit approval.
 - After resolution, scan for other memory with the same problem (loop closure).
 - Run lint after changes.

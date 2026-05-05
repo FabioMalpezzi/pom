@@ -15,10 +15,10 @@ Before modifying files:
    - Expiry: fact was true but is no longer relevant;
    - Gap: expected knowledge is missing from memory;
 5. propose the resolution path for the classified type:
-   - Obsolescence → update the wiki page to reflect the current source;
-   - Contradiction → create an ADR that resolves the contradiction; update wiki after decision;
+   - Obsolescence → update the wiki page to reflect the current source (only if `adoption.wiki` is enabled and `wiki/` exists; otherwise update the relevant spec or analysis document);
+   - Contradiction → create an ADR that resolves the contradiction; update wiki after decision (only if wiki is enabled and exists);
    - Expiry → archive or remove the memory; note the reason;
-   - Gap → create a new wiki page or section; flag as open question if source is unclear;
+   - Gap → create a new wiki page or section (only if wiki is enabled and exists); flag as open question if source is unclear;
 6. wait for approval before modifying any file.
 
 Rules:
