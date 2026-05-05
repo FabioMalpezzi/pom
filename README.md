@@ -106,9 +106,7 @@ After installation, show the command guide with:
 npm run pom:help
 ```
 
-In an interactive terminal it can launch common commands such as refresh, lint,
-or skill reference display. In non-interactive contexts it prints the guide and
-exits.
+Prints the command reference and skill index. Always exits immediately — no interactive input required.
 
 Supported instruction targets are deliberately conservative:
 
