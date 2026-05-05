@@ -100,7 +100,7 @@
   "handoff": {
     "projectStatePath": "PROJECT_STATE.md",
     "severity": "warning",
-    "maxLines": 180,
+    "maxLines": 220,
     "triggerPaths": [],
     "forbiddenHeadings": ["## Log", "## Timeline", "## Changelog", "## History"]
   },

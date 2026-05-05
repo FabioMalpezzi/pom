@@ -63,7 +63,7 @@ POM supports four forms of memory. Which are actually active in a given project 
 |---|---|---|---|
 | R1 | POM must be able to maintain the project's consolidated and cumulative knowledge as a persistent wiki, not as a volatile index | High | WIKI_METHOD.md |
 | R2 | POM must be able to maintain the history of decisions and their rationale as ADRs, distinct from specs and code | High | README, "ADR And Spec Changes" |
-| R3 | POM must be able to maintain the current state and restart point in a single artifact (PROJECT_STATE.md, target ≤180 lines) readable in a few minutes | High | README, "POM Minimal" |
+| R3 | POM must be able to maintain the current state and restart point in a single artifact (PROJECT_STATE.md, target ≤220 lines) readable in a few minutes | High | README, "POM Minimal" |
 | R4 | POM must be able to maintain the active work plan (current plan, verifiable tasks) as short-term operating memory | Medium | CURRENT_PLAN_TEMPLATE.md, TASK_PLAN_TEMPLATE.md |
 
 ### B. Verification — What Makes The Memory Reliable

@@ -2,17 +2,20 @@
 
 At the end of a significant session, before final handoff, update `PROJECT_STATE.md` if the project operating context changed.
 
-`PROJECT_STATE.md` is the minimum restart memory for the user and the next AI agent. It must include:
+`PROJECT_STATE.md` has two sections with different update frequencies:
 
-- current state;
-- latest relevant decisions or commits;
-- recommended next actions;
-- open decisions;
-- risks or blockers;
-- files to read when resuming;
-- what not to do without new approval.
+**Static Context** — update only when the project's direction, stack, or permanent constraints change:
+- project purpose, key constraints, structural decisions, files to always read, what not to do without a new decision.
 
-Do not update it for tiny edits with no operational impact. If method, governance, priorities, lint, task plans, wiki, or decisions changed, update it before the final response.
+**Dynamic Context** — update at every significant session:
+- current state, current objective, priorities, next actions, open decisions, risks.
+
+Do not update Static Context for operational changes. Do not update Dynamic Context for permanent structural changes — create or update an ADR instead.
+
+Compaction rules:
+- if the file exceeds the maxLines limit, compact Dynamic Context: remove completed actions, archive closed decisions to `decisions/` or `wiki/log.md`, delete resolved risks;
+- if a section of Dynamic Context is becoming a log, move it to `wiki/log.md` or `decisions/` and remove it from `PROJECT_STATE.md`;
+- never compact Static Context.
 
 ## POM Lint Workflow
 
