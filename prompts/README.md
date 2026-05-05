@@ -23,6 +23,10 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `13-query-wiki.md` | query the wiki and propose archival of reusable answers |
 | `14-lint-wiki.md` | check wiki health and produce a lightweight health report |
 | `15-classify-document-status.md` | choose the right document type and status before writing |
+| `16-defer-work.md` | preserve work without implementing it, with explicit reactivation criteria |
+| `17-sync-pom-framework.md` | align a target project's pom/ with the latest POM source after a framework change |
+| `18-post-action-validator.md` | read-only governance audit after closing tasks, decisions, or wiki updates |
+| `19-reconcile-memory.md` | classify and resolve a divergence between a source and project memory |
 | `16-defer-work.md` | preserve future work as Deferred without implementing it |
 | `17-sync-pom-framework.md` | commit POM source changes and align a target project's `pom/` |
 | `18-post-action-validator.md` | read-only audit of POM governance after significant actions |

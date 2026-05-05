@@ -35,6 +35,7 @@ Use `stale` when files changed and you want to find which wiki pages cite them. 
 - In `lint` mode, treat heuristic results as candidates, not certain errors.
 - Propose changes before applying them when impact is ambiguous.
 - Run lint after wiki updates.
+- If a stale candidate involves a contradiction between two authoritative sources, use `skills/reconcile.md` instead of updating the wiki directly.
 
 ## Output
 
