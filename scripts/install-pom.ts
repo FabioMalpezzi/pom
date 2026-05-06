@@ -470,8 +470,8 @@ if [ -f "PROJECT_STATE.md" ]; then
   pom_changed="$(git diff --cached --name-only -- wiki decisions docs analysis mockups pom.config.json CURRENT_PLAN.md specs 2>/dev/null)"
   pom_state_changed="$(git diff --cached --name-only -- PROJECT_STATE.md 2>/dev/null)"
   if [ -n "$pom_changed" ] && [ -z "$pom_state_changed" ]; then
-    echo "POM pre-commit reminder: governed project-memory files are staged, but PROJECT_STATE.md is not staged."
-    echo "Update PROJECT_STATE.md only if restart context changed: substantial ADR/spec change, roadmap/current-plan change, closed important task, new risk/blocker/open decision, or explicit end-of-session handoff request."
+    echo "POM pre-commit notice: this commit touches governed project-memory files but not PROJECT_STATE.md."
+    echo "Most commits do not need a PROJECT_STATE.md update. Update it only when the next person resuming would otherwise see a wrong starting picture: a closed important task, a new risk or open decision, a substantial ADR/spec/roadmap change, or an explicit handoff request."
   fi
 fi
 ${HOOK_END_MARKER}`;

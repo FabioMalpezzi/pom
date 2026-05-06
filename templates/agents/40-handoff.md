@@ -1,6 +1,9 @@
-## Session Handoff Memory
+## Restart Context (PROJECT_STATE.md)
 
-At the end of a significant session, before final handoff, update `PROJECT_STATE.md` if the project operating context changed.
+`PROJECT_STATE.md` is the minimum restart memory: it answers "from
+where do I pick up?" for the next person — or for the same person
+tomorrow. Update it when the restart context has actually changed,
+not just because a session is ending.
 
 `PROJECT_STATE.md` has two sections with different update frequencies:
 
@@ -37,13 +40,13 @@ If the command is missing, state that automatic POM checks are not configured an
 
 If `pom:init` installed the POM pre-commit hook, commits run `npm run pom:lint`.
 
-If `PROJECT_STATE.md` exists and governed project-memory files are staged, the hook prints a non-blocking reminder to update `PROJECT_STATE.md` when the restart context changed.
+If `PROJECT_STATE.md` exists and governed project-memory files are staged, the hook prints a non-blocking reminder. The reminder is informational, not an obligation: most commits do not need a `PROJECT_STATE.md` update.
 
-Update `PROJECT_STATE.md` when:
+Update `PROJECT_STATE.md` only when one of these applies:
 
 - an ADR, spec, roadmap, priority, or current plan changes substantially;
 - an important task or phase is closed;
 - a relevant risk, blocker, or open decision is introduced;
 - the user explicitly asks for a handoff or restart-status update.
 
-Do not update it for typos, regenerated indexes, or changes with no restart impact.
+Typos, regenerated indexes, link-only fixes, or changes with no restart impact do not need it.

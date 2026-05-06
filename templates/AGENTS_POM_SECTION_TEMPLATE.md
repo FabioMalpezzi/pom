@@ -113,11 +113,11 @@ Inputs / Code / Mockups / Analysis / Conversation
         -> Project State
 ```
 
-## Session Handoff Memory
+## Restart Context (PROJECT_STATE.md)
 
-At the end of a significant session, before final handoff, update `PROJECT_STATE.md` if the project operating context changed.
+`PROJECT_STATE.md` is the minimum restart memory for the user and the next AI agent. Its purpose is to answer "from where do I pick up?", not to record that a session has ended. Update it when the restart context has actually changed.
 
-`PROJECT_STATE.md` is the minimum restart memory for the user and the next AI agent. It must include:
+It must include:
 
 - current state;
 - latest relevant decisions or commits;
@@ -127,7 +127,7 @@ At the end of a significant session, before final handoff, update `PROJECT_STATE
 - files to read when resuming;
 - what not to do without new approval.
 
-Do not update it for tiny edits with no operational impact. If method, governance, priorities, lint, task plans, wiki, or decisions changed, update it before the final response.
+Most commits do not need a `PROJECT_STATE.md` update. Update it when method, governance, priorities, lint, task plans, wiki, or decisions changed in a way that the next session would otherwise see incorrectly. Tiny edits with no restart impact do not need it.
 
 ## POM Commands
 
@@ -186,18 +186,18 @@ If the command is missing, state that automatic POM checks are not configured an
 
 If `pom:init` installed the POM pre-commit hook, commits run `npm run pom:lint`.
 
-If `PROJECT_STATE.md` exists and governed project-memory files are staged, the hook prints a non-blocking reminder to update `PROJECT_STATE.md` when the restart context changed. The hook does not update `PROJECT_STATE.md` automatically.
+If `PROJECT_STATE.md` exists and governed project-memory files are staged, the hook prints a non-blocking reminder. The reminder is informational: most commits do not need a `PROJECT_STATE.md` update, and the hook never updates `PROJECT_STATE.md` automatically.
 
-Update `PROJECT_STATE.md` when:
+Update `PROJECT_STATE.md` only when one of these applies:
 
 - an ADR changes substantially;
 - a spec changes substantially;
 - roadmap, priority, dependency, or current plan changes;
 - an important task or phase is closed;
 - a relevant risk, blocker, or open decision is introduced;
-- the user explicitly asks for an end-of-session, end-of-day, handoff, or restart-status update.
+- the user explicitly asks for a handoff or restart-status update.
 
-Do not update it for typos, regenerated indexes, link-only fixes, or changes that do not affect how the next session should restart.
+Typos, regenerated indexes, link-only fixes, or changes that do not affect how the next session should restart do not need it.
 
 ## Templates
 

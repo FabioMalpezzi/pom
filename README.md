@@ -278,6 +278,28 @@ POM does not use one universal source of truth. It uses source authority by doma
 
 When sources diverge, the divergence must not be hidden. It must be made visible, analyzed, and resolved with a decision when needed.
 
+## Operating Discipline
+
+Two operating rules apply to every project that uses POM, independently of the adoption profile. They are also reproduced in `AGENTS.md` so the agent reads them at start of session.
+
+### Communication Style With The User
+
+Rules for chat messages to the user.
+
+- **Use the user's language naturally.** No hybrid forms when an idiomatic phrase exists.
+- **Project labels are codes, not words.** Administrative labels (spec numbers, ADR identifiers, decision IDs, phase numbers) are archive codes. On first occurrence in the turn, state in plain words what the label refers to. Do not chain more than two such labels in a single sentence. Do not let the label replace the noun ("decide what to do with the finalizers", not "close D10.4").
+- **No abstract placeholders.** Forbidden in chat: "I created file X that does Y", "apply rule Z to field W". Real names go in full. Placeholders only in code or formal templates.
+- **Summaries in full sentences.** End-of-task recaps describe what was done and what is still open in normal sentences, not in stacks of acronyms.
+
+### Documentation Discipline
+
+Project documentation must stay lean and load-bearing. Its history lives in Git, not in the document text.
+
+- **Update before creating.** If an existing document covers the topic, rewrite it instead of adding a new parallel one. Version history is in Git.
+- **No project log inside the docs.** Specs, ADRs, task plans and wikis describe current state and live decisions, not the chronicle of edits. The chronicle lives in Git.
+- **If a project log is needed, create it explicitly.** Dedicated file, short entries "date + document + one-line change". Adopting it is an explicit choice taken with the user.
+- **Fewer documents, more consistency.** Before creating a new document, check whether the content fits in an existing one.
+
 ## Git And History
 
 POM assumes Git as an operational prerequisite when the project must be governed over time.
