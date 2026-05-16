@@ -13,3 +13,5 @@ Rules:
 
 Always-useful entries include `clarify`, `status`, `defer`, `diagnose`, `prune`, `sync`, and `validate`.
 Use profile-specific entries such as `wiki`, `guard`, `plan`, or `spike` only when the corresponding module is enabled.
+
+Use `sync` before manually updating this project's installed `pom/` folder or aligning it to a source POM commit.

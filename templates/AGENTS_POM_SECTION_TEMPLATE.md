@@ -265,7 +265,7 @@ Common entry points:
 | Defer or park future work | `pom/skills/defer.md` |
 | Diagnose a failing POM workflow | `pom/skills/diagnose.md` |
 | Prune overlapping or excessive POM rules | `pom/skills/prune.md` |
-| Sync POM framework changes into this project | `pom/skills/sync.md` |
+| Refresh or sync POM in this project | `pom/skills/sync.md` |
 | Validate governance after significant work | `pom/skills/validate.md` |
 
 ### Skill Usage Tracking

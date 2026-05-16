@@ -24,7 +24,7 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `14-lint-wiki.md` | check wiki health and produce a lightweight health report |
 | `15-classify-document-status.md` | choose the right document type and status before writing |
 | `16-defer-work.md` | preserve work without implementing it, with explicit reactivation criteria |
-| `17-sync-pom-framework.md` | align a target project's pom/ with the latest POM source after a framework change |
+| `17-sync-pom-framework.md` | refresh an existing POM installation or align a target project's pom/ with a source POM change |
 | `18-post-action-validator.md` | read-only governance audit after significant or memory-changing actions |
 | `19-reconcile-memory.md` | classify and resolve a divergence between a source and project memory |
 | `20-clarify-pom-work.md` | clarify ambiguous POM work before creating memory or changing method |

@@ -64,7 +64,7 @@ Existing project structures should be mapped first, not moved by default.
 | `prune` | simplify, merge, demote, delete, or config-gate POM method bloat | `prompts/21-prune-pom-method.md` |
 | `status` | classify document type and choose the least misleading status | `prompts/15-classify-document-status.md` |
 | `defer` | park important work without implementing it | `prompts/16-defer-work.md` |
-| `sync` | align POM source changes with a target project's `pom/` | `prompts/17-sync-pom-framework.md` |
+| `sync` | refresh an existing POM installation or align source POM changes with a target project's `pom/` | `prompts/17-sync-pom-framework.md` |
 | `reconcile` | classify and resolve a divergence between a source and project memory | `prompts/19-reconcile-memory.md` |
 | `validate` | audit POM governance after significant actions | `prompts/18-post-action-validator.md` |
 

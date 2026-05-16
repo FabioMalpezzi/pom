@@ -40,7 +40,7 @@ Use the smallest workflow that matches your situation:
 | Reduce method bloat | `skills/prune.md` |
 | Diagnose a POM problem | `skills/diagnose.md` |
 | Defer work without implementing | `skills/defer.md` |
-| Sync POM source to a project | `skills/sync.md` |
+| Refresh or sync POM in a project | `skills/sync.md` |
 | See available commands | `npm run pom:help` |
 
 ### How to talk to the agent
@@ -106,13 +106,21 @@ node bootstrap-pom.mjs --profile refresh
 
 Refresh updates `pom/`, the POM section in every existing supported agent instruction file, package scripts, and the pre-commit hook. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
 
-If POM is already installed and `package.json` has the scripts, you can also refresh with:
+For agent-driven updates in a project that already has POM installed, use the sync skill:
+
+```text
+Read pom/skills/sync.md and refresh this project's POM installation.
+```
+
+The sync workflow checks the target project, inspects local changes in `pom/`, updates `pom/` first, runs the refresh installer, runs lint, and stages only the related files.
+
+If POM is already installed, `pom/` is clean, and `package.json` has the scripts, you can also refresh with:
 
 ```bash
 npm run pom:init -- --profile refresh
 ```
 
-This auto-pulls `pom/` to the latest version before updating.
+That command is a convenience path. When the installer itself may have changed, update `pom/` first or use `node bootstrap-pom.mjs --profile refresh`, because the bootstrap lives outside `pom/` and can update POM before launching the installer.
 
 After installation, show the command guide with:
 
@@ -529,7 +537,7 @@ POM skills are short operational aliases for the main prompts. They do not repla
 | `prune` | reduce POM method bloat |
 | `status` | document type and status classification |
 | `defer` | park work without implementation |
-| `sync` | align POM source and target project |
+| `sync` | refresh or align POM in a target project |
 | `reconcile` | resolve source/project memory divergence |
 | `validate` | read-only governance audit |
 
