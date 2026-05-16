@@ -439,6 +439,20 @@
       font-size: 0.92em;
     }
 
+    .command-list {
+      display: grid;
+      gap: 8px;
+      margin: 12px 0 0;
+    }
+
+    .command-list code {
+      display: block;
+      overflow-x: auto;
+      padding: 8px 10px;
+      white-space: nowrap;
+      background: #fffdf9;
+    }
+
     ul, ol {
       padding-left: 1.2rem;
     }
@@ -617,6 +631,7 @@
         <a href="#why">Perché esiste</a>
         <a href="#principles">Principi</a>
         <a href="#tools">Strumenti</a>
+        <a href="#install">Installa</a>
         <a href="#adoption">Adozione</a>
         <a href="#skills">Skill</a>
         <a href="#recommendations">Raccomandazioni</a>
@@ -759,6 +774,33 @@
       </table>
     </section>
 
+    <section id="install">
+      <h2>Prima installazione e aggiornamenti</h2>
+      <div class="grid two">
+        <div class="item">
+          <h3>Prima installazione</h3>
+          <p>Dalla root del progetto target, scaricare lo script di bootstrap ed eseguirlo. L'installer interattivo permette di scegliere un profilo come <code>minimal</code>, <code>wiki</code>, <code>decisions</code>, <code>full</code> o <code>adopt</code>.</p>
+          <div class="command-list">
+            <code>curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs</code>
+            <code>node bootstrap-pom.mjs</code>
+          </div>
+          <p>Dopo che il bootstrap ha installato <code>pom/</code>, usare <code>Read pom/skills/seed.md and set up POM for this project.</code> Su un repository esistente, usare <code>Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code></p>
+        </div>
+        <div class="item">
+          <h3>Aggiornare POM già installato</h3>
+          <p>Quando un progetto ha già <code>pom/</code>, usare la skill <code>sync</code>: l'agente controlla modifiche locali, aggiorna <code>pom/</code>, rigenera le sezioni, esegue il lint e prepara solo i file collegati.</p>
+          <p><code>Read pom/skills/sync.md and refresh this project's POM installation.</code></p>
+          <div class="command-list">
+            <code>git -C pom pull --ff-only origin main</code>
+            <code>npm run pom:init -- --profile refresh</code>
+            <code>npm run pom:lint</code>
+          </div>
+          <p>Se <code>pom/</code> contiene modifiche locali, vanno ispezionate prima del pull. Le personalizzazioni del progetto non vanno sovrascritte in silenzio.</p>
+        </div>
+      </div>
+      <p class="callout">Per gli aggiornamenti, <code>node bootstrap-pom.mjs --profile refresh</code> è il percorso più sicuro perché il bootstrap vive fuori da <code>pom/</code> e può aggiornare POM prima di lanciare l'installer.</p>
+    </section>
+
     <section id="new-project">
       <h2>Usare POM su un nuovo progetto</h2>
       <ol>
@@ -846,7 +888,7 @@
           <tr><td data-label="Esigenza">Estendere il metodo POM</td><td data-label="Skill"><code>extend</code></td></tr>
           <tr><td data-label="Esigenza">Classificare tipo o stato di un documento</td><td data-label="Skill"><code>status</code></td></tr>
           <tr><td data-label="Esigenza">Parcheggiare lavoro senza implementarlo</td><td data-label="Skill"><code>defer</code></td></tr>
-          <tr><td data-label="Esigenza">Sincronizzare POM source in un progetto target</td><td data-label="Skill"><code>sync</code></td></tr>
+          <tr><td data-label="Esigenza">Aggiornare o sincronizzare POM in un progetto target</td><td data-label="Skill"><code>sync</code></td></tr>
           <tr><td data-label="Esigenza">Risolvere divergenze tra fonti</td><td data-label="Skill"><code>reconcile</code></td></tr>
           <tr><td data-label="Esigenza">Eseguire un audit di governance read-only</td><td data-label="Skill"><code>validate</code></td></tr>
           <tr><td data-label="Esigenza">Ridurre bloat del metodo</td><td data-label="Skill"><code>prune</code></td></tr>

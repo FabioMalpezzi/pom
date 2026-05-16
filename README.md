@@ -73,13 +73,25 @@ See `examples/agent-conversations.md` for more detailed interaction examples.
 
 **Requirements:** Node.js ≥22.6 (for TypeScript script execution via `--experimental-strip-types`). Git required.
 
-### Quick install (recommended)
+### First install (recommended)
 
 Download and run the bootstrap script from the target project root:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
 node bootstrap-pom.mjs
+```
+
+After bootstrap has installed `pom/`, for agent-driven setup on a new project, ask:
+
+```text
+Read pom/skills/seed.md and set up POM for this project.
+```
+
+After bootstrap has installed `pom/`, for agent-driven adoption in an existing repository, ask:
+
+```text
+Read pom/skills/adopt.md and adopt POM without changing the existing structure.
 ```
 
 The bootstrap script:
@@ -97,7 +109,9 @@ You can also pass a profile directly:
 node bootstrap-pom.mjs --profile full
 ```
 
-To refresh an existing POM installation from the target project root:
+### Updating POM in an existing project
+
+For the safest refresh path from the target project root:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
@@ -113,6 +127,17 @@ Read pom/skills/sync.md and refresh this project's POM installation.
 ```
 
 The sync workflow checks the target project, inspects local changes in `pom/`, updates `pom/` first, runs the refresh installer, runs lint, and stages only the related files.
+
+For a manual compact refresh:
+
+```bash
+git status --short --branch
+git -C pom status --short --branch
+git -C pom pull --ff-only origin main
+npm run pom:init -- --profile refresh
+npm run pom:lint
+git diff
+```
 
 If POM is already installed, `pom/` is clean, and `package.json` has the scripts, you can also refresh with:
 
