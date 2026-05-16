@@ -631,6 +631,7 @@
         <a href="#why">Perché esiste</a>
         <a href="#principles">Principi</a>
         <a href="#tools">Strumenti</a>
+        <a href="#workflow">Workflow</a>
         <a href="#install">Installa</a>
         <a href="#overlay">Overlay</a>
         <a href="#adoption">Adozione</a>
@@ -773,6 +774,33 @@
           </tr>
         </tbody>
       </table>
+    </section>
+
+    <section id="workflow">
+      <h2>Come funziona in pratica</h2>
+      <p>POM si può leggere come un flusso operativo compatto: l'utente dichiara il lavoro, l'agente sceglie il workflow, il risultato diventa memoria del progetto e POM verifica che l'artefatto sia affidabile.</p>
+      <div class="grid">
+        <div class="item">
+          <span class="tag teal">1. Richiesta</span>
+          <h3>L'utente dichiara il lavoro e il risultato atteso</h3>
+          <p>Esempio: "Trasforma la specifica sul recupero password in un piano verificabile".</p>
+        </div>
+        <div class="item">
+          <span class="tag">2. Workflow</span>
+          <h3>L'agente sceglie la procedura</h3>
+          <p>L'agente sceglie la skill, legge il prompt canonico e usa il template giusto. Esempio: usa <code>plan</code>, legge il prompt per creare task plan e applica il template dei task.</p>
+        </div>
+        <div class="item">
+          <span class="tag gold">3. Memoria</span>
+          <h3>Il risultato entra nel repository</h3>
+          <p>Il risultato non resta nella chat: diventa un documento nel progetto, per esempio <code>tasks/recovery/P0/password-reset.md</code>.</p>
+        </div>
+        <div class="item">
+          <span class="tag teal">4. Verifica</span>
+          <h3>POM controlla l'affidabilità</h3>
+          <p>POM controlla che l'artefatto sia affidabile: lint, controllo goal-backward, scenari positivi e casi di errore quando c'è codice.</p>
+        </div>
+      </div>
     </section>
 
     <section id="install">

@@ -631,6 +631,7 @@
         <a href="#why">Why it exists</a>
         <a href="#principles">Principles</a>
         <a href="#tools">Tools</a>
+        <a href="#workflow">Workflow</a>
         <a href="#install">Install</a>
         <a href="#overlay">Overlay</a>
         <a href="#adoption">Adoption</a>
@@ -773,6 +774,33 @@
           </tr>
         </tbody>
       </table>
+    </section>
+
+    <section id="workflow">
+      <h2>How POM works in practice</h2>
+      <p>POM can be read as a compact operating flow: the user states the work, the agent chooses the workflow, the result becomes project memory, and POM verifies that the artifact is reliable.</p>
+      <div class="grid">
+        <div class="item">
+          <span class="tag teal">1. Request</span>
+          <h3>The user states the work and expected result</h3>
+          <p>Example: "Turn the password recovery spec into a verifiable plan".</p>
+        </div>
+        <div class="item">
+          <span class="tag">2. Workflow</span>
+          <h3>The agent chooses the procedure</h3>
+          <p>The agent chooses the skill, reads the canonical prompt, and uses the right template. Example: it uses <code>plan</code>, reads the task-plan prompt, and applies the task template.</p>
+        </div>
+        <div class="item">
+          <span class="tag gold">3. Memory</span>
+          <h3>The result enters the repository</h3>
+          <p>The result does not remain in chat: it becomes a project document, for example <code>tasks/recovery/P0/password-reset.md</code>.</p>
+        </div>
+        <div class="item">
+          <span class="tag teal">4. Verification</span>
+          <h3>POM checks reliability</h3>
+          <p>POM checks that the artifact is reliable: lint, goal-backward review, positive scenarios, and error cases when code exists.</p>
+        </div>
+      </div>
     </section>
 
     <section id="install">
