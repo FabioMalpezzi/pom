@@ -632,6 +632,7 @@
         <a href="#principles">Principles</a>
         <a href="#tools">Tools</a>
         <a href="#install">Install</a>
+        <a href="#overlay">Overlay</a>
         <a href="#adoption">Adoption</a>
         <a href="#skills">Skills</a>
         <a href="#recommendations">Recommendations</a>
@@ -820,6 +821,18 @@
         <li>Adopt incrementally. Migrations are explicit decisions, not installation side effects.</li>
       </ol>
       <div class="callout">Good first request: <code>Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code></div>
+    </section>
+
+    <section id="overlay">
+      <h2>Overlay on external projects</h2>
+      <p>When the repository is cloned from an upstream you do not own, POM should act as a local understanding overlay, not as project governance.</p>
+      <ul>
+        <li>Do not impose POM conventions on upstream <code>docs/</code>, <code>tests/</code>, ADRs, source layout, release process, or pull-request contents.</li>
+        <li>Use local memory to map architecture, entrypoints, modules, tests, conventions, risks, and open questions.</li>
+        <li>Keep overlay artifacts out of upstream contributions unless the project explicitly wants them.</li>
+        <li>Before a PR, stage only the real upstream change and run the upstream project's own checks.</li>
+      </ul>
+      <div class="callout">Documented mode: <code>Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding overlay.</code></div>
     </section>
 
     <section id="adoption">

@@ -18,6 +18,7 @@ Before applying a skill, read `pom.config.json` when present.
 
 The config defines project-specific conventions, including:
 
+- repository ownership and operating posture (`ownership`);
 - decisions/ADR roots and patterns (`decisions`);
 - documentation roots (`documentation`);
 - source roots (`source`);
@@ -30,6 +31,12 @@ The config defines project-specific conventions, including:
 - handoff rules for `PROJECT_STATE.md`.
 
 For existing projects, prefer mapping current folders and file patterns in config before proposing a migration to POM's canonical examples.
+
+If `ownership.mode` is missing or `unknown`, clarify it before making structural assumptions:
+
+- `owned`: POM may become part of project governance.
+- `team`: POM should preserve existing conventions unless the user approves changes.
+- `external_overlay`: POM is local understanding memory only and must not govern upstream docs, tests, source layout, release process, or PR contents.
 
 If a skill proposes a convention that differs from `pom.config.json`, ask for confirmation before proceeding and update the config if approved.
 

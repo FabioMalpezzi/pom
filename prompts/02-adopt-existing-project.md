@@ -9,9 +9,10 @@ Before modifying files:
 1. read the repository structure;
 2. check Git status with `git status`;
 3. if the repository is not under Git, propose `git init` before reorganizations or structural governance;
-4. identify existing folders and their roles;
-5. propose an adoption profile that fits the existing project;
-6. propose a mapping to the method:
+4. classify or ask the user's relationship to the repository: `owned`, `team`, or `external_overlay`;
+5. identify existing folders and their roles;
+6. propose an adoption profile that fits the existing project;
+7. propose a mapping to the method:
    - wiki, if it exists or should be created;
    - wiki/index.md and wiki/log.md, if the wiki exists or is created;
    - analysis;
@@ -23,8 +24,13 @@ Before modifying files:
    - tests, if present;
    - temporary work;
    - project state / roadmap / current plan;
-7. report conflicts or ambiguities;
-8. wait for approval.
+8. report conflicts or ambiguities;
+9. wait for approval.
+
+Ownership modes:
+- `owned`: the user can govern structure and conventions.
+- `team`: the user can modify the repository, but existing conventions must be preserved unless explicitly changed.
+- `external_overlay`: the repository belongs to an external upstream; POM is local understanding memory only.
 
 Adoption profiles:
 - minimal: only the POM operating hook, package scripts, and `pom.config.json`.
@@ -35,6 +41,8 @@ Adoption profiles:
 - custom: ask which POM modules to enable.
 
 For existing projects, prefer `adopt` or `custom` unless the user explicitly wants a stronger profile. Save the selected profile in `pom.config.json` under `adoption`. Do not create folders for disabled modules, and do not create optional folders unless they are immediately needed or approved.
+
+If the relationship is `external_overlay`, do not configure POM as project governance. Read `pom/specs/SPEC-0004-external-project-overlay.md`. Preserve upstream `docs/`, `tests/`, ADRs, source layout, agent instruction files, release process, and PR contents. Use local memory only to understand the project and prepare safe work.
 
 General mapping rule: map existing project structures first, then propose migrations separately only when the user asks for cleanup. This applies to decisions, docs, source, tests, wiki, analysis, mockups, planning, and handoff files. For new POM-owned analysis/task/test material, prefer a shared analysis/workstream namespace such as `analysis/governance-core/...`, `tasks/governance-core/P0/...`, and `tests/governance-core/...`.
 
@@ -60,6 +68,7 @@ After approval:
 - add useful templates;
 - update README and supported agent instruction files using `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md`;
 - if lint is enabled, use `pom/prompts/08-create-pom-config.md` to create or update `pom.config.json` from `pom/templates/POM_CONFIG_TEMPLATE.json`;
+- save the approved `ownership.mode` in `pom.config.json`;
 - configure `tests.root`, `tests.areas`, `tests.recommendedLayout`, and `tests.severity` according to the existing test structure or the user's approved preference;
 - configure `documentation.officialRoot`, `documentation.existingRoots`, and `source.roots` according to the existing structure or the user's approved preference;
 - create or update wiki index/log using the `WIKI_*` templates, if the wiki is enabled;

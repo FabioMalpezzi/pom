@@ -632,6 +632,7 @@
         <a href="#principles">Principi</a>
         <a href="#tools">Strumenti</a>
         <a href="#install">Installa</a>
+        <a href="#overlay">Overlay</a>
         <a href="#adoption">Adozione</a>
         <a href="#skills">Skill</a>
         <a href="#recommendations">Raccomandazioni</a>
@@ -820,6 +821,18 @@
         <li>Adottare in modo incrementale. Le migrazioni sono decisioni esplicite, non effetti collaterali dell'installazione.</li>
       </ol>
       <div class="callout">Prima richiesta utile: <code>Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code></div>
+    </section>
+
+    <section id="overlay">
+      <h2>Overlay su progetti esterni</h2>
+      <p>Quando il repository è clonato da un upstream che non controlliamo, POM deve comportarsi come overlay locale di comprensione, non come governance del progetto.</p>
+      <ul>
+        <li>Non imporre convenzioni POM a <code>docs/</code>, <code>tests/</code>, ADR, struttura sorgente, processo di release o contenuto delle pull request upstream.</li>
+        <li>Usare la memoria locale per mappare architettura, entrypoint, moduli, test, convenzioni, rischi e domande aperte.</li>
+        <li>Tenere gli artefatti overlay fuori dai contributi upstream, salvo richiesta esplicita del progetto.</li>
+        <li>Prima di una PR, stageare solo la modifica reale per upstream ed eseguire i controlli propri del progetto.</li>
+      </ul>
+      <div class="callout">Modalità documentata: <code>Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding overlay.</code></div>
     </section>
 
     <section id="adoption">

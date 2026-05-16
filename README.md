@@ -34,6 +34,7 @@ Use the smallest workflow that matches your situation:
 | Ambiguous request or artifact | `skills/clarify.md` |
 | New project | `skills/seed.md` |
 | Existing project | `skills/adopt.md` |
+| External repository you do not own | Overlay mode in `specs/SPEC-0004-external-project-overlay.md` |
 | Resume after a pause | `skills/pulse.md` |
 | Ask or maintain the wiki | `skills/wiki.md` |
 | Extend POM | `skills/extend.md` |
@@ -93,6 +94,14 @@ After bootstrap has installed `pom/`, for agent-driven adoption in an existing r
 ```text
 Read pom/skills/adopt.md and adopt POM without changing the existing structure.
 ```
+
+For a cloned repository you do not own, prefer overlay mode. Overlay mode is documented first, not automated yet:
+
+```text
+Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding overlay, not as project governance.
+```
+
+In overlay mode, POM governs the operator's understanding of the project. It must not impose POM conventions on upstream `docs/`, `tests/`, ADRs, source layout, release process, or pull-request contents.
 
 The bootstrap script:
 
@@ -158,6 +167,27 @@ Supported instruction targets are deliberately conservative:
 - existing rule folders, where POM creates or updates a dedicated file: `.claude/rules/pom.md`, `.github/instructions/pom.instructions.md`, `.cursor/rules/pom.mdc`, `.windsurf/rules/pom.md`, `.kiro/steering/pom.md`, `.continue/rules/pom.md`, `.roo/rules/pom.md`, `.clinerules/pom.md`.
 
 POM does not create tool-specific folders just because the tool exists. It only writes into a tool-specific folder when that folder is already part of the project.
+
+### External project overlay
+
+Use overlay mode when the repository is cloned from an upstream you do not own and POM is needed to understand, audit, or prepare a limited contribution.
+
+Overlay mode is different from adoption:
+
+| Mode | What POM governs |
+|---|---|
+| Adoption | the project's operating method |
+| Overlay | the operator's local understanding of someone else's project |
+
+Overlay mode should keep upstream structures authoritative:
+
+- upstream `docs/` remain upstream documentation, not POM-governed docs;
+- upstream `tests/` remain upstream test layout, not POM-governed test structure;
+- upstream agent instruction files should be preserved unless local agent guidance is intentionally added;
+- local wiki pages are working notes for understanding architecture, entrypoints, modules, tests, conventions, risks, and open questions;
+- before opening a PR, POM overlay artifacts must stay out of the contribution unless the upstream project explicitly wants them.
+
+See `specs/SPEC-0004-external-project-overlay.md` for the documented mode and future implementation requirements.
 
 If you customized or translated templates, keep them outside `pom/` before refreshing, for example:
 
@@ -663,6 +693,23 @@ When the project uses a language other than English, translate the POM templates
 ```
 
 Lint will then check documents against the translated headings. The `pom/skills/config.md` workflow handles this during project configuration.
+
+### Ownership Mode
+
+`pom.config.json` may include an `ownership` section. It tells the agent whether POM is allowed to become project governance or should stay local to the operator's work.
+
+Allowed values:
+
+| Mode | Meaning | Default posture |
+|---|---|---|
+| `owned` | The user can govern structure and conventions | POM may propose stronger governance when useful |
+| `team` | The user can modify the repository, but existing conventions matter | Preserve current structure unless explicitly changed |
+| `external_overlay` | The repository belongs to an external upstream | POM is local understanding memory only |
+| `unknown` | Relationship not clarified yet | Ask before structural assumptions |
+
+For existing repositories, the agent should clarify ownership before mapping POM modules. Heuristics such as a remote pointing to another organization can suggest the question, but they must not decide it silently.
+
+For `external_overlay`, POM should disable governance over upstream `docs/`, `tests`, ADRs, source layout, release process, and PR contents. Use local wiki or notes to understand the project, and keep overlay artifacts out of upstream contributions unless explicitly wanted.
 
 ### Adoption Profile
 

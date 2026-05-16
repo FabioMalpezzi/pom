@@ -4,6 +4,10 @@
     "pomRoot": "pom",
     "note": "Template paths assume POM is installed in the target project as pom/. Adapt paths if using a different installation layout."
   },
+  "ownership": {
+    "mode": "unknown",
+    "note": "Use owned, team, or external_overlay. For external_overlay, POM is local understanding memory and must not govern upstream project structure."
+  },
   "adoption": {
     "profile": "minimal",
     "wiki": "disabled",

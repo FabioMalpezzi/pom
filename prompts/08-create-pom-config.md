@@ -10,12 +10,14 @@ Before modifying files:
 2. read `README.md` and supported agent instruction files, if present;
 3. read the main folder structure without analyzing all content;
 4. check whether `wiki/`, `analysis/`, `decisions/`, `docs/`, `doc/`, `mockups/`, `tests/`, `src/`, `apps/`, `packages/`, `services/`, `frontend/`, `backend/`, and `PROJECT_STATE.md` exist;
-5. propose or preserve an `adoption` profile;
-6. propose a `pom.config.json` configuration;
-7. wait for my approval.
+5. classify or ask repository ownership: `owned`, `team`, or `external_overlay`;
+6. propose or preserve an `adoption` profile;
+7. propose a `pom.config.json` configuration;
+8. wait for my approval.
 
 Rules:
 - always start from `pom/templates/POM_CONFIG_TEMPLATE.json`;
+- configure `ownership` before `adoption`, because ownership determines whether POM governs the project or only the operator's local understanding;
 - configure `adoption` first, because it tells the agent which POM modules are active;
 - keep base POM rules generic;
 - put only project-specific rules in `pom.config.json`;
@@ -35,6 +37,21 @@ Rules:
 - if `src/`, `apps/`, `packages/`, `services/`, `frontend/`, `backend/`, or other source folders exist, ask which to declare as source roots;
 - if tests, wiki, analysis, mockups, planning, or handoff files already exist in non-POM locations, prefer mapping or documenting the existing convention before proposing moves;
 - do not move documents, source files, tests, mockups, wiki, analysis, or planning files without approval.
+
+Ownership values:
+- `owned`: the user can govern structure and conventions.
+- `team`: the user can modify the repository, but existing conventions should be preserved unless explicitly changed.
+- `external_overlay`: the repository belongs to an external upstream; POM is local understanding memory only.
+
+For `external_overlay`, prefer:
+- `ownership.localOnly: true`, when represented;
+- `adoption.docs: disabled`;
+- `adoption.tests: disabled`;
+- `adoption.decisions: disabled`;
+- upstream `docs/` listed as existing documentation, not official POM documentation;
+- upstream `tests/` preserved as upstream test layout, not POM test governance;
+- source roots mapped for understanding, not migration;
+- overlay artifacts kept out of upstream commits and PRs.
 
 Adoption values:
 - `profile`: `minimal`, `wiki`, `decisions`, `full`, `adopt`, `refresh`, or `custom`;
@@ -62,6 +79,7 @@ Module semantics:
 - `enabled`: the module is part of the active project method and must be maintained.
 
 The configuration should cover, when applicable:
+- ownership mode and whether POM is local-only overlay memory;
 - Markdown allowed in root;
 - analysis taxonomy, root, optional recommended path, namespace convention, and whether analysis root files are allowed;
 - POM template paths and any project-owned template overrides;
@@ -88,6 +106,7 @@ After approval:
 In the final summary, state:
 - which rules are base POM rules;
 - which rules are project-specific;
+- which ownership mode was configured and why;
 - how the `analysis` section was configured and whether new analysis should follow `analysis/<analysis-or-workstream>/<analysis>.md`;
 - how the `taskPlans` section was configured and whether task paths should follow `tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md`;
 - how the `tests` section was configured and why;
