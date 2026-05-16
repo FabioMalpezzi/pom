@@ -80,8 +80,21 @@ Download and run the bootstrap script from the target project root:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
-node bootstrap-pom.mjs
+node bootstrap-pom.mjs --preset owned
 ```
+
+Choose the preset that matches your relationship to the repository:
+
+| Preset | Use when | Meaning |
+|---|---|---|
+| `owned` | The project is yours | POM may become project governance when useful. |
+| `team` | The project is shared with a team | POM must preserve shared conventions unless explicitly changed. |
+| `overlay` | The repository belongs to an external upstream | POM is local understanding memory only. |
+| `minimal` | You want only the smallest local setup | POM starts with minimal memory and no ownership assumption. |
+
+Running `bootstrap-pom.mjs` without a preset prints this guide and exits. POM does not guess ownership during first install.
+
+Use `--lang it|en` only when you want to force the language of CLI guidance.
 
 After bootstrap has installed `pom/`, for agent-driven setup on a new project, ask:
 
@@ -95,7 +108,13 @@ After bootstrap has installed `pom/`, for agent-driven adoption in an existing r
 Read pom/skills/adopt.md and adopt POM without changing the existing structure.
 ```
 
-For a cloned repository you do not own, prefer overlay mode. Overlay mode is documented first, not automated yet:
+For a cloned repository you do not own, prefer overlay mode:
+
+```bash
+node bootstrap-pom.mjs --preset overlay
+```
+
+Then ask the agent to read the overlay rules before adding project memory:
 
 ```text
 Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding overlay, not as project governance.
@@ -106,19 +125,27 @@ In overlay mode, POM governs the operator's understanding of the project. It mus
 The bootstrap script:
 
 - clones POM into `pom/` (or pulls if it already exists);
-- runs the interactive installer;
-- lets you choose an adoption profile (minimal, wiki, decisions, full, adopt, refresh, custom);
+- runs the installer using the selected preset;
+- lets advanced users choose an adoption profile directly (minimal, wiki, decisions, full, adopt, refresh, custom);
 - updates the POM section in every existing supported agent instruction file, or creates `AGENTS.md` if none exists;
 - creates `package.json` scripts, `pom-update.mjs`, `pom.config.json`, and governance folders based on the chosen profile.
 - installs or updates `.git/hooks/pre-commit` with POM checks when the project is a Git repository.
 
-You can also pass a profile directly:
+You can also pass a profile directly for advanced use:
 
 ```bash
 node bootstrap-pom.mjs --profile full
 ```
 
-For existing repositories, pass ownership explicitly when the agent or user already knows the relationship:
+For existing repositories, the presets are the normal path:
+
+```bash
+node bootstrap-pom.mjs --preset owned
+node bootstrap-pom.mjs --preset team
+node bootstrap-pom.mjs --preset overlay
+```
+
+You can still pass ownership explicitly when the agent or user already knows the relationship:
 
 ```bash
 node bootstrap-pom.mjs --profile adopt --ownership owned
@@ -129,7 +156,7 @@ node bootstrap-pom.mjs --profile adopt --ownership external_overlay
 The same option is available after POM is installed:
 
 ```bash
-npm run pom:init -- --profile adopt --ownership external_overlay
+npm run pom:init -- --preset overlay
 ```
 
 ### Updating POM in an existing project
@@ -142,6 +169,8 @@ git diff
 ```
 
 `pom:update` updates `pom/`, refreshes the POM section in every existing supported agent instruction file, updates package scripts and the pre-commit hook, then runs `pom:lint` when available. It supports both Git-managed POM installs and clean vendored `pom/` copies. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
+
+`pom:update` also does not change adoption mode. If called with `--preset`, `--profile`, or `--ownership`, it stops and tells you to use `pom:init` instead. Changing mode is a governance decision, not a framework update.
 
 If `pom/` has local changes, `pom:update` stops and suggests `pom/skills/sync.md` instead of overwriting them. For vendored copies, unrelated parent-project changes outside `pom/` do not block the update.
 
@@ -733,6 +762,13 @@ For existing repositories, the agent should clarify ownership before mapping POM
 For `external_overlay`, POM should disable governance over upstream `docs/`, `tests`, ADRs, source layout, release process, and PR contents. Use local wiki or notes to understand the project, and keep overlay artifacts out of upstream contributions unless explicitly wanted.
 
 Installer support:
+
+```bash
+node bootstrap-pom.mjs --preset overlay
+npm run pom:init -- --preset overlay
+```
+
+The explicit advanced form remains available:
 
 ```bash
 node bootstrap-pom.mjs --profile adopt --ownership external_overlay

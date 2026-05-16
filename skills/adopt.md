@@ -21,9 +21,11 @@ description: Use this skill to introduce POM into an existing project without br
 If the project has Node.js available, the installer handles the mapping automatically:
 
 ```bash
-node bootstrap-pom.mjs --profile adopt
+node bootstrap-pom.mjs --preset owned
+node bootstrap-pom.mjs --preset team
+node bootstrap-pom.mjs --preset overlay
 # or, if pom/ is already installed:
-npm run pom:init
+npm run pom:init -- --preset team
 ```
 
 Use this skill when you need guided adoption, want to review the mapping before applying it, or the project does not use npm.
@@ -35,6 +37,12 @@ What is your relationship to this repository: owned, team, or external_overlay?
 ```
 
 For `external_overlay`, read `pom/specs/SPEC-0004-external-project-overlay.md` and keep POM local to the operator's understanding of the project.
+
+Preset meanings:
+
+- `owned`: project is yours; POM may become project governance when useful.
+- `team`: shared/team project; preserve existing conventions unless explicitly changed.
+- `overlay`: third-party cloned repository; POM is local understanding memory only.
 
 ## Key Rules
 

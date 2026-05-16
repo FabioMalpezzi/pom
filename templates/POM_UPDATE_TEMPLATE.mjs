@@ -7,6 +7,7 @@ import { join, relative } from "node:path";
 
 const POM_DIR = "pom";
 const DEFAULT_REPO = "https://github.com/FabioMalpezzi/pom.git";
+const MODE_CHANGE_ARGS = ["preset", "profile", "ownership"];
 
 function run(cmd, args, options = {}) {
   console.log(`> ${cmd} ${args.join(" ")}`);
@@ -30,6 +31,70 @@ function readArg(name) {
   const inline = process.argv.find((arg) => arg.startsWith(`--${name}=`));
   if (inline) return inline.split("=").slice(1).join("=");
   return undefined;
+}
+
+function hasArg(name) {
+  return process.argv.some((arg) => arg === `--${name}` || arg.startsWith(`--${name}=`));
+}
+
+function normalizeLanguage(value) {
+  const normalized = value.toLowerCase();
+  if (normalized.startsWith("it")) return "it";
+  if (normalized.startsWith("en")) return "en";
+  return undefined;
+}
+
+function detectLanguage() {
+  const arg = readArg("lang");
+  if (hasArg("lang")) {
+    const normalized = arg ? normalizeLanguage(arg) : undefined;
+    if (!normalized) {
+      console.error("Missing or unsupported --lang value. Use en or it.");
+      process.exit(1);
+    }
+    return normalized;
+  }
+
+  const envLanguage =
+    process.env.POM_LANG || process.env.LC_ALL || process.env.LC_MESSAGES || process.env.LANG || "";
+  return normalizeLanguage(envLanguage) || "en";
+}
+
+function rejectModeChangeArgs() {
+  const found = MODE_CHANGE_ARGS.filter(hasArg);
+  if (found.length === 0) return;
+
+  if (detectLanguage() === "it") {
+    console.error("");
+    console.error(`pom:update non cambia la modalita di adozione (${found.map((name) => `--${name}`).join(", ")}).`);
+    console.error("");
+    console.error("Usa pom:update solo per aggiornare il framework POM installato:");
+    console.error("  npm run pom:update");
+    console.error("");
+    console.error("Per cambiare modalita, usa pom:init in modo esplicito:");
+    console.error("  npm run pom:init -- --preset owned");
+    console.error("  npm run pom:init -- --preset team");
+    console.error("  npm run pom:init -- --preset overlay");
+    console.error("  npm run pom:init -- --preset minimal");
+    console.error("");
+    console.error("Nei casi non chiari, chiedi all'agente di usare pom/skills/config.md.");
+    process.exit(1);
+  }
+
+  console.error("");
+  console.error(`pom:update does not change adoption mode (${found.map((name) => `--${name}`).join(", ")}).`);
+  console.error("");
+  console.error("Use pom:update only to update the installed POM framework:");
+  console.error("  npm run pom:update");
+  console.error("");
+  console.error("To change mode, run pom:init explicitly:");
+  console.error("  npm run pom:init -- --preset owned");
+  console.error("  npm run pom:init -- --preset team");
+  console.error("  npm run pom:init -- --preset overlay");
+  console.error("  npm run pom:init -- --preset minimal");
+  console.error("");
+  console.error("For unclear cases, ask the agent to use pom/skills/config.md.");
+  process.exit(1);
 }
 
 function hasPackageScript(name) {
@@ -199,6 +264,7 @@ function refreshProject() {
 }
 
 function main() {
+  rejectModeChangeArgs();
   updatePom();
   refreshProject();
 }

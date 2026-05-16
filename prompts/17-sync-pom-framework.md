@@ -54,6 +54,7 @@ Update workflow:
 
 Important note:
 - `npm run pom:update` is the normal path. It stops if `pom/` has local changes and suggests this sync workflow. For vendored copies, only changes under `pom/` are blocking; unrelated parent-project changes are preserved.
+- `npm run pom:update` does not change adoption mode. If the requested change includes `--preset`, `--profile`, or `--ownership`, use `npm run pom:init -- --preset ...` or the config/adopt workflow after the framework update.
 - `npm run pom:init -- --profile refresh` starts from the installer already present in `pom/`. If the installer itself may have changed, use `pom:update` or update `pom/` first.
 - If `pom:update` is missing and `pom/` is clean, `node bootstrap-pom.mjs --profile refresh` can install the current updater because the bootstrap lives outside `pom/`.
 

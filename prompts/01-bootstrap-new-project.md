@@ -9,7 +9,7 @@ Before modifying files:
 1. analyze the current repository structure;
 2. check whether the repository is under Git;
 3. if it is not under Git, propose `git init` before applying POM structurally;
-4. if POM is installed as `pom/`, prefer `npm run pom:init` to install/reconfigure POM and `npm run pom:update` to update an existing installation;
+4. if POM is installed as `pom/`, prefer `npm run pom:init -- --preset minimal` to install/reconfigure POM and `npm run pom:update` to update an existing installation;
 5. explain and propose an adoption profile before creating folders;
 6. propose a minimal, non-invasive structure based on that profile;
 7. wait for my approval.
@@ -26,11 +26,12 @@ Adoption profiles:
 If using the CLI, explain that these profiles map to:
 
 ```bash
-node --experimental-strip-types pom/scripts/install-pom.ts --profile minimal
-node --experimental-strip-types pom/scripts/install-pom.ts --profile wiki
-node --experimental-strip-types pom/scripts/install-pom.ts --profile decisions
+node bootstrap-pom.mjs --preset minimal
+npm run pom:init -- --preset minimal
 node --experimental-strip-types pom/scripts/install-pom.ts --profile full
 ```
+
+Use presets for normal first install. Use `--profile` only when the user explicitly chooses a stronger profile such as `wiki`, `decisions`, `full`, or `custom`.
 
 When creating `pom.config.json`, save the selected profile in `adoption`:
 
@@ -89,7 +90,7 @@ If documentation lint should be enabled:
 - collect the user's test-structure preferences before configuring the `tests` section of `pom.config.json`;
 - if the user prefers a structure other than `tests/<analysis-or-workstream-or-module>/...`, configure lint accordingly;
 - collect the user's preferences for `docs/doc` and source roots (`src`, `apps`, `packages`, `services`, etc.) before configuring `documentation` and `source`;
-- if `npm run pom:lint` or `npm run pom:update` does not exist and POM is installed as `pom/`, run or propose `npm run pom:init`;
+- if `npm run pom:lint` or `npm run pom:update` does not exist and POM is installed as `pom/`, run or propose `npm run pom:init -- --preset minimal`;
 - if lint is installed, document the command in `package.json`, `README.md`, and project agent instruction files;
 - propose a pre-commit hook only after lint passes at least once.
 

@@ -20,9 +20,9 @@ description: Use this skill to set up POM from scratch on a new or empty project
 If the project has Node.js available, the installer handles most of this automatically:
 
 ```bash
-node bootstrap-pom.mjs --profile minimal
+node bootstrap-pom.mjs --preset minimal
 # or, if pom/ is already installed:
-npm run pom:init
+npm run pom:init -- --preset minimal
 ```
 
 Use this skill when you need guided setup, want to review the structure before creating files, or the project does not use npm.

@@ -82,6 +82,7 @@ const CLAUDE_AGENT_TEMPLATES = [
 
 type ProfileName = "minimal" | "wiki" | "decisions" | "full" | "adopt" | "refresh" | "custom";
 type OwnershipMode = "owned" | "team" | "external_overlay" | "unknown";
+type PresetName = "owned" | "team" | "overlay" | "minimal";
 
 type AdoptionConfig = {
   profile: ProfileName;
@@ -212,6 +213,29 @@ const profiles: Record<ProfileName, { label: string; description: string; adopti
       tasks: "light",
       tests: "disabled",
     },
+  },
+};
+
+const presets: Record<PresetName, { profile: ProfileName; ownership: OwnershipMode; description: string }> = {
+  owned: {
+    profile: "adopt",
+    ownership: "owned",
+    description: "Project is yours; POM may become project governance when useful.",
+  },
+  team: {
+    profile: "adopt",
+    ownership: "team",
+    description: "Shared/team project; preserve existing conventions unless explicitly changed.",
+  },
+  overlay: {
+    profile: "adopt",
+    ownership: "external_overlay",
+    description: "Third-party cloned repository; POM is local understanding memory only.",
+  },
+  minimal: {
+    profile: "minimal",
+    ownership: "unknown",
+    description: "Minimal local POM setup with no ownership assumption.",
   },
 };
 
@@ -640,28 +664,37 @@ The project wiki has been initialized, but the project overview still needs to b
   console.log("Created wiki/overview.md.");
 }
 
-async function chooseProfile(): Promise<ProfileName> {
-  const argProfile = readProfileArg();
-  if (argProfile) return argProfile;
+async function chooseProfile(argProfile: ProfileName | undefined): Promise<{ profile: ProfileName; ownership?: OwnershipMode }> {
+  if (argProfile) return { profile: argProfile };
 
-  if (!process.stdin.isTTY) return "refresh";
+  if (!process.stdin.isTTY) {
+    if (pathExists("pom.config.json")) return { profile: "refresh" };
+    printPresetGuide();
+    process.exit(1);
+  }
 
   printLogo();
+  console.log("Common presets:");
+  for (const [name, preset] of Object.entries(presets)) {
+    console.log(`- ${name}: ${preset.description}`);
+  }
+  console.log("");
   printProfiles();
 
   const rl = createInterface({ input, output });
   try {
-    const answer = (await rl.question("Choose profile [minimal/wiki/decisions/full/adopt/refresh/custom]: ")).trim().toLowerCase();
-    if (isProfileName(answer)) return answer;
-    if (answer === "1") return "minimal";
-    if (answer === "2") return "wiki";
-    if (answer === "3") return "decisions";
-    if (answer === "4") return "full";
-    if (answer === "5") return "adopt";
-    if (answer === "6") return "refresh";
-    if (answer === "7") return "custom";
+    const answer = (await rl.question("Choose preset/profile [owned/team/overlay/minimal/wiki/decisions/full/adopt/refresh/custom]: ")).trim().toLowerCase();
+    if (isPresetName(answer)) return { profile: presets[answer].profile, ownership: presets[answer].ownership };
+    if (isProfileName(answer)) return { profile: answer };
+    if (answer === "1") return { profile: "minimal" };
+    if (answer === "2") return { profile: "wiki" };
+    if (answer === "3") return { profile: "decisions" };
+    if (answer === "4") return { profile: "full" };
+    if (answer === "5") return { profile: "adopt" };
+    if (answer === "6") return { profile: "refresh" };
+    if (answer === "7") return { profile: "custom" };
     console.log("Unknown profile. Using refresh.");
-    return "refresh";
+    return { profile: "refresh" };
   } finally {
     rl.close();
   }
@@ -713,39 +746,46 @@ async function askChoice<T extends string>(
   return allowed.includes(answer as T) ? (answer as T) : defaultValue;
 }
 
+function readNamedArg(name: string, allowedValues: string[]): string | undefined {
+  const exactIndex = process.argv.findIndex((arg) => arg === `--${name}`);
+  if (exactIndex >= 0) {
+    const value = process.argv[exactIndex + 1];
+    if (!value || value.startsWith("--")) {
+      throw new Error(`Missing --${name} value. Use one of: ${allowedValues.join(", ")}.`);
+    }
+    if (!allowedValues.includes(value)) {
+      throw new Error(`Unknown --${name} value: ${value}. Use one of: ${allowedValues.join(", ")}.`);
+    }
+    return value;
+  }
+
+  const inlinePrefix = `--${name}=`;
+  const inline = process.argv.find((arg) => arg.startsWith(inlinePrefix));
+  if (!inline) return undefined;
+
+  const value = inline.slice(inlinePrefix.length);
+  if (!value) {
+    throw new Error(`Missing --${name} value. Use one of: ${allowedValues.join(", ")}.`);
+  }
+  if (!allowedValues.includes(value)) {
+    throw new Error(`Unknown --${name} value: ${value}. Use one of: ${allowedValues.join(", ")}.`);
+  }
+  return value;
+}
+
 function readProfileArg(): ProfileName | undefined {
-  const profileIndex = process.argv.findIndex((arg) => arg === "--profile");
-  const value = profileIndex >= 0 ? process.argv[profileIndex + 1] : undefined;
-  if (value && isProfileName(value)) return value;
-
-  const inline = process.argv.find((arg) => arg.startsWith("--profile="))?.split("=").at(1);
-  if (inline && isProfileName(inline)) return inline;
-
-  return undefined;
+  return readNamedArg("profile", Object.keys(profiles)) as ProfileName | undefined;
 }
 
 function readOwnershipArg(): OwnershipMode | undefined {
-  const ownershipIndex = process.argv.findIndex((arg) => arg === "--ownership");
-  const value = ownershipIndex >= 0 ? process.argv[ownershipIndex + 1] : undefined;
-  if (ownershipIndex >= 0 && !value) {
-    throw new Error("Missing --ownership value. Use owned, team, external_overlay, or unknown.");
-  }
-  if (value && isOwnershipMode(value)) return value;
-  if (value) {
-    throw new Error(`Unknown --ownership value: ${value}. Use owned, team, external_overlay, or unknown.`);
-  }
-
-  const inline = process.argv.find((arg) => arg.startsWith("--ownership="))?.split("=").at(1);
-  if (inline && isOwnershipMode(inline)) return inline;
-  if (inline) {
-    throw new Error(`Unknown --ownership value: ${inline}. Use owned, team, external_overlay, or unknown.`);
-  }
-
-  return undefined;
+  return readNamedArg("ownership", ["owned", "team", "external_overlay", "unknown"]) as OwnershipMode | undefined;
 }
 
-function resolveOwnershipMode(): OwnershipMode | undefined {
-  const arg = readOwnershipArg();
+function readPresetArg(): PresetName | undefined {
+  return readNamedArg("preset", Object.keys(presets)) as PresetName | undefined;
+}
+
+function resolveOwnershipMode(arg: OwnershipMode | undefined): OwnershipMode | undefined {
   if (arg) return arg;
   return readExistingOwnershipMode();
 }
@@ -767,6 +807,10 @@ function isProfileName(value: string): value is ProfileName {
   return Object.prototype.hasOwnProperty.call(profiles, value);
 }
 
+function isPresetName(value: string): value is PresetName {
+  return Object.prototype.hasOwnProperty.call(presets, value);
+}
+
 function isOwnershipMode(value: string): value is OwnershipMode {
   return ["owned", "team", "external_overlay", "unknown"].includes(value);
 }
@@ -785,6 +829,69 @@ function printProfiles(): void {
     console.log(`${index + 1}. ${profile.label}`);
     console.log(`   ${profile.description}`);
   });
+  console.log("");
+}
+
+function readRawArg(name: string): string | undefined {
+  const exactIndex = process.argv.findIndex((arg) => arg === `--${name}`);
+  if (exactIndex >= 0) {
+    const value = process.argv[exactIndex + 1];
+    return value && !value.startsWith("--") ? value : "";
+  }
+  const inlinePrefix = `--${name}=`;
+  const inline = process.argv.find((arg) => arg.startsWith(inlinePrefix));
+  return inline ? inline.slice(inlinePrefix.length) : undefined;
+}
+
+function normalizeLanguage(value: string): "en" | "it" | undefined {
+  const normalized = value.toLowerCase();
+  if (normalized.startsWith("it")) return "it";
+  if (normalized.startsWith("en")) return "en";
+  return undefined;
+}
+
+function detectLanguage(): "en" | "it" {
+  const arg = readRawArg("lang");
+  if (arg !== undefined) {
+    const normalized = arg ? normalizeLanguage(arg) : undefined;
+    if (!normalized) {
+      throw new Error("Missing or unsupported --lang value. Use en or it.");
+    }
+    return normalized;
+  }
+
+  const envLanguage = process.env.POM_LANG || process.env.LC_ALL || process.env.LC_MESSAGES || process.env.LANG || "";
+  return normalizeLanguage(envLanguage) || "en";
+}
+
+function printPresetGuide(): void {
+  if (detectLanguage() === "it") {
+    console.log("");
+    console.log("POM richiede una modalita di adozione esplicita quando il setup non e interattivo.");
+    console.log("");
+    console.log("Usa uno di questi preset:");
+    console.log("  npm run pom:init -- --preset owned     # progetto tuo");
+    console.log("  npm run pom:init -- --preset team      # progetto condiviso/team");
+    console.log("  npm run pom:init -- --preset overlay   # repository clonato di terzi");
+    console.log("  npm run pom:init -- --preset minimal   # setup POM locale minimale");
+    console.log("");
+    console.log("Forma esplicita avanzata:");
+    console.log("  npm run pom:init -- --profile adopt --ownership external_overlay");
+    console.log("");
+    return;
+  }
+
+  console.log("");
+  console.log("POM needs an explicit adoption mode in non-interactive setup.");
+  console.log("");
+  console.log("Use one of these presets:");
+  console.log("  npm run pom:init -- --preset owned     # project is yours");
+  console.log("  npm run pom:init -- --preset team      # shared/team project");
+  console.log("  npm run pom:init -- --preset overlay   # third-party cloned repo");
+  console.log("  npm run pom:init -- --preset minimal   # minimal local POM setup");
+  console.log("");
+  console.log("Advanced explicit form:");
+  console.log("  npm run pom:init -- --profile adopt --ownership external_overlay");
   console.log("");
 }
 
@@ -828,8 +935,18 @@ async function main(): Promise<void> {
     return;
   }
 
-  const profileName = await chooseProfile();
-  const ownership = resolveOwnershipMode();
+  const presetName = readPresetArg();
+  const profileArg = readProfileArg();
+  const ownershipArg = readOwnershipArg();
+
+  if (presetName && (profileArg || ownershipArg)) {
+    throw new Error("Do not combine --preset with --profile or --ownership. Use either a preset or the explicit advanced form.");
+  }
+
+  const preset = presetName ? presets[presetName] : undefined;
+  const selected = await chooseProfile(preset?.profile ?? profileArg);
+  const profileName = selected.profile;
+  const ownership = resolveOwnershipMode(preset?.ownership ?? ownershipArg ?? selected.ownership);
   const adoption = applyOwnershipDefaults(await customizeAdoption(profiles[profileName].adoption), ownership);
 
   if (adoption.profile === "refresh") {

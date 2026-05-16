@@ -780,12 +780,31 @@
       <div class="grid two">
         <div class="item">
           <h3>First install</h3>
-          <p>From the target project root, download the bootstrap script and run it. The interactive installer lets you choose a profile such as <code>minimal</code>, <code>wiki</code>, <code>decisions</code>, <code>full</code>, or <code>adopt</code>.</p>
+          <p>From the target project root, download the bootstrap script and run it with an explicit preset. POM does not guess whether the repository is yours, shared with a team, or an external upstream.</p>
           <div class="command-list">
             <code>curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs</code>
-            <code>node bootstrap-pom.mjs</code>
+            <code>node bootstrap-pom.mjs --preset owned</code>
           </div>
-          <p>After bootstrap has installed <code>pom/</code>, use <code>Read pom/skills/seed.md and set up POM for this project.</code> On an existing repository, use <code>Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code></p>
+          <p>Choose the preset from your relationship to the repository:</p>
+          <ul>
+            <li><code>owned</code>: project is yours; POM may help govern method and structure.</li>
+            <li><code>team</code>: shared project; POM must preserve team conventions.</li>
+            <li><code>overlay</code>: third-party repository; POM stays local understanding memory.</li>
+            <li><code>minimal</code>: smallest local setup, with no ownership assumption.</li>
+          </ul>
+          <p>For a new project, after installation ask the agent:</p>
+          <div class="command-list">
+            <code>Read pom/skills/seed.md and set up POM for this project.</code>
+          </div>
+          <p>For an existing repository, ask instead:</p>
+          <div class="command-list">
+            <code>Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code>
+          </div>
+          <p>To force CLI message language, use <code>--lang</code>:</p>
+          <div class="command-list">
+            <code>node bootstrap-pom.mjs --preset team --lang en</code>
+            <code>npm run pom:help -- --lang en</code>
+          </div>
         </div>
         <div class="item">
           <h3>Update installed POM</h3>
@@ -794,7 +813,7 @@
           <div class="command-list">
             <code>npm run pom:update</code>
           </div>
-          <p><code>pom:update</code> works with Git-managed installs and clean vendored copies. It stops if <code>pom/</code> has local changes and suggests the <code>sync</code> skill instead of overwriting them.</p>
+          <p><code>pom:update</code> works with Git-managed installs and clean vendored copies. It stops if <code>pom/</code> has local changes and suggests the <code>sync</code> skill instead of overwriting them. It does not change adoption mode; use <code>pom:init -- --preset ...</code> for that.</p>
         </div>
       </div>
       <p class="callout">If an older project does not have <code>pom:update</code> yet, run <code>node bootstrap-pom.mjs --profile refresh</code> once to install the current updater.</p>
@@ -820,6 +839,7 @@
         <li>Identify the smallest memory gap that hurts restart, verification, or source authority.</li>
         <li>Adopt incrementally. Migrations are explicit decisions, not installation side effects.</li>
       </ol>
+      <div class="callout"><code>owned</code> means POM may help shape project governance. <code>team</code> means POM must preserve shared conventions unless the team explicitly changes them.</div>
       <div class="callout">Good first request: <code>Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code></div>
     </section>
 
@@ -834,8 +854,8 @@
         <li>Before a PR, transfer only selected non-POM changes, stage the real upstream change, and run the upstream project's own checks.</li>
       </ul>
       <div class="command-list">
-        <code>node bootstrap-pom.mjs --profile adopt --ownership external_overlay</code>
-        <code>npm run pom:init -- --profile adopt --ownership external_overlay</code>
+        <code>node bootstrap-pom.mjs --preset overlay</code>
+        <code>npm run pom:init -- --preset overlay</code>
       </div>
       <div class="callout">Documented mode: <code>Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding overlay.</code></div>
     </section>

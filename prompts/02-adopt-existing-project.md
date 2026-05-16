@@ -42,6 +42,13 @@ Adoption profiles:
 
 For existing projects, prefer `adopt` or `custom` unless the user explicitly wants a stronger profile. Save the selected profile in `pom.config.json` under `adoption`. Do not create folders for disabled modules, and do not create optional folders unless they are immediately needed or approved.
 
+CLI presets:
+- `--preset owned`: maps to `adopt` + `ownership: owned`.
+- `--preset team`: maps to `adopt` + `ownership: team`.
+- `--preset overlay`: maps to `adopt` + `ownership: external_overlay`.
+
+Use presets for normal adoption. Use explicit `--profile` and `--ownership` only for advanced or scripted cases.
+
 If the relationship is `external_overlay`, do not configure POM as project governance. Read `pom/specs/SPEC-0004-external-project-overlay.md`. Preserve upstream `docs/`, `tests/`, ADRs, source layout, agent instruction files, release process, and PR contents. Use local memory only to understand the project and prepare safe work.
 
 General mapping rule: map existing project structures first, then propose migrations separately only when the user asks for cleanup. This applies to decisions, docs, source, tests, wiki, analysis, mockups, planning, and handoff files. For new POM-owned analysis/task/test material, prefer a shared analysis/workstream namespace such as `analysis/governance-core/...`, `tasks/governance-core/P0/...`, and `tests/governance-core/...`.
@@ -72,7 +79,7 @@ After approval:
 - configure `tests.root`, `tests.areas`, `tests.recommendedLayout`, and `tests.severity` according to the existing test structure or the user's approved preference;
 - configure `documentation.officialRoot`, `documentation.existingRoots`, and `source.roots` according to the existing structure or the user's approved preference;
 - create or update wiki index/log using the `WIKI_*` templates, if the wiki is enabled;
-- if `npm run pom:lint` or `npm run pom:update` does not exist and POM is installed as `pom/`, run or propose `npm run pom:init`;
+- if `npm run pom:lint` or `npm run pom:update` does not exist and POM is installed as `pom/`, run or propose `npm run pom:init -- --preset team`, or `--preset owned` / `--preset overlay` when that relationship was explicitly selected;
 - if lint is added, document command, config, and pre-commit hook only after a first successful run;
 - run `npm run pom:lint`, if available;
 - do not delete existing material.

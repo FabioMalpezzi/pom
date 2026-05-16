@@ -37,6 +37,8 @@ If `pom:update` is not installed yet and `pom/` is clean, `node bootstrap-pom.mj
 
 Do not rely on `npm run pom:init -- --profile refresh` as the only updater when `pom/scripts/install-pom.ts` may have changed. That command starts from the currently installed installer; use `pom:update`, update `pom/` first, or use the bootstrap path.
 
+Do not pass `--preset`, `--profile`, or `--ownership` to `pom:update`. `pom:update` refreshes the installed framework; mode changes must go through `pom:init` or the config/adopt workflow.
+
 ## Rules
 
 - Inspect local changes in `pom/` before updating. Do not overwrite or discard them silently.

@@ -11,6 +11,9 @@
  * Scenario 6: docs lint skips specialized governance roots under docs/
  * Scenario 7: external overlay ownership applies conservative adoption defaults
  * Scenario 8: external overlay lint does not govern host project structure
+ * Scenario 9: pom:update rejects adoption mode changes
+ * Scenario 10: bootstrap without preset does not install implicitly
+ * Scenario 11: non-interactive init without preset does not install implicitly
  */
 
 import { execFileSync } from "node:child_process";
@@ -40,6 +43,14 @@ function runInstaller(projectDir, profile, extraArgs = []) {
   execFileSync(
     "node",
     ["--experimental-strip-types", "pom/scripts/install-pom.ts", "--profile", profile, ...extraArgs],
+    { cwd: projectDir, stdio: "pipe" }
+  );
+}
+
+function runInstallerArgs(projectDir, args) {
+  execFileSync(
+    "node",
+    ["--experimental-strip-types", "pom/scripts/install-pom.ts", ...args],
     { cwd: projectDir, stdio: "pipe" }
   );
 }
@@ -270,7 +281,7 @@ function scenario7() {
   console.log("\nScenario 7: external overlay ownership applies conservative adoption defaults");
   const dir = createTempProject();
   try {
-    runInstaller(dir, "adopt", ["--ownership", "external_overlay"]);
+    runInstallerArgs(dir, ["--preset", "overlay"]);
     const config = JSON.parse(readFileSync(join(dir, "pom.config.json"), "utf8"));
 
     assert("ownership mode saved", config.ownership?.mode === "external_overlay", JSON.stringify(config.ownership));
@@ -322,6 +333,89 @@ function scenario8() {
   }
 }
 
+function scenario9() {
+  console.log("\nScenario 9: pom:update rejects adoption mode changes");
+  const dir = mkdtempSync(join(tmpdir(), "pom-update-mode-test-"));
+  try {
+    writeFileSync(join(dir, "pom-update.mjs"), readFileSync(join(POM_ROOT, "templates", "POM_UPDATE_TEMPLATE.mjs"), "utf8"));
+
+    let result;
+    try {
+      execFileSync("node", ["pom-update.mjs", "--preset", "overlay"], {
+        cwd: dir,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      result = { status: 0, stderr: "" };
+    } catch (error) {
+      result = {
+        status: error.status ?? 1,
+        stderr: error.stderr?.toString() ?? "",
+      };
+    }
+
+    assert("pom:update exits non-zero", result.status !== 0, "Expected mode-change args to be rejected");
+    assert("pom:update explains boundary", result.stderr.includes("does not change adoption mode"), result.stderr);
+  } finally {
+    cleanup(dir);
+  }
+}
+
+function scenario10() {
+  console.log("\nScenario 10: bootstrap without preset does not install implicitly");
+  const dir = mkdtempSync(join(tmpdir(), "pom-bootstrap-guide-test-"));
+  try {
+    let result;
+    try {
+      execFileSync("node", [join(POM_ROOT, "bootstrap-pom.mjs")], {
+        cwd: dir,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      result = { status: 0, stdout: "" };
+    } catch (error) {
+      result = {
+        status: error.status ?? 1,
+        stdout: error.stdout?.toString() ?? "",
+      };
+    }
+
+    assert("bootstrap exits non-zero", result.status !== 0, "Expected missing preset to stop first install");
+    assert("bootstrap prints preset guide", result.stdout.includes("--preset overlay"), result.stdout);
+    assert("bootstrap did not create pom/", !existsSync(join(dir, "pom")), "pom/ should not be cloned without an explicit preset");
+  } finally {
+    cleanup(dir);
+  }
+}
+
+function scenario11() {
+  console.log("\nScenario 11: non-interactive init without preset does not install implicitly");
+  const dir = createTempProject();
+  try {
+    let result;
+    try {
+      execFileSync("node", ["--experimental-strip-types", "pom/scripts/install-pom.ts"], {
+        cwd: dir,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      result = { status: 0, stdout: "" };
+    } catch (error) {
+      result = {
+        status: error.status ?? 1,
+        stdout: error.stdout?.toString() ?? "",
+      };
+    }
+
+    assert("init exits non-zero", result.status !== 0, "Expected missing preset/profile to stop non-interactive init");
+    assert("init prints preset guide", result.stdout.includes("--preset overlay"), result.stdout);
+    assert("init did not create AGENTS.md", !existsSync(join(dir, "AGENTS.md")), "AGENTS.md should not be created without explicit mode");
+    assert("init did not create pom.config.json", !existsSync(join(dir, "pom.config.json")), "pom.config.json should not be created without explicit mode");
+  } finally {
+    cleanup(dir);
+  }
+}
+
 console.log("SPEC-0001 Completion Verification Tests");
 console.log("========================================");
 
@@ -333,6 +427,9 @@ scenario5();
 scenario6();
 scenario7();
 scenario8();
+scenario9();
+scenario10();
+scenario11();
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 

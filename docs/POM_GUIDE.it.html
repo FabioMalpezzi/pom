@@ -780,12 +780,31 @@
       <div class="grid two">
         <div class="item">
           <h3>Prima installazione</h3>
-          <p>Dalla root del progetto target, scaricare lo script di bootstrap ed eseguirlo. L'installer interattivo permette di scegliere un profilo come <code>minimal</code>, <code>wiki</code>, <code>decisions</code>, <code>full</code> o <code>adopt</code>.</p>
+          <p>Dalla root del progetto target, scaricare lo script di bootstrap ed eseguirlo con un preset esplicito. POM non deve indovinare se il repository è tuo, condiviso con un team o di un upstream esterno.</p>
           <div class="command-list">
             <code>curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs</code>
-            <code>node bootstrap-pom.mjs</code>
+            <code>node bootstrap-pom.mjs --preset owned</code>
           </div>
-          <p>Dopo che il bootstrap ha installato <code>pom/</code>, usare <code>Read pom/skills/seed.md and set up POM for this project.</code> Su un repository esistente, usare <code>Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code></p>
+          <p>Scegliere il preset in base al rapporto con il repository:</p>
+          <ul>
+            <li><code>owned</code>: progetto tuo; POM può aiutare a governare metodo e struttura.</li>
+            <li><code>team</code>: progetto condiviso; POM deve preservare le convenzioni del team.</li>
+            <li><code>overlay</code>: repository di terzi; POM resta memoria locale di comprensione.</li>
+            <li><code>minimal</code>: setup locale minimo, senza assumere ownership.</li>
+          </ul>
+          <p>Per un nuovo progetto, dopo l'installazione chiedere all'agente:</p>
+          <div class="command-list">
+            <code>Read pom/skills/seed.md and set up POM for this project.</code>
+          </div>
+          <p>Per un repository esistente, chiedere invece:</p>
+          <div class="command-list">
+            <code>Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code>
+          </div>
+          <p>Per forzare la lingua dei messaggi CLI, usare <code>--lang</code>:</p>
+          <div class="command-list">
+            <code>node bootstrap-pom.mjs --preset team --lang it</code>
+            <code>npm run pom:help -- --lang it</code>
+          </div>
         </div>
         <div class="item">
           <h3>Aggiornare POM già installato</h3>
@@ -794,7 +813,7 @@
           <div class="command-list">
             <code>npm run pom:update</code>
           </div>
-          <p><code>pom:update</code> funziona con installazioni Git-managed e copie vendorizzate pulite. Si ferma se <code>pom/</code> contiene modifiche locali e suggerisce la skill <code>sync</code> invece di sovrascriverle.</p>
+          <p><code>pom:update</code> funziona con installazioni Git-managed e copie vendorizzate pulite. Si ferma se <code>pom/</code> contiene modifiche locali e suggerisce la skill <code>sync</code> invece di sovrascriverle. Non cambia modalità di adozione: per quello usare <code>pom:init -- --preset ...</code>.</p>
         </div>
       </div>
       <p class="callout">Se un progetto più vecchio non ha ancora <code>pom:update</code>, eseguire una volta <code>node bootstrap-pom.mjs --profile refresh</code> per installare l'updater corrente.</p>
@@ -820,6 +839,7 @@
         <li>Individuare il più piccolo vuoto di memoria che danneggia ripartenza, verifica o fonte autorevole.</li>
         <li>Adottare in modo incrementale. Le migrazioni sono decisioni esplicite, non effetti collaterali dell'installazione.</li>
       </ol>
+      <div class="callout"><code>owned</code> significa che POM può aiutare a definire la governance del progetto. <code>team</code> significa che POM deve preservare le convenzioni condivise salvo cambio esplicito del team.</div>
       <div class="callout">Prima richiesta utile: <code>Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code></div>
     </section>
 
@@ -834,8 +854,8 @@
         <li>Prima di una PR, trasferire solo modifiche selezionate non-POM, stageare la modifica reale per upstream ed eseguire i controlli propri del progetto.</li>
       </ul>
       <div class="command-list">
-        <code>node bootstrap-pom.mjs --profile adopt --ownership external_overlay</code>
-        <code>npm run pom:init -- --profile adopt --ownership external_overlay</code>
+        <code>node bootstrap-pom.mjs --preset overlay</code>
+        <code>npm run pom:init -- --preset overlay</code>
       </div>
       <div class="callout">Modalità documentata: <code>Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding overlay.</code></div>
     </section>

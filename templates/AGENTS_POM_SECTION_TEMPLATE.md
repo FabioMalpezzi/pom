@@ -146,7 +146,8 @@ npm run pom:lint   # run POM documentation governance checks
 ```
 
 `pom:init` must update only the delimited POM section in every existing supported target agent instruction file or rule folder. If none exists, it creates `AGENTS.md`. It must not copy `pom/AGENTS.MD` into the target project.
-
+Use `npm run pom:init -- --preset owned`, `--preset team`, `--preset overlay`, or `--preset minimal` for normal install/reconfiguration. Use `--profile` and `--ownership` only for explicit advanced changes.
+`pom:update` updates the installed POM framework and refreshes generated sections. It must not change adoption profile or ownership mode.
 `pom:help` prints the command reference and skill index. It is non-interactive and always exits immediately — safe to call from agents and scripts.
 
 `pom:lint` is project-specific and optional. If it is not configured, state that automatic POM checks are not active.
