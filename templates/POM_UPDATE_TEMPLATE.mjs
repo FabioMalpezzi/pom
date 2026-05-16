@@ -36,6 +36,7 @@ function printSyncSuggestion(reason) {
   console.error(`POM update stopped: ${reason}`);
   console.error("");
   console.error("Recommended agent workflow:");
+  console.error("If you are an AI coding agent, stop the automatic update path now and follow:");
   console.error("Read pom/skills/sync.md and refresh this project's POM installation.");
   console.error("");
   console.error("Manual inspection:");
