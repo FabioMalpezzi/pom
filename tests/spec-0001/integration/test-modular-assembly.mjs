@@ -6,6 +6,7 @@
  * Scenario 1: minimal profile → ≤200 lines
  * Scenario 2: full profile → ≤320 lines
  * Scenario 3: full → refresh to minimal → section shrinks to ≤200 lines
+ * Scenario 4: pom:update stops on local pom/ changes
  */
 
 import { execFileSync } from "node:child_process";
@@ -78,6 +79,10 @@ function scenario1() {
     assert("Does NOT contain wiki rules", !section.includes("## Persistent Wiki"), "Wiki section should not be included in minimal");
     assert("Does NOT contain ADR rules", !section.includes("## ADR And Specs"), "Decisions section should not be included in minimal");
     assert("Does NOT contain mockup rules", !section.includes("## Mockup"), "Mockups section should not be included in minimal");
+
+    const packageJson = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+    assert("package.json contains pom:update", packageJson.scripts["pom:update"] === "node pom-update.mjs", "pom:update script missing");
+    assert("pom-update.mjs exists", existsSync(join(dir, "pom-update.mjs")), "pom-update.mjs not installed");
   } finally {
     cleanup(dir);
   }
@@ -142,12 +147,40 @@ function scenario3() {
   }
 }
 
+function scenario4() {
+  console.log("\nScenario 4: pom:update stops on local pom/ changes");
+  const dir = mkdtempSync(join(tmpdir(), "pom-update-test-"));
+  try {
+    mkdirSync(join(dir, "pom"));
+    execFileSync("git", ["init"], { cwd: join(dir, "pom"), stdio: "pipe" });
+    writeFileSync(join(dir, "pom", "local-change.md"), "local change\n");
+    writeFileSync(join(dir, "pom-update.mjs"), readFileSync(join(POM_ROOT, "templates", "POM_UPDATE_TEMPLATE.mjs"), "utf8"));
+
+    let result;
+    try {
+      execFileSync("node", ["pom-update.mjs"], { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+      result = { status: 0, stderr: "" };
+    } catch (error) {
+      result = {
+        status: error.status ?? 1,
+        stderr: error.stderr?.toString() ?? "",
+      };
+    }
+
+    assert("pom:update exits non-zero", result.status !== 0, "Expected dirty pom/ to stop update");
+    assert("pom:update suggests sync skill", result.stderr.includes("Read pom/skills/sync.md"), result.stderr);
+  } finally {
+    cleanup(dir);
+  }
+}
+
 console.log("SPEC-0001 Completion Verification Tests");
 console.log("========================================");
 
 scenario1();
 scenario2();
 scenario3();
+scenario4();
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 

@@ -15,7 +15,8 @@ Choose the mode:
 
 A. Refresh installed POM
 - Use when the target project just needs the latest approved POM version.
-- Update `pom/` first, then run the refresh installer.
+- Prefer `npm run pom:update`.
+- If `pom:update` stops, inspect the local `pom/` changes before pulling.
 
 B. Sync framework change
 - Use when the POM source repository was changed in this session or must be aligned to a specific POM commit.
@@ -38,20 +39,23 @@ Update workflow:
 1. If mode B, apply the framework change in the POM source repository.
 2. Run `npm run pom:lint` in the POM source repository when available.
 3. Commit and push the POM source repository when mode B created source changes.
-4. Update the target project's `pom/` before running the installer:
+4. For a simple refresh, run `npm run pom:update` from the target project root and inspect the result.
+5. If `pom:update` is not available or stops, update the target project's `pom/` before running the installer:
    - for a submodule or nested Git checkout, prefer `git -C pom pull --ff-only origin main`, or checkout the exact source POM commit if one was selected;
    - for a vendored copy, do not overwrite automatically; replace from the source POM repository only after approval and after preserving local changes.
-5. Run `npm run pom:init -- --profile refresh` from the target project root.
-6. Run `npm run pom:lint` in the target project when available.
-7. Inspect the diff:
+6. Run `npm run pom:init -- --profile refresh` from the target project root when `pom:update` did not already do it.
+7. Run `npm run pom:lint` in the target project when available and not already run by `pom:update`.
+8. Inspect the diff:
    - expected files are the `pom` pointer or vendored `pom/`, supported agent instruction files, package scripts, hook updates, and possibly `PROJECT_STATE.md`;
    - unexpected source-code or project-document changes must be explained before staging.
-8. Update `PROJECT_STATE.md` only if the restart context changed, for example the project now depends on new POM operating rules.
-9. Stage selectively. Never use broad staging such as `git add -A`.
-10. If requested by the user or required by the local workflow, commit the target project update.
+9. Update `PROJECT_STATE.md` only if the restart context changed, for example the project now depends on new POM operating rules.
+10. Stage selectively. Never use broad staging such as `git add -A`.
+11. If requested by the user or required by the local workflow, commit the target project update.
 
 Important note:
-- `npm run pom:init -- --profile refresh` starts from the installer already present in `pom/`. If the installer itself may have changed, update `pom/` first or use `node bootstrap-pom.mjs --profile refresh`, because the bootstrap lives outside `pom/` and can update POM before launching the installer.
+- `npm run pom:update` is the normal path. It stops if `pom/` has local changes and suggests this sync workflow.
+- `npm run pom:init -- --profile refresh` starts from the installer already present in `pom/`. If the installer itself may have changed, use `pom:update` or update `pom/` first.
+- If `pom:update` is missing and `pom/` is clean, `node bootstrap-pom.mjs --profile refresh` can install the current updater because the bootstrap lives outside `pom/`.
 
 Rules:
 - do not mix unrelated project work into the POM framework commit;

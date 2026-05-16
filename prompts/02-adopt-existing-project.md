@@ -63,7 +63,7 @@ After approval:
 - configure `tests.root`, `tests.areas`, `tests.recommendedLayout`, and `tests.severity` according to the existing test structure or the user's approved preference;
 - configure `documentation.officialRoot`, `documentation.existingRoots`, and `source.roots` according to the existing structure or the user's approved preference;
 - create or update wiki index/log using the `WIKI_*` templates, if the wiki is enabled;
-- if `npm run pom:lint` does not exist and POM is installed as `pom/`, run or propose `node --experimental-strip-types pom/scripts/install-pom.ts`;
+- if `npm run pom:lint` or `npm run pom:update` does not exist and POM is installed as `pom/`, run or propose `npm run pom:init`;
 - if lint is added, document command, config, and pre-commit hook only after a first successful run;
 - run `npm run pom:lint`, if available;
 - do not delete existing material.

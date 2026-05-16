@@ -100,7 +100,7 @@ The bootstrap script:
 - runs the interactive installer;
 - lets you choose an adoption profile (minimal, wiki, decisions, full, adopt, refresh, custom);
 - updates the POM section in every existing supported agent instruction file, or creates `AGENTS.md` if none exists;
-- creates `package.json` scripts, `pom.config.json`, and governance folders based on the chosen profile.
+- creates `package.json` scripts, `pom-update.mjs`, `pom.config.json`, and governance folders based on the chosen profile.
 - installs or updates `.git/hooks/pre-commit` with POM checks when the project is a Git repository.
 
 You can also pass a profile directly:
@@ -111,41 +111,37 @@ node bootstrap-pom.mjs --profile full
 
 ### Updating POM in an existing project
 
-For the safest refresh path from the target project root:
+For normal manual updates from a project that already has POM installed:
+
+```bash
+npm run pom:update
+git diff
+```
+
+`pom:update` updates `pom/`, refreshes the POM section in every existing supported agent instruction file, updates package scripts and the pre-commit hook, then runs `pom:lint` when available. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
+
+If `pom/` has local changes, `pom:update` stops and suggests `pom/skills/sync.md` instead of overwriting them.
+
+For agent-driven updates, use the sync skill:
+
+```text
+Read pom/skills/sync.md and refresh this project's POM installation.
+```
+
+If the project does not have `pom:update` yet, install the current updater once:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
 node bootstrap-pom.mjs --profile refresh
 ```
 
-Refresh updates `pom/`, the POM section in every existing supported agent instruction file, package scripts, and the pre-commit hook. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
-
-For agent-driven updates in a project that already has POM installed, use the sync skill:
-
-```text
-Read pom/skills/sync.md and refresh this project's POM installation.
-```
-
-The sync workflow checks the target project, inspects local changes in `pom/`, updates `pom/` first, runs the refresh installer, runs lint, and stages only the related files.
-
-For a manual compact refresh:
-
-```bash
-git status --short --branch
-git -C pom status --short --branch
-git -C pom pull --ff-only origin main
-npm run pom:init -- --profile refresh
-npm run pom:lint
-git diff
-```
-
-If POM is already installed, `pom/` is clean, and `package.json` has the scripts, you can also refresh with:
+If POM is already installed, `pom/` is clean, and `package.json` has the scripts, you can also refresh only generated sections with:
 
 ```bash
 npm run pom:init -- --profile refresh
 ```
 
-That command is a convenience path. When the installer itself may have changed, update `pom/` first or use `node bootstrap-pom.mjs --profile refresh`, because the bootstrap lives outside `pom/` and can update POM before launching the installer.
+That command is an advanced convenience path. It does not replace `pom:update` when POM itself may need to be pulled first.
 
 After installation, show the command guide with:
 
@@ -535,8 +531,8 @@ Lint reads the `documentation` and `source` sections of `pom.config.json`. Exist
 | `WIKI_METHOD.md` | cited reference copy of the original LLM Wiki method |
 | `prompts/` | reusable prompts for applying the method |
 | `skills/` | short skill cards derived from the main POM prompts |
-| `templates/` | reusable templates for project state, tasks, specs, ADRs, wiki, docs, experiments, and reconciliation |
-| `scripts/` | installer and documentation lint |
+| `templates/` | reusable templates for project state, tasks, specs, ADRs, wiki, docs, experiments, reconciliation, and the target-project updater |
+| `scripts/` | installer, command help, and documentation lint |
 | `examples/` | concrete examples of filled POM documents (ADR, PROJECT_STATE, wiki page) |
 
 ## POM Skills
@@ -721,7 +717,7 @@ For existing projects, existing structures do not have to be moved into canonica
 
 Example: a project can enable decisions while keeping ADRs under `doc/architecture/ADR-###-*.md`. If existing documents use a legacy format, relax only the necessary checks, such as `decisions.requireTemplateSections: false`, while preserving or gradually improving the documents.
 
-If generators increase or become expensive, split them into dedicated commands later. In version `0.1.0`, the supported commands are `pom:init` and `pom:lint`.
+If generators increase or become expensive, split them into dedicated commands later. In version `0.1.0`, the supported commands are `pom:init`, `pom:update`, `pom:help`, and `pom:lint`.
 
 ## Porting Lint To Another Project
 

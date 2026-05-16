@@ -266,6 +266,10 @@ function resolveHelpScript(): string {
   return "pom/scripts/pom-help.ts";
 }
 
+function resolveUpdateScriptTemplate(): string {
+  return resolveTemplate("POM_UPDATE_TEMPLATE.mjs");
+}
+
 function resolvePomAsset(path: string): string | undefined {
   const candidates = [`pom/${path}`, path];
   return candidates.find((candidate) => pathExists(candidate));
@@ -392,6 +396,20 @@ function installClaudeAgentFiles(): void {
   }
 }
 
+function installPomUpdateScript(): void {
+  const target = "pom-update.mjs";
+  const next = readText(resolveUpdateScriptTemplate());
+  const current = pathExists(target) ? readText(target) : "";
+
+  if (current === next) {
+    console.log(`${target} already contains the current POM updater.`);
+    return;
+  }
+
+  writeText(target, next);
+  console.log(`Installed or updated ${target}.`);
+}
+
 function upsertPackageScripts(): void {
   const packagePath = "package.json";
   if (!pathExists(packagePath)) {
@@ -402,12 +420,13 @@ function upsertPackageScripts(): void {
       type: "module",
       scripts: {
         "pom:init": "node --experimental-strip-types pom/scripts/install-pom.ts",
+        "pom:update": "node pom-update.mjs",
         "pom:help": `node --experimental-strip-types ${helpScript}`,
         "pom:lint": `node --experimental-strip-types ${lintScript}`,
       },
     };
     writeText(packagePath, `${JSON.stringify(content, null, 2)}\n`);
-    console.log("Created package.json with pom:init and pom:lint scripts.");
+    console.log("Created package.json with pom:init, pom:update, pom:help, and pom:lint scripts.");
     return;
   }
 
@@ -430,6 +449,10 @@ function upsertPackageScripts(): void {
     scripts["pom:init"] = initCommand;
     changed = true;
   }
+  if (!scripts["pom:update"]) {
+    scripts["pom:update"] = "node pom-update.mjs";
+    changed = true;
+  }
   if (!scripts["pom:help"]) {
     scripts["pom:help"] = `node --experimental-strip-types ${helpScript}`;
     changed = true;
@@ -440,13 +463,13 @@ function upsertPackageScripts(): void {
   }
 
   if (!changed) {
-    console.log("package.json already contains pom:init, pom:help, and pom:lint.");
+    console.log("package.json already contains pom:init, pom:update, pom:help, and pom:lint.");
     return;
   }
 
   parsed.scripts = scripts;
   writeText(packagePath, `${JSON.stringify(parsed, null, 2)}\n`);
-  console.log("Updated package.json with pom:init, pom:help, and pom:lint scripts.");
+  console.log("Updated package.json with pom:init, pom:update, pom:help, and pom:lint scripts.");
 }
 
 function installPreCommitHook(): void {
@@ -733,6 +756,7 @@ async function main(): Promise<void> {
 
   upsertAgentInstructionSections(adoption);
   installCodingAgentFiles();
+  installPomUpdateScript();
   upsertPackageScripts();
   installPreCommitHook();
 

@@ -65,6 +65,7 @@ If the target project has `package.json`, use these commands when available:
 
 ```text
 npm run pom:init   # install or refresh the POM section and package scripts
+npm run pom:update # update installed pom/ safely, then refresh and lint
 npm run pom:help   # show POM commands and skills index (non-interactive, always exits)
 npm run pom:lint   # run POM documentation governance checks
 ```

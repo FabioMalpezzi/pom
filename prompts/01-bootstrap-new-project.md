@@ -9,7 +9,7 @@ Before modifying files:
 1. analyze the current repository structure;
 2. check whether the repository is under Git;
 3. if it is not under Git, propose `git init` before applying POM structurally;
-4. if POM is installed as `pom/`, prefer `node --experimental-strip-types pom/scripts/install-pom.ts` or `npm run pom:init` to install/refresh hooks;
+4. if POM is installed as `pom/`, prefer `npm run pom:init` to install/reconfigure POM and `npm run pom:update` to update an existing installation;
 5. explain and propose an adoption profile before creating folders;
 6. propose a minimal, non-invasive structure based on that profile;
 7. wait for my approval.
@@ -20,7 +20,7 @@ Adoption profiles:
 - decisions: minimal + `decisions/` and ADR index generation from ADR metadata.
 - full: wiki + decisions + `PROJECT_STATE.md` + current planning support for long-running projects.
 - adopt: preserve an existing structure and map POM to it.
-- refresh: update only the POM section in supported agent instruction targets and package scripts.
+- refresh: update only the POM section in supported agent instruction targets, package scripts, updater script, hooks, and coding-agent files.
 - custom: ask which POM modules to enable.
 
 If using the CLI, explain that these profiles map to:
@@ -89,7 +89,7 @@ If documentation lint should be enabled:
 - collect the user's test-structure preferences before configuring the `tests` section of `pom.config.json`;
 - if the user prefers a structure other than `tests/<analysis-or-workstream-or-module>/...`, configure lint accordingly;
 - collect the user's preferences for `docs/doc` and source roots (`src`, `apps`, `packages`, `services`, etc.) before configuring `documentation` and `source`;
-- if `npm run pom:lint` does not exist and POM is installed as `pom/`, run or propose `node --experimental-strip-types pom/scripts/install-pom.ts`;
+- if `npm run pom:lint` or `npm run pom:update` does not exist and POM is installed as `pom/`, run or propose `npm run pom:init`;
 - if lint is installed, document the command in `package.json`, `README.md`, and project agent instruction files;
 - propose a pre-commit hook only after lint passes at least once.
 

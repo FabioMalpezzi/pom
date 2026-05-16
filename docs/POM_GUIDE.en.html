@@ -791,14 +791,12 @@
           <p>When a project already has <code>pom/</code>, use the sync skill so the agent checks local changes, updates <code>pom/</code>, refreshes generated sections, runs lint, and stages only related files.</p>
           <p><code>Read pom/skills/sync.md and refresh this project's POM installation.</code></p>
           <div class="command-list">
-            <code>git -C pom pull --ff-only origin main</code>
-            <code>npm run pom:init -- --profile refresh</code>
-            <code>npm run pom:lint</code>
+            <code>npm run pom:update</code>
           </div>
-          <p>If <code>pom/</code> has local changes, inspect them before pulling. Do not overwrite project-specific customizations silently.</p>
+          <p><code>pom:update</code> stops if <code>pom/</code> has local changes and suggests the <code>sync</code> skill instead of overwriting them.</p>
         </div>
       </div>
-      <p class="callout">For updates, <code>node bootstrap-pom.mjs --profile refresh</code> is the safest command path because the bootstrap lives outside <code>pom/</code> and can update POM before launching the installer.</p>
+      <p class="callout">If an older project does not have <code>pom:update</code> yet, run <code>node bootstrap-pom.mjs --profile refresh</code> once to install the current updater.</p>
     </section>
 
     <section id="new-project">

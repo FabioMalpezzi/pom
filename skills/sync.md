@@ -28,17 +28,14 @@ Use the smallest mode that fits:
 For an existing target project, update `pom/` before running the refresh installer:
 
 ```bash
-git status --short --branch
-git -C pom status --short --branch
-# inspect and resolve local pom/ changes before pulling
-git -C pom pull --ff-only origin main
-npm run pom:init -- --profile refresh
-npm run pom:lint
+npm run pom:update
 ```
 
-If `bootstrap-pom.mjs` is present, `node bootstrap-pom.mjs --profile refresh` is also valid because the bootstrap lives outside `pom/` and updates POM before launching the installer.
+If `pom:update` stops because `pom/` has local changes, inspect them and continue with the full sync workflow below.
 
-Do not rely on `npm run pom:init -- --profile refresh` as the only updater when `pom/scripts/install-pom.ts` may have changed. That command starts from the currently installed installer; update `pom/` first, or use the bootstrap path.
+If `pom:update` is not installed yet and `pom/` is clean, `node bootstrap-pom.mjs --profile refresh` installs the current updater because the bootstrap lives outside `pom/`.
+
+Do not rely on `npm run pom:init -- --profile refresh` as the only updater when `pom/scripts/install-pom.ts` may have changed. That command starts from the currently installed installer; use `pom:update`, update `pom/` first, or use the bootstrap path.
 
 ## Rules
 
