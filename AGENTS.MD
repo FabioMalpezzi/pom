@@ -15,7 +15,7 @@ When applying POM to a target project, use the project/user language for convers
 - Put reusable procedures in `prompts/`.
 - Put short workflow aliases in `skills/`.
 - Put document shapes in `templates/`.
-- Keep `README.md` as the method overview and navigation entry point.
+- Keep `README.md` as the canonical entry point and operating overview.
 - Keep `WIKI_METHOD.md` as the cited LLM Wiki reference copy.
 
 ## Extending POM
@@ -65,6 +65,9 @@ lives in Git, not in the document text.
   it is an explicit choice taken with the user.
 - **Fewer documents, more consistency.** Before creating a new
   document, check whether the content fits in an existing one.
+- **Optimize for the next safe step.** When the right document is
+  unclear, write the smallest useful note where the next reader or
+  agent will need it before acting.
 
 ## Work From Sources, Not From Memory
 

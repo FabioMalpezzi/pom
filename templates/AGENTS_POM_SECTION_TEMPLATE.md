@@ -34,6 +34,8 @@ There is no single source of truth for everything. Each domain has its own autho
 
 If sources diverge, do not hide the divergence: surface it, analyze it, and propose a decision or reconciliation.
 
+If the right document is unclear, optimize for the next safe step: write the smallest useful note where the next reader or agent will need it before acting.
+
 ## Git And History
 
 POM requires Git for history, rollback, and comparison between versions.

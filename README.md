@@ -2,6 +2,8 @@
 
 **POM** is a lightweight method for keeping a project's operating memory alive by connecting sources, code, mockups, wiki pages, decisions, verifiable tasks, roadmap context, and official documentation.
 
+This README is POM's canonical entry point and operating overview. Detailed procedures live in the repository's canonical files: `AGENTS.MD`, `skills/`, `prompts/`, `templates/`, and `scripts/`.
+
 POM is designed to be reused on new or existing projects. It does not impose a single application structure and does not assume that every project has mockups, source code, tests, or official docs. For existing projects, POM should first map the current structure in `pom.config.json`; migration to canonical folders is a later explicit decision, not a prerequisite.
 
 Version: `0.1.0`
@@ -311,6 +313,7 @@ Project documentation must stay lean and load-bearing. Its history lives in Git,
 - **No project log inside the docs.** Specs, ADRs, task plans and wikis describe current state and live decisions, not the chronicle of edits. The chronicle lives in Git.
 - **If a project log is needed, create it explicitly.** Dedicated file, short entries "date + document + one-line change". Adopting it is an explicit choice taken with the user.
 - **Fewer documents, more consistency.** Before creating a new document, check whether the content fits in an existing one.
+- **Optimize for the next safe step.** When the right document is unclear, write the smallest useful note where the next reader or agent will need it before acting.
 
 ### Work From Sources, Not From Memory
 
