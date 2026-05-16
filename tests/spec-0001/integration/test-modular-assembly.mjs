@@ -10,6 +10,7 @@
  * Scenario 5: pom:update supports clean vendored pom/ with unrelated parent changes
  * Scenario 6: docs lint skips specialized governance roots under docs/
  * Scenario 7: external overlay ownership applies conservative adoption defaults
+ * Scenario 8: external overlay lint does not govern host project structure
  */
 
 import { execFileSync } from "node:child_process";
@@ -229,6 +230,7 @@ function scenario6() {
       join(dir, "pom.config.json"),
       JSON.stringify(
         {
+          adoption: { decisions: "enabled", docs: "optional" },
           documentation: { officialRoot: "docs" },
           analysis: { root: "docs/specs", indexPath: "docs/specs/SPECS_INDEX.md" },
           decisions: { root: "docs/adr", indexPath: "docs/adr/ADR_INDEX.md", requireTemplateSections: false },
@@ -282,6 +284,44 @@ function scenario7() {
   }
 }
 
+function scenario8() {
+  console.log("\nScenario 8: external overlay lint does not govern host project structure");
+  const dir = createTempProject();
+  try {
+    runInstaller(dir, "adopt", ["--ownership", "external_overlay"]);
+
+    writeFileSync(join(dir, "CHANGELOG.md"), "# Host changelog\n");
+    mkdirSync(join(dir, "docs", "en"), { recursive: true });
+    writeFileSync(join(dir, "docs", "en", "_index.md"), "# Host docs index\n");
+    mkdirSync(join(dir, "tests", "host"), { recursive: true });
+    writeFileSync(join(dir, "tests", "host", "host_test.go"), "package host\n");
+    execFileSync("git", ["init"], { cwd: dir, stdio: "pipe" });
+
+    let result;
+    try {
+      const stdout = execFileSync("node", ["--experimental-strip-types", "pom/scripts/lint-doc-governance.ts"], {
+        cwd: dir,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      result = { status: 0, stdout, stderr: "" };
+    } catch (error) {
+      result = {
+        status: error.status ?? 1,
+        stdout: error.stdout?.toString() ?? "",
+        stderr: error.stderr?.toString() ?? "",
+      };
+    }
+
+    assert("lint exits zero", result.status === 0, result.stdout + result.stderr);
+    assert("host root Markdown ignored", !result.stdout.includes("root-markdown"), result.stdout);
+    assert("host docs ignored", !result.stdout.includes("docs-sources") && !result.stdout.includes("index-name"), result.stdout);
+    assert("host tests ignored", !result.stdout.includes("tests-"), result.stdout);
+  } finally {
+    cleanup(dir);
+  }
+}
+
 console.log("SPEC-0001 Completion Verification Tests");
 console.log("========================================");
 
@@ -292,6 +332,7 @@ scenario4();
 scenario5();
 scenario6();
 scenario7();
+scenario8();
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 

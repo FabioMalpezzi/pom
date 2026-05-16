@@ -18,6 +18,14 @@ const ADR_INDEX_SUMMARY_MAX_LENGTH = 250;
 const loadedConfig = loadLintConfig(ROOT);
 const findings: Finding[] = [...loadedConfig.findings];
 const config = loadedConfig.config;
+const isExternalOverlay = config.ownership.mode === "external_overlay";
+const analysisGovernanceEnabled = config.adoption.analysis !== "disabled" && !isExternalOverlay;
+const docsGovernanceEnabled = config.adoption.docs !== "disabled" && !isExternalOverlay;
+const wikiGovernanceEnabled = config.adoption.wiki === "enabled";
+const decisionsGovernanceEnabled = config.adoption.decisions === "enabled";
+const mockupsGovernanceEnabled = config.adoption.mockups === "enabled";
+const taskPlansGovernanceEnabled = !isExternalOverlay || config.adoption.tasks === "structured";
+const testsGovernanceEnabled = config.adoption.tests !== "disabled" && !isExternalOverlay;
 const allowedRootMarkdown = new Set(config.root.allowedMarkdown);
 const allowedAnalysisDirs = new Set(config.analysis.allowedDirs);
 
@@ -124,6 +132,8 @@ function gitChangedFiles(): Set<string> {
 }
 
 function checkRootMarkdown(): void {
+  if (isExternalOverlay) return;
+
   for (const entry of listDir(".")) {
     const path = entry;
     if (!path.toLowerCase().endsWith(".md")) continue;
@@ -139,6 +149,8 @@ function checkRootMarkdown(): void {
 }
 
 function checkAnalysisLayout(): void {
+  if (!analysisGovernanceEnabled) return;
+
   const analysisRoot = config.analysis.root || "analysis";
   if (!pathExists(analysisRoot)) return;
 
@@ -220,10 +232,10 @@ function ensureFolderIndex(indexPath: string, folderRoot: string, title: string,
 
 function checkIndexNamingConvention(): void {
   const roots = [
-    config.documentation.officialRoot,
-    config.analysis.root || "analysis",
-    config.decisions.root || "decisions",
-    config.taskPlans.root || "tasks",
+    docsGovernanceEnabled ? config.documentation.officialRoot : "",
+    analysisGovernanceEnabled ? config.analysis.root || "analysis" : "",
+    decisionsGovernanceEnabled ? config.decisions.root || "decisions" : "",
+    taskPlansGovernanceEnabled ? config.taskPlans.root || "tasks" : "",
   ];
   const uniqueRoots = [...new Set(roots.filter((root) => root && pathExists(root)))];
 
@@ -356,6 +368,8 @@ function writeAdrIndex(entries: AdrIndexEntry[]): void {
 }
 
 function checkDecisions(): void {
+  if (!decisionsGovernanceEnabled) return;
+
   const decisionsRoot = config.decisions.root || "decisions";
   if (!pathExists(decisionsRoot)) return;
 
@@ -412,6 +426,8 @@ function checkDecisions(): void {
 }
 
 function checkTaskPlans(): void {
+  if (!taskPlansGovernanceEnabled) return;
+
   const taskRoot = config.taskPlans.root || "tasks";
   if (!pathExists(taskRoot)) return;
 
@@ -467,6 +483,8 @@ function isGeneratedGovernanceIndex(path: string): boolean {
 }
 
 function checkDocs(): void {
+  if (!docsGovernanceEnabled) return;
+
   const docsRoot = config.documentation.officialRoot;
   if (!pathExists(docsRoot)) return;
 
@@ -484,6 +502,8 @@ function checkDocs(): void {
 }
 
 function checkDocumentationRoots(): void {
+  if (!docsGovernanceEnabled) return;
+
   const declared = new Set([config.documentation.officialRoot, ...config.documentation.existingRoots]);
 
   for (const candidate of config.documentation.knownRootCandidates) {
@@ -500,6 +520,8 @@ function checkDocumentationRoots(): void {
 }
 
 function checkSourceRoots(): void {
+  if (isExternalOverlay) return;
+
   const declared = new Set(config.source.roots);
 
   for (const candidate of config.source.knownRootCandidates) {
@@ -516,6 +538,8 @@ function checkSourceRoots(): void {
 }
 
 function checkMockReconciliation(): void {
+  if (!mockupsGovernanceEnabled) return;
+
   const packagesDir = config.mockups.packagesDir;
   const declaredMockDirs = pathExists(packagesDir)
     ? listDir(packagesDir)
@@ -577,6 +601,8 @@ function checkMockManifest(mockDir: string): void {
 }
 
 function checkWikiIndexCoverage(): void {
+  if (!wikiGovernanceEnabled) return;
+
   if (!pathExists("wiki/index.md")) return;
 
   const index = readText("wiki/index.md");
@@ -599,6 +625,8 @@ function checkWikiIndexCoverage(): void {
 }
 
 function checkWikiDocuments(): void {
+  if (!wikiGovernanceEnabled) return;
+
   if (!pathExists("wiki")) return;
 
   const wikiPages = walkFiles("wiki", (path) => path.endsWith(".md"));
@@ -737,6 +765,8 @@ function checkProjectWikiIndexShape(): void {
 }
 
 function checkTestsLayout(): void {
+  if (!testsGovernanceEnabled) return;
+
   const testsRoot = config.tests.root;
   if (!pathExists(testsRoot)) return;
 
@@ -807,13 +837,19 @@ function checkGitWorkflow(): void {
   const changed = gitChangedFiles();
   if (changed.size === 0) return;
 
-  const changedWiki = [...changed].filter((path) => path.startsWith("wiki/") && path.endsWith(".md"));
+  const changedWiki = wikiGovernanceEnabled
+    ? [...changed].filter((path) => path.startsWith("wiki/") && path.endsWith(".md"))
+    : [];
   const officialDocsRoot = config.documentation.officialRoot.replace(/\/$/, "");
-  const changedDocs = [...changed].filter(
-    (path) => path.startsWith(`${officialDocsRoot}/`) && path.endsWith(".md") && !isGeneratedGovernanceIndex(path),
-  );
+  const changedDocs = docsGovernanceEnabled
+    ? [...changed].filter(
+        (path) => path.startsWith(`${officialDocsRoot}/`) && path.endsWith(".md") && !isGeneratedGovernanceIndex(path),
+      )
+    : [];
   const decisionsRoot = (config.decisions.root || "decisions").replace(/\/$/, "");
-  const changedDecisions = [...changed].filter((path) => path.startsWith(`${decisionsRoot}/`) && new RegExp(config.decisions.adrPathPattern).test(path));
+  const changedDecisions = decisionsGovernanceEnabled
+    ? [...changed].filter((path) => path.startsWith(`${decisionsRoot}/`) && new RegExp(config.decisions.adrPathPattern).test(path))
+    : [];
 
   if (changedWiki.length > 0 && !changed.has("wiki/log.md")) {
     add("warning", "wiki-log-changed", "There are wiki changes without an update to wiki/log.md.", "wiki/log.md");
