@@ -8,6 +8,7 @@
  * Scenario 3: full → refresh to minimal → section shrinks to ≤200 lines
  * Scenario 4: pom:update stops on local pom/ changes
  * Scenario 5: pom:update supports clean vendored pom/ with unrelated parent changes
+ * Scenario 6: docs lint skips specialized governance roots under docs/
  */
 
 import { execFileSync } from "node:child_process";
@@ -218,6 +219,47 @@ function scenario5() {
   }
 }
 
+function scenario6() {
+  console.log("\nScenario 6: docs lint skips specialized governance roots under docs/");
+  const dir = createTempProject();
+  try {
+    mkdirSync(join(dir, "docs", "adr"), { recursive: true });
+    writeFileSync(
+      join(dir, "pom.config.json"),
+      JSON.stringify(
+        {
+          documentation: { officialRoot: "docs" },
+          analysis: { root: "docs/specs", indexPath: "docs/specs/SPECS_INDEX.md" },
+          decisions: { root: "docs/adr", indexPath: "docs/adr/ADR_INDEX.md", requireTemplateSections: false },
+          taskPlans: { root: "docs/tasks", indexPath: "docs/tasks/TASKS_INDEX.md", requireTemplateSections: true },
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    let result;
+    try {
+      execFileSync("node", ["--experimental-strip-types", "pom/scripts/lint-doc-governance.ts"], {
+        cwd: dir,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      result = { status: 0, stderr: "" };
+    } catch (error) {
+      result = {
+        status: error.status ?? 1,
+        stderr: error.stderr?.toString() ?? "",
+      };
+    }
+
+    assert("lint exits zero", result.status === 0, result.stderr);
+    assert("ADR index generated", existsSync(join(dir, "docs", "adr", "ADR_INDEX.md")), "ADR index missing");
+  } finally {
+    cleanup(dir);
+  }
+}
+
 console.log("SPEC-0001 Completion Verification Tests");
 console.log("========================================");
 
@@ -226,6 +268,7 @@ scenario2();
 scenario3();
 scenario4();
 scenario5();
+scenario6();
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 

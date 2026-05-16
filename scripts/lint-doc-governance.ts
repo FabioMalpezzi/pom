@@ -445,12 +445,25 @@ function checkTaskPlans(): void {
   }
 }
 
+function isSamePathOrInside(path: string, root: string): boolean {
+  const cleanPath = normalize(path).replace(/\\/g, "/").replace(/\/$/, "");
+  const cleanRoot = normalize(root).replace(/\\/g, "/").replace(/\/$/, "");
+  return cleanPath === cleanRoot || cleanPath.startsWith(`${cleanRoot}/`);
+}
+
+function isSpecializedGovernancePath(path: string): boolean {
+  const roots = [config.analysis.root, config.decisions.root, config.taskPlans.root].filter(Boolean);
+  return roots.some((root) => isSamePathOrInside(path, root));
+}
+
 function checkDocs(): void {
   const docsRoot = config.documentation.officialRoot;
   if (!pathExists(docsRoot)) return;
 
   const docs = walkFiles(docsRoot, (path) => path.endsWith(".md"));
   for (const file of docs) {
+    if (isSpecializedGovernancePath(file)) continue;
+
     const text = readText(file);
     for (const section of requiredDocsSections) {
       if (!text.includes(section)) {
