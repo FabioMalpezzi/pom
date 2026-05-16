@@ -237,24 +237,27 @@ function scenario6() {
         2,
       ) + "\n",
     );
+    execFileSync("git", ["init"], { cwd: dir, stdio: "pipe" });
 
     let result;
     try {
-      execFileSync("node", ["--experimental-strip-types", "pom/scripts/lint-doc-governance.ts"], {
+      const stdout = execFileSync("node", ["--experimental-strip-types", "pom/scripts/lint-doc-governance.ts"], {
         cwd: dir,
         encoding: "utf8",
         stdio: ["ignore", "pipe", "pipe"],
       });
-      result = { status: 0, stderr: "" };
+      result = { status: 0, stdout, stderr: "" };
     } catch (error) {
       result = {
         status: error.status ?? 1,
+        stdout: error.stdout?.toString() ?? "",
         stderr: error.stderr?.toString() ?? "",
       };
     }
 
     assert("lint exits zero", result.status === 0, result.stderr);
     assert("ADR index generated", existsSync(join(dir, "docs", "adr", "ADR_INDEX.md")), "ADR index missing");
+    assert("generated ADR index does not require ADR", !result.stdout.includes("docs-without-adr"), result.stdout);
   } finally {
     cleanup(dir);
   }

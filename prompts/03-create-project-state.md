@@ -42,4 +42,3 @@ Rules:
 - compaction rule 2: Dynamic Context must describe current state and next steps only — if a section is becoming a log or changelog, move it to wiki/log.md, decisions/, or Git and remove it from PROJECT_STATE.md;
 - if you find uncertainty or contradictions, add a "To clarify" section under Dynamic Context.
 ```
-

@@ -456,6 +456,16 @@ function isSpecializedGovernancePath(path: string): boolean {
   return roots.some((root) => isSamePathOrInside(path, root));
 }
 
+function isGeneratedGovernanceIndex(path: string): boolean {
+  const indexes = [
+    configuredIndexPath(config.analysis.indexPath, config.analysis.root || "analysis"),
+    configuredIndexPath(config.decisions.indexPath, config.decisions.root || "decisions"),
+    configuredIndexPath(config.taskPlans.indexPath, config.taskPlans.root || "tasks"),
+  ];
+
+  return indexes.some((indexPath) => normalize(path).replace(/\\/g, "/") === normalize(indexPath).replace(/\\/g, "/"));
+}
+
 function checkDocs(): void {
   const docsRoot = config.documentation.officialRoot;
   if (!pathExists(docsRoot)) return;
@@ -798,7 +808,10 @@ function checkGitWorkflow(): void {
   if (changed.size === 0) return;
 
   const changedWiki = [...changed].filter((path) => path.startsWith("wiki/") && path.endsWith(".md"));
-  const changedDocs = [...changed].filter((path) => path.startsWith("docs/") && path.endsWith(".md"));
+  const officialDocsRoot = config.documentation.officialRoot.replace(/\/$/, "");
+  const changedDocs = [...changed].filter(
+    (path) => path.startsWith(`${officialDocsRoot}/`) && path.endsWith(".md") && !isGeneratedGovernanceIndex(path),
+  );
   const decisionsRoot = (config.decisions.root || "decisions").replace(/\/$/, "");
   const changedDecisions = [...changed].filter((path) => path.startsWith(`${decisionsRoot}/`) && new RegExp(config.decisions.adrPathPattern).test(path));
 
