@@ -118,9 +118,9 @@ npm run pom:update
 git diff
 ```
 
-`pom:update` updates `pom/`, refreshes the POM section in every existing supported agent instruction file, updates package scripts and the pre-commit hook, then runs `pom:lint` when available. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
+`pom:update` updates `pom/`, refreshes the POM section in every existing supported agent instruction file, updates package scripts and the pre-commit hook, then runs `pom:lint` when available. It supports both Git-managed POM installs and clean vendored `pom/` copies. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
 
-If `pom/` has local changes, `pom:update` stops and suggests `pom/skills/sync.md` instead of overwriting them.
+If `pom/` has local changes, `pom:update` stops and suggests `pom/skills/sync.md` instead of overwriting them. For vendored copies, unrelated parent-project changes outside `pom/` do not block the update.
 
 For agent-driven updates, use the sync skill:
 

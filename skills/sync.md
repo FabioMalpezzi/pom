@@ -31,9 +31,9 @@ For an existing target project, update `pom/` before running the refresh install
 npm run pom:update
 ```
 
-If `pom:update` stops because `pom/` has local changes, inspect them and continue with the full sync workflow below.
+If `pom:update` stops because `pom/` has local changes, inspect them and continue with the full sync workflow below. On clean vendored copies, `pom:update` can replace `pom/` from the source POM repository while ignoring unrelated parent-project changes outside `pom/`.
 
-If `pom:update` is not installed yet and `pom/` is clean, `node bootstrap-pom.mjs --profile refresh` installs the current updater because the bootstrap lives outside `pom/`.
+If `pom:update` is not installed yet and `pom/` is clean, `node bootstrap-pom.mjs --profile refresh` installs the current updater because the bootstrap lives outside `pom/`. For projects that only have a vendored `pom/` and no root bootstrap yet, refresh from the source POM repository first, then run `npm run pom:init -- --profile refresh`.
 
 Do not rely on `npm run pom:init -- --profile refresh` as the only updater when `pom/scripts/install-pom.ts` may have changed. That command starts from the currently installed installer; use `pom:update`, update `pom/` first, or use the bootstrap path.
 

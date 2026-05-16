@@ -7,6 +7,7 @@
  * Scenario 2: full profile → ≤320 lines
  * Scenario 3: full → refresh to minimal → section shrinks to ≤200 lines
  * Scenario 4: pom:update stops on local pom/ changes
+ * Scenario 5: pom:update supports clean vendored pom/ with unrelated parent changes
  */
 
 import { execFileSync } from "node:child_process";
@@ -174,6 +175,49 @@ function scenario4() {
   }
 }
 
+function scenario5() {
+  console.log("\nScenario 5: pom:update supports clean vendored pom/ with unrelated parent changes");
+  const dir = mkdtempSync(join(tmpdir(), "pom-update-vendored-test-"));
+  try {
+    mkdirSync(join(dir, "pom"));
+    writeFileSync(join(dir, "pom", "README.md"), "old vendored POM\n");
+    execFileSync("git", ["init"], { cwd: dir, stdio: "pipe" });
+    execFileSync("git", ["add", "pom"], { cwd: dir, stdio: "pipe" });
+    execFileSync(
+      "git",
+      ["-c", "user.name=POM Test", "-c", "user.email=pom@example.test", "commit", "-m", "baseline"],
+      { cwd: dir, stdio: "pipe" }
+    );
+
+    writeFileSync(join(dir, "notes.txt"), "unrelated local note\n");
+    writeFileSync(join(dir, "pom-update.mjs"), readFileSync(join(POM_ROOT, "templates", "POM_UPDATE_TEMPLATE.mjs"), "utf8"));
+
+    let result;
+    try {
+      execFileSync("node", ["pom-update.mjs"], {
+        cwd: dir,
+        encoding: "utf8",
+        env: { ...process.env, POM_REPO: POM_ROOT },
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      result = { status: 0, stderr: "" };
+    } catch (error) {
+      result = {
+        status: error.status ?? 1,
+        stderr: error.stderr?.toString() ?? "",
+      };
+    }
+
+    const packageJson = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+    assert("pom:update exits zero", result.status === 0, result.stderr);
+    assert("vendored pom/ refreshed", existsSync(join(dir, "pom", "templates", "POM_UPDATE_TEMPLATE.mjs")), "POM template missing after update");
+    assert("package.json keeps pom:update", packageJson.scripts["pom:update"] === "node pom-update.mjs", "pom:update script missing");
+    assert("unrelated parent change preserved", existsSync(join(dir, "notes.txt")), "Unrelated file was removed");
+  } finally {
+    cleanup(dir);
+  }
+}
+
 console.log("SPEC-0001 Completion Verification Tests");
 console.log("========================================");
 
@@ -181,6 +225,7 @@ scenario1();
 scenario2();
 scenario3();
 scenario4();
+scenario5();
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 

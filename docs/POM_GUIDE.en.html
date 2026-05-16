@@ -793,7 +793,7 @@
           <div class="command-list">
             <code>npm run pom:update</code>
           </div>
-          <p><code>pom:update</code> stops if <code>pom/</code> has local changes and suggests the <code>sync</code> skill instead of overwriting them.</p>
+          <p><code>pom:update</code> works with Git-managed installs and clean vendored copies. It stops if <code>pom/</code> has local changes and suggests the <code>sync</code> skill instead of overwriting them.</p>
         </div>
       </div>
       <p class="callout">If an older project does not have <code>pom:update</code> yet, run <code>node bootstrap-pom.mjs --profile refresh</code> once to install the current updater.</p>
