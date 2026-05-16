@@ -50,6 +50,19 @@ Map existing project conventions first. Do not migrate existing analysis, task, 
 
 The config includes `skillUsage` and `promptUsage` sections that are updated automatically by the agent when skills or prompts are read. Do not reset these counters unless explicitly requested.
 
+## Template Localization
+
+Use project-owned templates when the project needs documents in a language other than English or a different local document shape.
+
+Workflow:
+
+1. Copy only the needed templates from `pom/templates/` into a project-owned folder, for example `project-templates/`.
+2. Translate or adapt headings and placeholder text while preserving the intended document structure.
+3. Map the translated templates in `pom.config.json.templates`.
+4. Run `npm run pom:lint` and fix configuration issues before changing governed documents.
+
+Do not place translated or customized target-project templates under `pom/`, because framework updates may overwrite them or create conflicts.
+
 ## Output
 
 - `pom.config.json` consistent with the project;

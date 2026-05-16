@@ -161,6 +161,7 @@ function checkAnalysisLayout(): void {
     const path = join(analysisRoot, entry);
     const stat = statSync(join(ROOT, path));
 
+    if (isGeneratedGovernanceIndex(path)) continue;
     if (!config.analysis.allowMarkdownAtRoot && stat.isFile() && entry.toLowerCase().endsWith(".md")) {
       add("error", "analysis-root-file", `Do not leave Markdown files directly under ${analysisRoot}/.`, path);
     }
