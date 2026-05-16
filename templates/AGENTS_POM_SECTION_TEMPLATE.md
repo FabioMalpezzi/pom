@@ -78,9 +78,12 @@ For experiments, research, spikes, external repository trials, or immature analy
 Rules:
 
 - prefer branch `exp/<topic>`, `/tmp`, or `experiments/<topic>/` depending on the case;
+- prefer a Git worktree on `exp/<topic>` when an experiment is risky, broad, dependency-heavy, or likely to dirty many stable files;
 - do not contaminate stable codebase, wiki, specs, or docs before evaluation;
+- keep trial dependencies, env files, service config, generated output, and external repositories outside the stable project unless adoption is approved;
+- stable source must not import from `experiments/`; add tooling guardrails where the project already has lint/type/build configuration;
 - do not import heavy artifacts or external repositories without approval;
-- at the end, propose consolidation: discard, synthesis in `analysis/`, wiki/spec update, new ADR, or task plan.
+- at the end, propose consolidation: discard, synthesis in `analysis/`, wiki/spec update, new ADR, task plan, selective cherry-pick, or clean reimplementation.
 
 ## Persistent Wiki
 
@@ -254,9 +257,12 @@ Common entry points:
 
 | Need | Skill |
 |---|---|
+| Clarify ambiguous work before creating memory | `pom/skills/clarify.md` |
 | Query, build, or maintain wiki memory | `pom/skills/wiki.md` |
 | Classify or set document status | `pom/skills/status.md` |
 | Defer or park future work | `pom/skills/defer.md` |
+| Diagnose a failing POM workflow | `pom/skills/diagnose.md` |
+| Prune overlapping or excessive POM rules | `pom/skills/prune.md` |
 | Sync POM framework changes into this project | `pom/skills/sync.md` |
 | Validate governance after significant work | `pom/skills/validate.md` |
 
@@ -325,7 +331,7 @@ A spec, task, or ADR cannot be marked Complete without passing the completion ve
    - at least 1 antithesis: a case of incorrect or improper usage that is demonstrated to be false or inferior to the thesis (more is better);
    - the work cannot be marked Complete if any antithesis is not confuted.
 
-3. **Governance check (third):** run `pom/skills/validate.md` to verify PROJECT_STATE, wiki, task status, decisions, and orphan artifacts.
+3. **Governance check (third):** for significant or memory-changing closures, run `pom/skills/validate.md` to verify PROJECT_STATE, wiki, task status, decisions, and orphan artifacts.
 
 ### Who verifies
 

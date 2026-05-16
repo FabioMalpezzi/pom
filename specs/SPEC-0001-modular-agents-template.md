@@ -13,7 +13,7 @@ Reduce the cognitive load on both the user and the agent by injecting only the A
 
 ## Context
 
-Today `install-pom.ts` injects the full `AGENTS_POM_SECTION_TEMPLATE.md` into the target project's agent instruction file regardless of the adoption profile. A project using profile `minimal` (no wiki, no decisions, no mockups, no structured planning) receives the same ≤350 lines as a project using profile `full`. This means:
+Today `install-pom.ts` injects the full `AGENTS_POM_SECTION_TEMPLATE.md` into the target project's agent instruction file regardless of the adoption profile. A project using profile `minimal` (no wiki, no decisions, no mockups, no structured planning) receives the same full legacy template as a project using profile `full`. This means:
 
 - the agent reads rules about wiki maintenance, ADR governance, mockup reconciliation, test conventions, and structured planning even when those modules are disabled;
 - the agent's context window is consumed by irrelevant instructions;
@@ -22,7 +22,7 @@ Today `install-pom.ts` injects the full `AGENTS_POM_SECTION_TEMPLATE.md` into th
 
 Sources:
 
-- `templates/AGENTS_POM_SECTION_TEMPLATE.md` — current monolithic template (≤350 lines)
+- `templates/AGENTS_POM_SECTION_TEMPLATE.md` — current monolithic template kept for backward compatibility
 - `scripts/install-pom.ts` — current installer that injects the full template
 - `templates/POM_CONFIG_TEMPLATE.json` — adoption profile definitions
 - Critical analysis session comparing POM with GSD, Spec Kit, and OpenSpec
@@ -94,13 +94,13 @@ templates/
 
 ### Expected sizes
 
-| Profile | Estimated lines | Current |
+| Profile | Estimated lines | Legacy full template |
 |---|---|---|
-| minimal | ≤200 | ≤350 |
-| wiki | ≤230 | ≤350 |
-| decisions | ≤220 | ≤350 |
-| full | ≤320 | ≤350 |
-| adopt | ≤200 | ≤350 |
+| minimal | ≤200 | 374 |
+| wiki | ≤230 | 374 |
+| decisions | ≤220 | 374 |
+| full | ≤320 | 374 |
+| adopt | ≤200 | 374 |
 
 ## Out Of Scope
 
@@ -126,7 +126,7 @@ templates/
 - [x] T3: Wire `upsertAgentInstructionSections()` to use the modular assembly instead of the monolithic template
 - [x] T4: Keep `AGENTS_POM_SECTION_TEMPLATE.md` as full assembled version for backward compatibility
 - [x] T5: Write and run scenario tests (see Completion Verification below)
-- [x] T6: Verify line counts match targets (minimal 183 ≤200 ✓, full 277 ≤320 ✓)
+- [x] T6: Verify line counts match targets (minimal 195 ≤200 ✓, full 289 ≤320 ✓)
 - [x] T7: Mark spec as Complete after all tests pass
 
 ## Completion Verification
@@ -136,19 +136,19 @@ This spec cannot be marked Complete without passing the completion verification 
 ### Step 0 — Goal-backward check (always first)
 
 - [x] What must be TRUE for the purpose of this spec to be met?
-  - Truth 1: profile `minimal` produces an AGENTS section ≤200 lines — **verified: 183 lines**
-  - Truth 2: profile `full` produces an AGENTS section ≤320 lines — **verified: 277 lines**
+  - Truth 1: profile `minimal` produces an AGENTS section ≤200 lines — **verified: 195 lines**
+  - Truth 2: profile `full` produces an AGENTS section ≤320 lines — **verified: 289 lines**
   - Truth 3: the installer assembles sections based on the adoption profile — **verified: modules assembled by `assembleAgentsTemplate()`**
-  - Truth 4: refresh re-assembles based on current config — **verified: full→minimal shrinks from 277 to 183**
-- [x] For each truth, what must EXIST? Verified against `templates/agents/`, `scripts/install-pom.ts`, `tests/spec-0001/test-modular-assembly.mjs`.
+  - Truth 4: refresh re-assembles based on current config — **verified: full→minimal shrinks from 289 to 195**
+- [x] For each truth, what must EXIST? Verified against `templates/agents/`, `scripts/install-pom.ts`, `tests/spec-0001/integration/test-modular-assembly.mjs`.
 - [x] All truths hold.
 
 ### Scenario tests (code — mandatory for Complete)
 
-- [x] Scenario 1 (positive): install with profile `minimal` in a temp directory → 183 lines, ≤200 ✓
-- [x] Scenario 2 (positive): install with profile `full` in a temp directory → 277 lines, ≤320 ✓
-- [x] Scenario 3 (error/misuse): install with profile `full`, then refresh after changing config to `minimal` → section shrinks from 277 to 183 lines ✓
-- [x] All 15 tests run and pass (`tests/spec-0001/test-modular-assembly.mjs`)
+- [x] Scenario 1 (positive): install with profile `minimal` in a temp directory → 195 lines, ≤200 ✓
+- [x] Scenario 2 (positive): install with profile `full` in a temp directory → 289 lines, ≤320 ✓
+- [x] Scenario 3 (error/misuse): install with profile `full`, then refresh after changing config to `minimal` → section shrinks from 289 to 195 lines ✓
+- [x] All 15 tests run and pass (`tests/spec-0001/integration/test-modular-assembly.mjs`)
 
 ### Exception
 
@@ -157,7 +157,7 @@ Exception reason: _none_
 ## Sources And Decisions
 
 - Source: critical analysis of POM vs GSD/SpecKit/OpenSpec
-- Source: `templates/AGENTS_POM_SECTION_TEMPLATE.md` (≤350 lines, current state)
+- Source: `templates/AGENTS_POM_SECTION_TEMPLATE.md` (legacy full template, current state 374 lines)
 - ADR: none yet (create if the approach changes during implementation)
 
 ## Evolution Rule

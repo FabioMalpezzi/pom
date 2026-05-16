@@ -20,6 +20,8 @@ description: Use this skill to extend POM by adding or modifying a config rule, 
 
 ## Key Rules
 
+- Use `skills/clarify.md` first if the extension objective or correct POM level is unclear.
+- Use `skills/prune.md` first when the proposed extension might duplicate an existing rule or increase method weight.
 - Choose the smallest necessary level: config, template, prompt, skill, or lint.
 - Use `skills/sync.md` after a framework-level change when a target project must be aligned to the new POM commit.
 - Do not turn local adaptations into general rules without a reason.
@@ -34,3 +36,7 @@ description: Use this skill to extend POM by adding or modifying a config rule, 
 - updated files;
 - lint/tests run;
 - any remaining open decisions.
+
+## Memory Impact
+
+Extensions must improve operating memory, verification, or portability. If an extension mostly adds process, route to `skills/prune.md` before implementing it.

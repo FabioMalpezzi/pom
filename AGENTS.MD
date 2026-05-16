@@ -73,6 +73,9 @@ documents, never on a recollection of them.
 
 - **Read before designing.** Open the actual file before proposing
   changes, summarizing behavior, or referencing decisions.
+- **Use the domain glossary.** Read `CONTEXT.md` before design,
+  refactoring, or governance changes, and use its terms in new
+  prompts, templates, specs, and code comments.
 - **Verify before citing.** A note or memory saying "X exists" or
   "spec Y says Z" is a claim to verify against the repository, not
   a fact.

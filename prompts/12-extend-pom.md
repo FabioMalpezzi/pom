@@ -22,6 +22,7 @@ Before modifying files:
 Rules:
 - do not turn a local preference into a general rule without a reason;
 - do not duplicate rules across README, prompts, skills, and templates if a reference is enough;
+- if the proposed extension duplicates an existing rule or mainly adds process weight, use `prompts/21-prune-pom-method.md` first;
 - a skill must be short and point to a canonical prompt;
 - a prompt must describe what to read, what to propose, when to ask for approval, and what to verify;
 - a template must remain the starting point for real documents;

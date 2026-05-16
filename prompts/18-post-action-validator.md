@@ -2,20 +2,23 @@
 
 ## Purpose
 
-Read-only audit agent that verifies project governance after significant
-actions (task closure, decision approval, phase completion, wiki update, defer,
-handoff). Produces a compact punch list of what's OK and what needs fixing
-before the commit.
+Read-only audit agent that verifies project governance after significant or
+memory-changing actions (task closure, decision approval, phase completion,
+wiki update, defer, handoff). Produces a compact punch list of what's OK and
+what needs fixing before the commit.
 
 ## When To Run
 
-Run this validator after:
+Run this validator after significant or memory-changing work, especially:
 
-- closing a task or phase;
+- closing a significant task or phase;
 - approving or superseding a decision;
 - completing a wiki build or major wiki update;
 - deferring or parking important work;
-- ending a significant work session (before handoff).
+- ending a significant work session when governed memory changed.
+
+Do not run it merely because a tiny local edit happened. Use focused tests,
+lint, or `skills/check.md` for ordinary local verification.
 
 ## Constraint
 

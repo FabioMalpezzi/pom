@@ -25,11 +25,11 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `15-classify-document-status.md` | choose the right document type and status before writing |
 | `16-defer-work.md` | preserve work without implementing it, with explicit reactivation criteria |
 | `17-sync-pom-framework.md` | align a target project's pom/ with the latest POM source after a framework change |
-| `18-post-action-validator.md` | read-only governance audit after closing tasks, decisions, or wiki updates |
+| `18-post-action-validator.md` | read-only governance audit after significant or memory-changing actions |
 | `19-reconcile-memory.md` | classify and resolve a divergence between a source and project memory |
-| `16-defer-work.md` | preserve future work as Deferred without implementing it |
-| `17-sync-pom-framework.md` | commit POM source changes and align a target project's `pom/` |
-| `18-post-action-validator.md` | read-only audit of POM governance after significant actions |
+| `20-clarify-pom-work.md` | clarify ambiguous POM work before creating memory or changing method |
+| `21-prune-pom-method.md` | simplify, merge, demote, delete, or config-gate POM method bloat |
+| `22-diagnose-pom-problem.md` | diagnose failing or confusing POM workflows with a focused feedback loop |
 
 ## Work Planning Hierarchy
 

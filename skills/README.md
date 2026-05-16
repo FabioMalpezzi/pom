@@ -48,6 +48,7 @@ Existing project structures should be mapped first, not moved by default.
 | Skill | Use | Prompt |
 |---|---|---|
 | `help` | choose and explain POM skills | `skills/README.md` |
+| `clarify` | clarify ambiguous work before creating memory or changing method | `prompts/20-clarify-pom-work.md` |
 | `seed` | start POM on a new project | `prompts/01-bootstrap-new-project.md` |
 | `adopt` | adopt POM in an existing project | `prompts/02-adopt-existing-project.md` |
 | `pulse` | create or update `PROJECT_STATE.md` | `prompts/03-create-project-state.md` |
@@ -55,10 +56,12 @@ Existing project structures should be mapped first, not moved by default.
 | `plan` | turn specs/ADRs into verifiable tasks | `prompts/05-create-task-plan-from-spec.md` |
 | `check` | verify a phase, workstream, or task | `prompts/06-review-task-phase.md` |
 | `handoff` | close a session by updating memory and status | `prompts/07-update-project-after-work.md` |
-| `config` | create or update `pom.config.json` | `pom/prompts/08-create-pom-config.md` |
+| `diagnose` | debug failing or confusing POM workflows with a focused feedback loop | `prompts/22-diagnose-pom-problem.md` |
+| `config` | create or update `pom.config.json` | `prompts/08-create-pom-config.md` |
 | `spike` | manage temporary experiments and consolidation | `prompts/09-run-temporary-experiment.md` |
 | `wiki` | build, query, check, or maintain the wiki | `prompts/10-build-wiki.md`, `prompts/11-review-stale-wiki.md`, `prompts/13-query-wiki.md`, `prompts/14-lint-wiki.md` |
 | `extend` | extend POM with config, templates, prompts, skills, or lint | `prompts/12-extend-pom.md` |
+| `prune` | simplify, merge, demote, delete, or config-gate POM method bloat | `prompts/21-prune-pom-method.md` |
 | `status` | classify document type and choose the least misleading status | `prompts/15-classify-document-status.md` |
 | `defer` | park important work without implementing it | `prompts/16-defer-work.md` |
 | `sync` | align POM source changes with a target project's `pom/` | `prompts/17-sync-pom-framework.md` |

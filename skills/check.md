@@ -1,6 +1,6 @@
 ---
 name: check
-description: Use this skill to verify a completed phase, workstream, or task — including goal-backward check, scenario tests, thesis/antithesis validation, and consistency with specs, ADRs, and wiki.
+description: Use this skill to verify that a completed phase, workstream, or task actually meets its declared goal, including scenario tests, thesis/antithesis validation, and consistency with specs, ADRs, and wiki.
 ---
 
 # Skill - check
@@ -27,7 +27,8 @@ description: Use this skill to verify a completed phase, workstream, or task —
 
 ## Related Skills
 
-- Use `skills/validate.md` after check to run the full governance audit (PROJECT_STATE, wiki, task status, decisions, orphan artifacts).
+- Use `skills/validate.md` after significant closures or governance-changing work, not after every small local check.
+- Use `skills/diagnose.md` if verification fails and the cause is unclear.
 
 Read `pom.config.json` to know approved analysis/task/test/docs/source roots and which warnings should be treated as errors.
 
@@ -37,6 +38,10 @@ For analysis/task/test artifacts, verify that either:
 - they intentionally follow an existing service/framework structure recorded in config or local project rules.
 
 Do not request folder moves as part of verification unless the task explicitly includes migration.
+
+## Memory Impact
+
+`check` verifies work evidence. It should update durable memory only when the verified result changes task status, project state, wiki knowledge, or a decision.
 
 ## Output
 

@@ -1,6 +1,6 @@
 ---
 name: help
-description: Use this skill when the request is ambiguous or the user asks which POM skill, prompt, or template to use for a given task.
+description: Use this skill when the user asks which POM skill, prompt, or template exists or should be used.
 ---
 
 # Skill - help
@@ -9,8 +9,8 @@ description: Use this skill when the request is ambiguous or the user asks which
 
 - The user asks which POM skill to use.
 - POM, prompts, templates, or config need to be explained.
-- The request is ambiguous and the correct workflow must be chosen.
 - Navigation is needed across `skills/`, `prompts/`, `templates/`, and `pom.config.json`.
+- Use `skills/clarify.md` instead when the work itself is ambiguous and may create or change memory.
 
 ## Sources To Read
 
@@ -26,7 +26,7 @@ description: Use this skill when the request is ambiguous or the user asks which
 - Suggest the most appropriate skill for the request.
 - Remind that a skill always points to a canonical prompt.
 - Remind that `pom.config.json` governs project-specific conventions.
-- If the request matches no skill, propose the closest POM prompt or state that a new skill is needed.
+- If the user needs to decide whether memory should be created, route to `skills/clarify.md`.
 
 ## Output
 

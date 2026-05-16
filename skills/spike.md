@@ -20,12 +20,15 @@ description: Use this skill to run a temporary experiment, spike, or exploratory
 ## Key Rules
 
 - Isolate with branch `exp/<topic>`, `/tmp`, or `experiments/<topic>/`.
+- Prefer a Git worktree on `exp/<topic>` when the experiment is risky, broad, dependency-heavy, or likely to dirty many stable files.
 - For one-shot work: branch `exp/<topic>` if risky, `experiments/<topic>/` only for notes/proofs/reports, `/tmp` for disposable scripts.
 - For focused refactors, prefer `exp/refactor-<topic>` or `experiments/refactor-<topic>/`.
+- Keep trial dependencies, environment variables, service config, generated output, and external repositories outside the stable project unless adoption is approved.
+- Stable source must not import from `experiments/`; use project tooling to exclude or forbid experiment paths where practical.
 - Approved final code belongs in the real codebase, not in `experiments/`.
 - Do not contaminate stable codebase or documentation.
 - Do not import heavy artifacts without approval.
-- Consolidate only after evaluation.
+- Consolidate only after evaluation, preferably by selective cherry-pick, clean reimplementation, or moving specific approved artifacts.
 
 ## Config
 

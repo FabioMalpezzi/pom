@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>POM Guide - Project Operating Memory</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f6f8fb;
+      --surface: #fffdf9;
+      --surface-cool: #fbfdff;
+      --ink: #1f2630;
+      --muted: #5d6674;
+      --line: #d6dde8;
+      --teal: #067c78;
+      --blue: #2458a7;
+      --gold: #a66a00;
+      --mint-bg: #e9f8f2;
+      --sky-bg: #eef6ff;
+      --amber-bg: #fff5dc;
+      --shadow: 0 18px 45px rgba(31, 38, 48, 0.09);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #f4fbf8 0, #f6f8fb 46%, #fff9f0 100%);
+      color: var(--ink);
+      font-family: "Helvetica Neue", "Aptos", "Segoe UI", Arial, sans-serif;
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration-thickness: 0.08em;
+      text-underline-offset: 0.18em;
+    }
+
+    header {
+      position: relative;
+      background: linear-gradient(180deg, #fffdf9 0, #f7fbff 100%);
+      border-bottom: 1px solid var(--line);
+    }
+
+    header::before {
+      content: "";
+      display: block;
+      height: 6px;
+      background: linear-gradient(90deg, var(--teal), var(--blue), var(--gold));
+    }
+
+    .wrap {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+      gap: 44px;
+      padding: 72px 0 42px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--gold);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      font-family: "Avenir Next Condensed", "Optima", "Aptos Display", "Segoe UI Variable Display", "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.14;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.3rem, 7vw, 5.4rem);
+      max-width: 840px;
+      color: #18212d;
+    }
+
+    h1 span {
+      display: block;
+    }
+
+    h1 .brand {
+      color: var(--teal);
+      font-size: 0.48em;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+
+    .title-lockup {
+      display: grid;
+      grid-template-columns: 62px minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .pom-logo {
+      width: 58px;
+      height: 58px;
+      margin-top: 7px;
+      filter: drop-shadow(0 10px 18px rgba(31, 38, 48, 0.12));
+    }
+
+    .pom-logo text {
+      font-family: "Avenir Next Condensed", "Helvetica Neue", "Aptos", "Segoe UI", Arial, sans-serif;
+      font-size: 13px;
+      font-weight: 900;
+      fill: #ffffff;
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: clamp(1.7rem, 3vw, 2.55rem);
+    }
+
+    h2::before {
+      content: "";
+      display: inline-block;
+      width: 0.55em;
+      height: 0.55em;
+      margin-right: 0.35em;
+      border-radius: 3px;
+      background: var(--teal);
+      vertical-align: 0.07em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.08rem;
+    }
+
+    .lead {
+      margin: 24px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: clamp(1.08rem, 2vw, 1.35rem);
+    }
+
+    .language {
+      justify-self: end;
+      align-self: start;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 8px 24px rgba(31, 38, 48, 0.06);
+      font-size: 0.92rem;
+    }
+
+    .language strong {
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .language a {
+      padding: 6px 10px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .hero-side {
+      display: grid;
+      gap: 18px;
+      align-self: stretch;
+      align-content: start;
+      justify-items: end;
+    }
+
+    .memory-map {
+      width: min(100%, 430px);
+      padding: 22px;
+      border: 1px solid #cfd9e8;
+      border-radius: 8px;
+      background: linear-gradient(160deg, #ffffff 0, #f2fbf7 46%, #fff7e7 100%);
+      box-shadow: 0 22px 48px rgba(31, 38, 48, 0.11);
+    }
+
+    .memory-map-title {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+      color: var(--ink);
+      font-size: 0.92rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .memory-map-title::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      background: linear-gradient(135deg, var(--teal), var(--gold));
+    }
+
+    .loop {
+      display: grid;
+      gap: 9px;
+    }
+
+    .loop-step {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 11px;
+      border: 1px solid rgba(31, 38, 48, 0.09);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .loop-step:nth-child(2) .loop-mark { background: var(--blue); }
+    .loop-step:nth-child(3) .loop-mark { background: var(--gold); }
+    .loop-step:nth-child(4) .loop-mark { background: var(--teal); }
+
+    .loop-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--teal);
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .loop-step b {
+      display: block;
+      line-height: 1.2;
+    }
+
+    .loop-step span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    .hero-rule {
+      margin: 16px 0 0;
+      padding-top: 14px;
+      border-top: 1px solid rgba(31, 38, 48, 0.1);
+      color: var(--blue);
+      font-weight: 800;
+    }
+
+    nav {
+      display: flex;
+      gap: 10px;
+      padding: 16px 0 18px;
+      overflow-x: auto;
+      border-top: 1px solid var(--line);
+    }
+
+    nav a {
+      flex: 0 0 auto;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--ink);
+      font-size: 0.92rem;
+      text-decoration: none;
+    }
+
+    main {
+      padding: 38px 0 70px;
+    }
+
+    section {
+      margin-top: 26px;
+      padding: 32px;
+      border: 1px solid var(--line);
+      border-top: 4px solid #dfe6f1;
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    #what { border-top-color: var(--teal); }
+    #why { border-top-color: var(--gold); }
+    #not { border-top-color: var(--blue); }
+    #principles { border-top-color: var(--teal); }
+    #tools { border-top-color: var(--gold); }
+    #new-project { border-top-color: var(--teal); }
+    #existing-project { border-top-color: var(--blue); }
+    #adoption { border-top-color: var(--teal); }
+    #experiments { border-top-color: var(--gold); }
+    #git { border-top-color: var(--blue); }
+    #skills { border-top-color: var(--blue); }
+    #recommendations { border-top-color: var(--gold); }
+
+    #why h2::before,
+    #experiments h2::before,
+    #tools h2::before,
+    #recommendations h2::before { background: var(--gold); }
+
+    #not h2::before,
+    #existing-project h2::before,
+    #git h2::before,
+    #skills h2::before { background: var(--blue); }
+
+    #new-project h2::before,
+    #principles h2::before,
+    #adoption h2::before { background: var(--teal); }
+
+    .note {
+      border-left: 5px solid var(--teal);
+      background: var(--mint-bg);
+      box-shadow: none;
+    }
+
+    .warning {
+      border-left: 5px solid var(--gold);
+      background: var(--amber-bg);
+      box-shadow: none;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .item {
+      min-height: 100%;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-cool);
+      box-shadow: 0 8px 22px rgba(31, 38, 48, 0.05);
+    }
+
+    .grid .item:nth-child(3n+1) {
+      background: var(--mint-bg);
+      border-color: #bfe0d8;
+    }
+
+    .grid .item:nth-child(3n+2) {
+      background: var(--sky-bg);
+      border-color: #c5d8f0;
+    }
+
+    .grid .item:nth-child(3n+3) {
+      background: var(--amber-bg);
+      border-color: #ead49c;
+    }
+
+    .item p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .tag {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--sky-bg);
+      color: var(--blue);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .tag.teal {
+      background: var(--mint-bg);
+      color: var(--teal);
+    }
+
+    .tag.gold {
+      background: var(--amber-bg);
+      color: var(--gold);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 0.96rem;
+    }
+
+    th, td {
+      padding: 13px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      background: #f1f6fb;
+      font-size: 0.78rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    tbody tr:nth-child(odd) {
+      background: #fffdf7;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f7fbff;
+    }
+
+    td:first-child {
+      border-left: 4px solid rgba(6, 124, 120, 0.22);
+      font-weight: 700;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: #fff1cf;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.92em;
+    }
+
+    ul, ol {
+      padding-left: 1.2rem;
+    }
+
+    li + li {
+      margin-top: 8px;
+    }
+
+    .principle {
+      border-top: 4px solid var(--teal);
+    }
+
+    .principle:nth-child(2) {
+      border-top-color: var(--blue);
+    }
+
+    .principle:nth-child(3) {
+      border-top-color: var(--gold);
+    }
+
+    .callout {
+      margin: 22px 0 0;
+      padding: 18px;
+      border-radius: 8px;
+      background: #eef6ff;
+      color: var(--muted);
+    }
+
+    footer {
+      padding: 30px 0 50px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .footer-brand {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .footer-brand .pom-logo {
+      width: 30px;
+      height: 30px;
+      margin: 0;
+      filter: none;
+      flex: 0 0 auto;
+    }
+
+    .footer-brand p {
+      margin: 0;
+    }
+
+    @media (max-width: 820px) {
+      .wrap {
+        width: min(100% - 26px, 1120px);
+      }
+
+      .hero, .grid, .two {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        gap: 26px;
+        padding-top: 42px;
+      }
+
+      .title-lockup {
+        grid-template-columns: 48px minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .pom-logo {
+        width: 44px;
+        height: 44px;
+        margin-top: 5px;
+      }
+
+      .hero-side {
+        justify-items: stretch;
+      }
+
+      .language {
+        justify-self: start;
+      }
+
+      .memory-map {
+        width: 100%;
+      }
+
+      section {
+        padding: 24px 18px;
+      }
+
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      td {
+        border: 0;
+        padding: 7px 0;
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: block;
+        color: var(--muted);
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hero">
+      <div>
+        <p class="eyebrow">Readable guide</p>
+        <div class="title-lockup">
+          <svg class="pom-logo" viewBox="0 0 64 64" role="img" aria-label="POM logo">
+            <rect x="3" y="3" width="58" height="58" rx="10" fill="#fffdf9" stroke="#cfd9e8" stroke-width="2"></rect>
+            <rect x="11" y="12" width="12" height="40" rx="4" fill="#067c78"></rect>
+            <rect x="26" y="12" width="12" height="40" rx="4" fill="#2458a7"></rect>
+            <rect x="41" y="12" width="12" height="40" rx="4" fill="#a66a00"></rect>
+            <path d="M23 32h3M38 32h3" stroke="#a66a00" stroke-width="2" stroke-linecap="round"></path>
+            <text x="17" y="37" text-anchor="middle">P</text>
+            <text x="32" y="37" text-anchor="middle">O</text>
+            <text x="47" y="37" text-anchor="middle">M</text>
+          </svg>
+          <h1><span class="brand">POM</span><span>Project Operating Memory</span></h1>
+        </div>
+        <p class="lead">A lightweight way to keep a project's working memory alive across people, agents, and sessions without turning the repository into a project-management system.</p>
+      </div>
+      <div class="hero-side">
+        <div class="language" aria-label="Language switcher">
+          <strong>EN</strong>
+          <a href="POM_GUIDE.it.html">IT</a>
+        </div>
+        <div class="memory-map" aria-label="POM operating loop">
+          <div class="memory-map-title">Operating loop</div>
+          <div class="loop">
+            <div class="loop-step">
+              <div class="loop-mark">1</div>
+              <div><b>Read</b><span>Start from current sources, not recollection.</span></div>
+            </div>
+            <div class="loop-step">
+              <div class="loop-mark">2</div>
+              <div><b>Synthesize</b><span>Keep only memory that changes future work.</span></div>
+            </div>
+            <div class="loop-step">
+              <div class="loop-mark">3</div>
+              <div><b>Verify</b><span>Close work with evidence, not ritual.</span></div>
+            </div>
+            <div class="loop-step">
+              <div class="loop-mark">4</div>
+              <div><b>Resume</b><span>Leave the next safe step visible.</span></div>
+            </div>
+          </div>
+          <p class="hero-rule">Memory > Verification > Organization</p>
+        </div>
+      </div>
+    </div>
+    <div class="wrap">
+      <nav aria-label="Guide sections">
+        <a href="#what">What it is</a>
+        <a href="#why">Why it exists</a>
+        <a href="#principles">Principles</a>
+        <a href="#tools">Tools</a>
+        <a href="#adoption">Adoption</a>
+        <a href="#skills">Skills</a>
+        <a href="#recommendations">Recommendations</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="note" id="status">
+      <h2>This guide is explanatory</h2>
+      <p>This page helps a reader understand POM. It is not the operational rulebook. The canonical operating rules remain in <code>README.md</code>, <code>AGENTS.MD</code>, <code>prompts/</code>, <code>skills/</code>, and <code>templates/</code>.</p>
+      <p>When POM changes, this guide should be reviewed so it remains useful to humans who are learning the method.</p>
+    </section>
+
+    <section id="what">
+      <h2>What POM is</h2>
+      <p>POM stands for <strong>Project Operating Memory</strong>. It is a reusable method for preserving the minimum reliable context needed to understand where a project is, why it is there, and what the next safe step is.</p>
+      <p>POM connects source code, decisions, specifications, task plans, wiki pages, mockups, tests, and agent instructions. The point is not to document everything. The point is to make the project restartable after a pause, a handoff, or a change of agent.</p>
+    </section>
+
+    <section id="why">
+      <h2>Why it exists</h2>
+      <div class="grid">
+        <div class="item">
+          <span class="tag teal">Continuity</span>
+          <h3>Projects lose context</h3>
+          <p>Important reasoning often lives in chat, memory, or a person's head. POM moves durable context into the repository.</p>
+        </div>
+        <div class="item">
+          <span class="tag">Verification</span>
+          <h3>Done needs evidence</h3>
+          <p>POM treats completion as a claim to verify, not as a checkbox to trust.</p>
+        </div>
+        <div class="item">
+          <span class="tag gold">Navigation</span>
+          <h3>Agents need source authority</h3>
+          <p>Different questions belong to different sources. POM helps the agent read the right file before acting.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="not">
+      <h2>What POM is not</h2>
+      <div class="grid two">
+        <div class="item">
+          <h3>Not a project manager</h3>
+          <p>POM does not replace issue trackers, roadmap tools, or team rituals. It keeps operating memory close to the work.</p>
+        </div>
+        <div class="item">
+          <h3>Not a runtime framework</h3>
+          <p>POM should not impose application architecture. Existing project structure is mapped before any migration is proposed.</p>
+        </div>
+        <div class="item">
+          <h3>Not a document dump</h3>
+          <p>More files are not automatically better. Memory must be useful, current, and connected to source authority.</p>
+        </div>
+        <div class="item">
+          <h3>Not a substitute for Git</h3>
+          <p>Git remains the detailed historical memory. POM captures the current operating synthesis.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="principles">
+      <h2>Founding principles</h2>
+      <div class="grid">
+        <div class="item principle">
+          <h3>1. Operating memory</h3>
+          <p>Keep the minimum reliable context that lets someone resume work safely. Avoid logs, archives, and decorative documentation.</p>
+        </div>
+        <div class="item principle">
+          <h3>2. Verification</h3>
+          <p>A spec, task, or decision is not complete until its stated goal is actually met and the evidence supports that claim.</p>
+        </div>
+        <div class="item principle">
+          <h3>3. Organization</h3>
+          <p>Structure helps only when it protects memory and verification. Organization serves the work, not the other way around.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="tools">
+      <h2>POM tools</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tool</th>
+            <th>Purpose</th>
+            <th>Typical file</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="Tool">Persistent Wiki</td>
+            <td data-label="Purpose">Reusable synthesis of project knowledge.</td>
+            <td data-label="Typical file"><code>wiki/</code></td>
+          </tr>
+          <tr>
+            <td data-label="Tool">Project State</td>
+            <td data-label="Purpose">Short restart memory with current position and next safe actions.</td>
+            <td data-label="Typical file"><code>PROJECT_STATE.md</code></td>
+          </tr>
+          <tr>
+            <td data-label="Tool">ADR and Spec</td>
+            <td data-label="Purpose">Durable decisions and intended behavior.</td>
+            <td data-label="Typical file"><code>decisions/</code>, <code>specs/</code></td>
+          </tr>
+          <tr>
+            <td data-label="Tool">Task Plan</td>
+            <td data-label="Purpose">Verifiable breakdown of work, scenarios, and done criteria.</td>
+            <td data-label="Typical file"><code>tasks/</code></td>
+          </tr>
+          <tr>
+            <td data-label="Tool">Config</td>
+            <td data-label="Purpose">Maps POM to the project's actual structure.</td>
+            <td data-label="Typical file"><code>pom.config.json</code></td>
+          </tr>
+          <tr>
+            <td data-label="Tool">Lint</td>
+            <td data-label="Purpose">Automates stable, objective governance checks.</td>
+            <td data-label="Typical file"><code>npm run pom:lint</code></td>
+          </tr>
+          <tr>
+            <td data-label="Tool">Skills</td>
+            <td data-label="Purpose">Short entry points that tell an agent which workflow to use.</td>
+            <td data-label="Typical file"><code>skills/</code></td>
+          </tr>
+          <tr>
+            <td data-label="Tool">Prompts</td>
+            <td data-label="Purpose">Canonical procedures for applying the method.</td>
+            <td data-label="Typical file"><code>prompts/</code></td>
+          </tr>
+          <tr>
+            <td data-label="Tool">Templates</td>
+            <td data-label="Purpose">Reusable shapes for governed memory elements.</td>
+            <td data-label="Typical file"><code>templates/</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="new-project">
+      <h2>Using POM on a new project</h2>
+      <ol>
+        <li>Start small. Choose the lightest adoption profile that gives the project a reliable restart point.</li>
+        <li>Create the basic memory: agent instructions, config, and project state.</li>
+        <li>Add wiki, decisions, task plans, or structured tests only when the project needs them.</li>
+        <li>Let Git carry detailed history. Let POM carry the current synthesis.</li>
+      </ol>
+      <div class="callout">Good first request: <code>Read pom/skills/seed.md and set up POM for this project.</code></div>
+    </section>
+
+    <section id="existing-project">
+      <h2>Using POM on an existing project</h2>
+      <p>For an existing repository, POM should first observe and map. It should not reorganize the project just to fit a canonical example.</p>
+      <ol>
+        <li>Read existing documentation, source roots, tests, decisions, and conventions.</li>
+        <li>Record the actual structure in <code>pom.config.json</code>.</li>
+        <li>Identify the smallest memory gap that hurts restart, verification, or source authority.</li>
+        <li>Adopt incrementally. Migrations are explicit decisions, not installation side effects.</li>
+      </ol>
+      <div class="callout">Good first request: <code>Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code></div>
+    </section>
+
+    <section id="adoption">
+      <h2>Levels of use</h2>
+      <div class="grid">
+        <div class="item">
+          <span class="tag teal">Minimal</span>
+          <h3>Restart memory</h3>
+          <p>Use POM for agent instructions, config, and project state. Best when the project is small or still forming.</p>
+        </div>
+        <div class="item">
+          <span class="tag gold">Light</span>
+          <h3>Focused memory</h3>
+          <p>Add the wiki or decision records where they solve a real coordination problem. This maps to profiles such as <code>wiki</code> or <code>decisions</code>.</p>
+        </div>
+        <div class="item">
+          <span class="tag gold">Full</span>
+          <h3>Governed memory</h3>
+          <p>Use wiki, decisions, planning, verification, lint, and stronger handoff rules for larger or long-running projects.</p>
+        </div>
+      </div>
+      <p class="callout">The installer also supports practical profiles such as <code>adopt</code>, <code>refresh</code>, and <code>custom</code>. The profile is a starting point, not a badge of maturity.</p>
+    </section>
+
+    <section id="experiments">
+      <h2>Isolated experiments</h2>
+      <p>Experiments are valuable, but they should not contaminate stable source before evaluation. POM treats experiments as temporary work until they are deliberately consolidated.</p>
+      <ul>
+        <li>Use a branch or Git worktree such as <code>exp/&lt;topic&gt;</code> for broad or risky work.</li>
+        <li>Use <code>/tmp</code> or <code>experiments/&lt;topic&gt;</code> for short trials and disposable evidence.</li>
+        <li>Keep trial dependencies, environment files, generated output, and external repositories isolated.</li>
+        <li>Promote only selected learning: discard, synthesize, write a decision, create a task plan, or reimplement cleanly.</li>
+      </ul>
+    </section>
+
+    <section id="git">
+      <h2>Git and POM</h2>
+      <p>Git is the fine-grained historical memory. It records what changed and when. POM is the operating synthesis. It explains what matters now, why it matters, and where to resume.</p>
+      <p>Do not turn POM documents into manual changelogs. If historical detail is needed, read Git. If restart context is needed, read POM.</p>
+    </section>
+
+    <section id="skills">
+      <h2>Skills and when to use them</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Need</th>
+            <th>Skill</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Need">Choose a workflow or understand available tools</td><td data-label="Skill"><code>help</code></td></tr>
+          <tr><td data-label="Need">Clarify ambiguous work before creating memory</td><td data-label="Skill"><code>clarify</code></td></tr>
+          <tr><td data-label="Need">Start POM on a new project</td><td data-label="Skill"><code>seed</code></td></tr>
+          <tr><td data-label="Need">Adopt POM in an existing project</td><td data-label="Skill"><code>adopt</code></td></tr>
+          <tr><td data-label="Need">Create or refresh restart memory</td><td data-label="Skill"><code>pulse</code></td></tr>
+          <tr><td data-label="Need">Set governance guardrails</td><td data-label="Skill"><code>guard</code></td></tr>
+          <tr><td data-label="Need">Create a verifiable task plan</td><td data-label="Skill"><code>plan</code></td></tr>
+          <tr><td data-label="Need">Verify completed work</td><td data-label="Skill"><code>check</code></td></tr>
+          <tr><td data-label="Need">Close a significant session</td><td data-label="Skill"><code>handoff</code></td></tr>
+          <tr><td data-label="Need">Configure local mappings and lint</td><td data-label="Skill"><code>config</code></td></tr>
+          <tr><td data-label="Need">Run or consolidate an experiment</td><td data-label="Skill"><code>spike</code></td></tr>
+          <tr><td data-label="Need">Build, query, or maintain wiki memory</td><td data-label="Skill"><code>wiki</code></td></tr>
+          <tr><td data-label="Need">Extend the POM method</td><td data-label="Skill"><code>extend</code></td></tr>
+          <tr><td data-label="Need">Classify document type or status</td><td data-label="Skill"><code>status</code></td></tr>
+          <tr><td data-label="Need">Park work without implementation</td><td data-label="Skill"><code>defer</code></td></tr>
+          <tr><td data-label="Need">Sync POM source into a target project</td><td data-label="Skill"><code>sync</code></td></tr>
+          <tr><td data-label="Need">Resolve divergence between sources</td><td data-label="Skill"><code>reconcile</code></td></tr>
+          <tr><td data-label="Need">Run a read-only governance audit</td><td data-label="Skill"><code>validate</code></td></tr>
+          <tr><td data-label="Need">Reduce method bloat</td><td data-label="Skill"><code>prune</code></td></tr>
+          <tr><td data-label="Need">Debug a POM problem</td><td data-label="Skill"><code>diagnose</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="warning" id="recommendations">
+      <h2>Final recommendations</h2>
+      <ul>
+        <li>Start with the smallest useful POM profile.</li>
+        <li>Create memory only when it helps future work restart, verify, or avoid rediscovery.</li>
+        <li>Read current sources before making claims about the project.</li>
+        <li>Use Git for history and POM for current operating synthesis.</li>
+        <li>Keep experiments isolated until their learning is selected for promotion.</li>
+        <li>Prune rules that add process without protecting memory.</li>
+        <li>When using or evolving POM itself, ask what a future reader or agent will need to know to take the next safe step in the project.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <div class="footer-brand">
+      <svg class="pom-logo" viewBox="0 0 64 64" aria-hidden="true">
+        <rect x="3" y="3" width="58" height="58" rx="10" fill="#fffdf9" stroke="#cfd9e8" stroke-width="2"></rect>
+        <rect x="11" y="12" width="12" height="40" rx="4" fill="#067c78"></rect>
+        <rect x="26" y="12" width="12" height="40" rx="4" fill="#2458a7"></rect>
+        <rect x="41" y="12" width="12" height="40" rx="4" fill="#a66a00"></rect>
+        <path d="M23 32h3M38 32h3" stroke="#a66a00" stroke-width="2" stroke-linecap="round"></path>
+        <text x="17" y="37" text-anchor="middle">P</text>
+        <text x="32" y="37" text-anchor="middle">O</text>
+        <text x="47" y="37" text-anchor="middle">M</text>
+      </svg>
+      <p>POM - Project Operating Memory. This guide is a readable overview for people approaching the method. Operational rules live in the repository's canonical POM files.</p>
+    </div>
+  </footer>
+</body>
+</html>

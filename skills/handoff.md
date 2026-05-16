@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Use this skill at the end of a significant session to update project state, run lint, verify completed work, and leave a clear restart point.
+description: Use this skill at the end of a significant session to leave a clear restart point, updating project state only when operating context changed.
 ---
 
 # Skill - handoff
@@ -13,7 +13,8 @@ description: Use this skill at the end of a significant session to update projec
 
 ## Related Skills
 
-- Use `skills/validate.md` as part of handoff to run the full governance punch list before closing the session.
+- Use `skills/validate.md` during handoff only when governed memory changed significantly or the user asks for a governance audit.
+- Use `skills/pulse.md` when the restart point itself needs to be created or refreshed.
 
 ## Canonical Prompt
 
@@ -23,6 +24,7 @@ description: Use this skill at the end of a significant session to update projec
 
 - Before handoff, verify that any work marked Complete during this session has passed the completion verification gate (goal-backward + scenario tests or thesis/antithesis).
 - Update `PROJECT_STATE.md` if the operating context changes.
+- Do not rewrite `PROJECT_STATE.md` when nothing materially changed; state that no memory update is needed.
 - Use Git for fine-grained history.
 - Do not update everything automatically.
 - Run available lint/tests.
@@ -38,3 +40,7 @@ Read `pom.config.json`, especially the `handoff` section, before updating or eva
 - lint/tests run;
 - completed/open tasks;
 - next restart point.
+
+## Memory Impact
+
+`handoff` writes restart memory, not a full diary. Capture only state, decisions, blockers, next actions, and verification that matter to the next session.

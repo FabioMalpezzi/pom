@@ -21,6 +21,7 @@ description: Use this skill to turn a spec, ADR, or analysis into a verifiable t
 
 ## Related Skills
 
+- Use `skills/clarify.md` first when the objective, source authority, or expected artifact is unclear.
 - Use `skills/status.md` first when the artifact might be a spec, ADR, wiki page, or deferred work instead of an executable task.
 - Use `skills/defer.md` when the work should be preserved but not implemented now.
 
@@ -43,6 +44,10 @@ tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}
 ```
 
 Keep service-local or framework-required tests in their existing locations unless the config or user says otherwise.
+
+## Memory Impact
+
+Task plans are operating memory for future execution. Create one only when work needs coordination, staged verification, or restartable context.
 
 ## Output
 

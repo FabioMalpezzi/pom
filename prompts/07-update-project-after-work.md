@@ -19,6 +19,7 @@ Handoff rule:
 - always update `PROJECT_STATE.md` if the project operating context changed;
 - do not update it for tiny changes with no impact;
 - if you do not update it, explain in the summary why it was not necessary.
+- run `skills/validate.md` only when governed memory changed significantly or the user asks for a governance audit.
 
 Then update, when present and relevant:
 - PROJECT_STATE.md;

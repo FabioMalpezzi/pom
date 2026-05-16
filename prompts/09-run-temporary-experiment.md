@@ -11,6 +11,7 @@ Before modifying files:
 3. check Git status with `git status`;
 4. propose where to work:
    - Git branch `exp/<topic>` if the experiment touches project files;
+   - Git worktree `../<project>-exp-<topic>` on branch `exp/<topic>` if the experiment is risky, broad, or likely to leave many file changes;
    - `/tmp` if it is only temporary exploration;
    - `experiments/<topic>/` only if artifacts must remain in the repository during evaluation;
 5. wait for my approval.
@@ -18,6 +19,7 @@ Before modifying files:
 If the request concerns one-shot work, for example a focused refactor, test of a new LLM model, library/API trial, comparison script, quick benchmark, or temporary technical analysis:
 - if it is lightweight and already decided, propose direct work on the current branch with a clear task/commit;
 - if it is risky or exploratory, propose branch `exp/<topic>`; for refactoring, prefer `exp/refactor-<topic>`;
+- if it may touch many stable files, new dependencies, generated output, or service config, prefer a Git worktree over a normal branch so the main working tree stays physically clean;
 - if notes, proofs, reports, or temporary scripts must be kept during evaluation, propose `experiments/<topic>/`; for refactoring, prefer `experiments/refactor-<topic>/`;
 - if only disposable scripts are needed, use `/tmp`;
 - do not leave approved final code inside `experiments/`: it must be moved into the real codebase.
@@ -26,6 +28,9 @@ Rules:
 - do not mix experiments with stable code/documentation without approval;
 - do not import full repositories, dumps, or heavy artifacts into the codebase without a decision;
 - do not move stable files into the experiment;
+- do not add dependencies to the stable project manifest only for a trial; use a local experiment manifest, `npx`/`npm exec`, a worktree, or `/tmp` unless the dependency is approved for adoption;
+- do not change stable environment or service config for a trial; use `.env.experiment`, experiment-specific config files, Docker Compose project names, temporary databases, or Testcontainers-style disposable services;
+- do not let stable source import from `experiments/`; if the project has ESLint, TypeScript, or equivalent tooling, prefer guardrails that exclude or forbid imports from experiment paths;
 - do not update wiki, docs, specs, or ADRs until the experiment is evaluated;
 - use Git to preserve history and make the experiment discardable;
 - if using an `experiments/` folder, create `EXPERIMENT.md` from `templates/EXPERIMENT_TEMPLATE.md`.
@@ -40,6 +45,8 @@ Recommended format when artifacts must stay in the repository:
 
 experiments/<topic>/
   EXPERIMENT.md
+  package.json          # optional, only for experiment-local dependencies
+  experiment.config.*   # optional, only for experiment-local config
   notes/
   artifacts/
   references/
@@ -56,10 +63,12 @@ At the end, propose a consolidation decision:
 Before consolidation:
 1. summarize results, costs, risks, licenses, privacy, and impacts;
 2. indicate which files would be promoted and where;
-3. wait for approval.
+3. state whether promotion should happen by selective cherry-pick, clean reimplementation on a feature branch, or moving specific artifacts out of `experiments/`;
+4. wait for approval.
 
 After consolidation:
 - run available lint/tests;
 - update `PROJECT_STATE.md` if the operating context changes;
 - state what was discarded and what was promoted.
+- remove the worktree, abandon the experiment branch, or delete temporary artifacts when they are no longer needed.
 ```

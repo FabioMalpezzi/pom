@@ -6,6 +6,7 @@
 | Type | one-shot / spike / refactoring / LLM model / API library / benchmark / research |
 | Status | under evaluation / consolidated / discarded |
 | Branch / Path | exp/<topic> / experiments/<topic> / /tmp |
+| Isolation | branch / worktree / /tmp / local manifest / container |
 | Owner | name or role |
 
 ## Objective
@@ -26,6 +27,17 @@ Included:
 Excluded:
 
 - What is not being touched
+
+## Isolation Plan
+
+Describe how the experiment stays separate from stable source and memory.
+
+- Branch or worktree:
+- Temporary path:
+- Dependency isolation:
+- Environment/config isolation:
+- Service/data isolation:
+- Import/build guardrail:
 
 ## Commands / Procedure
 
@@ -59,6 +71,13 @@ Decision:
 - create ADR;
 - generate task plan;
 - leave only Git/branch reference.
+
+Promotion path:
+
+- selective cherry-pick;
+- clean reimplementation on a feature branch;
+- move approved artifacts out of `experiments/`;
+- no promotion.
 
 ## Consolidation
 

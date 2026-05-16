@@ -14,17 +14,29 @@ Website: <https://www.improveandmanage.com/>
 
 Special thanks to **Andrej Karpathy** for the LLM Wiki pattern that inspired POM's persistent wiki approach.
 
+## Readable Guides
+
+For a reader-friendly explanation of POM's purpose, tools, adoption levels, skills, and recommendations, see:
+
+- [POM Guide in English](docs/POM_GUIDE.en.html)
+- [Guida POM in italiano](docs/POM_GUIDE.it.html)
+
+These guides are explanatory, not normative. Operational rules remain in `README.md`, `AGENTS.MD`, `prompts/`, `skills/`, and `templates/`.
+
 ## Quickstart
 
 Use the smallest workflow that matches your situation:
 
 | Situation | Start Here |
 |---|---|
+| Ambiguous request or artifact | `skills/clarify.md` |
 | New project | `skills/seed.md` |
 | Existing project | `skills/adopt.md` |
 | Resume after a pause | `skills/pulse.md` |
 | Ask or maintain the wiki | `skills/wiki.md` |
 | Extend POM | `skills/extend.md` |
+| Reduce method bloat | `skills/prune.md` |
+| Diagnose a POM problem | `skills/diagnose.md` |
 | Defer work without implementing | `skills/defer.md` |
 | Sync POM source to a project | `skills/sync.md` |
 | See available commands | `npm run pom:help` |
@@ -305,6 +317,7 @@ Project documentation must stay lean and load-bearing. Its history lives in Git,
 Design and analysis must rely on the current state of code and documents, never on a recollection of them.
 
 - **Read before designing.** Open the actual file before proposing changes, summarizing behavior, or referencing decisions.
+- **Use the domain glossary.** Read `CONTEXT.md` before design, refactoring, or governance changes, and use its terms in new prompts, templates, specs, and code comments.
 - **Verify before citing.** A note or memory saying "X exists" or "spec Y says Z" is a claim to verify against the repository, not a fact.
 - **Declare gaps.** If the artifact you expected cannot be found, say so. Do not fill the gap with assumptions.
 - **No reconstruction from memory.** Describing the current content or behavior of a file requires reading it now.
@@ -371,6 +384,8 @@ Rules:
 ## Temporary Experiments
 
 Experiments must remain separate from the stable codebase until evaluated. Use branch `exp/<topic>`, `/tmp`, or `experiments/<topic>/` depending on the case. Consolidate only after evaluation.
+
+For risky or broad experiments, prefer a Git worktree on an `exp/<topic>` branch so the main working tree stays clean. Keep trial dependencies, environment files, service config, generated output, and external repositories isolated from stable source unless adoption is approved. Stable source must not import from `experiments/`; use lint/type/build guardrails where the project already has them.
 
 See `prompts/09-run-temporary-experiment.md` for the full workflow.
 
@@ -457,7 +472,7 @@ A spec, task, or ADR cannot be marked Complete/Accepted without passing the comp
 1. **Goal-backward check (first):** verify the declared goal is actually achieved — "what must be TRUE for this goal to be met?" — before checking tests or theses. If the goal is not met, the work cannot be Complete regardless of checkbox status.
 2. **Technical work (with code):** at least 2 positive scenario tests based on real user use cases + at least 1 error/misuse scenario test. Tests must run and pass.
 3. **Non-technical work (without code):** at least 1 thesis proving validity based on use cases + at least 1 antithesis (incorrect/improper usage) confuted. Cannot close if an antithesis is not confuted.
-4. **Governance check:** run `pom/skills/validate.md` to verify PROJECT_STATE, wiki, task status, decisions, and orphan artifacts.
+4. **Governance check:** for significant or memory-changing closures, run `pom/skills/validate.md` to verify PROJECT_STATE, wiki, task status, decisions, and orphan artifacts.
 
 **Who verifies:** when the environment supports it (sub-agents, hooks), verification should be performed by a separate agent or fresh context. When not available, the working agent re-reads files from disk instead of relying on session memory.
 
@@ -495,6 +510,7 @@ POM skills are short operational aliases for the main prompts. They do not repla
 | Skill | Prompt |
 |---|---|
 | `help` | skill selection and explanation |
+| `clarify` | clarify ambiguous work |
 | `seed` | bootstrap a new project |
 | `adopt` | adopt POM in an existing project |
 | `pulse` | project state |
@@ -502,10 +518,17 @@ POM skills are short operational aliases for the main prompts. They do not repla
 | `plan` | task plan |
 | `check` | review/verification |
 | `handoff` | session closeout |
+| `diagnose` | focused POM troubleshooting |
 | `config` | lint configuration |
 | `spike` | temporary experiments |
 | `wiki` | build, query, lightweight lint, and stale wiki maintenance |
 | `extend` | controlled POM extension |
+| `prune` | reduce POM method bloat |
+| `status` | document type and status classification |
+| `defer` | park work without implementation |
+| `sync` | align POM source and target project |
+| `reconcile` | resolve source/project memory divergence |
+| `validate` | read-only governance audit |
 
 ### Skill Usage Tracking
 

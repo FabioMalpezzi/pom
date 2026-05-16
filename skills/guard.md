@@ -1,6 +1,6 @@
 ---
 name: guard
-description: Use this skill to set up or update documentation governance — including lint configuration, decision records, mock manifests, and agent operating rules.
+description: Use this skill to set or update project operating guardrails beyond the installer, including governance rules, decision records, mock manifests, lint configuration, and agent rules.
 ---
 
 # Skill - guard
@@ -9,7 +9,9 @@ description: Use this skill to set up or update documentation governance — inc
 
 - Documentation governance must be set up.
 - Lint, decisions, mock manifests, or agent rules must be configured.
-- The project operating method changes.
+- Project operating guardrails change beyond normal config editing.
+
+Use `skills/config.md` for config-only path or severity changes. Use `skills/extend.md` when the general POM method changes.
 
 ## Canonical Prompt
 
@@ -35,6 +37,10 @@ Use this skill when governance rules, lint configuration, or agent operating rul
 ## Config
 
 Governance and lint must be consistent with `pom.config.json`. If a project rule changes, update the config before or together with the rule. For existing projects, encode approved mappings to current structures before proposing folder migrations.
+
+## Memory Impact
+
+`guard` protects how memory is governed. It should add rules only when they prevent stale, contradictory, unverifiable, or misplaced memory.
 
 ## Output
 
