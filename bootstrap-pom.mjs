@@ -9,6 +9,7 @@
  * Usage:
  *   node bootstrap-pom.mjs
  *   node bootstrap-pom.mjs --profile minimal
+ *   node bootstrap-pom.mjs --profile adopt --ownership external_overlay
  *   node bootstrap-pom.mjs --repo https://github.com/your-fork/pom.git
  */
 
@@ -49,6 +50,7 @@ function run(cmd, args, options = {}) {
 function main() {
   const repo = readArg("repo") || DEFAULT_REPO;
   const profile = readArg("profile");
+  const ownership = readArg("ownership");
 
   if (existsSync(POM_DIR)) {
     console.log(`${POM_DIR}/ already exists. Updating...`);
@@ -81,6 +83,7 @@ function main() {
 
   const installArgs = ["--experimental-strip-types", installScript];
   if (profile) installArgs.push("--profile", profile);
+  if (ownership) installArgs.push("--ownership", ownership);
 
   run("node", installArgs);
 }

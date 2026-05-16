@@ -35,6 +35,11 @@ function printHelp(): void {
   console.log("3. Install or reconfigure POM");
   console.log("   npm run pom:init");
   console.log("   Run the interactive installer/profile chooser for a target project.");
+  console.log("   For deterministic agent use, pass explicit options:");
+  console.log("   npm run pom:init -- --profile adopt --ownership owned");
+  console.log("   npm run pom:init -- --profile adopt --ownership team");
+  console.log("   npm run pom:init -- --profile adopt --ownership external_overlay");
+  console.log("   Ownership modes: owned, team, external_overlay, unknown.");
   console.log("");
   console.log("4. Lint POM governance");
   console.log("   npm run pom:lint");

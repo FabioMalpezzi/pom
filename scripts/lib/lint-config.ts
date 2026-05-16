@@ -11,6 +11,11 @@ export type Finding = {
 };
 
 export type LintConfig = {
+  ownership: {
+    mode: string;
+    localOnly: boolean;
+    preserveExistingConventions: boolean;
+  };
   adoption: {
     profile: string;
     wiki: string;
@@ -98,6 +103,11 @@ export type LintConfig = {
 };
 
 const defaultConfig: LintConfig = {
+  ownership: {
+    mode: "unknown",
+    localOnly: false,
+    preserveExistingConventions: true,
+  },
   adoption: {
     profile: "minimal",
     wiki: "disabled",
@@ -249,6 +259,15 @@ function mergeConfig(base: LintConfig, raw: Record<string, unknown>, readers: Co
   } = readers;
 
   return {
+    ownership: {
+      mode: readString(raw, "ownership.mode", base.ownership.mode),
+      localOnly: readBoolean(raw, "ownership.localOnly", base.ownership.localOnly),
+      preserveExistingConventions: readBoolean(
+        raw,
+        "ownership.preserveExistingConventions",
+        base.ownership.preserveExistingConventions,
+      ),
+    },
     adoption: {
       profile: readString(raw, "adoption.profile", base.adoption.profile),
       wiki: readString(raw, "adoption.wiki", base.adoption.wiki),
@@ -462,6 +481,8 @@ function validateConfig(
   current: LintConfig,
   add: (severity: Severity, rule: string, message: string, file?: string) => void,
 ): void {
+  validateEnum(add, "ownership.mode", current.ownership.mode, ["owned", "team", "external_overlay", "unknown"]);
+
   validateEnum(add, "adoption.profile", current.adoption.profile, [
     "minimal",
     "wiki",

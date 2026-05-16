@@ -118,6 +118,20 @@ You can also pass a profile directly:
 node bootstrap-pom.mjs --profile full
 ```
 
+For existing repositories, pass ownership explicitly when the agent or user already knows the relationship:
+
+```bash
+node bootstrap-pom.mjs --profile adopt --ownership owned
+node bootstrap-pom.mjs --profile adopt --ownership team
+node bootstrap-pom.mjs --profile adopt --ownership external_overlay
+```
+
+The same option is available after POM is installed:
+
+```bash
+npm run pom:init -- --profile adopt --ownership external_overlay
+```
+
 ### Updating POM in an existing project
 
 For normal manual updates from a project that already has POM installed:
@@ -186,6 +200,13 @@ Overlay mode should keep upstream structures authoritative:
 - upstream agent instruction files should be preserved unless local agent guidance is intentionally added;
 - local wiki pages are working notes for understanding architecture, entrypoints, modules, tests, conventions, risks, and open questions;
 - before opening a PR, POM overlay artifacts must stay out of the contribution unless the upstream project explicitly wants them.
+
+Recommended Git posture:
+
+- keep the overlay in its own branch or, better, in a separate Git worktree;
+- do actual upstream contribution work on a separate feature branch;
+- do not merge the overlay branch into the contribution branch;
+- transfer only selected non-POM changes with a patch, file checkout, or `git cherry-pick -n` of commits that contain no POM artifacts.
 
 See `specs/SPEC-0004-external-project-overlay.md` for the documented mode and future implementation requirements.
 
@@ -710,6 +731,13 @@ Allowed values:
 For existing repositories, the agent should clarify ownership before mapping POM modules. Heuristics such as a remote pointing to another organization can suggest the question, but they must not decide it silently.
 
 For `external_overlay`, POM should disable governance over upstream `docs/`, `tests`, ADRs, source layout, release process, and PR contents. Use local wiki or notes to understand the project, and keep overlay artifacts out of upstream contributions unless explicitly wanted.
+
+Installer support:
+
+```bash
+node bootstrap-pom.mjs --profile adopt --ownership external_overlay
+npm run pom:init -- --profile adopt --ownership external_overlay
+```
 
 ### Adoption Profile
 

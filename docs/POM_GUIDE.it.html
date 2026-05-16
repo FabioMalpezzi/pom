@@ -830,8 +830,13 @@
         <li>Non imporre convenzioni POM a <code>docs/</code>, <code>tests/</code>, ADR, struttura sorgente, processo di release o contenuto delle pull request upstream.</li>
         <li>Usare la memoria locale per mappare architettura, entrypoint, moduli, test, convenzioni, rischi e domande aperte.</li>
         <li>Tenere gli artefatti overlay fuori dai contributi upstream, salvo richiesta esplicita del progetto.</li>
-        <li>Prima di una PR, stageare solo la modifica reale per upstream ed eseguire i controlli propri del progetto.</li>
+        <li>Tenere il lavoro overlay su un suo branch o worktree; non fare merge di quel branch nella branch di contributo.</li>
+        <li>Prima di una PR, trasferire solo modifiche selezionate non-POM, stageare la modifica reale per upstream ed eseguire i controlli propri del progetto.</li>
       </ul>
+      <div class="command-list">
+        <code>node bootstrap-pom.mjs --profile adopt --ownership external_overlay</code>
+        <code>npm run pom:init -- --profile adopt --ownership external_overlay</code>
+      </div>
       <div class="callout">Modalità documentata: <code>Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding overlay.</code></div>
     </section>
 

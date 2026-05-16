@@ -46,7 +46,7 @@ Core principle:
 
 ## Proposed Design
 
-Overlay mode is a documented operating posture first, not an installer feature yet.
+Overlay mode is a documented operating posture with initial installer support for explicit ownership. The `.pom/` local-only layout remains future work.
 
 ### Ownership classification
 
@@ -60,7 +60,7 @@ Before adoption, POM should classify the user's relationship to the repository a
 
 POM may notice signals such as `origin` pointing to another organization, existing contribution files, or upstream branch tracking. These signals should only shape the question. They must not silently decide the mode.
 
-Future installer support should prefer deterministic parameters over blocking prompts, for example:
+Installer support prefers deterministic parameters over blocking prompts, for example:
 
 ```bash
 node bootstrap-pom.mjs --profile adopt --ownership external_overlay
@@ -90,13 +90,26 @@ Preferred future layout:
 
 This layout keeps local understanding separate from upstream-owned files. The `.pom/` directory should be excluded through `.git/info/exclude` by default, not by editing upstream `.gitignore`.
 
+### Git posture
+
+Overlay work should not be mixed into the branch that will be proposed upstream.
+
+Recommended options:
+
+1. **Separate worktree**: create a dedicated worktree or branch for POM overlay memory, and a separate feature branch for the actual upstream change.
+2. **Ignored local overlay**: keep overlay files under `.pom/` and exclude them through `.git/info/exclude`, so they never enter commits.
+3. **Selective transfer only**: when a useful code or documentation change is discovered while working with the overlay, move only that change to the contribution branch with a selective patch, `git checkout <overlay-branch> -- <file>`, or `git cherry-pick -n` of a commit that contains no POM artifacts.
+
+Do not merge the overlay branch into the contribution branch. The overlay branch may contain POM memory, local notes, and experimental context that should not be part of an upstream pull request.
+
 Until `.pom/` is automated, the safe documented practice is:
 
-1. create a local branch or worktree;
+1. create a local branch or worktree for the overlay;
 2. install POM only if local repository changes are acceptable;
 3. configure `pom.config.json` so upstream `docs/` and `tests/` are preserved, not governed;
 4. use wiki-style pages only for local understanding;
-5. before preparing a PR, stage only the upstream-relevant change and leave POM overlay artifacts uncommitted or excluded.
+5. do actual contribution work on a separate branch or transfer only selected non-POM changes;
+6. before preparing a PR, stage only the upstream-relevant change and leave POM overlay artifacts uncommitted or excluded.
 
 ### Overlay wiki
 
@@ -130,12 +143,12 @@ Before contributing upstream:
 1. run the upstream project's own tests and lint;
 2. ensure POM overlay artifacts are not staged;
 3. ensure upstream docs or source changes are intentional;
-4. create a PR that contains the actual contribution, not the local operating memory.
+4. transfer only selected non-POM changes from the overlay branch/worktree if needed;
+5. create a PR that contains the actual contribution, not the local operating memory.
 
 ## Out Of Scope
 
 - Implementing the `.pom/` overlay installer.
-- Changing default `adopt` behavior in code.
 - Moving existing POM installations from `pom/` to `.pom/`.
 - Automatically building a wiki by scanning every repository.
 - Submitting POM artifacts to external upstream projects by default.

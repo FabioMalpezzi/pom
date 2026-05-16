@@ -81,6 +81,7 @@ const CLAUDE_AGENT_TEMPLATES = [
 ];
 
 type ProfileName = "minimal" | "wiki" | "decisions" | "full" | "adopt" | "refresh" | "custom";
+type OwnershipMode = "owned" | "team" | "external_overlay" | "unknown";
 
 type AdoptionConfig = {
   profile: ProfileName;
@@ -92,6 +93,13 @@ type AdoptionConfig = {
   planning: "light" | "structured";
   tasks: "light" | "structured";
   tests: "disabled" | "existing" | "pom";
+};
+
+type OwnershipConfig = {
+  mode: OwnershipMode;
+  localOnly?: boolean;
+  preserveExistingConventions?: boolean;
+  note?: string;
 };
 
 type PackageJson = {
@@ -514,10 +522,11 @@ ${HOOK_END_MARKER}`;
   }
 }
 
-function createOrUpdateConfig(adoption: AdoptionConfig): void {
+function createOrUpdateConfig(adoption: AdoptionConfig, ownership: OwnershipMode | undefined): void {
   const configPath = "pom.config.json";
   if (!pathExists(configPath)) {
     const template = JSON.parse(readText(resolveTemplate("POM_CONFIG_TEMPLATE.json"))) as Record<string, unknown>;
+    template.ownership = ownershipConfig(ownership);
     template.adoption = adoption;
     writeText(configPath, `${JSON.stringify(template, null, 2)}\n`);
     console.log(`Created ${configPath} with ${adoption.profile} adoption profile.`);
@@ -525,9 +534,38 @@ function createOrUpdateConfig(adoption: AdoptionConfig): void {
   }
 
   const config = JSON.parse(readText(configPath)) as Record<string, unknown>;
+  if (ownership) {
+    config.ownership = ownershipConfig(ownership, config.ownership);
+  } else if (!config.ownership) {
+    config.ownership = ownershipConfig(undefined);
+  }
   config.adoption = adoption;
   writeText(configPath, `${JSON.stringify(config, null, 2)}\n`);
   console.log(`Updated ${configPath} adoption profile to ${adoption.profile}.`);
+}
+
+function ownershipConfig(ownership: OwnershipMode | undefined, existing?: unknown): OwnershipConfig {
+  const existingRecord = typeof existing === "object" && existing !== null ? (existing as Record<string, unknown>) : {};
+  const mode = ownership ?? (isOwnershipMode(String(existingRecord.mode)) ? (existingRecord.mode as OwnershipMode) : "unknown");
+  const base: OwnershipConfig = {
+    mode,
+    note: String(existingRecord.note ?? "Use owned, team, or external_overlay. For external_overlay, POM is local understanding memory and must not govern upstream project structure."),
+  };
+
+  if (mode === "external_overlay") {
+    return {
+      ...base,
+      localOnly: true,
+      preserveExistingConventions: true,
+    };
+  }
+
+  if (typeof existingRecord.localOnly === "boolean") base.localOnly = existingRecord.localOnly;
+  if (typeof existingRecord.preserveExistingConventions === "boolean") {
+    base.preserveExistingConventions = existingRecord.preserveExistingConventions;
+  }
+
+  return base;
 }
 
 function createProfileFiles(adoption: AdoptionConfig): void {
@@ -686,8 +724,51 @@ function readProfileArg(): ProfileName | undefined {
   return undefined;
 }
 
+function readOwnershipArg(): OwnershipMode | undefined {
+  const ownershipIndex = process.argv.findIndex((arg) => arg === "--ownership");
+  const value = ownershipIndex >= 0 ? process.argv[ownershipIndex + 1] : undefined;
+  if (ownershipIndex >= 0 && !value) {
+    throw new Error("Missing --ownership value. Use owned, team, external_overlay, or unknown.");
+  }
+  if (value && isOwnershipMode(value)) return value;
+  if (value) {
+    throw new Error(`Unknown --ownership value: ${value}. Use owned, team, external_overlay, or unknown.`);
+  }
+
+  const inline = process.argv.find((arg) => arg.startsWith("--ownership="))?.split("=").at(1);
+  if (inline && isOwnershipMode(inline)) return inline;
+  if (inline) {
+    throw new Error(`Unknown --ownership value: ${inline}. Use owned, team, external_overlay, or unknown.`);
+  }
+
+  return undefined;
+}
+
+function resolveOwnershipMode(): OwnershipMode | undefined {
+  const arg = readOwnershipArg();
+  if (arg) return arg;
+  return readExistingOwnershipMode();
+}
+
+function readExistingOwnershipMode(): OwnershipMode | undefined {
+  if (!pathExists("pom.config.json")) return undefined;
+  try {
+    const config = JSON.parse(readText("pom.config.json")) as Record<string, unknown>;
+    const ownership = config.ownership;
+    if (typeof ownership !== "object" || ownership === null) return undefined;
+    const mode = (ownership as Record<string, unknown>).mode;
+    return typeof mode === "string" && isOwnershipMode(mode) ? mode : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function isProfileName(value: string): value is ProfileName {
   return Object.prototype.hasOwnProperty.call(profiles, value);
+}
+
+function isOwnershipMode(value: string): value is OwnershipMode {
+  return ["owned", "team", "external_overlay", "unknown"].includes(value);
 }
 
 function printLogo(): void {
@@ -748,7 +829,8 @@ async function main(): Promise<void> {
   }
 
   const profileName = await chooseProfile();
-  const adoption = await customizeAdoption(profiles[profileName].adoption);
+  const ownership = resolveOwnershipMode();
+  const adoption = applyOwnershipDefaults(await customizeAdoption(profiles[profileName].adoption), ownership);
 
   if (adoption.profile === "refresh") {
     pullPomIfGitRepo();
@@ -761,13 +843,24 @@ async function main(): Promise<void> {
   installPreCommitHook();
 
   if (adoption.profile !== "refresh") {
-    createOrUpdateConfig(adoption);
+    createOrUpdateConfig(adoption, ownership);
     createProfileFiles(adoption);
   } else {
     console.log("Refresh profile selected: pom.config.json and governance folders were not changed.");
   }
 
   console.log("POM init complete.");
+}
+
+function applyOwnershipDefaults(adoption: AdoptionConfig, ownership: OwnershipMode | undefined): AdoptionConfig {
+  if (ownership !== "external_overlay") return adoption;
+
+  return {
+    ...adoption,
+    decisions: "disabled",
+    docs: "disabled",
+    tests: "disabled",
+  };
 }
 
 main().catch((error) => {

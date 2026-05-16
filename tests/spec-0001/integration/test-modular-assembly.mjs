@@ -9,6 +9,7 @@
  * Scenario 4: pom:update stops on local pom/ changes
  * Scenario 5: pom:update supports clean vendored pom/ with unrelated parent changes
  * Scenario 6: docs lint skips specialized governance roots under docs/
+ * Scenario 7: external overlay ownership applies conservative adoption defaults
  */
 
 import { execFileSync } from "node:child_process";
@@ -34,10 +35,10 @@ function cleanup(dir) {
   rmSync(dir, { recursive: true, force: true });
 }
 
-function runInstaller(projectDir, profile) {
+function runInstaller(projectDir, profile, extraArgs = []) {
   execFileSync(
     "node",
-    ["--experimental-strip-types", "pom/scripts/install-pom.ts", "--profile", profile],
+    ["--experimental-strip-types", "pom/scripts/install-pom.ts", "--profile", profile, ...extraArgs],
     { cwd: projectDir, stdio: "pipe" }
   );
 }
@@ -263,6 +264,24 @@ function scenario6() {
   }
 }
 
+function scenario7() {
+  console.log("\nScenario 7: external overlay ownership applies conservative adoption defaults");
+  const dir = createTempProject();
+  try {
+    runInstaller(dir, "adopt", ["--ownership", "external_overlay"]);
+    const config = JSON.parse(readFileSync(join(dir, "pom.config.json"), "utf8"));
+
+    assert("ownership mode saved", config.ownership?.mode === "external_overlay", JSON.stringify(config.ownership));
+    assert("ownership is local-only", config.ownership?.localOnly === true, JSON.stringify(config.ownership));
+    assert("docs governance disabled", config.adoption?.docs === "disabled", JSON.stringify(config.adoption));
+    assert("tests governance disabled", config.adoption?.tests === "disabled", JSON.stringify(config.adoption));
+    assert("decisions governance disabled", config.adoption?.decisions === "disabled", JSON.stringify(config.adoption));
+    assert("wiki not created by overlay default", !existsSync(join(dir, "wiki")), "wiki/ should not be created by default in current overlay mode");
+  } finally {
+    cleanup(dir);
+  }
+}
+
 console.log("SPEC-0001 Completion Verification Tests");
 console.log("========================================");
 
@@ -272,6 +291,7 @@ scenario3();
 scenario4();
 scenario5();
 scenario6();
+scenario7();
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 

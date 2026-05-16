@@ -44,6 +44,7 @@ For `external_overlay`, read `pom/specs/SPEC-0004-external-project-overlay.md` a
 - Do not move files without approval.
 - Configure `pom.config.json` according to approved choices.
 - In `external_overlay`, do not govern upstream `docs/`, `tests/`, ADRs, source layout, release process, or PR contents.
+- In `external_overlay`, keep overlay work on its own branch or worktree and transfer only selected non-POM changes to any contribution branch.
 
 ## Config
 
