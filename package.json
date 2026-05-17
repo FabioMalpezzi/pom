@@ -9,6 +9,7 @@
   "scripts": {
     "pom:init": "node --experimental-strip-types scripts/install-pom.ts",
     "pom:help": "node --experimental-strip-types scripts/pom-help.ts",
-    "pom:lint": "node --experimental-strip-types scripts/lint-doc-governance.ts"
+    "pom:lint": "node --experimental-strip-types scripts/lint-doc-governance.ts",
+    "pom:wiki:render": "node scripts/render-wiki.mjs"
   }
 }

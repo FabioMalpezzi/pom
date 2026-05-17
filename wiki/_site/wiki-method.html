@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="POM Wiki Reader">
+  <title>Persistent Wiki Method - POM Wiki Reader</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">POM</span>
+      <span>POM Wiki Reader</span>
+    </a>
+    <a class="source-link" href="../wiki-method.md">Markdown source</a>
+  </header>
+
+  <div class="layout">
+    <aside class="site-nav" aria-label="Wiki pages">
+      <label class="search-label" for="page-search">Search wiki</label>
+      <input id="page-search" type="search" placeholder="Search title and content" autocomplete="off">
+      <p id="search-status" class="search-status" aria-live="polite"></p>
+      <nav id="page-nav">
+        <a href="index.html" data-title="POM Wiki - Index">POM Wiki - Index</a>
+<a href="overview.html" data-title="POM Overview">POM Overview</a>
+<a href="operating-memory.html" data-title="Operating Memory">Operating Memory</a>
+<a href="wiki-method.html" data-title="Persistent Wiki Method" aria-current="page">Persistent Wiki Method</a>
+<a href="adoption-and-installation.html" data-title="Adoption And Installation">Adoption And Installation</a>
+<a href="skills-and-prompts.html" data-title="Skills And Prompts">Skills And Prompts</a>
+<a href="templates-and-governance.html" data-title="Templates And Governance">Templates And Governance</a>
+<a href="experiments-and-extension.html" data-title="Experiments And Extension">Experiments And Extension</a>
+<a href="reader-capabilities.html" data-title="Reader Capabilities">Reader Capabilities</a>
+<a href="current-specs.html" data-title="Current POM Specs">Current POM Specs</a>
+<a href="log.html" data-title="POM Wiki Log">POM Wiki Log</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <article class="page">
+        <header class="page-head">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span>Persistent Wiki Method</span></nav>
+          <p class="eyebrow">Persistent Wiki</p>
+          <h1>Persistent Wiki Method</h1>
+          <p class="dek">The Persistent Wiki is POM's maintained synthesis of reusable project knowledge. It is the place where repeated understanding can accumulate, without becoming a temporary RAG index, a scratchpad, or a document dump.</p>
+          <div class="meta">
+            <span>Source: wiki-method.md</span>
+            <span>Generated: 2026-05-17</span>
+          </div>
+        </header>
+        <aside class="generated-notice">
+          <strong>Generated reader view.</strong> Edit the Markdown source, then regenerate this static site. The HTML is not canonical Operating Memory.
+        </aside>
+        <h2 id="summary">Summary <a class="heading-anchor" href="#summary" aria-label="Copy link to Summary">#</a></h2>
+<p>The Persistent Wiki is POM's maintained synthesis of reusable project knowledge. It is the place where repeated understanding can accumulate, without becoming a temporary RAG index, a scratchpad, or a document dump.</p>
+<h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
+<p>POM's wiki model is inspired by Andrej Karpathy's LLM Wiki pattern. POM keeps a local reference copy in <code>WIKI_METHOD.md</code> and adapts the pattern into reusable skills, prompts, templates, and lint guidance.</p>
+<p>The active wiki workflows are exposed through <code>skills/wiki.md</code>. They treat the wiki as a maintained Memory Element, not as prose that is written once and left to age:</p>
+<ul><li><code>build</code>: initial wiki creation.</li><li><code>stale</code>: find pages that may be outdated after source changes.</li><li><code>query</code>: answer from the wiki and optionally archive reusable answers.</li><li><code>lint</code>: health-check links, orphans, weak sources, stale candidates, and open questions.</li></ul>
+<h2 id="details">Details <a class="heading-anchor" href="#details" aria-label="Copy link to Details">#</a></h2>
+<p>The wiki layer sits between raw sources and question-answering. The agent should not rediscover the project from scratch on every question. Instead, it should read the index, drill into relevant pages, distinguish facts from inferences, and propose archival when an answer has durable value.</p>
+<p>The two special wiki files have distinct roles:</p>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Role</th></tr></thead><tbody><tr><td data-label="File"><code>wiki/index.md</code></td><td data-label="Role">Content map for navigation and page discovery.</td></tr><tr><td data-label="File"><code>wiki/log.md</code></td><td data-label="Role">Chronological register of wiki changes.</td></tr></tbody></table></div>
+<p>POM now also supports generated HTML reader output. That reader output should make the wiki easier to read, but it remains derived from Markdown, not a second memory source.</p>
+<h2 id="sources">Sources <a class="heading-anchor" href="#sources" aria-label="Copy link to Sources">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Source</th><th>Use</th></tr></thead><tbody><tr><td data-label="Source"><code>WIKI_METHOD.md</code></td><td data-label="Use">Conceptual architecture: raw sources, wiki, schema, ingest, query, lint, index, and log.</td></tr><tr><td data-label="Source"><code>skills/wiki.md</code></td><td data-label="Use">POM skill modes and key rules.</td></tr><tr><td data-label="Source"><code>prompts/10-build-wiki.md</code></td><td data-label="Use">Batch-oriented initial wiki creation.</td></tr><tr><td data-label="Source"><code>prompts/13-query-wiki.md</code></td><td data-label="Use">Query workflow and optional archival of useful answers.</td></tr><tr><td data-label="Source"><code>prompts/14-lint-wiki.md</code></td><td data-label="Use">Lightweight wiki health report.</td></tr><tr><td data-label="Source"><code>templates/WIKI_INDEX_TEMPLATE.md</code></td><td data-label="Use">Shape of a wiki index.</td></tr><tr><td data-label="Source"><code>templates/WIKI_LOG_TEMPLATE.md</code></td><td data-label="Use">Shape of a wiki log.</td></tr><tr><td data-label="Source"><code>templates/WIKI_PAGE_TEMPLATE.md</code></td><td data-label="Use">Shape of a generic page.</td></tr></tbody></table></div>
+<h2 id="linked-decisions">Linked Decisions <a class="heading-anchor" href="#linked-decisions" aria-label="Copy link to Linked Decisions">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Decision</th><th>Impact</th></tr></thead><tbody><tr><td data-label="Decision">SPEC-0000 R1</td><td data-label="Impact">POM must be able to maintain a persistent wiki rather than a volatile index.</td></tr><tr><td data-label="Decision">SPEC-0000 R6</td><td data-label="Impact">Memory must stay alive through stale review, reconciliation, and orphan detection.</td></tr></tbody></table></div>
+<h2 id="open-questions">Open Questions <a class="heading-anchor" href="#open-questions" aria-label="Copy link to Open Questions">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Question</th><th>Status</th></tr></thead><tbody><tr><td data-label="Question">Should reader generation become a wiki skill mode or remain a script command?</td><td data-label="Status">Open; the stable command is <code>npm run pom:wiki:render</code>.</td></tr><tr><td data-label="Question">Should the reader preserve the exact Markdown section shape or add semantic cards?</td><td data-label="Status">Open; the current renderer uses conservative Markdown rendering.</td></tr></tbody></table></div>
+<h2 id="related-links">Related Links <a class="heading-anchor" href="#related-links" aria-label="Copy link to Related Links">#</a></h2>
+<ul><li><a href="operating-memory.html">operating-memory</a></li><li><a href="skills-and-prompts.html">skills-and-prompts</a></li><li><a href="templates-and-governance.html">templates-and-governance</a></li></ul>
+        <nav class="page-pager" aria-label="Previous and next pages">
+    <a class="pager-prev" href="operating-memory.html"><span>Previous</span>Operating Memory</a>
+    <a class="pager-next" href="adoption-and-installation.html"><span>Next</span>Adoption And Installation</a>
+  </nav>
+      </article>
+    </main>
+
+    <aside class="outline" aria-label="Page outline">
+      <p class="outline-title">On This Page</p>
+      <nav><a class="level-2" href="#summary">Summary</a>
+<a class="level-2" href="#current-state">Current State</a>
+<a class="level-2" href="#details">Details</a>
+<a class="level-2" href="#sources">Sources</a>
+<a class="level-2" href="#linked-decisions">Linked Decisions</a>
+<a class="level-2" href="#open-questions">Open Questions</a>
+<a class="level-2" href="#related-links">Related Links</a></nav>
+    </aside>
+  </div>
+
+  <script src="search-index.js"></script>
+  <script src="reader.js"></script>
+  
+</body>
+</html>

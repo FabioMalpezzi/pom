@@ -298,6 +298,12 @@ function resolveHelpScript(): string {
   return "pom/scripts/pom-help.ts";
 }
 
+function resolveWikiRenderScript(): string {
+  if (pathExists("pom/scripts/render-wiki.mjs")) return "pom/scripts/render-wiki.mjs";
+  if (pathExists("scripts/render-wiki.mjs")) return "scripts/render-wiki.mjs";
+  return "pom/scripts/render-wiki.mjs";
+}
+
 function resolveUpdateScriptTemplate(): string {
   return resolveTemplate("POM_UPDATE_TEMPLATE.mjs");
 }
@@ -447,6 +453,7 @@ function upsertPackageScripts(): void {
   if (!pathExists(packagePath)) {
     const lintScript = resolveLintScript();
     const helpScript = resolveHelpScript();
+    const wikiRenderScript = resolveWikiRenderScript();
     const content: PackageJson = {
       private: true,
       type: "module",
@@ -455,10 +462,11 @@ function upsertPackageScripts(): void {
         "pom:update": "node pom-update.mjs",
         "pom:help": `node --experimental-strip-types ${helpScript}`,
         "pom:lint": `node --experimental-strip-types ${lintScript}`,
+        "pom:wiki:render": `node ${wikiRenderScript}`,
       },
     };
     writeText(packagePath, `${JSON.stringify(content, null, 2)}\n`);
-    console.log("Created package.json with pom:init, pom:update, pom:help, and pom:lint scripts.");
+    console.log("Created package.json with pom:init, pom:update, pom:help, pom:lint, and pom:wiki:render scripts.");
     return;
   }
 
@@ -472,6 +480,7 @@ function upsertPackageScripts(): void {
   const scripts = { ...(parsed.scripts ?? {}) };
   const lintScript = resolveLintScript();
   const helpScript = resolveHelpScript();
+  const wikiRenderScript = resolveWikiRenderScript();
   const initCommand = pathExists("pom/scripts/install-pom.ts")
     ? "node --experimental-strip-types pom/scripts/install-pom.ts"
     : "node --experimental-strip-types scripts/install-pom.ts";
@@ -493,15 +502,19 @@ function upsertPackageScripts(): void {
     scripts["pom:lint"] = `node --experimental-strip-types ${lintScript}`;
     changed = true;
   }
+  if (!scripts["pom:wiki:render"]) {
+    scripts["pom:wiki:render"] = `node ${wikiRenderScript}`;
+    changed = true;
+  }
 
   if (!changed) {
-    console.log("package.json already contains pom:init, pom:update, pom:help, and pom:lint.");
+    console.log("package.json already contains pom:init, pom:update, pom:help, pom:lint, and pom:wiki:render.");
     return;
   }
 
   parsed.scripts = scripts;
   writeText(packagePath, `${JSON.stringify(parsed, null, 2)}\n`);
-  console.log("Updated package.json with pom:init, pom:update, pom:help, and pom:lint scripts.");
+  console.log("Updated package.json with pom:init, pom:update, pom:help, pom:lint, and pom:wiki:render scripts.");
 }
 
 function installPreCommitHook(): void {

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="POM Wiki Reader">
+  <title>POM Overview - POM Wiki Reader</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">POM</span>
+      <span>POM Wiki Reader</span>
+    </a>
+    <a class="source-link" href="../overview.md">Markdown source</a>
+  </header>
+
+  <div class="layout">
+    <aside class="site-nav" aria-label="Wiki pages">
+      <label class="search-label" for="page-search">Search wiki</label>
+      <input id="page-search" type="search" placeholder="Search title and content" autocomplete="off">
+      <p id="search-status" class="search-status" aria-live="polite"></p>
+      <nav id="page-nav">
+        <a href="index.html" data-title="POM Wiki - Index">POM Wiki - Index</a>
+<a href="overview.html" data-title="POM Overview" aria-current="page">POM Overview</a>
+<a href="operating-memory.html" data-title="Operating Memory">Operating Memory</a>
+<a href="wiki-method.html" data-title="Persistent Wiki Method">Persistent Wiki Method</a>
+<a href="adoption-and-installation.html" data-title="Adoption And Installation">Adoption And Installation</a>
+<a href="skills-and-prompts.html" data-title="Skills And Prompts">Skills And Prompts</a>
+<a href="templates-and-governance.html" data-title="Templates And Governance">Templates And Governance</a>
+<a href="experiments-and-extension.html" data-title="Experiments And Extension">Experiments And Extension</a>
+<a href="reader-capabilities.html" data-title="Reader Capabilities">Reader Capabilities</a>
+<a href="current-specs.html" data-title="Current POM Specs">Current POM Specs</a>
+<a href="log.html" data-title="POM Wiki Log">POM Wiki Log</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <article class="page">
+        <header class="page-head">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span>POM Overview</span></nav>
+          <p class="eyebrow">Persistent Wiki</p>
+          <h1>POM Overview</h1>
+          <p class="dek">POM, Project Operating Memory, preserves restartcritical project context across people, agents, and interrupted sessions. It keeps that context in Markdown.</p>
+          <div class="meta">
+            <span>Source: overview.md</span>
+            <span>Generated: 2026-05-17</span>
+          </div>
+        </header>
+        <aside class="generated-notice">
+          <strong>Generated reader view.</strong> Edit the Markdown source, then regenerate this static site. The HTML is not canonical Operating Memory.
+        </aside>
+        <h2 id="summary">Summary <a class="heading-anchor" href="#summary" aria-label="Copy link to Summary">#</a></h2>
+<p>POM, Project Operating Memory, preserves restart-critical project context across people, agents, and interrupted sessions. It keeps that context in Markdown.</p>
+<p>This page summarizes the method for the root POM wiki and the generated reader view, while keeping Markdown as the canonical source.</p>
+<h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
+<p>POM is a method, not an agent, runtime library, project manager, deployment tool, or replacement for Git. Its repository contains reusable prompts, skills, templates, scripts, specs, examples, and readable HTML guides.</p>
+<p>The canonical entry point is <code>README.md</code>. The domain language is defined in <code>CONTEXT.md</code>. The cited conceptual origin for the wiki model is <code>WIKI_METHOD.md</code>, which keeps a reference copy of Andrej Karpathy's LLM Wiki pattern.</p>
+<h2 id="details">Details <a class="heading-anchor" href="#details" aria-label="Copy link to Details">#</a></h2>
+<p>The method is organized around three pillars from the founding spec:</p>
+<ul><li>Memory: what POM maintains.</li><li>Verification: what makes the memory reliable.</li><li>Organization: how POM keeps the memory ordered.</li></ul>
+<p>Memory preserves context. Verification makes that context reliable. Organization keeps it findable, so the next reader or agent does not have to rediscover the project from scratch.</p>
+<p>POM should start small. The README describes gradual adoption through profiles such as <code>minimal</code>, <code>wiki</code>, <code>decisions</code>, <code>full</code>, <code>adopt</code>, <code>refresh</code>, and <code>custom</code>. The same method can be applied to owned repositories, team repositories, or external repositories in overlay mode.</p>
+<p>The current repository already contains reader-oriented guides under <code>docs/</code>, but those guides are explanatory. Operational rules remain in <code>README.md</code>, <code>AGENTS.MD</code>, <code>prompts/</code>, <code>skills/</code>, and <code>templates/</code>.</p>
+<h2 id="sources">Sources <a class="heading-anchor" href="#sources" aria-label="Copy link to Sources">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Source</th><th>Use</th></tr></thead><tbody><tr><td data-label="Source"><code>README.md</code></td><td data-label="Use">Canonical overview, installation model, wiki rules, skills, templates, and extension levels.</td></tr><tr><td data-label="Source"><code>CONTEXT.md</code></td><td data-label="Use">Domain glossary for POM terms.</td></tr><tr><td data-label="Source"><code>specs/SPEC-0000-pom-founding-spec.md</code></td><td data-label="Use">Foundational requirements and structural decisions.</td></tr><tr><td data-label="Source"><code>WIKI_METHOD.md</code></td><td data-label="Use">Reference copy of the LLM Wiki pattern.</td></tr></tbody></table></div>
+<h2 id="linked-decisions">Linked Decisions <a class="heading-anchor" href="#linked-decisions" aria-label="Copy link to Linked Decisions">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Decision</th><th>Impact</th></tr></thead><tbody><tr><td data-label="Decision">SPEC-0000 structural decisions D1-D7</td><td data-label="Impact">Defines templates, extensibility levels, agent-agnostic installation, reversibility, bilingual policy, adoption profiles, and delegated history.</td></tr></tbody></table></div>
+<h2 id="open-questions">Open Questions <a class="heading-anchor" href="#open-questions" aria-label="Copy link to Open Questions">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Question</th><th>Status</th></tr></thead><tbody><tr><td data-label="Question">Should target projects generate reader HTML by default or only on demand?</td><td data-label="Status">Open; default generation could add method weight.</td></tr></tbody></table></div>
+<h2 id="related-links">Related Links <a class="heading-anchor" href="#related-links" aria-label="Copy link to Related Links">#</a></h2>
+<ul><li><a href="operating-memory.html">operating-memory</a></li><li><a href="wiki-method.html">wiki-method</a></li><li><a href="adoption-and-installation.html">adoption-and-installation</a></li></ul>
+        <nav class="page-pager" aria-label="Previous and next pages">
+    <a class="pager-prev" href="index.html"><span>Previous</span>POM Wiki - Index</a>
+    <a class="pager-next" href="operating-memory.html"><span>Next</span>Operating Memory</a>
+  </nav>
+      </article>
+    </main>
+
+    <aside class="outline" aria-label="Page outline">
+      <p class="outline-title">On This Page</p>
+      <nav><a class="level-2" href="#summary">Summary</a>
+<a class="level-2" href="#current-state">Current State</a>
+<a class="level-2" href="#details">Details</a>
+<a class="level-2" href="#sources">Sources</a>
+<a class="level-2" href="#linked-decisions">Linked Decisions</a>
+<a class="level-2" href="#open-questions">Open Questions</a>
+<a class="level-2" href="#related-links">Related Links</a></nav>
+    </aside>
+  </div>
+
+  <script src="search-index.js"></script>
+  <script src="reader.js"></script>
+  
+</body>
+</html>

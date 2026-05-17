@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="POM Wiki Reader">
+  <title>Experiments And Extension - POM Wiki Reader</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">POM</span>
+      <span>POM Wiki Reader</span>
+    </a>
+    <a class="source-link" href="../experiments-and-extension.md">Markdown source</a>
+  </header>
+
+  <div class="layout">
+    <aside class="site-nav" aria-label="Wiki pages">
+      <label class="search-label" for="page-search">Search wiki</label>
+      <input id="page-search" type="search" placeholder="Search title and content" autocomplete="off">
+      <p id="search-status" class="search-status" aria-live="polite"></p>
+      <nav id="page-nav">
+        <a href="index.html" data-title="POM Wiki - Index">POM Wiki - Index</a>
+<a href="overview.html" data-title="POM Overview">POM Overview</a>
+<a href="operating-memory.html" data-title="Operating Memory">Operating Memory</a>
+<a href="wiki-method.html" data-title="Persistent Wiki Method">Persistent Wiki Method</a>
+<a href="adoption-and-installation.html" data-title="Adoption And Installation">Adoption And Installation</a>
+<a href="skills-and-prompts.html" data-title="Skills And Prompts">Skills And Prompts</a>
+<a href="templates-and-governance.html" data-title="Templates And Governance">Templates And Governance</a>
+<a href="experiments-and-extension.html" data-title="Experiments And Extension" aria-current="page">Experiments And Extension</a>
+<a href="reader-capabilities.html" data-title="Reader Capabilities">Reader Capabilities</a>
+<a href="current-specs.html" data-title="Current POM Specs">Current POM Specs</a>
+<a href="log.html" data-title="POM Wiki Log">POM Wiki Log</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <article class="page">
+        <header class="page-head">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span>Experiments And Extension</span></nav>
+          <p class="eyebrow">Persistent Wiki</p>
+          <h1>Experiments And Extension</h1>
+          <p class="dek">POM changes should start at the smallest necessary level. Temporary experiments stay isolated until evaluated, then they are discarded, archived, or promoted into the stable method.</p>
+          <div class="meta">
+            <span>Source: experiments-and-extension.md</span>
+            <span>Generated: 2026-05-17</span>
+          </div>
+        </header>
+        <aside class="generated-notice">
+          <strong>Generated reader view.</strong> Edit the Markdown source, then regenerate this static site. The HTML is not canonical Operating Memory.
+        </aside>
+        <h2 id="summary">Summary <a class="heading-anchor" href="#summary" aria-label="Copy link to Summary">#</a></h2>
+<p>POM changes should start at the smallest necessary level. Temporary experiments stay isolated until evaluated, then they are discarded, archived, or promoted into the stable method.</p>
+<h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
+<p>The <code>spike</code> skill and temporary experiment prompt define how exploratory work stays separate from stable source and documentation. The <code>extend</code> skill defines how approved POM improvements choose the smallest fitting level: project config, template, prompt, skill, lint/script, or sync workflow.</p>
+<p>The wiki reader followed that model: it started under <code>experiments/wiki-reader-view/</code>, then moved into stable <code>wiki/</code> and <code>scripts/render-wiki.mjs</code> after evaluation.</p>
+<h2 id="details">Details <a class="heading-anchor" href="#details" aria-label="Copy link to Details">#</a></h2>
+<p>Promotion paths should stay intentionally modest:</p>
+<div class="table-wrap"><table><thead><tr><th>Candidate Outcome</th><th>Meaning</th></tr></thead><tbody><tr><td data-label="Candidate Outcome">Discard</td><td data-label="Meaning">Delete or abandon the experiment branch and keep only the lesson learned.</td></tr><tr><td data-label="Candidate Outcome">Archive synthesis</td><td data-label="Meaning">Write a concise analysis note if the idea is useful but not ready.</td></tr><tr><td data-label="Candidate Outcome">Promote wiki</td><td data-label="Meaning">Move selected pages into a stable root <code>wiki/</code> after approval.</td></tr><tr><td data-label="Candidate Outcome">Promote reader</td><td data-label="Meaning">Reimplement a small static renderer under stable <code>scripts/</code> after approval.</td></tr><tr><td data-label="Candidate Outcome">Create spec or ADR</td><td data-label="Meaning">Use if reader generation changes POM structure or source authority.</td></tr></tbody></table></div>
+<p>The first evaluation should focus on consultation quality: whether the reader helps someone understand POM faster without creating a second source of truth. LLM-powered querying should remain a separate experiment because it introduces provider configuration, privacy considerations, and write-approval rules.</p>
+<h2 id="sources">Sources <a class="heading-anchor" href="#sources" aria-label="Copy link to Sources">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Source</th><th>Use</th></tr></thead><tbody><tr><td data-label="Source"><code>skills/spike.md</code></td><td data-label="Use">Experiment isolation and consolidation rules.</td></tr><tr><td data-label="Source"><code>prompts/09-run-temporary-experiment.md</code></td><td data-label="Use">Full temporary experiment workflow.</td></tr><tr><td data-label="Source"><code>skills/extend.md</code></td><td data-label="Use">Smallest-level extension rule.</td></tr><tr><td data-label="Source"><code>prompts/12-extend-pom.md</code></td><td data-label="Use">Controlled POM extension workflow.</td></tr><tr><td data-label="Source"><code>skills/prune.md</code></td><td data-label="Use">Route for reducing method bloat if the proposed feature adds too much process.</td></tr><tr><td data-label="Source"><code>README.md</code></td><td data-label="Use">Extending POM and temporary experiment rules.</td></tr></tbody></table></div>
+<h2 id="linked-decisions">Linked Decisions <a class="heading-anchor" href="#linked-decisions" aria-label="Copy link to Linked Decisions">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Decision</th><th>Impact</th></tr></thead><tbody><tr><td data-label="Decision">SPEC-0000 D2</td><td data-label="Impact">Extensions choose the smallest possible level.</td></tr><tr><td data-label="Decision">SPEC-0000 R10</td><td data-label="Impact">Reader functionality must justify its cognitive and maintenance cost.</td></tr></tbody></table></div>
+<h2 id="open-questions">Open Questions <a class="heading-anchor" href="#open-questions" aria-label="Copy link to Open Questions">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Question</th><th>Status</th></tr></thead><tbody><tr><td data-label="Question">Is static HTML generation enough to solve consultation pain?</td><td data-label="Status">Answered for now: yes, as an explicit script command.</td></tr><tr><td data-label="Question">Does a reader view belong in a wiki skill mode or optional tooling?</td><td data-label="Status">Open; current shape is optional tooling.</td></tr><tr><td data-label="Question">Should LLM query and page creation be a separate second spike?</td><td data-label="Status">Likely yes.</td></tr></tbody></table></div>
+<h2 id="related-links">Related Links <a class="heading-anchor" href="#related-links" aria-label="Copy link to Related Links">#</a></h2>
+<ul><li><a href="wiki-method.html">wiki-method</a></li><li><a href="templates-and-governance.html">templates-and-governance</a></li><li><a href="current-specs.html">current-specs</a></li></ul>
+        <nav class="page-pager" aria-label="Previous and next pages">
+    <a class="pager-prev" href="templates-and-governance.html"><span>Previous</span>Templates And Governance</a>
+    <a class="pager-next" href="reader-capabilities.html"><span>Next</span>Reader Capabilities</a>
+  </nav>
+      </article>
+    </main>
+
+    <aside class="outline" aria-label="Page outline">
+      <p class="outline-title">On This Page</p>
+      <nav><a class="level-2" href="#summary">Summary</a>
+<a class="level-2" href="#current-state">Current State</a>
+<a class="level-2" href="#details">Details</a>
+<a class="level-2" href="#sources">Sources</a>
+<a class="level-2" href="#linked-decisions">Linked Decisions</a>
+<a class="level-2" href="#open-questions">Open Questions</a>
+<a class="level-2" href="#related-links">Related Links</a></nav>
+    </aside>
+  </div>
+
+  <script src="search-index.js"></script>
+  <script src="reader.js"></script>
+  
+</body>
+</html>

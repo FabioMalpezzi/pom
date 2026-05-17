@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="POM Wiki Reader">
+  <title>Reader Capabilities - POM Wiki Reader</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">POM</span>
+      <span>POM Wiki Reader</span>
+    </a>
+    <a class="source-link" href="../reader-capabilities.md">Markdown source</a>
+  </header>
+
+  <div class="layout">
+    <aside class="site-nav" aria-label="Wiki pages">
+      <label class="search-label" for="page-search">Search wiki</label>
+      <input id="page-search" type="search" placeholder="Search title and content" autocomplete="off">
+      <p id="search-status" class="search-status" aria-live="polite"></p>
+      <nav id="page-nav">
+        <a href="index.html" data-title="POM Wiki - Index">POM Wiki - Index</a>
+<a href="overview.html" data-title="POM Overview">POM Overview</a>
+<a href="operating-memory.html" data-title="Operating Memory">Operating Memory</a>
+<a href="wiki-method.html" data-title="Persistent Wiki Method">Persistent Wiki Method</a>
+<a href="adoption-and-installation.html" data-title="Adoption And Installation">Adoption And Installation</a>
+<a href="skills-and-prompts.html" data-title="Skills And Prompts">Skills And Prompts</a>
+<a href="templates-and-governance.html" data-title="Templates And Governance">Templates And Governance</a>
+<a href="experiments-and-extension.html" data-title="Experiments And Extension">Experiments And Extension</a>
+<a href="reader-capabilities.html" data-title="Reader Capabilities" aria-current="page">Reader Capabilities</a>
+<a href="current-specs.html" data-title="Current POM Specs">Current POM Specs</a>
+<a href="log.html" data-title="POM Wiki Log">POM Wiki Log</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <article class="page">
+        <header class="page-head">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span>Reader Capabilities</span></nav>
+          <p class="eyebrow">Persistent Wiki</p>
+          <h1>Reader Capabilities</h1>
+          <p class="dek">This page documents the Markdown features supported by the static reader. It shows how generated HTML improves browsing without becoming a second source of truth.</p>
+          <div class="meta">
+            <span>Source: reader-capabilities.md</span>
+            <span>Generated: 2026-05-17</span>
+          </div>
+        </header>
+        <aside class="generated-notice">
+          <strong>Generated reader view.</strong> Edit the Markdown source, then regenerate this static site. The HTML is not canonical Operating Memory.
+        </aside>
+        <h2 id="summary">Summary <a class="heading-anchor" href="#summary" aria-label="Copy link to Summary">#</a></h2>
+<p>This page documents the Markdown features supported by the static reader. It shows how generated HTML improves browsing without becoming a second source of truth.</p>
+<h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
+<p>Markdown remains canonical. The reader generates HTML, CSS, search data, navigation, code presentation, and optional diagram enhancements from the source Markdown files.</p>
+<h2 id="static-workflow">Static Workflow <a class="heading-anchor" href="#static-workflow" aria-label="Copy link to Static Workflow">#</a></h2>
+<p>The reader is designed as generated output, not as a running application. Its job is to make the Operating Memory legible after generation, then disappear into a static file tree.</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">npm run pom:wiki:render</code></pre>
+</figure>
+<p>After generation, the command prints the <code>file://</code> link for <code>wiki/_site/index.html</code>. The command is separate from <code>pom:lint</code> by default, so lint remains a governance check and reader generation remains an explicit derived-output step.</p>
+<h2 id="supported-markdown">Supported Markdown <a class="heading-anchor" href="#supported-markdown" aria-label="Copy link to Supported Markdown">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Feature</th><th>Rendering</th></tr></thead><tbody><tr><td data-label="Feature">Headings</td><td data-label="Rendering">Page outline and copyable section links</td></tr><tr><td data-label="Feature">Paragraphs and emphasis</td><td data-label="Rendering">Editorial article typography</td></tr><tr><td data-label="Feature">Bullet and numbered lists</td><td data-label="Rendering">Native lists with reader styling</td></tr><tr><td data-label="Feature">Tables</td><td data-label="Rendering">Desktop tables and mobile card-like rows</td></tr><tr><td data-label="Feature">Wikilinks</td><td data-label="Rendering">Links to generated page HTML</td></tr><tr><td data-label="Feature">Markdown links</td><td data-label="Rendering">External URLs preserved, <code>.md</code> links rewritten to <code>.html</code></td></tr><tr><td data-label="Feature">Fenced code blocks</td><td data-label="Rendering">Language label, fixed-width layout, and optional syntax coloring</td></tr><tr><td data-label="Feature">Mermaid blocks</td><td data-label="Rendering">Styled diagram source by default; renderable when a Mermaid runtime is configured</td></tr></tbody></table></div>
+<h2 id="fixed-width-text">Fixed-Width Text <a class="heading-anchor" href="#fixed-width-text" aria-label="Copy link to Fixed-Width Text">#</a></h2>
+<p>Use <code>text</code> or <code>ascii</code> fences for diagrams that must preserve spacing.</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>ASCII</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-ascii">Inputs / Code / Mockups / Analysis / Conversation
+        -&gt; Wiki
+        -&gt; Decisions
+        -&gt; Delivery Plan
+        -&gt; Docs
+        -&gt; Project State</code></pre>
+</figure>
+<h2 id="programming-code">Programming Code <a class="heading-anchor" href="#programming-code" aria-label="Copy link to Programming Code">#</a></h2>
+<p>Known language fences get lightweight, dependency-free highlighting. The goal is readability, not a full IDE inside the wiki.</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>JavaScript</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-js"><span class="tok-keyword">const</span> pages = loadPages(config);
+<span class="tok-keyword">for</span> (<span class="tok-keyword">const</span> page <span class="tok-keyword">of</span> pages) {
+  writeFileSync(join(config.out, page.output), renderPage(page, pages, config), <span class="tok-string">&quot;utf8&quot;</span>);
+}</code></pre>
+</figure>
+<figure class="code-figure code-highlight">
+  <figcaption><span>JSON</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-json">{
+  <span class="tok-key">&quot;wikiReader&quot;</span>: {
+    <span class="tok-key">&quot;source&quot;</span>: <span class="tok-string">&quot;wiki&quot;</span>,
+    <span class="tok-key">&quot;out&quot;</span>: <span class="tok-string">&quot;wiki/_site&quot;</span>,
+    <span class="tok-key">&quot;theme&quot;</span>: <span class="tok-string">&quot;pom/scripts/lib/wiki-reader-theme.css&quot;</span>
+  }
+}</code></pre>
+</figure>
+<h2 id="mermaid-diagram-source">Mermaid Diagram Source <a class="heading-anchor" href="#mermaid-diagram-source" aria-label="Copy link to Mermaid Diagram Source">#</a></h2>
+<p>Mermaid support is optional so the default reader remains offline and dependency-free. Without a configured runtime, the reader keeps the Mermaid source readable and preserves the diagram as Markdown-owned memory.</p>
+<figure class="code-figure mermaid-figure">
+  <figcaption><span>Mermaid</span><span>Mermaid source. Configure --mermaid-runtime to render diagrams.</span></figcaption>
+  <pre class="mermaid-source">flowchart LR
+  M[Markdown wiki] --&gt; R[Static renderer]
+  R --&gt; H[HTML reader]
+  H --&gt; U[User opens index.html]</pre>
+</figure>
+<h2 id="generated-files">Generated Files <a class="heading-anchor" href="#generated-files" aria-label="Copy link to Generated Files">#</a></h2>
+<p>The renderer writes:</p>
+<div class="table-wrap"><table><thead><tr><th>Output</th><th>Purpose</th></tr></thead><tbody><tr><td data-label="Output"><code>*.html</code></td><td data-label="Purpose">Reader pages</td></tr><tr><td data-label="Output"><code>assets.css</code></td><td data-label="Purpose">Generated copy of the configured theme</td></tr><tr><td data-label="Output"><code>reader.js</code></td><td data-label="Purpose">Static search and section-link behavior</td></tr><tr><td data-label="Output"><code>search-index.json</code></td><td data-label="Purpose">Machine-readable search data</td></tr><tr><td data-label="Output"><code>search-index.js</code></td><td data-label="Purpose">Same data for direct <code>file://</code> opening</td></tr></tbody></table></div>
+<h2 id="open-questions">Open Questions <a class="heading-anchor" href="#open-questions" aria-label="Copy link to Open Questions">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Question</th><th>Status</th></tr></thead><tbody><tr><td data-label="Question">Should Mermaid rendering use a vendored runtime, a local project runtime, or no runtime by default?</td><td data-label="Status">Open</td></tr><tr><td data-label="Question">Should syntax highlighting remain lightweight or adopt a library such as Shiki if the renderer is promoted?</td><td data-label="Status">Open</td></tr><tr><td data-label="Question">Should generated reader output be committed by default or regenerated locally after wiki updates?</td><td data-label="Status">Open for target projects; POM source commits the root reader output.</td></tr></tbody></table></div>
+<h2 id="related-links">Related Links <a class="heading-anchor" href="#related-links" aria-label="Copy link to Related Links">#</a></h2>
+<ul><li><a href="wiki-method.html">wiki-method</a></li><li><a href="experiments-and-extension.html">experiments-and-extension</a></li><li><a href="templates-and-governance.html">templates-and-governance</a></li></ul>
+        <nav class="page-pager" aria-label="Previous and next pages">
+    <a class="pager-prev" href="experiments-and-extension.html"><span>Previous</span>Experiments And Extension</a>
+    <a class="pager-next" href="current-specs.html"><span>Next</span>Current POM Specs</a>
+  </nav>
+      </article>
+    </main>
+
+    <aside class="outline" aria-label="Page outline">
+      <p class="outline-title">On This Page</p>
+      <nav><a class="level-2" href="#summary">Summary</a>
+<a class="level-2" href="#current-state">Current State</a>
+<a class="level-2" href="#static-workflow">Static Workflow</a>
+<a class="level-2" href="#supported-markdown">Supported Markdown</a>
+<a class="level-2" href="#fixed-width-text">Fixed-Width Text</a>
+<a class="level-2" href="#programming-code">Programming Code</a>
+<a class="level-2" href="#mermaid-diagram-source">Mermaid Diagram Source</a>
+<a class="level-2" href="#generated-files">Generated Files</a>
+<a class="level-2" href="#open-questions">Open Questions</a>
+<a class="level-2" href="#related-links">Related Links</a></nav>
+    </aside>
+  </div>
+
+  <script src="search-index.js"></script>
+  <script src="reader.js"></script>
+  
+</body>
+</html>

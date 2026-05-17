@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="POM Wiki Reader">
+  <title>Adoption And Installation - POM Wiki Reader</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">POM</span>
+      <span>POM Wiki Reader</span>
+    </a>
+    <a class="source-link" href="../adoption-and-installation.md">Markdown source</a>
+  </header>
+
+  <div class="layout">
+    <aside class="site-nav" aria-label="Wiki pages">
+      <label class="search-label" for="page-search">Search wiki</label>
+      <input id="page-search" type="search" placeholder="Search title and content" autocomplete="off">
+      <p id="search-status" class="search-status" aria-live="polite"></p>
+      <nav id="page-nav">
+        <a href="index.html" data-title="POM Wiki - Index">POM Wiki - Index</a>
+<a href="overview.html" data-title="POM Overview">POM Overview</a>
+<a href="operating-memory.html" data-title="Operating Memory">Operating Memory</a>
+<a href="wiki-method.html" data-title="Persistent Wiki Method">Persistent Wiki Method</a>
+<a href="adoption-and-installation.html" data-title="Adoption And Installation" aria-current="page">Adoption And Installation</a>
+<a href="skills-and-prompts.html" data-title="Skills And Prompts">Skills And Prompts</a>
+<a href="templates-and-governance.html" data-title="Templates And Governance">Templates And Governance</a>
+<a href="experiments-and-extension.html" data-title="Experiments And Extension">Experiments And Extension</a>
+<a href="reader-capabilities.html" data-title="Reader Capabilities">Reader Capabilities</a>
+<a href="current-specs.html" data-title="Current POM Specs">Current POM Specs</a>
+<a href="log.html" data-title="POM Wiki Log">POM Wiki Log</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <article class="page">
+        <header class="page-head">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span>Adoption And Installation</span></nav>
+          <p class="eyebrow">Persistent Wiki</p>
+          <h1>Adoption And Installation</h1>
+          <p class="dek">POM can be installed as a reusable method without forcing a project into a new shape. Presets, profiles, and ownership posture decide how much memory and governance to introduce.</p>
+          <div class="meta">
+            <span>Source: adoption-and-installation.md</span>
+            <span>Generated: 2026-05-17</span>
+          </div>
+        </header>
+        <aside class="generated-notice">
+          <strong>Generated reader view.</strong> Edit the Markdown source, then regenerate this static site. The HTML is not canonical Operating Memory.
+        </aside>
+        <h2 id="summary">Summary <a class="heading-anchor" href="#summary" aria-label="Copy link to Summary">#</a></h2>
+<p>POM can be installed as a reusable method without forcing a project into a new shape. Presets, profiles, and ownership posture decide how much memory and governance to introduce.</p>
+<h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
+<p>The recommended first install path downloads <code>bootstrap-pom.mjs</code>, runs it from the target project root, and chooses a preset such as <code>owned</code>, <code>team</code>, <code>overlay</code>, or <code>minimal</code>. The preset is not just a convenience flag; it tells POM how much authority it should assume inside the repository.</p>
+<p>POM normally lives in a target project as <code>pom/</code>. The memory products, such as <code>wiki/</code>, <code>decisions/</code>, <code>PROJECT_STATE.md</code>, and task plans, belong to the target project and survive POM removal.</p>
+<h2 id="details">Details <a class="heading-anchor" href="#details" aria-label="Copy link to Details">#</a></h2>
+<h3 id="install-pom-in-a-project">Install POM In A Project <a class="heading-anchor" href="#install-pom-in-a-project" aria-label="Copy link to Install POM In A Project">#</a></h3>
+<p>From the target project root, use the bootstrap script and choose the preset that matches the repository relationship:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
+node bootstrap-pom.mjs --preset owned</code></pre>
+</figure>
+<p>Use:</p>
+<div class="table-wrap"><table><thead><tr><th>Preset</th><th>Use When</th></tr></thead><tbody><tr><td data-label="Preset"><code>owned</code></td><td data-label="Use When">The project is yours and POM may become project governance.</td></tr><tr><td data-label="Preset"><code>team</code></td><td data-label="Use When">The project is shared and existing conventions must be preserved unless changed explicitly.</td></tr><tr><td data-label="Preset"><code>overlay</code></td><td data-label="Use When">The repository belongs to an external upstream and POM is only local understanding memory.</td></tr><tr><td data-label="Preset"><code>minimal</code></td><td data-label="Use When">You want the smallest setup and no ownership assumption.</td></tr></tbody></table></div>
+<p>After bootstrap installs <code>pom/</code>, use the agent workflow that fits the project:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">Read pom/skills/seed.md and set up POM for this project.</code></pre>
+</figure>
+<p>for a new project, or:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code></pre>
+</figure>
+<p>for an existing project.</p>
+<p>For an external repository, prefer overlay mode:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">node bootstrap-pom.mjs --preset overlay</code></pre>
+</figure>
+<p>Then ask the agent to use overlay rules:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding overlay, not as project governance.</code></pre>
+</figure>
+<h3 id="what-bootstrap-creates">What Bootstrap Creates <a class="heading-anchor" href="#what-bootstrap-creates" aria-label="Copy link to What Bootstrap Creates">#</a></h3>
+<p>The bootstrap script:</p>
+<ul><li>clones or updates POM under <code>pom/</code>;</li><li>runs the installer with the chosen preset;</li><li>creates or updates <code>pom.config.json</code>;</li><li>creates package scripts such as <code>pom:init</code>, <code>pom:update</code>, <code>pom:help</code>, and <code>pom:lint</code>;</li><li>updates supported agent instruction files, or creates <code>AGENTS.md</code> when none exists;</li><li>creates governance folders only when the selected profile needs them;</li><li>installs or updates the Git pre-commit hook when the project is a Git repository.</li></ul>
+<h3 id="customize-pom-for-a-project">Customize POM For A Project <a class="heading-anchor" href="#customize-pom-for-a-project" aria-label="Copy link to Customize POM For A Project">#</a></h3>
+<p>Project-specific customization belongs in <code>pom.config.json</code>, not in files under <code>pom/</code>. That separation lets the POM Source update safely while the target project keeps its own language, roots, templates, and thresholds.</p>
+<p>Use <code>pom.config.json</code> to map:</p>
+<ul><li>ownership mode;</li><li>adoption profile and enabled modules;</li><li>wiki categories and page expectations;</li><li>decision, task, analysis, docs, source, test, mockup, and handoff roots;</li><li>template overrides;</li><li>lint severity and thresholds.</li></ul>
+<p>If the project needs translated or customized document shapes, copy templates out of <code>pom/</code> and point config to them:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">project-templates/
+  ADR_TEMPLATE.md
+  WIKI_PAGE_TEMPLATE.md
+  PROJECT_STATE_TEMPLATE.md</code></pre>
+</figure>
+<figure class="code-figure code-highlight">
+  <figcaption><span>JSON</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-json"><span class="tok-key">&quot;templates&quot;</span>: {
+  <span class="tok-key">&quot;adr&quot;</span>: <span class="tok-string">&quot;project-templates/ADR_TEMPLATE.md&quot;</span>,
+  <span class="tok-key">&quot;wikiPage&quot;</span>: <span class="tok-string">&quot;project-templates/WIKI_PAGE_TEMPLATE.md&quot;</span>,
+  <span class="tok-key">&quot;projectState&quot;</span>: <span class="tok-string">&quot;project-templates/PROJECT_STATE_TEMPLATE.md&quot;</span>
+}</code></pre>
+</figure>
+<p>Do not edit reusable POM files directly under <code>pom/</code> for target-project preferences. POM updates may overwrite those files or create conflicts.</p>
+<h3 id="customize-templates">Customize Templates <a class="heading-anchor" href="#customize-templates" aria-label="Copy link to Customize Templates">#</a></h3>
+<p>Templates are the shape of governed POM documents. Customize them when a target project needs a different language, section wording, document tone, or local metadata, while preserving the role each document plays in Operating Memory.</p>
+<p>The safe workflow is:</p>
+<ol><li>Copy only the templates the project needs from <code>pom/templates/</code> into a project-owned folder.</li><li>Rename them clearly if useful, for example <code>ADR_TEMPLATE_IT.md</code> or <code>WIKI_PAGE_TEMPLATE_PRODUCT.md</code>.</li><li>Translate or adapt the placeholder text and section headings.</li><li>Keep the document's purpose and required structure recognizable.</li><li>Map the copied template paths in <code>pom.config.json</code>.</li><li>Run <code>npm run pom:lint</code> after creating or updating governed documents.</li></ol>
+<p>Example:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">project-templates/
+  ADR_TEMPLATE_IT.md
+  SPEC_TEMPLATE_IT.md
+  TASK_PLAN_TEMPLATE_IT.md
+  WIKI_PAGE_TEMPLATE_IT.md</code></pre>
+</figure>
+<figure class="code-figure code-highlight">
+  <figcaption><span>JSON</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-json"><span class="tok-key">&quot;templates&quot;</span>: {
+  <span class="tok-key">&quot;adr&quot;</span>: <span class="tok-string">&quot;project-templates/ADR_TEMPLATE_IT.md&quot;</span>,
+  <span class="tok-key">&quot;spec&quot;</span>: <span class="tok-string">&quot;project-templates/SPEC_TEMPLATE_IT.md&quot;</span>,
+  <span class="tok-key">&quot;taskPlan&quot;</span>: <span class="tok-string">&quot;project-templates/TASK_PLAN_TEMPLATE_IT.md&quot;</span>,
+  <span class="tok-key">&quot;wikiPage&quot;</span>: <span class="tok-string">&quot;project-templates/WIKI_PAGE_TEMPLATE_IT.md&quot;</span>
+}</code></pre>
+</figure>
+<p>What is safe to customize:</p>
+<div class="table-wrap"><table><thead><tr><th>Template Part</th><th>Safe Change</th></tr></thead><tbody><tr><td data-label="Template Part">Section headings</td><td data-label="Safe Change">Translate or adapt them to the project language.</td></tr><tr><td data-label="Template Part">Placeholder text</td><td data-label="Safe Change">Replace generic guidance with local phrasing.</td></tr><tr><td data-label="Template Part">Metadata fields</td><td data-label="Safe Change">Add project-specific fields when they are useful and stable.</td></tr><tr><td data-label="Template Part">Examples</td><td data-label="Safe Change">Replace with local examples when clearly marked as examples.</td></tr><tr><td data-label="Template Part">Optional sections</td><td data-label="Safe Change">Add sections that the project will maintain consistently.</td></tr></tbody></table></div>
+<p>What to avoid:</p>
+<div class="table-wrap"><table><thead><tr><th>Avoid</th><th>Reason</th></tr></thead><tbody><tr><td data-label="Avoid">Editing files directly under <code>pom/templates/</code></td><td data-label="Reason">Framework updates may overwrite or conflict with local preferences.</td></tr><tr><td data-label="Avoid">Creating parallel document shapes for the same artifact</td><td data-label="Reason">Readers and agents lose a single expected structure.</td></tr><tr><td data-label="Avoid">Removing verification sections from specs, tasks, or decisions</td><td data-label="Reason">POM relies on completion verification to keep memory trustworthy.</td></tr><tr><td data-label="Avoid">Hardcoding project-specific categories into reusable POM templates</td><td data-label="Reason">Local categories belong in <code>pom.config.json</code> or project-owned templates.</td></tr></tbody></table></div>
+<p>Lint reads required <code>##</code> headings from the configured template. If a project maps translated templates, lint checks documents against those translated headings instead of the English defaults.</p>
+<h3 id="change-adoption-mode">Change Adoption Mode <a class="heading-anchor" href="#change-adoption-mode" aria-label="Copy link to Change Adoption Mode">#</a></h3>
+<p>Changing preset, profile, or ownership is a governance change because it changes what POM is allowed to create, check, or assume. Use <code>pom:init</code>, not <code>pom:update</code>:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">npm run pom:init -- --preset owned
+npm run pom:init -- --preset team
+npm run pom:init -- --preset overlay
+npm run pom:init -- --preset minimal</code></pre>
+</figure>
+<p>Advanced explicit forms remain available:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">npm run pom:init -- --profile full
+npm run pom:init -- --profile adopt --ownership external_overlay</code></pre>
+</figure>
+<h3 id="update-pom-to-a-new-version">Update POM To A New Version <a class="heading-anchor" href="#update-pom-to-a-new-version" aria-label="Copy link to Update POM To A New Version">#</a></h3>
+<p>For a project that already has POM installed, the normal update path is:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">npm run pom:update
+git diff</code></pre>
+</figure>
+<p><code>pom:update</code> updates <code>pom/</code>, refreshes generated POM sections, updates package scripts and hooks, and runs lint when available. It does not change <code>pom.config.json</code>, project wiki pages, decisions, docs, task plans, or project-owned templates.</p>
+<p>Do not pass <code>--preset</code>, <code>--profile</code>, or <code>--ownership</code> to <code>pom:update</code>. Those options change operating mode and belong to <code>pom:init</code>.</p>
+<p>If <code>pom:update</code> stops because <code>pom/</code> has local changes, inspect them before updating:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">Read pom/skills/sync.md and refresh this project's POM installation.</code></pre>
+</figure>
+<p>If the project does not have <code>pom:update</code> yet, install the current updater once:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
+node bootstrap-pom.mjs --profile refresh</code></pre>
+</figure>
+<p>If POM is already installed, <code>pom/</code> is clean, and the root scripts already exist, this can refresh generated sections:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">npm run pom:init -- --profile refresh</code></pre>
+</figure>
+<p>That command starts from the currently installed installer, so it does not replace <code>pom:update</code> when POM framework files themselves need updating.</p>
+<h3 id="check-installed-commands">Check Installed Commands <a class="heading-anchor" href="#check-installed-commands" aria-label="Copy link to Check Installed Commands">#</a></h3>
+<p>After installation or update, show the command and skill guide:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">npm run pom:help</code></pre>
+</figure>
+<p>Ownership posture matters because POM should never claim more authority than the operator actually has:</p>
+<div class="table-wrap"><table><thead><tr><th>Ownership</th><th>Meaning</th></tr></thead><tbody><tr><td data-label="Ownership"><code>owned</code></td><td data-label="Meaning">The user can govern structure and conventions.</td></tr><tr><td data-label="Ownership"><code>team</code></td><td data-label="Meaning">The user can change the repository, but shared conventions should be preserved unless approved.</td></tr><tr><td data-label="Ownership"><code>external_overlay</code></td><td data-label="Meaning">The repository belongs to an external upstream; POM is local understanding memory only.</td></tr><tr><td data-label="Ownership"><code>unknown</code></td><td data-label="Meaning">The agent should ask before making structural assumptions.</td></tr></tbody></table></div>
+<p>Adoption profile controls which Memory Elements and governance modules are active:</p>
+<div class="table-wrap"><table><thead><tr><th>Profile</th><th>Meaning</th></tr></thead><tbody><tr><td data-label="Profile"><code>minimal</code></td><td data-label="Meaning">Operating hook, scripts, and config only.</td></tr><tr><td data-label="Profile"><code>wiki</code></td><td data-label="Meaning">Minimal plus Persistent Wiki memory.</td></tr><tr><td data-label="Profile"><code>decisions</code></td><td data-label="Meaning">Minimal plus Decision Record governance.</td></tr><tr><td data-label="Profile"><code>full</code></td><td data-label="Meaning">Wiki, decisions, handoff memory, and current planning.</td></tr><tr><td data-label="Profile"><code>adopt</code></td><td data-label="Meaning">Preserve existing structures and map POM to them.</td></tr><tr><td data-label="Profile"><code>refresh</code></td><td data-label="Meaning">Refresh installation hooks only.</td></tr><tr><td data-label="Profile"><code>custom</code></td><td data-label="Meaning">Explicit user choices.</td></tr></tbody></table></div>
+<p>Overlay mode is distinct from adoption. In overlay mode, POM governs the operator's understanding, not the upstream project. Overlay artifacts should be kept local and out of upstream contributions unless explicitly wanted.</p>
+<h2 id="sources">Sources <a class="heading-anchor" href="#sources" aria-label="Copy link to Sources">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Source</th><th>Use</th></tr></thead><tbody><tr><td data-label="Source"><code>README.md</code></td><td data-label="Use">Installation, presets, profile meanings, ownership, update flow, and overlay summary.</td></tr><tr><td data-label="Source"><code>templates/POM_CONFIG_TEMPLATE.json</code></td><td data-label="Use">Default config fields for ownership, adoption, roots, templates, wiki, decisions, tests, and handoff.</td></tr><tr><td data-label="Source"><code>prompts/01-bootstrap-new-project.md</code></td><td data-label="Use">New project setup.</td></tr><tr><td data-label="Source"><code>prompts/02-adopt-existing-project.md</code></td><td data-label="Use">Existing project adoption without moving structures by default.</td></tr><tr><td data-label="Source"><code>skills/sync.md</code></td><td data-label="Use">Safe refresh and synchronization workflow for existing POM installations.</td></tr><tr><td data-label="Source"><code>prompts/17-sync-pom-framework.md</code></td><td data-label="Use">Detailed sync procedure for submodules, nested Git checkouts, and vendored POM copies.</td></tr><tr><td data-label="Source"><code>specs/SPEC-0004-external-project-overlay.md</code></td><td data-label="Use">Overlay mode requirements and recommended posture.</td></tr></tbody></table></div>
+<h2 id="linked-decisions">Linked Decisions <a class="heading-anchor" href="#linked-decisions" aria-label="Copy link to Linked Decisions">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Decision</th><th>Impact</th></tr></thead><tbody><tr><td data-label="Decision">SPEC-0000 D4</td><td data-label="Impact">POM lives separately from project-owned memory products.</td></tr><tr><td data-label="Decision">SPEC-0000 D6</td><td data-label="Impact">Adoption profile determines which memory modules are active.</td></tr><tr><td data-label="Decision">SPEC-0004</td><td data-label="Impact">External overlay mode is local understanding memory, not upstream governance.</td></tr></tbody></table></div>
+<h2 id="open-questions">Open Questions <a class="heading-anchor" href="#open-questions" aria-label="Copy link to Open Questions">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Question</th><th>Status</th></tr></thead><tbody><tr><td data-label="Question">Should POM source repository have a <code>pom.config.json</code> for self-governance?</td><td data-label="Status">Open; no root config exists at experiment start.</td></tr><tr><td data-label="Question">Should a generated wiki reader be part of <code>wiki</code> profile or remain an optional command?</td><td data-label="Status">Answered for now: optional command.</td></tr></tbody></table></div>
+<h2 id="related-links">Related Links <a class="heading-anchor" href="#related-links" aria-label="Copy link to Related Links">#</a></h2>
+<ul><li><a href="overview.html">overview</a></li><li><a href="current-specs.html">current-specs</a></li><li><a href="experiments-and-extension.html">experiments-and-extension</a></li></ul>
+        <nav class="page-pager" aria-label="Previous and next pages">
+    <a class="pager-prev" href="wiki-method.html"><span>Previous</span>Persistent Wiki Method</a>
+    <a class="pager-next" href="skills-and-prompts.html"><span>Next</span>Skills And Prompts</a>
+  </nav>
+      </article>
+    </main>
+
+    <aside class="outline" aria-label="Page outline">
+      <p class="outline-title">On This Page</p>
+      <nav><a class="level-2" href="#summary">Summary</a>
+<a class="level-2" href="#current-state">Current State</a>
+<a class="level-2" href="#details">Details</a>
+<a class="level-3" href="#install-pom-in-a-project">Install POM In A Project</a>
+<a class="level-3" href="#what-bootstrap-creates">What Bootstrap Creates</a>
+<a class="level-3" href="#customize-pom-for-a-project">Customize POM For A Project</a>
+<a class="level-3" href="#customize-templates">Customize Templates</a>
+<a class="level-3" href="#change-adoption-mode">Change Adoption Mode</a>
+<a class="level-3" href="#update-pom-to-a-new-version">Update POM To A New Version</a>
+<a class="level-3" href="#check-installed-commands">Check Installed Commands</a>
+<a class="level-2" href="#sources">Sources</a>
+<a class="level-2" href="#linked-decisions">Linked Decisions</a>
+<a class="level-2" href="#open-questions">Open Questions</a>
+<a class="level-2" href="#related-links">Related Links</a></nav>
+    </aside>
+  </div>
+
+  <script src="search-index.js"></script>
+  <script src="reader.js"></script>
+  
+</body>
+</html>

@@ -22,8 +22,9 @@ For a reader-friendly explanation of POM's purpose, tools, adoption levels, skil
 
 - [POM Guide in English](docs/POM_GUIDE.en.html)
 - [Guida POM in italiano](docs/POM_GUIDE.it.html)
+- [POM Wiki Reader](wiki/_site/index.html)
 
-These guides are explanatory, not normative. Operational rules remain in `README.md`, `AGENTS.MD`, `prompts/`, `skills/`, and `templates/`.
+These guides are explanatory or generated reader views, not normative replacements. Operational rules remain in `README.md`, `AGENTS.MD`, `prompts/`, `skills/`, `templates/`, `scripts/`, and the source Markdown under `wiki/`.
 
 ## Quickstart
 
@@ -37,6 +38,7 @@ Use the smallest workflow that matches your situation:
 | External repository you do not own | Overlay mode in `specs/SPEC-0004-external-project-overlay.md` |
 | Resume after a pause | `skills/pulse.md` |
 | Ask or maintain the wiki | `skills/wiki.md` |
+| Render the wiki reader | `npm run pom:wiki:render` |
 | Extend POM | `skills/extend.md` |
 | Reduce method bloat | `skills/prune.md` |
 | Diagnose a POM problem | `skills/diagnose.md` |
@@ -55,6 +57,9 @@ Read pom/skills/seed.md and set up POM for this project.
 
 # Build the wiki from existing sources
 Read pom/skills/wiki.md in build mode and create the wiki.
+
+# Generate the static wiki reader
+npm run pom:wiki:render
 
 # Resume after a pause
 Read pom/skills/pulse.md and update PROJECT_STATE.md.
@@ -516,8 +521,11 @@ Rules:
 - `decisions/` keeps decision rationale and decision history;
 - `wiki/index.md` is the content map;
 - `wiki/log.md` is the append-only chronological register;
+- `npm run pom:wiki:render` generates `wiki/_site/` as a static reader view;
 - a useful answer or analysis can become a new wiki page;
 - every relevant update should check contradictions, stale claims, missing links, and orphan pages.
+
+The generated reader is derived output. It is useful for browsing and search, but Markdown remains the canonical Operating Memory. The reader command is separate from `pom:lint` by default: lint verifies governance, while `pom:wiki:render` writes the static HTML files.
 
 ## Operating Cycle
 
@@ -833,7 +841,7 @@ For existing projects, existing structures do not have to be moved into canonica
 
 Example: a project can enable decisions while keeping ADRs under `doc/architecture/ADR-###-*.md`. If existing documents use a legacy format, relax only the necessary checks, such as `decisions.requireTemplateSections: false`, while preserving or gradually improving the documents.
 
-If generators increase or become expensive, split them into dedicated commands later. In version `0.1.0`, the supported commands are `pom:init`, `pom:update`, `pom:help`, and `pom:lint`.
+If generators increase or become expensive, keep them in dedicated commands rather than hiding them inside lint. In version `0.1.0`, the supported commands are `pom:init`, `pom:update`, `pom:help`, `pom:lint`, and `pom:wiki:render`.
 
 ## Porting Lint To Another Project
 

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="POM Wiki Reader">
+  <title>Operating Memory - POM Wiki Reader</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">POM</span>
+      <span>POM Wiki Reader</span>
+    </a>
+    <a class="source-link" href="../operating-memory.md">Markdown source</a>
+  </header>
+
+  <div class="layout">
+    <aside class="site-nav" aria-label="Wiki pages">
+      <label class="search-label" for="page-search">Search wiki</label>
+      <input id="page-search" type="search" placeholder="Search title and content" autocomplete="off">
+      <p id="search-status" class="search-status" aria-live="polite"></p>
+      <nav id="page-nav">
+        <a href="index.html" data-title="POM Wiki - Index">POM Wiki - Index</a>
+<a href="overview.html" data-title="POM Overview">POM Overview</a>
+<a href="operating-memory.html" data-title="Operating Memory" aria-current="page">Operating Memory</a>
+<a href="wiki-method.html" data-title="Persistent Wiki Method">Persistent Wiki Method</a>
+<a href="adoption-and-installation.html" data-title="Adoption And Installation">Adoption And Installation</a>
+<a href="skills-and-prompts.html" data-title="Skills And Prompts">Skills And Prompts</a>
+<a href="templates-and-governance.html" data-title="Templates And Governance">Templates And Governance</a>
+<a href="experiments-and-extension.html" data-title="Experiments And Extension">Experiments And Extension</a>
+<a href="reader-capabilities.html" data-title="Reader Capabilities">Reader Capabilities</a>
+<a href="current-specs.html" data-title="Current POM Specs">Current POM Specs</a>
+<a href="log.html" data-title="POM Wiki Log">POM Wiki Log</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <article class="page">
+        <header class="page-head">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span>Operating Memory</span></nav>
+          <p class="eyebrow">Persistent Wiki</p>
+          <h1>Operating Memory</h1>
+          <p class="dek">Operating Memory is the reliable context needed to know where a project is, why it is there, and what the next safe step is. POM keeps that context in durable Memory Elements.</p>
+          <div class="meta">
+            <span>Source: operating-memory.md</span>
+            <span>Generated: 2026-05-17</span>
+          </div>
+        </header>
+        <aside class="generated-notice">
+          <strong>Generated reader view.</strong> Edit the Markdown source, then regenerate this static site. The HTML is not canonical Operating Memory.
+        </aside>
+        <h2 id="summary">Summary <a class="heading-anchor" href="#summary" aria-label="Copy link to Summary">#</a></h2>
+<p>Operating Memory is the reliable context needed to know where a project is, why it is there, and what the next safe step is. POM keeps that context in durable Memory Elements.</p>
+<h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
+<p>The POM glossary defines the core terms used by prompts, templates, specs, and code comments. This matters because the method is only useful when its documents name the same things consistently: a Project State is not a status report, a Persistent Wiki is not a document dump, and a Decision Record is not a changelog.</p>
+<p>The central Memory Elements are:</p>
+<ul><li>Persistent Wiki.</li><li>Decision Record.</li><li>Project State.</li><li>Current Plan.</li><li>Task Plan.</li></ul>
+<h2 id="details">Details <a class="heading-anchor" href="#details" aria-label="Copy link to Details">#</a></h2>
+<p>POM does not use one universal source of truth. It uses Source Authority by domain, because different questions deserve different evidence:</p>
+<div class="table-wrap"><table><thead><tr><th>Question</th><th>Authoritative Source</th></tr></thead><tbody><tr><td data-label="Question">What does the system currently do?</td><td data-label="Authoritative Source">code and tests, when present</td></tr><tr><td data-label="Question">What do we currently know about the project?</td><td data-label="Authoritative Source"><code>wiki/</code></td></tr><tr><td data-label="Question">Why did we decide this?</td><td data-label="Authoritative Source"><code>decisions/</code></td></tr><tr><td data-label="Question">What analysis supports or challenges a choice?</td><td data-label="Authoritative Source"><code>analysis/</code></td></tr><tr><td data-label="Question">What does the intended experience show?</td><td data-label="Authoritative Source"><code>mockups/</code>, when present</td></tr><tr><td data-label="Question">What can be shared as official documentation?</td><td data-label="Authoritative Source"><code>docs/</code>, when present</td></tr><tr><td data-label="Question">Where do I restart after a pause?</td><td data-label="Authoritative Source"><code>PROJECT_STATE.md</code> or current plan</td></tr></tbody></table></div>
+<p>When authoritative sources diverge, POM surfaces and resolves the Divergence. The reconciliation workflow classifies divergence as obsolescence, contradiction, expiry, or gap before proposing a resolution.</p>
+<p>Operating Memory is intentionally narrower than project history. Git keeps fine-grained history; POM keeps the current synthesis, live decisions, and restart-critical context close enough to act on.</p>
+<h2 id="sources">Sources <a class="heading-anchor" href="#sources" aria-label="Copy link to Sources">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Source</th><th>Use</th></tr></thead><tbody><tr><td data-label="Source"><code>CONTEXT.md</code></td><td data-label="Use">Definitions of POM, Operating Memory, Memory Element, Persistent Wiki, Decision Record, Project State, Current Plan, Task Plan, Source Authority, and Divergence.</td></tr><tr><td data-label="Source"><code>README.md</code></td><td data-label="Use">Source Authority table, documentation discipline, and Git/history rules.</td></tr><tr><td data-label="Source"><code>specs/SPEC-0000-pom-founding-spec.md</code></td><td data-label="Use">Requirement R0 and memory requirements R1-R4.</td></tr><tr><td data-label="Source"><code>specs/SPEC-0003-structured-reconciliation.md</code></td><td data-label="Use">Divergence classification and resolution workflow.</td></tr></tbody></table></div>
+<h2 id="linked-decisions">Linked Decisions <a class="heading-anchor" href="#linked-decisions" aria-label="Copy link to Linked Decisions">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Decision</th><th>Impact</th></tr></thead><tbody><tr><td data-label="Decision">SPEC-0000 R0</td><td data-label="Impact">POM must preserve operating context across pauses, sessions, agents, and people.</td></tr><tr><td data-label="Decision">SPEC-0000 R8</td><td data-label="Impact">Each question has a source best qualified to answer it.</td></tr></tbody></table></div>
+<h2 id="open-questions">Open Questions <a class="heading-anchor" href="#open-questions" aria-label="Copy link to Open Questions">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Question</th><th>Status</th></tr></thead><tbody><tr><td data-label="Question">Which Memory Elements should POM itself enable as stable repository artifacts?</td><td data-label="Status">Open; the repository currently has specs and docs, but no stable root <code>wiki/</code>.</td></tr></tbody></table></div>
+<h2 id="related-links">Related Links <a class="heading-anchor" href="#related-links" aria-label="Copy link to Related Links">#</a></h2>
+<ul><li><a href="overview.html">overview</a></li><li><a href="wiki-method.html">wiki-method</a></li><li><a href="templates-and-governance.html">templates-and-governance</a></li></ul>
+        <nav class="page-pager" aria-label="Previous and next pages">
+    <a class="pager-prev" href="overview.html"><span>Previous</span>POM Overview</a>
+    <a class="pager-next" href="wiki-method.html"><span>Next</span>Persistent Wiki Method</a>
+  </nav>
+      </article>
+    </main>
+
+    <aside class="outline" aria-label="Page outline">
+      <p class="outline-title">On This Page</p>
+      <nav><a class="level-2" href="#summary">Summary</a>
+<a class="level-2" href="#current-state">Current State</a>
+<a class="level-2" href="#details">Details</a>
+<a class="level-2" href="#sources">Sources</a>
+<a class="level-2" href="#linked-decisions">Linked Decisions</a>
+<a class="level-2" href="#open-questions">Open Questions</a>
+<a class="level-2" href="#related-links">Related Links</a></nav>
+    </aside>
+  </div>
+
+  <script src="search-index.js"></script>
+  <script src="reader.js"></script>
+  
+</body>
+</html>
