@@ -40,6 +40,7 @@ Use the smallest workflow that matches your situation:
 | Extend POM | `skills/extend.md` |
 | Reduce method bloat | `skills/prune.md` |
 | Diagnose a POM problem | `skills/diagnose.md` |
+| Rework a patch around the intended final shape | `skills/zero-tech-debt.md` |
 | Defer work without implementing | `skills/defer.md` |
 | Refresh or sync POM in a project | `skills/sync.md` |
 | See available commands | `npm run pom:help` |
@@ -63,6 +64,9 @@ Read pom/skills/plan.md and create a task plan from specs/my-feature.md.
 
 # Defer future work
 Read pom/skills/defer.md and park this topic without implementing it.
+
+# Rework a patch around the intended final shape
+Read pom/skills/zero-tech-debt.md and reshape the current change before closure.
 
 # End-of-session handoff
 Read pom/skills/handoff.md and update the project state.
@@ -631,6 +635,7 @@ POM skills are short operational aliases for the main prompts. They do not repla
 | `check` | review/verification |
 | `handoff` | session closeout |
 | `diagnose` | focused POM troubleshooting |
+| `zero-tech-debt` | scoped end-state refactor |
 | `config` | lint configuration |
 | `spike` | temporary experiments |
 | `wiki` | build, query, lightweight lint, and stale wiki maintenance |

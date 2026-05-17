@@ -64,6 +64,7 @@ Existing project structures should be mapped first, not moved by default.
 | `check` | verify a phase, workstream, or task | `prompts/06-review-task-phase.md` |
 | `handoff` | close a session by updating memory and status | `prompts/07-update-project-after-work.md` |
 | `diagnose` | debug failing or confusing POM workflows with a focused feedback loop | `prompts/22-diagnose-pom-problem.md` |
+| `zero-tech-debt` | reshape a scoped change around the intended product and architecture end state | `prompts/23-zero-tech-debt.md` |
 | `config` | create or update `pom.config.json` | `prompts/08-create-pom-config.md` |
 | `spike` | manage temporary experiments and consolidation | `prompts/09-run-temporary-experiment.md` |
 | `wiki` | build, query, check, or maintain the wiki | `prompts/10-build-wiki.md`, `prompts/11-review-stale-wiki.md`, `prompts/13-query-wiki.md`, `prompts/14-lint-wiki.md` |

@@ -266,6 +266,7 @@ Common entry points:
 | Classify or set document status | `pom/skills/status.md` |
 | Defer or park future work | `pom/skills/defer.md` |
 | Diagnose a failing POM workflow | `pom/skills/diagnose.md` |
+| Rework a scoped change around the intended final shape | `pom/skills/zero-tech-debt.md` |
 | Prune overlapping or excessive POM rules | `pom/skills/prune.md` |
 | Refresh or sync POM in this project | `pom/skills/sync.md` |
 | Validate governance after significant work | `pom/skills/validate.md` |

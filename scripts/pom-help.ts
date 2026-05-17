@@ -96,6 +96,7 @@ function printHelp(): void {
   console.log("  - Use `pom/skills/wiki.md` to query or maintain the wiki.");
   console.log("  - Use `pom/skills/sync.md` when pom:update stops on local pom/ changes.");
   console.log("  - Use `pom/skills/defer.md` to park future work.");
+  console.log("  - Use `pom/skills/zero-tech-debt.md` to reshape a patch around the intended final shape.");
   console.log("  - Use `pom/skills/validate.md` to audit governance after significant work.");
   console.log("  - Use `pom/skills/reconcile.md` to resolve a divergence between a source and memory.");
   console.log("");
@@ -152,6 +153,7 @@ function printHelpIt(): void {
   console.log("");
   console.log("  - Usa `pom/skills/sync.md` quando pom:update si ferma su modifiche locali in pom/.");
   console.log("  - Usa `pom/skills/config.md` quando la modalita o la configurazione non sono chiare.");
+  console.log("  - Usa `pom/skills/zero-tech-debt.md` per rimodellare una patch intorno alla forma finale prevista.");
   console.log("  - Usa `pom/skills/validate.md` dopo lavoro significativo, prima di handoff o commit.");
   console.log("");
 

@@ -30,6 +30,7 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `20-clarify-pom-work.md` | clarify ambiguous POM work before creating memory or changing method |
 | `21-prune-pom-method.md` | simplify, merge, demote, delete, or config-gate POM method bloat |
 | `22-diagnose-pom-problem.md` | diagnose failing or confusing POM workflows with a focused feedback loop |
+| `23-zero-tech-debt.md` | reshape a scoped change around the intended end state before closure |
 
 ## Work Planning Hierarchy
 

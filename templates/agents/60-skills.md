@@ -11,7 +11,7 @@ Rules:
 - do not treat a skill as a replacement for prompts or templates;
 - if no suitable skill exists, use POM prompts directly and propose a new skill only if the workflow becomes recurring.
 
-Always-useful entries include `clarify`, `status`, `defer`, `diagnose`, `prune`, `sync`, and `validate`.
+Always-useful entries include `clarify`, `status`, `defer`, `diagnose`, `zero-tech-debt`, `prune`, `sync`, and `validate`.
 Use profile-specific entries such as `wiki`, `guard`, `plan`, or `spike` only when the corresponding module is enabled.
 
 Use `sync` before manually updating this project's installed `pom/` folder or aligning it to a source POM commit.
