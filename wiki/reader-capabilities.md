@@ -16,7 +16,7 @@ The reader is designed as generated output, not as a running application. Its jo
 npm run pom:wiki:render
 ```
 
-After generation, the command prints the `file://` link for `wiki/_site/index.html`. The command is separate from `pom:lint` by default, so lint remains a governance check and reader generation remains an explicit derived-output step.
+After generation, the command prints the `file://` link for `wiki/_site/index.html`. `pom:lint` also regenerates the reader at the end when Git reports changed Markdown pages under `wiki/`; if no wiki page changed, lint does not pay the render cost.
 
 ## Supported Markdown
 

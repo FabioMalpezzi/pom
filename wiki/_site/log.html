@@ -57,6 +57,9 @@
 <h2 id="2026-05-17-init-promote-root-pom-wiki-and-reader">[2026-05-17] init | promote root POM wiki and reader <a class="heading-anchor" href="#2026-05-17-init-promote-root-pom-wiki-and-reader" aria-label="Copy link to [2026-05-17] init | promote root POM wiki and reader">#</a></h2>
 <p>Promoted the reader-view experiment into a stable root <code>wiki/</code> and added generated HTML output under <code>wiki/_site/</code>.</p>
 <p>Sources used: <code>README.md</code>, <code>CONTEXT.md</code>, <code>WIKI_METHOD.md</code>, <code>skills/README.md</code>, <code>prompts/README.md</code>, <code>templates/</code>, <code>scripts/</code>, and <code>specs/</code>.</p>
+<h2 id="2026-05-17-update-auto-render-reader-after-wiki-changes">[2026-05-17] update | auto-render reader after wiki changes <a class="heading-anchor" href="#2026-05-17-update-auto-render-reader-after-wiki-changes" aria-label="Copy link to [2026-05-17] update | auto-render reader after wiki changes">#</a></h2>
+<p>Updated <code>pom:lint</code> so it regenerates <code>wiki/_site/</code> at the end only when Git reports changed Markdown pages under <code>wiki/</code>.</p>
+<p>Sources used: <code>scripts/lint-doc-governance.ts</code>, <code>README.md</code>, and <code>scripts/pom-help.ts</code>.</p>
         <nav class="page-pager" aria-label="Previous and next pages">
     <a class="pager-prev" href="current-specs.html"><span>Previous</span>Current POM Specs</a>
     <span></span>
@@ -67,7 +70,8 @@
     <aside class="outline" aria-label="Page outline">
       <p class="outline-title">On This Page</p>
       <nav><a class="level-2" href="#summary">Summary</a>
-<a class="level-2" href="#2026-05-17-init-promote-root-pom-wiki-and-reader">[2026-05-17] init | promote root POM wiki and reader</a></nav>
+<a class="level-2" href="#2026-05-17-init-promote-root-pom-wiki-and-reader">[2026-05-17] init | promote root POM wiki and reader</a>
+<a class="level-2" href="#2026-05-17-update-auto-render-reader-after-wiki-changes">[2026-05-17] update | auto-render reader after wiki changes</a></nav>
     </aside>
   </div>
 

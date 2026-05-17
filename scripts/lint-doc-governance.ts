@@ -77,6 +77,12 @@ function pathExists(path: string): boolean {
   return existsSync(join(ROOT, path));
 }
 
+function resolveWikiRenderScript(): string | undefined {
+  if (pathExists("pom/scripts/render-wiki.mjs")) return "pom/scripts/render-wiki.mjs";
+  if (pathExists("scripts/render-wiki.mjs")) return "scripts/render-wiki.mjs";
+  return undefined;
+}
+
 function readText(path: string): string {
   return readFileSync(join(ROOT, path), "utf8");
 }
@@ -975,6 +981,33 @@ function printSuggestedWorkflows(): void {
   }
 }
 
+function changedWikiMarkdownFiles(): string[] {
+  return [...gitChangedFiles()].filter((path) => {
+    return path.startsWith("wiki/") && !path.startsWith("wiki/_site/") && path.endsWith(".md");
+  });
+}
+
+function renderWikiReaderIfNeeded(): void {
+  const changedWiki = changedWikiMarkdownFiles();
+  if (changedWiki.length === 0) return;
+  if (!pathExists("wiki")) return;
+
+  const script = resolveWikiRenderScript();
+  if (!script) {
+    console.log("");
+    console.log("POM wiki reader: wiki Markdown changed, but scripts/render-wiki.mjs was not found.");
+    console.log("Run npm run pom:wiki:render after restoring the renderer.");
+    return;
+  }
+
+  console.log("");
+  console.log(`POM wiki reader: ${changedWiki.length} wiki Markdown file${changedWiki.length === 1 ? "" : "s"} changed; regenerating wiki/_site/.`);
+  execFileSync(process.execPath, [script], {
+    cwd: ROOT,
+    stdio: "inherit",
+  });
+}
+
 checkRootMarkdown();
 checkAnalysisLayout();
 checkDocumentationRoots();
@@ -994,3 +1027,5 @@ printResults();
 if (findings.some((finding) => finding.severity === "error")) {
   process.exit(1);
 }
+
+renderWikiReaderIfNeeded();

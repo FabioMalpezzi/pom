@@ -9,3 +9,9 @@ This log records root wiki changes for the POM source repository. It keeps updat
 Promoted the reader-view experiment into a stable root `wiki/` and added generated HTML output under `wiki/_site/`.
 
 Sources used: `README.md`, `CONTEXT.md`, `WIKI_METHOD.md`, `skills/README.md`, `prompts/README.md`, `templates/`, `scripts/`, and `specs/`.
+
+## [2026-05-17] update | auto-render reader after wiki changes
+
+Updated `pom:lint` so it regenerates `wiki/_site/` at the end only when Git reports changed Markdown pages under `wiki/`.
+
+Sources used: `scripts/lint-doc-governance.ts`, `README.md`, and `scripts/pom-help.ts`.

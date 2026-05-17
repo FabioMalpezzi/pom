@@ -525,7 +525,7 @@ Rules:
 - a useful answer or analysis can become a new wiki page;
 - every relevant update should check contradictions, stale claims, missing links, and orphan pages.
 
-The generated reader is derived output. It is useful for browsing and search, but Markdown remains the canonical Operating Memory. The reader command is separate from `pom:lint` by default: lint verifies governance, while `pom:wiki:render` writes the static HTML files.
+The generated reader is derived output. It is useful for browsing and search, but Markdown remains the canonical Operating Memory. `pom:lint` regenerates `wiki/_site/` at the end only when Git reports changed Markdown pages under `wiki/`; `npm run pom:wiki:render` remains available for explicit regeneration.
 
 ## Operating Cycle
 
@@ -841,7 +841,7 @@ For existing projects, existing structures do not have to be moved into canonica
 
 Example: a project can enable decisions while keeping ADRs under `doc/architecture/ADR-###-*.md`. If existing documents use a legacy format, relax only the necessary checks, such as `decisions.requireTemplateSections: false`, while preserving or gradually improving the documents.
 
-If generators increase or become expensive, keep them in dedicated commands rather than hiding them inside lint. In version `0.1.0`, the supported commands are `pom:init`, `pom:update`, `pom:help`, `pom:lint`, and `pom:wiki:render`.
+If generators increase or become expensive, keep them in dedicated commands rather than hiding them inside lint. The lightweight wiki reader is the exception: `pom:lint` refreshes it only when Markdown pages under `wiki/` changed. In version `0.1.0`, the supported commands are `pom:init`, `pom:update`, `pom:help`, `pom:lint`, and `pom:wiki:render`.
 
 ## Porting Lint To Another Project
 
