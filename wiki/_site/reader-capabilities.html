@@ -33,7 +33,6 @@
 <a href="experiments-and-extension.html" data-title="Experiments And Extension">Experiments And Extension</a>
 <a href="reader-capabilities.html" data-title="Reader Capabilities" aria-current="page">Reader Capabilities</a>
 <a href="current-specs.html" data-title="Current POM Specs">Current POM Specs</a>
-<a href="log.html" data-title="POM Wiki Log">POM Wiki Log</a>
       </nav>
     </aside>
 
@@ -63,6 +62,7 @@
   <pre><code class="language-bash">npm run pom:wiki:render</code></pre>
 </figure>
 <p>After generation, the command prints the <code>file://</code> link for <code>wiki/_site/index.html</code>. <code>pom:lint</code> also regenerates the reader at the end when Git reports changed Markdown pages under <code>wiki/</code>; if no wiki page changed, lint does not pay the render cost.</p>
+<p>The repository root also contains <code>wiki.html</code>, a stable shortcut to the generated reader. Target projects using a wiki-enabled POM profile should place the same shortcut at <code>&lt;project-root&gt;/wiki.html</code>; generated HTML still lives under <code>wiki/_site/</code>. If the reader is missing, the shortcut explains that the project wiki must be enabled or built through the POM wiki workflow before rendering.</p>
 <h2 id="supported-markdown">Supported Markdown <a class="heading-anchor" href="#supported-markdown" aria-label="Copy link to Supported Markdown">#</a></h2>
 <div class="table-wrap"><table><thead><tr><th>Feature</th><th>Rendering</th></tr></thead><tbody><tr><td data-label="Feature">Headings</td><td data-label="Rendering">Page outline and copyable section links</td></tr><tr><td data-label="Feature">Paragraphs and emphasis</td><td data-label="Rendering">Editorial article typography</td></tr><tr><td data-label="Feature">Bullet and numbered lists</td><td data-label="Rendering">Native lists with reader styling</td></tr><tr><td data-label="Feature">Tables</td><td data-label="Rendering">Desktop tables and mobile card-like rows</td></tr><tr><td data-label="Feature">Wikilinks</td><td data-label="Rendering">Links to generated page HTML</td></tr><tr><td data-label="Feature">Markdown links</td><td data-label="Rendering">External URLs preserved, <code>.md</code> links rewritten to <code>.html</code></td></tr><tr><td data-label="Feature">Fenced code blocks</td><td data-label="Rendering">Language label, fixed-width layout, and optional syntax coloring</td></tr><tr><td data-label="Feature">Mermaid blocks</td><td data-label="Rendering">Styled diagram source by default; renderable when a Mermaid runtime is configured</td></tr></tbody></table></div>
 <h2 id="fixed-width-text">Fixed-Width Text <a class="heading-anchor" href="#fixed-width-text" aria-label="Copy link to Fixed-Width Text">#</a></h2>
@@ -97,6 +97,7 @@
 </figure>
 <h2 id="mermaid-diagram-source">Mermaid Diagram Source <a class="heading-anchor" href="#mermaid-diagram-source" aria-label="Copy link to Mermaid Diagram Source">#</a></h2>
 <p>Mermaid support is optional so the default reader remains offline and dependency-free. Without a configured runtime, the reader keeps the Mermaid source readable and preserves the diagram as Markdown-owned memory.</p>
+<p>The wiki method page uses this support for the reader lifecycle diagram, so the diagram remains normal Markdown-owned wiki content even when the generated reader shows it as source.</p>
 <figure class="code-figure mermaid-figure">
   <figcaption><span>Mermaid</span><span>Mermaid source. Configure --mermaid-runtime to render diagrams.</span></figcaption>
   <pre class="mermaid-source">flowchart LR
@@ -107,6 +108,7 @@
 <h2 id="generated-files">Generated Files <a class="heading-anchor" href="#generated-files" aria-label="Copy link to Generated Files">#</a></h2>
 <p>The renderer writes:</p>
 <div class="table-wrap"><table><thead><tr><th>Output</th><th>Purpose</th></tr></thead><tbody><tr><td data-label="Output"><code>*.html</code></td><td data-label="Purpose">Reader pages</td></tr><tr><td data-label="Output"><code>assets.css</code></td><td data-label="Purpose">Generated copy of the configured theme</td></tr><tr><td data-label="Output"><code>reader.js</code></td><td data-label="Purpose">Static search and section-link behavior</td></tr><tr><td data-label="Output"><code>search-index.json</code></td><td data-label="Purpose">Machine-readable search data</td></tr><tr><td data-label="Output"><code>search-index.js</code></td><td data-label="Purpose">Same data for direct <code>file://</code> opening</td></tr></tbody></table></div>
+<p><code>wiki/log.md</code> is intentionally excluded from the reader. It remains the chronological register for maintainers, while the reader focuses on current wiki content.</p>
 <h2 id="open-questions">Open Questions <a class="heading-anchor" href="#open-questions" aria-label="Copy link to Open Questions">#</a></h2>
 <div class="table-wrap"><table><thead><tr><th>Question</th><th>Status</th></tr></thead><tbody><tr><td data-label="Question">Should Mermaid rendering use a vendored runtime, a local project runtime, or no runtime by default?</td><td data-label="Status">Open</td></tr><tr><td data-label="Question">Should syntax highlighting remain lightweight or adopt a library such as Shiki if the renderer is promoted?</td><td data-label="Status">Open</td></tr><tr><td data-label="Question">Should generated reader output be committed by default or regenerated locally after wiki updates?</td><td data-label="Status">Open for target projects; POM source commits the root reader output.</td></tr></tbody></table></div>
 <h2 id="related-links">Related Links <a class="heading-anchor" href="#related-links" aria-label="Copy link to Related Links">#</a></h2>

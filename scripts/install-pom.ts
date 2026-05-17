@@ -611,9 +611,9 @@ function createProfileFiles(adoption: AdoptionConfig): void {
     console.log("Ensured wiki/ exists.");
     copyTemplateIfMissing(resolveTemplate("WIKI_INDEX_TEMPLATE.md"), "wiki/index.md");
     copyTemplateIfMissing(resolveTemplate("WIKI_LOG_TEMPLATE.md"), "wiki/log.md");
+    copyTemplateIfMissing(resolveTemplate("WIKI_READER_SHORTCUT.html"), "wiki.html");
     createWikiOverviewIfMissing();
   }
-
   if (adoption.decisions === "enabled") {
     ensureDir("decisions");
     console.log("Ensured decisions/ exists.");

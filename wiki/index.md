@@ -14,6 +14,8 @@ This is the root Persistent Wiki for the POM source repository. The pages below 
 
 Each page documents current consolidated knowledge about POM. The source Markdown remains authoritative, and the generated HTML is only a reader view over that source.
 
+The reader-oriented guides under `docs/` remain introductory public guides. They explain POM for humans who are learning the method, while this wiki carries the current operating synthesis.
+
 ## Overview
 
 | Page | Summary |
@@ -53,4 +55,3 @@ Each page documents current consolidated knowledge about POM. The source Markdow
 | Concept | Why It Is Needed |
 |---|---|
 | Full lint rule map | Needed only if the reader view becomes a governance aid rather than a consultation aid. |
-| Generated docs relation | Needed if reader HTML is promoted beside existing `docs/POM_GUIDE.*.html`. |

@@ -18,6 +18,8 @@ const DEFAULT_CONFIG = {
   mermaidRuntime: "",
 };
 
+const EXCLUDED_READER_FILES = new Set(["log.md"]);
+
 const LANGUAGE_LABELS = {
   ascii: "ASCII",
   bash: "Bash",
@@ -119,7 +121,7 @@ function resolvePath(value) {
 
 function loadPages(config) {
   const files = orderFiles(
-    readdirSync(config.source).filter((file) => file.endsWith(".md")),
+    readdirSync(config.source).filter((file) => file.endsWith(".md") && !EXCLUDED_READER_FILES.has(file)),
     config.source,
   );
 
@@ -150,8 +152,6 @@ function orderFiles(files, source) {
     if (ai !== -1 || bi !== -1) return rank(ai) - rank(bi);
     if (a === "index.md") return -1;
     if (b === "index.md") return 1;
-    if (a === "log.md") return 1;
-    if (b === "log.md") return -1;
     return a.localeCompare(b);
   });
 }
@@ -167,10 +167,9 @@ function readIndexOrder(files, source) {
   for (const match of text.matchAll(linkPattern)) {
     const raw = match[1] || match[2];
     const file = basename(raw.trim()).replace(/\.md$/, "") + ".md";
-    if (available.has(file) && !ordered.includes(file) && file !== "log.md") ordered.push(file);
+    if (available.has(file) && !ordered.includes(file)) ordered.push(file);
   }
 
-  if (available.has("log.md")) ordered.push("log.md");
   return ordered;
 }
 

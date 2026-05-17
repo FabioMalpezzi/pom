@@ -18,6 +18,8 @@ npm run pom:wiki:render
 
 After generation, the command prints the `file://` link for `wiki/_site/index.html`. `pom:lint` also regenerates the reader at the end when Git reports changed Markdown pages under `wiki/`; if no wiki page changed, lint does not pay the render cost.
 
+The repository root also contains `wiki.html`, a stable shortcut to the generated reader. Target projects using a wiki-enabled POM profile should place the same shortcut at `<project-root>/wiki.html`; generated HTML still lives under `wiki/_site/`. If the reader is missing, the shortcut explains that the project wiki must be enabled or built through the POM wiki workflow before rendering.
+
 ## Supported Markdown
 
 | Feature | Rendering |
@@ -69,6 +71,8 @@ for (const page of pages) {
 
 Mermaid support is optional so the default reader remains offline and dependency-free. Without a configured runtime, the reader keeps the Mermaid source readable and preserves the diagram as Markdown-owned memory.
 
+The wiki method page uses this support for the reader lifecycle diagram, so the diagram remains normal Markdown-owned wiki content even when the generated reader shows it as source.
+
 ```mermaid
 flowchart LR
   M[Markdown wiki] --> R[Static renderer]
@@ -87,6 +91,8 @@ The renderer writes:
 | `reader.js` | Static search and section-link behavior |
 | `search-index.json` | Machine-readable search data |
 | `search-index.js` | Same data for direct `file://` opening |
+
+`wiki/log.md` is intentionally excluded from the reader. It remains the chronological register for maintainers, while the reader focuses on current wiki content.
 
 ## Open Questions
 

@@ -33,7 +33,6 @@
 <a href="experiments-and-extension.html" data-title="Experiments And Extension">Experiments And Extension</a>
 <a href="reader-capabilities.html" data-title="Reader Capabilities">Reader Capabilities</a>
 <a href="current-specs.html" data-title="Current POM Specs">Current POM Specs</a>
-<a href="log.html" data-title="POM Wiki Log">POM Wiki Log</a>
       </nav>
     </aside>
 
@@ -61,10 +60,25 @@
 <h2 id="details">Details <a class="heading-anchor" href="#details" aria-label="Copy link to Details">#</a></h2>
 <p>The wiki layer sits between raw sources and question-answering. The agent should not rediscover the project from scratch on every question. Instead, it should read the index, drill into relevant pages, distinguish facts from inferences, and propose archival when an answer has durable value.</p>
 <p>The two special wiki files have distinct roles:</p>
-<div class="table-wrap"><table><thead><tr><th>File</th><th>Role</th></tr></thead><tbody><tr><td data-label="File"><code>wiki/index.md</code></td><td data-label="Role">Content map for navigation and page discovery.</td></tr><tr><td data-label="File"><code>wiki/log.md</code></td><td data-label="Role">Chronological register of wiki changes.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>File</th><th>Role</th></tr></thead><tbody><tr><td data-label="File"><code>wiki/index.md</code></td><td data-label="Role">Content map for navigation and page discovery.</td></tr><tr><td data-label="File"><code>wiki/log.md</code></td><td data-label="Role">Chronological register of wiki changes. It is maintained as source memory but excluded from the generated reader.</td></tr></tbody></table></div>
 <p>POM now also supports generated HTML reader output. That reader output should make the wiki easier to read, but it remains derived from Markdown, not a second memory source.</p>
+<h2 id="wiki-reader-lifecycle">Wiki Reader Lifecycle <a class="heading-anchor" href="#wiki-reader-lifecycle" aria-label="Copy link to Wiki Reader Lifecycle">#</a></h2>
+<p>The wiki lifecycle starts from source authority and ends with a regenerated reader. Markdown remains the maintained memory; HTML is the static view generated from it.</p>
+<figure class="code-figure mermaid-figure">
+  <figcaption><span>Mermaid</span><span>Mermaid source. Configure --mermaid-runtime to render diagrams.</span></figcaption>
+  <pre class="mermaid-source">flowchart LR
+  S[Sources and project changes] --&gt; W[Update wiki Markdown]
+  W --&gt; L[npm run pom:lint]
+  L --&gt;|wiki/*.md changed| R[Regenerate wiki/_site]
+  L --&gt;|no wiki change| O[Governance check only]
+  R --&gt; H[Open root wiki.html]
+  W --&gt; G[Commit source and reader output]
+  R --&gt; G</pre>
+</figure>
+<p>The lint-triggered render is intentionally conditional. <code>pom:lint</code> uses Git status to detect changed Markdown pages under <code>wiki/</code>. If it finds any, it runs the static renderer after governance checks pass. If no wiki Markdown changed, lint does not regenerate the reader.</p>
+<p>Use <code>npm run pom:wiki:render</code> for an explicit refresh, for example after changing the reader script or theme. Open <code>wiki.html</code> from the project root when a human needs the generated reader.</p>
 <h2 id="sources">Sources <a class="heading-anchor" href="#sources" aria-label="Copy link to Sources">#</a></h2>
-<div class="table-wrap"><table><thead><tr><th>Source</th><th>Use</th></tr></thead><tbody><tr><td data-label="Source"><code>WIKI_METHOD.md</code></td><td data-label="Use">Conceptual architecture: raw sources, wiki, schema, ingest, query, lint, index, and log.</td></tr><tr><td data-label="Source"><code>skills/wiki.md</code></td><td data-label="Use">POM skill modes and key rules.</td></tr><tr><td data-label="Source"><code>prompts/10-build-wiki.md</code></td><td data-label="Use">Batch-oriented initial wiki creation.</td></tr><tr><td data-label="Source"><code>prompts/13-query-wiki.md</code></td><td data-label="Use">Query workflow and optional archival of useful answers.</td></tr><tr><td data-label="Source"><code>prompts/14-lint-wiki.md</code></td><td data-label="Use">Lightweight wiki health report.</td></tr><tr><td data-label="Source"><code>templates/WIKI_INDEX_TEMPLATE.md</code></td><td data-label="Use">Shape of a wiki index.</td></tr><tr><td data-label="Source"><code>templates/WIKI_LOG_TEMPLATE.md</code></td><td data-label="Use">Shape of a wiki log.</td></tr><tr><td data-label="Source"><code>templates/WIKI_PAGE_TEMPLATE.md</code></td><td data-label="Use">Shape of a generic page.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Source</th><th>Use</th></tr></thead><tbody><tr><td data-label="Source"><code>WIKI_METHOD.md</code></td><td data-label="Use">Conceptual architecture: raw sources, wiki, schema, ingest, query, lint, index, and log.</td></tr><tr><td data-label="Source"><code>README.md</code></td><td data-label="Use">Persistent Wiki lifecycle and reader generation rules.</td></tr><tr><td data-label="Source"><code>skills/wiki.md</code></td><td data-label="Use">POM skill modes and key rules.</td></tr><tr><td data-label="Source"><code>prompts/10-build-wiki.md</code></td><td data-label="Use">Batch-oriented initial wiki creation.</td></tr><tr><td data-label="Source"><code>prompts/13-query-wiki.md</code></td><td data-label="Use">Query workflow and optional archival of useful answers.</td></tr><tr><td data-label="Source"><code>prompts/14-lint-wiki.md</code></td><td data-label="Use">Lightweight wiki health report.</td></tr><tr><td data-label="Source"><code>scripts/lint-doc-governance.ts</code></td><td data-label="Use">Conditional reader regeneration after wiki Markdown changes.</td></tr><tr><td data-label="Source"><code>scripts/render-wiki.mjs</code></td><td data-label="Use">Static wiki reader generation.</td></tr><tr><td data-label="Source"><code>templates/WIKI_INDEX_TEMPLATE.md</code></td><td data-label="Use">Shape of a wiki index.</td></tr><tr><td data-label="Source"><code>templates/WIKI_LOG_TEMPLATE.md</code></td><td data-label="Use">Shape of a wiki log.</td></tr><tr><td data-label="Source"><code>templates/WIKI_PAGE_TEMPLATE.md</code></td><td data-label="Use">Shape of a generic page.</td></tr></tbody></table></div>
 <h2 id="linked-decisions">Linked Decisions <a class="heading-anchor" href="#linked-decisions" aria-label="Copy link to Linked Decisions">#</a></h2>
 <div class="table-wrap"><table><thead><tr><th>Decision</th><th>Impact</th></tr></thead><tbody><tr><td data-label="Decision">SPEC-0000 R1</td><td data-label="Impact">POM must be able to maintain a persistent wiki rather than a volatile index.</td></tr><tr><td data-label="Decision">SPEC-0000 R6</td><td data-label="Impact">Memory must stay alive through stale review, reconciliation, and orphan detection.</td></tr></tbody></table></div>
 <h2 id="open-questions">Open Questions <a class="heading-anchor" href="#open-questions" aria-label="Copy link to Open Questions">#</a></h2>
@@ -83,6 +97,7 @@
       <nav><a class="level-2" href="#summary">Summary</a>
 <a class="level-2" href="#current-state">Current State</a>
 <a class="level-2" href="#details">Details</a>
+<a class="level-2" href="#wiki-reader-lifecycle">Wiki Reader Lifecycle</a>
 <a class="level-2" href="#sources">Sources</a>
 <a class="level-2" href="#linked-decisions">Linked Decisions</a>
 <a class="level-2" href="#open-questions">Open Questions</a>

@@ -22,7 +22,7 @@ For a reader-friendly explanation of POM's purpose, tools, adoption levels, skil
 
 - [POM Guide in English](docs/POM_GUIDE.en.html)
 - [Guida POM in italiano](docs/POM_GUIDE.it.html)
-- [POM Wiki Reader](wiki/_site/index.html)
+- [POM Wiki Reader](wiki.html)
 
 These guides are explanatory or generated reader views, not normative replacements. Operational rules remain in `README.md`, `AGENTS.MD`, `prompts/`, `skills/`, `templates/`, `scripts/`, and the source Markdown under `wiki/`.
 
@@ -60,6 +60,9 @@ Read pom/skills/wiki.md in build mode and create the wiki.
 
 # Generate the static wiki reader
 npm run pom:wiki:render
+
+# Open the static wiki reader
+wiki.html
 
 # Resume after a pause
 Read pom/skills/pulse.md and update PROJECT_STATE.md.
@@ -303,6 +306,7 @@ my-project/
   AGENTS.md             <- project agent instructions, when used (references pom/)
   CLAUDE.md             <- also updated when already present
   pom.config.json       <- project-specific config
+  wiki.html             <- shortcut to the generated wiki reader, if wiki profile enabled
   wiki/                 <- if wiki profile enabled
   decisions/            <- if decisions profile enabled
   ...
@@ -520,12 +524,34 @@ Rules:
 - sources, code, mockups, and analysis feed the wiki;
 - `decisions/` keeps decision rationale and decision history;
 - `wiki/index.md` is the content map;
-- `wiki/log.md` is the append-only chronological register;
+- `wiki/log.md` is the append-only chronological register and is not rendered as a reader page;
 - `npm run pom:wiki:render` generates `wiki/_site/` as a static reader view;
+- `wiki.html` at the project root is the stable human shortcut to the generated reader when the wiki is enabled, and explains how to enable or generate the wiki when the reader is missing;
 - a useful answer or analysis can become a new wiki page;
 - every relevant update should check contradictions, stale claims, missing links, and orphan pages.
 
 The generated reader is derived output. It is useful for browsing and search, but Markdown remains the canonical Operating Memory. `pom:lint` regenerates `wiki/_site/` at the end only when Git reports changed Markdown pages under `wiki/`; `npm run pom:wiki:render` remains available for explicit regeneration.
+
+### Wiki Reader Lifecycle
+
+```mermaid
+flowchart LR
+  S[Sources, code, docs, analysis, conversation] --> W[Update wiki Markdown]
+  W --> L[npm run pom:lint]
+  L -->|wiki/*.md changed| R[Regenerate wiki/_site]
+  L -->|no wiki change| O[Governance check only]
+  R --> H[Open root wiki.html]
+  W --> G[Commit Markdown and generated reader]
+  R --> G
+```
+
+Operational rules:
+
+- edit `wiki/*.md`, not `wiki/_site/*.html`;
+- run `npm run pom:lint` after wiki changes;
+- let lint regenerate `wiki/_site/` when Git reports changed wiki Markdown;
+- use `npm run pom:wiki:render` when an explicit reader refresh is needed;
+- commit Markdown and regenerated reader output together when the reader output is tracked.
 
 ## Operating Cycle
 
