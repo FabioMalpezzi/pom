@@ -38,12 +38,16 @@ const LANGUAGE_LABELS = {
 
 function main() {
   const config = parseArgs(process.argv.slice(2));
-  const pages = loadPages(config);
+  const { pages, sourcePages } = loadPages(config);
 
   rmSync(config.out, { recursive: true, force: true });
   mkdirSync(config.out, { recursive: true });
 
   for (const page of pages) {
+    writeFileSync(join(config.out, page.output), renderPage(page, pages, config), "utf8");
+  }
+  for (const page of sourcePages.values()) {
+    mkdirSync(dirname(join(config.out, page.output)), { recursive: true });
     writeFileSync(join(config.out, page.output), renderPage(page, pages, config), "utf8");
   }
 
@@ -65,7 +69,7 @@ function main() {
       "Warning: generated reader will load Mermaid from a remote URL. Use a local runtime for offline or sensitive environments.",
     );
   }
-  console.log(`Rendered ${pages.length} pages to ${config.out}`);
+  console.log(`Rendered ${pages.length} pages and ${sourcePages.size} linked Markdown sources to ${config.out}`);
   console.log(`Open ${pathToFileURL(join(config.out, "index.html")).href}`);
 }
 
@@ -133,23 +137,32 @@ function loadPages(config) {
     config.source,
   );
   const readerFiles = new Set(files);
-
-  return files.map((file) => {
+  const readerOutputs = new Map(files.map((file) => [file, file.replace(/\.md$/, ".html")]));
+  const inputs = files.map((file) => {
     const markdown = readFileSync(join(config.source, file), "utf8");
     const parsed = splitFrontmatter(markdown);
+    return { file, markdown, parsed };
+  });
+  const sourcePages = collectSourcePages(inputs, config, readerOutputs);
+
+  const pages = inputs.map(({ file, markdown, parsed }) => {
+    const output = file.replace(/\.md$/, ".html");
     const title = extractTitle(parsed.body, file);
     const navTitle = extractNavTitle(parsed.metadata, title);
     const summary = extractSummary(parsed.body);
     const rendered = renderMarkdown(parsed.body, config, {
+      outputFile: output,
       out: config.out,
       pageFile: file,
       readerFiles,
+      readerOutputs,
       source: config.source,
+      sourcePages,
     });
     return {
       file,
       slug: file.replace(/\.md$/, ""),
-      output: file.replace(/\.md$/, ".html"),
+      output,
       markdown,
       title,
       navTitle,
@@ -159,6 +172,67 @@ function loadPages(config) {
       searchText: normalizeSearchText(`${title} ${navTitle} ${summary} ${stripMarkdown(parsed.body)}`),
     };
   });
+
+  for (const page of sourcePages.values()) {
+    const markdown = readFileSync(page.absPath, "utf8");
+    const parsed = splitFrontmatter(markdown);
+    const title = extractTitle(parsed.body, page.file);
+    const navTitle = extractNavTitle(parsed.metadata, title);
+    const summary = extractSummary(parsed.body);
+    const rendered = renderMarkdown(parsed.body, config, {
+      outputFile: page.output,
+      out: config.out,
+      pageFile: page.file,
+      readerFiles,
+      readerOutputs,
+      source: ROOT,
+      sourcePages,
+    });
+    Object.assign(page, {
+      body: rendered.html,
+      outline: rendered.outline,
+      summary,
+      title,
+      navTitle,
+      searchText: normalizeSearchText(`${title} ${navTitle} ${summary} ${stripMarkdown(parsed.body)}`),
+    });
+  }
+
+  return { pages, sourcePages };
+}
+
+function collectSourcePages(inputs, config, readerOutputs) {
+  const sourcePages = new Map();
+  for (const input of inputs) {
+    for (const href of markdownLinks(input.parsed.body)) {
+      const target = resolveMarkdownTarget(href, config.source, input.file);
+      if (!target || !existsSync(target.absPath)) continue;
+      if (target.sourceRelative && readerOutputs.has(target.sourceRelative)) continue;
+      if (sourcePages.has(target.absPath)) continue;
+
+      const rootRelative = relative(ROOT, target.absPath);
+      if (rootRelative.startsWith("..")) continue;
+      sourcePages.set(target.absPath, {
+        absPath: target.absPath,
+        file: rootRelative,
+        output: join("_sources", rootRelative).replace(/\.md$/, ".html"),
+      });
+    }
+  }
+  return sourcePages;
+}
+
+function markdownLinks(markdown) {
+  return Array.from(markdown.matchAll(/\[[^\]]+\]\(([^)]+)\)/g), (match) => match[1]);
+}
+
+function resolveMarkdownTarget(href, sourceRoot, pageFile) {
+  if (/^(https?:|mailto:|#|\/)/.test(href)) return null;
+  const targetPath = href.split("#")[0];
+  if (!targetPath.endsWith(".md")) return null;
+  const absPath = join(sourceRoot, dirname(pageFile), targetPath);
+  const sourceRelative = relative(sourceRoot, absPath);
+  return { absPath, sourceRelative };
 }
 
 function orderFiles(files, source) {
@@ -555,6 +629,7 @@ function renderHrefAttrs(href, context = {}) {
 function shouldOpenInNewPage(href) {
   if (!href || href.startsWith("#") || href.startsWith("mailto:")) return false;
   if (/^https?:/.test(href)) return true;
+  if (href.startsWith("_sources/") || href.includes("/_sources/")) return true;
   return !/\.html($|#)/.test(href);
 }
 
@@ -568,18 +643,23 @@ function rewriteHref(href, context = {}) {
   const fragment = hashIndex === -1 ? "" : href.slice(hashIndex);
   if (!targetPath || targetPath.endsWith(".html")) return href;
 
-  const normalizedTarget = targetPath.replace(/^\.\//, "");
-  if (normalizedTarget.endsWith(".md") && context.readerFiles?.has(normalizedTarget)) {
-    return `${normalizedTarget.replace(/\.md$/, ".html")}${fragment}`;
-  }
-
-  if (!context.source || !context.out) {
-    return href;
-  }
+  if (!context.source || !context.out) return href;
 
   const sourceDir = join(context.source, dirname(context.pageFile || ""));
   const sourceTarget = join(sourceDir, targetPath);
-  const rewritten = relative(context.out, sourceTarget) || ".";
+  const outputDir = dirname(join(context.out, context.outputFile || ""));
+  const normalizedTarget = targetPath.replace(/^\.\//, "");
+  const readerOutput = context.readerOutputs?.get(normalizedTarget);
+  if (readerOutput) {
+    return `${relative(outputDir, join(context.out, readerOutput))}${fragment}`;
+  }
+
+  const sourcePage = context.sourcePages?.get(sourceTarget);
+  if (sourcePage) {
+    return `${relative(outputDir, join(context.out, sourcePage.output))}${fragment}`;
+  }
+
+  const rewritten = relative(outputDir, sourceTarget) || ".";
   const trailingSlash = targetPath.endsWith("/") && !rewritten.endsWith("/") ? "/" : "";
   return `${rewritten}${trailingSlash}${fragment}`;
 }
@@ -611,7 +691,7 @@ function renderPage(page, pages, config) {
   const index = pages.findIndex((item) => item.output === page.output);
   const previous = pages[index - 1];
   const next = pages[index + 1];
-  const sourceHref = relative(config.out, join(config.source, page.file));
+  const sourceHref = relative(config.out, page.absPath || join(config.source, page.file));
 
   return `<!doctype html>
 <html lang="${escapeAttr(config.lang)}">
