@@ -132,6 +132,7 @@ function loadPages(config) {
     readdirSync(config.source).filter((file) => file.endsWith(".md") && !EXCLUDED_READER_FILES.has(file)),
     config.source,
   );
+  const readerFiles = new Set(files);
 
   return files.map((file) => {
     const markdown = readFileSync(join(config.source, file), "utf8");
@@ -139,7 +140,12 @@ function loadPages(config) {
     const title = extractTitle(parsed.body, file);
     const navTitle = extractNavTitle(parsed.metadata, title);
     const summary = extractSummary(parsed.body);
-    const rendered = renderMarkdown(parsed.body, config);
+    const rendered = renderMarkdown(parsed.body, config, {
+      out: config.out,
+      pageFile: file,
+      readerFiles,
+      source: config.source,
+    });
     return {
       file,
       slug: file.replace(/\.md$/, ""),
@@ -252,7 +258,7 @@ function shorten(value, maxLength) {
   return `${value.slice(0, maxLength - 3).replace(/\s+\S*$/, "")}...`;
 }
 
-function renderMarkdown(markdown, config) {
+function renderMarkdown(markdown, config, context = {}) {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   const html = [];
   const outline = [];
@@ -302,7 +308,7 @@ function renderMarkdown(markdown, config) {
         table.push(lines[i]);
         i += 1;
       }
-      html.push(renderTable(table));
+      html.push(renderTable(table, context));
       continue;
     }
 
@@ -312,7 +318,7 @@ function renderMarkdown(markdown, config) {
         items.push(lines[i].replace(/^\s*-\s+/, "").trim());
         i += 1;
       }
-      html.push(`<ul>${items.map((item) => `<li>${inline(item)}</li>`).join("")}</ul>`);
+      html.push(`<ul>${items.map((item) => `<li>${inline(item, context)}</li>`).join("")}</ul>`);
       continue;
     }
 
@@ -322,7 +328,7 @@ function renderMarkdown(markdown, config) {
         items.push(lines[i].replace(/^\s*\d+\.\s+/, "").trim());
         i += 1;
       }
-      html.push(`<ol>${items.map((item) => `<li>${inline(item)}</li>`).join("")}</ol>`);
+      html.push(`<ol>${items.map((item) => `<li>${inline(item, context)}</li>`).join("")}</ol>`);
       continue;
     }
 
@@ -332,7 +338,7 @@ function renderMarkdown(markdown, config) {
         quote.push(lines[i].replace(/^>\s?/, ""));
         i += 1;
       }
-      html.push(`<blockquote>${quote.map(inline).join("<br>")}</blockquote>`);
+      html.push(`<blockquote>${quote.map((line) => inline(line, context)).join("<br>")}</blockquote>`);
       continue;
     }
 
@@ -341,7 +347,7 @@ function renderMarkdown(markdown, config) {
       paragraph.push(lines[i].trim());
       i += 1;
     }
-    html.push(`<p>${inline(paragraph.join(" "))}</p>`);
+    html.push(`<p>${inline(paragraph.join(" "), context)}</p>`);
   }
 
   return { html: html.join("\n"), outline };
@@ -367,7 +373,7 @@ function isTableLine(line) {
   return /^\s*\|.+\|\s*$/.test(line);
 }
 
-function renderTable(lines) {
+function renderTable(lines, context) {
   const rows = lines
     .filter((line, index) => index !== 1)
     .map((line) => line.trim().slice(1, -1).split("|").map((cell) => cell.trim()));
@@ -375,11 +381,11 @@ function renderTable(lines) {
   const header = rows.shift() || [];
   const body = rows;
 
-  const head = `<thead><tr>${header.map((cell) => `<th>${inline(cell)}</th>`).join("")}</tr></thead>`;
+  const head = `<thead><tr>${header.map((cell) => `<th>${inline(cell, context)}</th>`).join("")}</tr></thead>`;
   const rowsHtml = body
     .map((row) => {
       const cells = row
-        .map((cell, index) => `<td data-label="${escapeAttr(stripMarkdown(header[index] || ""))}">${inline(cell)}</td>`)
+        .map((cell, index) => `<td data-label="${escapeAttr(stripMarkdown(header[index] || ""))}">${inline(cell, context)}</td>`)
         .join("");
       return `<tr>${cells}</tr>`;
     })
@@ -515,7 +521,7 @@ function span(className, value) {
   return `<span class="${className}">${escapeHtml(value)}</span>`;
 }
 
-function inline(text) {
+function inline(text, context = {}) {
   const code = [];
   let value = text.replace(/`([^`]+)`/g, (_, raw) => {
     const token = `\u0000${code.length}\u0000`;
@@ -531,7 +537,7 @@ function inline(text) {
     return `<a href="${escapeAttr(slug)}.html">${escapeHtml(text)}</a>`;
   });
   value = value.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
-    return `<a ${renderHrefAttrs(href)}>${label}</a>`;
+    return `<a ${renderHrefAttrs(href, context)}>${label}</a>`;
   });
 
   for (let i = 0; i < code.length; i += 1) {
@@ -540,8 +546,8 @@ function inline(text) {
   return value;
 }
 
-function renderHrefAttrs(href) {
-  const rewritten = rewriteHref(href);
+function renderHrefAttrs(href, context = {}) {
+  const rewritten = rewriteHref(href, context);
   const target = shouldOpenInNewPage(rewritten) ? ' target="_blank" rel="noopener noreferrer"' : "";
   return `href="${escapeAttr(rewritten)}"${target}`;
 }
@@ -552,12 +558,30 @@ function shouldOpenInNewPage(href) {
   return !/\.html($|#)/.test(href);
 }
 
-function rewriteHref(href) {
-  if (href.startsWith("../")) return `../${href}`;
+function rewriteHref(href, context = {}) {
   if (/^(https?:|mailto:)/.test(href) || href.startsWith("#") || href.startsWith("/")) {
     return href;
   }
-  return href.replace(/\.md($|#)/, ".html$1");
+
+  const hashIndex = href.indexOf("#");
+  const targetPath = hashIndex === -1 ? href : href.slice(0, hashIndex);
+  const fragment = hashIndex === -1 ? "" : href.slice(hashIndex);
+  if (!targetPath || targetPath.endsWith(".html")) return href;
+
+  const normalizedTarget = targetPath.replace(/^\.\//, "");
+  if (normalizedTarget.endsWith(".md") && context.readerFiles?.has(normalizedTarget)) {
+    return `${normalizedTarget.replace(/\.md$/, ".html")}${fragment}`;
+  }
+
+  if (!context.source || !context.out) {
+    return href;
+  }
+
+  const sourceDir = join(context.source, dirname(context.pageFile || ""));
+  const sourceTarget = join(sourceDir, targetPath);
+  const rewritten = relative(context.out, sourceTarget) || ".";
+  const trailingSlash = targetPath.endsWith("/") && !rewritten.endsWith("/") ? "/" : "";
+  return `${rewritten}${trailingSlash}${fragment}`;
 }
 
 function slugify(value) {
@@ -605,7 +629,7 @@ function renderPage(page, pages, config) {
       <span class="brand-mark">POM</span>
       <span>${escapeHtml(config.title)}</span>
     </a>
-    <a class="source-link" ${renderHrefAttrs(sourceHref)}>Markdown source</a>
+    <a class="source-link" href="${escapeAttr(sourceHref)}" target="_blank" rel="noopener noreferrer">Markdown source</a>
   </header>
 
   <div class="layout">
