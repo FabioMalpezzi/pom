@@ -14,6 +14,10 @@ Before modifying files:
 6. propose a minimal, non-invasive structure based on that profile;
 7. wait for my approval.
 
+If the repository root contains only an installed POM baseline (`pom/`, supported agent instructions, `package.json`, `pom-update.mjs`, `pom.config.json`, and optional agent-tool folders), treat it as a day-zero project, not as a corrupt install. A Git-managed `pom/` checkout may contain its own `.git`, `README.md`, `AGENTS.MD`, `bootstrap-pom.mjs`, and `package.json`; those files are normal under `pom/`. The error case is POM Source files directly at the target project root.
+
+For a day-zero project, read `pom.config.json`, state which modules are enabled, optional, or disabled, and do not create `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or `decisions/` unless the active adoption profile enables them or current work needs them.
+
 Adoption profiles:
 - minimal: agent instruction hook + package scripts + `pom.config.json`; no wiki, docs, analysis, mockups, or tests.
 - wiki: minimal + `wiki/index.md` and `wiki/log.md` for persistent project knowledge.

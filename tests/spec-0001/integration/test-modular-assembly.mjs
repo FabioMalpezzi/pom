@@ -16,10 +16,11 @@
  * Scenario 11: non-interactive init without preset does not install implicitly
  * Scenario 12: installer leaves the POM source repo untouched when pom/ is a symlink
  * Scenario 13: pom-update leaves the POM source repo untouched when pom/ is a symlink
+ * Scenario 14: bootstrap stops when run from the POM Source root
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -93,6 +94,7 @@ function scenario1() {
     assert("POM section exists", section !== null, "No POM section found in AGENTS.md");
     assert("Lines ≤200", lines <= 200, `Got ${lines} lines, expected ≤200`);
     assert("Contains core principle", section.includes("authoritative source") || section.includes("Operating Memory"), "Core section missing");
+    assert("Explains installed POM layout", section.includes("day-zero project") && section.includes("Git-managed install"), "Installed layout guidance missing");
     assert("Does NOT contain wiki rules", !section.includes("## Persistent Wiki"), "Wiki section should not be included in minimal");
     assert("Does NOT contain ADR rules", !section.includes("## ADR And Specs"), "Decisions section should not be included in minimal");
     assert("Does NOT contain mockup rules", !section.includes("## Mockup"), "Mockups section should not be included in minimal");
@@ -535,6 +537,46 @@ function scenario13() {
   }
 }
 
+function scenario14() {
+  console.log("\nScenario 14: bootstrap stops when run from the POM Source root");
+  const parent = mkdtempSync(join(tmpdir(), "pom-bootstrap-source-root-test-"));
+  const sourceDir = join(parent, "pom");
+  try {
+    mkdirSync(join(sourceDir, "templates"), { recursive: true });
+    mkdirSync(join(sourceDir, "prompts"), { recursive: true });
+    mkdirSync(join(sourceDir, "skills"), { recursive: true });
+    mkdirSync(join(sourceDir, "scripts"), { recursive: true });
+    writeFileSync(join(sourceDir, "WIKI_METHOD.md"), "# Wiki Method\n");
+    writeFileSync(join(sourceDir, "README.md"), "# POM\n");
+    writeFileSync(join(sourceDir, "AGENTS.MD"), "# POM Repository Instructions\n");
+    writeFileSync(join(sourceDir, "templates", "AGENTS_POM_SECTION_TEMPLATE.md"), "# Project Operating Memory\n");
+    writeFileSync(join(sourceDir, "scripts", "install-pom.ts"), "console.log('dummy installer should not run');\n");
+    copyFileSync(join(POM_ROOT, "bootstrap-pom.mjs"), join(sourceDir, "bootstrap-pom.mjs"));
+
+    let result;
+    try {
+      execFileSync("node", ["bootstrap-pom.mjs", "--preset", "minimal", "--lang", "en"], {
+        cwd: sourceDir,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      result = { status: 0, stdout: "", stderr: "" };
+    } catch (error) {
+      result = {
+        status: error.status ?? 1,
+        stdout: error.stdout?.toString() ?? "",
+        stderr: error.stderr?.toString() ?? "",
+      };
+    }
+
+    assert("bootstrap exits non-zero", result.status !== 0, "Expected POM Source root to stop bootstrap");
+    assert("bootstrap identifies POM Source root", result.stderr.includes("POM Source"), result.stderr);
+    assert("bootstrap does not run installer", !result.stdout.includes("dummy installer"), result.stdout);
+  } finally {
+    cleanup(parent);
+  }
+}
+
 console.log("SPEC-0001 Completion Verification Tests");
 console.log("========================================");
 
@@ -544,6 +586,7 @@ console.log("========================================");
 // otherwise have moved the branch before they could observe the unmoved state.
 scenario12();
 scenario13();
+scenario14();
 scenario1();
 scenario2();
 scenario3();

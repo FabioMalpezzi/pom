@@ -16,7 +16,6 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { basename, resolve } from "node:path";
 
 const DEFAULT_REPO = "https://github.com/FabioMalpezzi/pom.git";
 const POM_DIR = "pom";
@@ -25,18 +24,16 @@ const OWNERSHIP_MODES = new Set(["owned", "team", "external_overlay", "unknown"]
 const PRESET_NAMES = new Set(["owned", "team", "overlay", "minimal"]);
 const LANG_NAMES = new Set(["en", "it"]);
 
-// Detect if running from inside pom/ and move to the parent directory
-const cwd = process.cwd();
-if (
-  basename(cwd) === "pom" &&
-  existsSync("WIKI_METHOD.md") &&
-  existsSync("templates") &&
-  existsSync("prompts") &&
-  existsSync("skills")
-) {
-  const parent = resolve(cwd, "..");
-  console.log(`Detected: running from inside pom/. Moving to parent directory: ${parent}`);
-  process.chdir(parent);
+function isPomSourceRoot() {
+  return (
+    existsSync("WIKI_METHOD.md") &&
+    existsSync("README.md") &&
+    existsSync("AGENTS.MD") &&
+    existsSync("templates/AGENTS_POM_SECTION_TEMPLATE.md") &&
+    existsSync("prompts") &&
+    existsSync("skills") &&
+    existsSync("scripts/install-pom.ts")
+  );
 }
 
 function readArg(name) {
@@ -136,6 +133,26 @@ function printExplicitModeGuide(lang) {
   }
 }
 
+function stopIfRunningFromPomSourceRoot(lang) {
+  if (!isPomSourceRoot()) return;
+
+  if (lang === "it") {
+    console.error("Questa directory sembra la sorgente POM, non la root di un progetto target.");
+    console.error("Non clonare POM direttamente nella root del progetto.");
+    console.error("Esegui il bootstrap dalla root del progetto target: scarichera POM in pom/ e poi lancera l'installer.");
+    console.error("Se vuoi migliorare POM stesso, lavora in questo clone e non eseguire il bootstrap.");
+    console.error("Se hai clonato POM qui per errore, separa prima i file del progetto target dai file sorgente POM.");
+    process.exit(1);
+  }
+
+  console.error("This directory appears to be the POM Source, not a target project root.");
+  console.error("Do not clone POM directly into the project root.");
+  console.error("Run the bootstrap from the target project root: it will download POM into pom/ and then run the installer.");
+  console.error("If you want to improve POM itself, work in this clone and do not run the bootstrap.");
+  console.error("If you cloned POM here by mistake, separate the target project files from the POM Source files before continuing.");
+  process.exit(1);
+}
+
 function main() {
   const repo = readArg("repo") || DEFAULT_REPO;
   const profile = readArg("profile");
@@ -143,6 +160,8 @@ function main() {
   const preset = readArg("preset");
   const lang = detectLanguage();
   const hasAdoptionArg = hasArg("profile") || hasArg("ownership") || hasArg("preset");
+
+  stopIfRunningFromPomSourceRoot(lang);
 
   validateValue("profile", profile, PROFILE_NAMES);
   validateValue("ownership", ownership, OWNERSHIP_MODES);

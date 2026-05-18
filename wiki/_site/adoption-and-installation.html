@@ -56,6 +56,8 @@
 <h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
 <p>The recommended first install path downloads <code>bootstrap-pom.mjs</code>, runs it from the target project root, and chooses a preset such as <code>owned</code>, <code>team</code>, <code>overlay</code>, or <code>minimal</code>. The preset is not just a convenience flag; it tells POM how much authority it should assume inside the repository.</p>
 <p>POM normally lives in a target project as <code>pom/</code>. The memory products, such as <code>wiki/</code>, <code>decisions/</code>, <code>PROJECT_STATE.md</code>, and task plans, belong to the target project and survive POM removal.</p>
+<p>Do not clone the POM Source directly into a target project root. The bootstrap is the supported install path because it keeps reusable POM files under <code>pom/</code> and keeps project-owned memory at the target project root.</p>
+<p>If the goal is to improve POM itself, clone the POM Source as its own repository and use the source commands. That is development on POM, not installation into a target project.</p>
 <h2 id="details">Details <a class="heading-anchor" href="#details" aria-label="Copy link to Details">#</a></h2>
 <h3 id="install-pom-in-a-project">Install POM In A Project <a class="heading-anchor" href="#install-pom-in-a-project" aria-label="Copy link to Install POM In A Project">#</a></h3>
 <p>From the target project root, use the bootstrap script and choose the preset that matches the repository relationship:</p>
@@ -64,6 +66,7 @@
   <pre><code class="language-bash">curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
 node bootstrap-pom.mjs --preset owned</code></pre>
 </figure>
+<p>If an AI agent is doing the install, ask for <code>POM - Project Operating Memory from FabioMalpezzi/pom</code> and tell it not to run <code>git clone ... .</code> in the target project root.</p>
 <p>Use:</p>
 <div class="table-wrap"><table><thead><tr><th>Preset</th><th>Use When</th></tr></thead><tbody><tr><td data-label="Preset"><code>owned</code></td><td data-label="Use When">The project is yours and POM may become project governance.</td></tr><tr><td data-label="Preset"><code>team</code></td><td data-label="Use When">The project is shared and existing conventions must be preserved unless changed explicitly.</td></tr><tr><td data-label="Preset"><code>overlay</code></td><td data-label="Use When">The repository belongs to an external upstream and POM is only local understanding memory.</td></tr><tr><td data-label="Preset"><code>minimal</code></td><td data-label="Use When">You want the smallest setup and no ownership assumption.</td></tr></tbody></table></div>
 <p>After bootstrap installs <code>pom/</code>, use the agent workflow that fits the project:</p>
@@ -90,6 +93,8 @@ node bootstrap-pom.mjs --preset owned</code></pre>
 <h3 id="what-bootstrap-creates">What Bootstrap Creates <a class="heading-anchor" href="#what-bootstrap-creates" aria-label="Copy link to What Bootstrap Creates">#</a></h3>
 <p>The bootstrap script:</p>
 <ul><li>clones or updates POM under <code>pom/</code>;</li><li>runs the installer with the chosen preset;</li><li>creates or updates <code>pom.config.json</code>;</li><li>creates package scripts such as <code>pom:init</code>, <code>pom:update</code>, <code>pom:help</code>, and <code>pom:lint</code>;</li><li>updates supported agent instruction files, or creates <code>AGENTS.md</code> when none exists;</li><li>creates governance folders only when the selected profile needs them;</li><li>installs or updates the Git pre-commit hook when the project is a Git repository.</li></ul>
+<p>In a Git-managed install, <code>pom/</code> is a full checkout of the POM Source and may contain <code>.git</code>, <code>README.md</code>, <code>AGENTS.MD</code>, <code>bootstrap-pom.mjs</code>, and <code>package.json</code>. That is expected. The wrong layout is POM Source files directly at the target project root.</p>
+<p>When a target project has only <code>pom/</code>, agent instructions, <code>package.json</code>, <code>pom-update.mjs</code>, and <code>pom.config.json</code>, it is a valid day-zero project. Read <code>pom.config.json</code>, report that project memory has not started yet, and create memory folders only when the adoption profile enables them or current work needs them.</p>
 <h3 id="customize-pom-for-a-project">Customize POM For A Project <a class="heading-anchor" href="#customize-pom-for-a-project" aria-label="Copy link to Customize POM For A Project">#</a></h3>
 <p>Project-specific customization belongs in <code>pom.config.json</code>, not in files under <code>pom/</code>. That separation lets the POM Source update safely while the target project keeps its own language, roots, templates, and thresholds.</p>
 <p>Use <code>pom.config.json</code> to map:</p>

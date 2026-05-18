@@ -27,6 +27,8 @@ npm run pom:init -- --preset minimal
 
 Use this skill when you need guided setup, want to review the structure before creating files, or the project does not use npm.
 
+If only the installed POM baseline exists in the project root, treat the project as day zero. `pom/` may be a full POM Source checkout with its own `.git`; that is normal. Create project memory only when the active adoption profile enables it or the first real work needs it.
+
 ## Main Templates
 
 - `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md`

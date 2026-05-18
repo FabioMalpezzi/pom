@@ -8,6 +8,19 @@ The POM method files in this repository are written in English for portability.
 
 When applying POM to a target project, use the project/user language for conversation and generated artifacts unless the user asks otherwise.
 
+## Installation Safety
+
+When a user asks to install POM in a target project, treat POM as
+**Project Operating Memory** from this repository, not Maven `pom.xml`,
+Page Object Model, or another expansion.
+
+Do not clone this repository directly into the target project root.
+Run the bootstrap from the target project root so the POM Source is
+installed under `pom/` and project-owned files remain at the root.
+
+When the goal is to improve POM itself, clone this repository as its
+own working repository and do not run the bootstrap as an install step.
+
 ## Editing Rules
 
 - Keep this repository generic and reusable.

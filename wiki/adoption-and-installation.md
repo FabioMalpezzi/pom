@@ -10,6 +10,10 @@ The recommended first install path downloads `bootstrap-pom.mjs`, runs it from t
 
 POM normally lives in a target project as `pom/`. The memory products, such as `wiki/`, `decisions/`, `PROJECT_STATE.md`, and task plans, belong to the target project and survive POM removal.
 
+Do not clone the POM Source directly into a target project root. The bootstrap is the supported install path because it keeps reusable POM files under `pom/` and keeps project-owned memory at the target project root.
+
+If the goal is to improve POM itself, clone the POM Source as its own repository and use the source commands. That is development on POM, not installation into a target project.
+
 ## Details
 
 ### Install POM In A Project
@@ -20,6 +24,8 @@ From the target project root, use the bootstrap script and choose the preset tha
 curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
 node bootstrap-pom.mjs --preset owned
 ```
+
+If an AI agent is doing the install, ask for `POM - Project Operating Memory from FabioMalpezzi/pom` and tell it not to run `git clone ... .` in the target project root.
 
 Use:
 
@@ -67,6 +73,10 @@ The bootstrap script:
 - updates supported agent instruction files, or creates `AGENTS.md` when none exists;
 - creates governance folders only when the selected profile needs them;
 - installs or updates the Git pre-commit hook when the project is a Git repository.
+
+In a Git-managed install, `pom/` is a full checkout of the POM Source and may contain `.git`, `README.md`, `AGENTS.MD`, `bootstrap-pom.mjs`, and `package.json`. That is expected. The wrong layout is POM Source files directly at the target project root.
+
+When a target project has only `pom/`, agent instructions, `package.json`, `pom-update.mjs`, and `pom.config.json`, it is a valid day-zero project. Read `pom.config.json`, report that project memory has not started yet, and create memory folders only when the adoption profile enables them or current work needs them.
 
 ### Customize POM For A Project
 

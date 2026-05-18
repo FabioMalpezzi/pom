@@ -97,6 +97,12 @@ curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-po
 node bootstrap-pom.mjs --preset owned
 ```
 
+Do not install POM by running `git clone https://github.com/FabioMalpezzi/pom.git .` in a project root. This repository is the POM Source. The bootstrap is the supported install path because it keeps the reusable method under `pom/` and leaves project-owned files at the target project root.
+
+If your goal is to improve POM itself, clone this repository as its own working repository and do not run the bootstrap. Use the source repository commands such as `npm run pom:lint`, `npm run pom:test`, and `npm run pom:wiki:render`.
+
+When asking an AI agent to install this method, say `POM - Project Operating Memory from FabioMalpezzi/pom` and ask it to run the bootstrap from the target project root. That wording distinguishes POM from Maven `pom.xml`, Page Object Model, and other common meanings.
+
 Do not pipe a remote bootstrap script directly into `node`. Download it first, then inspect it or verify it before running.
 
 For environments that require a pinned and checked install, prefer a tag or commit URL and verify the bootstrap checksum before execution:
@@ -312,9 +318,14 @@ node --experimental-strip-types pom/scripts/install-pom.ts
 
 ### Project structure after installation
 
+In the common Git-managed install, `pom/` is a full checkout of the POM Source and may contain its own `.git`, `README.md`, `AGENTS.MD`, `bootstrap-pom.mjs`, and `package.json`. That is expected. The wrong layout is POM Source files directly at the target project root.
+
+On a new project, the root may initially contain only `pom/`, agent instructions, `package.json`, `pom-update.mjs`, and `pom.config.json`. That is a valid day-zero state: create `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or `decisions/` only when the selected adoption profile enables them or current work needs them.
+
 ```text
 my-project/
   pom/                  <- POM method (this repository)
+    .git/               <- present in Git-managed installs
     prompts/
     skills/
     templates/
