@@ -59,6 +59,11 @@ function main() {
   writeFileSync(join(config.out, "search-index.json"), `${JSON.stringify(searchIndex, null, 2)}\n`, "utf8");
   writeFileSync(join(config.out, "search-index.js"), `window.POM_SEARCH_INDEX = ${JSON.stringify(searchIndex)};\n`, "utf8");
 
+  if (isRemoteUrl(config.mermaidRuntime)) {
+    console.log(
+      "Warning: generated reader will load Mermaid from a remote URL. Use a local runtime for offline or sensitive environments.",
+    );
+  }
   console.log(`Rendered ${pages.length} pages to ${config.out}`);
   console.log(`Open ${pathToFileURL(join(config.out, "index.html")).href}`);
 }
@@ -104,7 +109,9 @@ Options:
   --theme <file>            CSS theme copied to assets.css
   --lang <code>             HTML language attribute
   --generated-date <date>   Date shown in generated page metadata
-  --mermaid-runtime <path>  Optional local or URL Mermaid module
+  --mermaid-runtime <path>  Optional local or URL Mermaid module.
+                         Default loads no Mermaid runtime; prefer local
+                         runtimes for offline or sensitive environments.
 
 The generated HTML is a reader view. Markdown remains canonical.`);
 }
@@ -611,6 +618,10 @@ function renderMermaidRuntime(config) {
 import mermaid from "${escapeAttr(config.mermaidRuntime)}";
 mermaid.initialize({ startOnLoad: true, theme: "base" });
 </script>`;
+}
+
+function isRemoteUrl(value) {
+  return /^https?:\/\//i.test(value);
 }
 
 function renderCss(config) {

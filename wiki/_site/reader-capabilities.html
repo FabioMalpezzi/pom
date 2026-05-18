@@ -45,7 +45,7 @@
           <p class="dek">This page documents the Markdown features supported by the static reader. It shows how generated HTML improves browsing without becoming a second source of truth.</p>
           <div class="meta">
             <span>Source: reader-capabilities.md</span>
-            <span>Generated: 2026-05-17</span>
+            <span>Generated: 2026-05-18</span>
           </div>
         </header>
         <aside class="generated-notice">
@@ -98,6 +98,7 @@
 <h2 id="mermaid-diagram-source">Mermaid Diagram Source <a class="heading-anchor" href="#mermaid-diagram-source" aria-label="Copy link to Mermaid Diagram Source">#</a></h2>
 <p>Mermaid support is optional so the default reader remains offline and dependency-free. Without a configured runtime, the reader keeps the Mermaid source readable and preserves the diagram as Markdown-owned memory.</p>
 <p>The wiki method page uses this support for the reader lifecycle diagram, so the diagram remains normal Markdown-owned wiki content even when the generated reader shows it as source.</p>
+<p>If a project passes <code>--mermaid-runtime</code> with a remote URL, the generated reader will fetch that module in the browser. Use no runtime or a local vendored runtime for offline or sensitive environments. The renderer does not add Subresource Integrity for remote Mermaid modules.</p>
 <figure class="code-figure mermaid-figure">
   <figcaption><span>Mermaid</span><span>Mermaid source. Configure --mermaid-runtime to render diagrams.</span></figcaption>
   <pre class="mermaid-source">flowchart LR
@@ -110,7 +111,7 @@
 <div class="table-wrap"><table><thead><tr><th>Output</th><th>Purpose</th></tr></thead><tbody><tr><td data-label="Output"><code>*.html</code></td><td data-label="Purpose">Reader pages</td></tr><tr><td data-label="Output"><code>assets.css</code></td><td data-label="Purpose">Generated copy of the configured theme</td></tr><tr><td data-label="Output"><code>reader.js</code></td><td data-label="Purpose">Static search and section-link behavior</td></tr><tr><td data-label="Output"><code>search-index.json</code></td><td data-label="Purpose">Machine-readable search data</td></tr><tr><td data-label="Output"><code>search-index.js</code></td><td data-label="Purpose">Same data for direct <code>file://</code> opening</td></tr></tbody></table></div>
 <p><code>wiki/log.md</code> is intentionally excluded from the reader. It remains the chronological register for maintainers, while the reader focuses on current wiki content.</p>
 <h2 id="open-questions">Open Questions <a class="heading-anchor" href="#open-questions" aria-label="Copy link to Open Questions">#</a></h2>
-<div class="table-wrap"><table><thead><tr><th>Question</th><th>Status</th></tr></thead><tbody><tr><td data-label="Question">Should Mermaid rendering use a vendored runtime, a local project runtime, or no runtime by default?</td><td data-label="Status">Open</td></tr><tr><td data-label="Question">Should syntax highlighting remain lightweight or adopt a library such as Shiki if the renderer is promoted?</td><td data-label="Status">Open</td></tr><tr><td data-label="Question">Should generated reader output be committed by default or regenerated locally after wiki updates?</td><td data-label="Status">Open for target projects; POM source commits the root reader output.</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Question</th><th>Status</th></tr></thead><tbody><tr><td data-label="Question">Should Mermaid rendering use a vendored runtime, a local project runtime, or no runtime by default?</td><td data-label="Status">Answered for now: no runtime by default; local vendored runtime for sensitive environments.</td></tr><tr><td data-label="Question">Should syntax highlighting remain lightweight or adopt a library such as Shiki if the renderer is promoted?</td><td data-label="Status">Open</td></tr><tr><td data-label="Question">Should generated reader output be committed by default or regenerated locally after wiki updates?</td><td data-label="Status">Open for target projects; POM source commits the root reader output.</td></tr></tbody></table></div>
 <h2 id="related-links">Related Links <a class="heading-anchor" href="#related-links" aria-label="Copy link to Related Links">#</a></h2>
 <ul><li><a href="wiki-method.html">wiki-method</a></li><li><a href="experiments-and-extension.html">experiments-and-extension</a></li><li><a href="templates-and-governance.html">templates-and-governance</a></li></ul>
         <nav class="page-pager" aria-label="Previous and next pages">

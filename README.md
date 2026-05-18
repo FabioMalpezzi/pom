@@ -8,6 +8,8 @@ POM is designed to be reused on new or existing projects. It does not impose a s
 
 Version: `0.1.0`
 
+Release notes: see `CHANGELOG.md`.
+
 ## Credits
 
 POM - Project Operating Memory is created and maintained by **Fabio Malpezzi**.
@@ -94,6 +96,20 @@ Download and run the bootstrap script from the target project root:
 curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
 node bootstrap-pom.mjs --preset owned
 ```
+
+Do not pipe a remote bootstrap script directly into `node`. Download it first, then inspect it or verify it before running.
+
+For environments that require a pinned and checked install, prefer a tag or commit URL and verify the bootstrap checksum before execution:
+
+```bash
+POM_REF=main
+curl -fsSL "https://raw.githubusercontent.com/FabioMalpezzi/pom/${POM_REF}/bootstrap-pom.mjs" -o bootstrap-pom.mjs
+curl -fsSL "https://raw.githubusercontent.com/FabioMalpezzi/pom/${POM_REF}/checksums/bootstrap-pom.mjs.sha256" -o bootstrap-pom.mjs.sha256
+shasum -a 256 -c bootstrap-pom.mjs.sha256
+node bootstrap-pom.mjs --preset owned
+```
+
+Use `main` only when you intentionally want the current development line. For repeatable adoption, set `POM_REF` to a release tag or immutable commit and use the checksum published with that same ref.
 
 Choose the preset that matches your relationship to the repository:
 
@@ -535,6 +551,8 @@ Rules:
 - every relevant update should check contradictions, stale claims, missing links, and orphan pages.
 
 The generated reader is derived output. It is useful for browsing and search, but Markdown remains the canonical Operating Memory. `pom:lint` regenerates `wiki/_site/` at the end only when Git reports changed Markdown pages under `wiki/`; `npm run pom:wiki:render` remains available for explicit regeneration.
+
+Mermaid rendering is opt-in. By default, the generated reader does not load Mermaid or any external CDN; it shows Mermaid blocks as readable source. If a project passes `--mermaid-runtime` with a remote URL, the generated reader will fetch that module in the browser. Offline or sensitive environments should use no runtime or a local vendored runtime. POM does not add Subresource Integrity for remote Mermaid modules.
 
 ### Wiki Reader Lifecycle
 

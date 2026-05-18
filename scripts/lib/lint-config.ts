@@ -129,6 +129,7 @@ const defaultConfig: LintConfig = {
       "GEMINI.md",
       "CONVENTIONS.md",
       "CONTEXT.md",
+      "CHANGELOG.md",
       "PROJECT_STATE.md",
       "CURRENT_PLAN.md",
       "WIKI_METHOD.md",

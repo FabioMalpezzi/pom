@@ -73,6 +73,8 @@ Mermaid support is optional so the default reader remains offline and dependency
 
 The wiki method page uses this support for the reader lifecycle diagram, so the diagram remains normal Markdown-owned wiki content even when the generated reader shows it as source.
 
+If a project passes `--mermaid-runtime` with a remote URL, the generated reader will fetch that module in the browser. Use no runtime or a local vendored runtime for offline or sensitive environments. The renderer does not add Subresource Integrity for remote Mermaid modules.
+
 ```mermaid
 flowchart LR
   M[Markdown wiki] --> R[Static renderer]
@@ -98,7 +100,7 @@ The renderer writes:
 
 | Question | Status |
 |---|---|
-| Should Mermaid rendering use a vendored runtime, a local project runtime, or no runtime by default? | Open |
+| Should Mermaid rendering use a vendored runtime, a local project runtime, or no runtime by default? | Answered for now: no runtime by default; local vendored runtime for sensitive environments. |
 | Should syntax highlighting remain lightweight or adopt a library such as Shiki if the renderer is promoted? | Open |
 | Should generated reader output be committed by default or regenerated locally after wiki updates? | Open for target projects; POM source commits the root reader output. |
 

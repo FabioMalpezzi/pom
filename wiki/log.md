@@ -39,3 +39,9 @@ Sources used: `README.md`, `scripts/install-pom.ts`, `templates/WIKI_READER_SHOR
 Updated the root wiki shortcut so it no longer blindly redirects when the generated reader may be missing. It now explains how to enable or build the POM wiki before rendering.
 
 Sources used: `wiki.html`, `templates/WIKI_READER_SHORTCUT.html`, `README.md`, and `wiki/reader-capabilities.md`.
+
+## [2026-05-18] update | document reader runtime security
+
+Clarified that the wiki reader does not load Mermaid by default, and that projects using a remote Mermaid runtime create an external browser dependency without Subresource Integrity.
+
+Sources used: `README.md`, `scripts/render-wiki.mjs`, and `wiki/reader-capabilities.md`.
