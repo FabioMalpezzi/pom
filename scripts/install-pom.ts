@@ -450,15 +450,25 @@ function upsertAgentInstructionSections(adoption: AdoptionConfig): void {
   }
 }
 
-function installCodingAgentFiles(): void {
-  installClaudeAgentFiles();
+function buildPomInitCommand(presetName: PresetName | undefined, profileName: ProfileName, ownership: OwnershipMode | undefined): string {
+  if (presetName) return `npm run pom:init -- --preset ${presetName}`;
+
+  const args = [`--profile ${profileName}`];
+  if (ownership) args.push(`--ownership ${ownership}`);
+  return `npm run pom:init -- ${args.join(" ")}`;
 }
 
-function installClaudeAgentFiles(): void {
+function installCodingAgentFiles(rerunCommand: string): void {
+  installClaudeAgentFiles(rerunCommand);
+}
+
+function installClaudeAgentFiles(rerunCommand: string): void {
   const shouldInstall = pathIsDirectory(".claude") || pathIsDirectory(".claude/agents");
   if (!shouldInstall) {
     console.log("Optional Claude Code agent files not installed: .claude/ not found.");
-    console.log("To enable them, create .claude/ and rerun npm run pom:init with the selected preset.");
+    console.log("To enable them, run:");
+    console.log("  mkdir -p .claude");
+    console.log(`  ${rerunCommand}`);
     return;
   }
 
@@ -1014,7 +1024,7 @@ async function main(): Promise<void> {
   }
 
   upsertAgentInstructionSections(adoption);
-  installCodingAgentFiles();
+  installCodingAgentFiles(buildPomInitCommand(presetName, profileName, ownership));
   installPomUpdateScript();
   upsertPackageScripts();
   installPreCommitHook();

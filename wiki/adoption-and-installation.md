@@ -83,7 +83,7 @@ The bootstrap script:
 
 If the target project is a subdirectory inside a larger Git worktree, POM does not create a nested repository and does not install a hook automatically. Install from the Git root, or adapt the hook manually so it runs the target project's `npm run pom:lint` from the correct directory.
 
-Claude Code helper files are optional. The installer creates `.claude/agents/pom-post-action-validator.md` only when `.claude/` already exists. To enable the helper in a new project, create `.claude/` and rerun `npm run pom:init` with the selected preset.
+Claude Code helper files are optional. The installer creates `.claude/agents/pom-post-action-validator.md` only when `.claude/` already exists. If `.claude/` is missing, the installer prints the exact `mkdir -p .claude` and `npm run pom:init ...` commands to enable the helper with the same install mode.
 
 In a Git-managed install, `pom/` is a full checkout of the POM Source and may contain `.git`, `README.md`, `AGENTS.MD`, `bootstrap-pom.mjs`, and `package.json`. That is expected. The wrong layout is POM Source files directly at the target project root.
 

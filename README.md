@@ -254,7 +254,7 @@ Supported instruction targets are deliberately conservative:
 
 POM does not create tool-specific folders just because the tool exists. It only writes into a tool-specific folder when that folder is already part of the project.
 
-For Claude Code, `.claude/agents/pom-post-action-validator.md` is optional. The installer creates or updates it only when `.claude/` already exists. To enable that helper in a new project, create `.claude/` and rerun `npm run pom:init -- --preset <owned|team|overlay|minimal>`.
+For Claude Code, `.claude/agents/pom-post-action-validator.md` is optional. The installer creates or updates it only when `.claude/` already exists. If `.claude/` is missing, the installer prints the exact `mkdir -p .claude` and `npm run pom:init ...` commands to enable the helper with the same install mode.
 
 ### External project overlay
 

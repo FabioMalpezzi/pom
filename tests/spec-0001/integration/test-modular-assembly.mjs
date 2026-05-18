@@ -587,13 +587,14 @@ function scenario15() {
   try {
     const stdout = execFileSync(
       "node",
-      ["--experimental-strip-types", "pom/scripts/install-pom.ts", "--profile", "minimal"],
+      ["--experimental-strip-types", "pom/scripts/install-pom.ts", "--preset", "owned"],
       { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
     );
 
     const hookPath = join(dir, ".git", "hooks", "pre-commit");
     assert("installer reports Git initialization", stdout.includes("Initialized Git repository"), stdout);
     assert("installer marks Claude helper as optional", stdout.includes("Optional Claude Code agent files not installed"), stdout);
+    assert("installer prints exact Claude helper command", stdout.includes("mkdir -p .claude") && stdout.includes("npm run pom:init -- --preset owned"), stdout);
     assert("target root has Git repository", existsSync(join(dir, ".git")), ".git missing");
     assert("target root has POM pre-commit hook", readFileSync(hookPath, "utf8").includes("POM pre-commit"), "POM hook missing");
   } finally {
