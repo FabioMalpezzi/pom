@@ -593,6 +593,7 @@ function scenario15() {
 
     const hookPath = join(dir, ".git", "hooks", "pre-commit");
     assert("installer reports Git initialization", stdout.includes("Initialized Git repository"), stdout);
+    assert("installer marks Claude helper as optional", stdout.includes("Optional Claude Code agent files not installed"), stdout);
     assert("target root has Git repository", existsSync(join(dir, ".git")), ".git missing");
     assert("target root has POM pre-commit hook", readFileSync(hookPath, "utf8").includes("POM pre-commit"), "POM hook missing");
   } finally {

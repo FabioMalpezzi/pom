@@ -457,7 +457,8 @@ function installCodingAgentFiles(): void {
 function installClaudeAgentFiles(): void {
   const shouldInstall = pathIsDirectory(".claude") || pathIsDirectory(".claude/agents");
   if (!shouldInstall) {
-    console.log("Claude agent files not installed: .claude/ not found.");
+    console.log("Optional Claude Code agent files not installed: .claude/ not found.");
+    console.log("To enable them, create .claude/ and rerun npm run pom:init with the selected preset.");
     return;
   }
 
