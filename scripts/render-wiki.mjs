@@ -531,13 +531,25 @@ function inline(text) {
     return `<a href="${escapeAttr(slug)}.html">${escapeHtml(text)}</a>`;
   });
   value = value.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
-    return `<a href="${escapeAttr(rewriteHref(href))}">${label}</a>`;
+    return `<a ${renderHrefAttrs(href)}>${label}</a>`;
   });
 
   for (let i = 0; i < code.length; i += 1) {
     value = value.replace(`\u0000${i}\u0000`, code[i]);
   }
   return value;
+}
+
+function renderHrefAttrs(href) {
+  const rewritten = rewriteHref(href);
+  const target = shouldOpenInNewPage(rewritten) ? ' target="_blank" rel="noopener noreferrer"' : "";
+  return `href="${escapeAttr(rewritten)}"${target}`;
+}
+
+function shouldOpenInNewPage(href) {
+  if (!href || href.startsWith("#") || href.startsWith("mailto:")) return false;
+  if (/^https?:/.test(href)) return true;
+  return !/\.html($|#)/.test(href);
 }
 
 function rewriteHref(href) {
@@ -596,7 +608,7 @@ function renderPage(page, pages, config) {
       <span class="brand-mark">POM</span>
       <span>${escapeHtml(config.title)}</span>
     </a>
-    <a class="source-link" href="${escapeAttr(sourceHref)}">Markdown source</a>
+    <a class="source-link" ${renderHrefAttrs(sourceHref)}>Markdown source</a>
   </header>
 
   <div class="layout">
