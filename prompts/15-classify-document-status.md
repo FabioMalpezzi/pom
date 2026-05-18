@@ -6,7 +6,11 @@ document type or status is unclear.
 ```text
 Classify the requested artifact before writing it.
 
-First decide the document type:
+First decide the document type. Apply precedence before choosing:
+
+- durable decision or boundary -> ADR, even when the decision is reusable knowledge;
+- exploratory reasoning, comparison, synthesis, or evidence -> analysis, even when it will later inform the wiki;
+- current consolidated reference knowledge -> wiki, only after source authority is clear.
 
 | Question | Document |
 |---|---|

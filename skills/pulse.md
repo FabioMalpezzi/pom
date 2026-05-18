@@ -28,8 +28,8 @@ Read `pom.config.json`, especially `handoff.projectStatePath`, `handoff.maxLines
 - **Static Context** (project purpose, constraints, permanent decisions): update only when the project's direction or stack changes. Do not touch for operational updates.
 - **Dynamic Context** (current state, priorities, next actions, risks): update at every significant session.
 - Permanent structural changes belong in an ADR, not in Static Context.
-- **Compaction rule 1:** if the file exceeds the maxLines limit, compact Dynamic Context — remove completed actions, archive closed decisions to `decisions/` or `wiki/log.md`, delete resolved risks. Never compact Static Context.
-- **Compaction rule 2:** Dynamic Context must describe current state and next steps only. If a section is becoming a log or changelog, move it to `wiki/log.md`, `decisions/`, or Git and remove it from `PROJECT_STATE.md`.
+- **Compaction rule 1:** if the file exceeds the maxLines limit, compact Dynamic Context — remove completed actions, archive closed decisions to the configured decisions root or `wiki/log.md`, delete resolved risks. Never compact Static Context.
+- **Compaction rule 2:** Dynamic Context must describe current state and next steps only. If a section is becoming a log or changelog, move it to `wiki/log.md`, the configured decisions root, or Git and remove it from `PROJECT_STATE.md`.
 
 ## Output
 

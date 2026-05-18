@@ -67,7 +67,7 @@
     "root": "decisions",
     "adrPathPattern": "^decisions/ADR-\\d{4}-.+\\.md$",
     "datePattern": "\\| Date \\|\\s*\\d{4}-\\d{2}-\\d{2}\\s*\\|",
-    "indexPath": "decisions/ADR_INDEX.md",
+    "indexPath": "decisions/DECISIONS_INDEX.md",
     "categoryField": "Category",
     "areaField": "Area",
     "docsPathsRequiringAdr": [],

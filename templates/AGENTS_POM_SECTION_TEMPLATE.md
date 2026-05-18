@@ -22,7 +22,7 @@ POM is documented in English for portability. When applying POM to this project,
 
 In a target project, `pom/` is the POM Source. It may contain `.git`, `README.md`, `AGENTS.MD`, `bootstrap-pom.mjs`, and `package.json`; that is normal for a Git-managed install.
 The error case is POM Source files at the target root, for example `WIKI_METHOD.md`, `prompts/`, `skills/`, `templates/`, and `scripts/install-pom.ts` beside project files.
-If the root has only `pom/`, `AGENTS.md`, `package.json`, `pom-update.mjs`, `pom.config.json`, and optional agent folders, treat it as a day-zero project. Read `pom.config.json`, report that project memory has not started yet, and create no `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or `decisions/` unless the active profile enables them or current work needs them.
+If the root has only `pom/`, `AGENTS.md`, `package.json`, `pom-update.mjs`, `pom.config.json`, and optional agent folders, treat it as a day-zero project. Read `pom.config.json`, report that project memory has not started yet, and create no `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or configured decisions root unless the active profile enables them or current work needs them.
 
 ## Principle
 
@@ -32,7 +32,7 @@ There is no single source of truth for everything. Each domain has its own autho
 |---|---|
 | What does the system currently do? | code and tests, when present |
 | What do we currently know about the project? | `wiki/` |
-| Why did we decide this? | `decisions/` |
+| Why did we decide this? | configured decisions root (`decisions.root`, default `decisions/`) |
 | What analysis supports or challenges a choice? | `analysis/` |
 | What does the intended experience show? | `mockups/`, when present |
 | What can be shared as official documentation? | `docs/`, when present |
@@ -101,7 +101,7 @@ The wiki is persistent and cumulative memory, not a temporary research output.
 Rules:
 
 - keep the wiki as the current synthesis of the project;
-- keep decision rationale history in `decisions/`;
+- keep decision rationale history in the configured decisions root (`decisions.root`, default `decisions/`);
 - update `wiki/index.md` when wiki pages are added or changed;
 - update `wiki/log.md` when the wiki changes materially;
 - create new wiki pages when an answer, analysis, or synthesis becomes reusable knowledge;
@@ -190,7 +190,7 @@ npm run pom:lint
 
 Run it:
 
-- after changes to `wiki/`, `decisions/`, `docs/`, `analysis/`, `mockups/`, `PROJECT_STATE.md`, `pom.config.json`, or POM templates;
+- after changes to `wiki/`, the configured decisions root, `docs/`, `analysis/`, `mockups/`, `PROJECT_STATE.md`, `pom.config.json`, or POM templates;
 - before committing documentation/governance changes;
 - after applying fixes suggested by a previous POM lint run.
 

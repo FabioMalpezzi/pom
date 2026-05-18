@@ -17,7 +17,7 @@ The team loses context between work sessions. Each new AI agent session rediscov
 
 ## Decision
 
-Adopt a persistent wiki maintained by the LLM agent as the project's consolidated knowledge base. The wiki will contain current synthesis, not full history. Decision rationale stays in `decisions/`. Code behavior stays in code and tests.
+Adopt a persistent wiki maintained by the LLM agent as the project's consolidated knowledge base. The wiki will contain current synthesis, not full history. Decision rationale stays in the configured decisions root. Code behavior stays in code and tests.
 
 ## Rationale
 

@@ -32,7 +32,7 @@ One sentence describing what this project is and why it exists.
 
 ## Dynamic Context
 
-_Current operational state. Update at every significant session or when priorities, risks, or next actions change. If this section grows beyond the maxLines limit, compact it: remove completed actions, archive closed decisions to `decisions/` or `wiki/log.md`, delete resolved risks. Do not let this section become a log._
+_Current operational state. Update at every significant session or when priorities, risks, or next actions change. If this section grows beyond the maxLines limit, compact it: remove completed actions, archive closed decisions to the configured decisions root or `wiki/log.md`, delete resolved risks. Do not let this section become a log._
 
 ### Current State
 

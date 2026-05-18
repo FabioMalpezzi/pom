@@ -104,6 +104,8 @@ type OwnershipConfig = {
   note?: string;
 };
 
+type ProjectConfig = Record<string, unknown>;
+
 type PackageJson = {
   scripts?: Record<string, string>;
   [key: string]: unknown;
@@ -148,7 +150,7 @@ const profiles: Record<ProfileName, { label: string; description: string; adopti
   },
   decisions: {
     label: "Decisions",
-    description: "Minimal + ADR governance. Enables decisions/ and generated decisions/ADR_INDEX.md.",
+    description: "Minimal + ADR governance. Enables the configured decisions root and generated ADR index.",
     adoption: {
       profile: "decisions",
       wiki: "disabled",
@@ -577,7 +579,7 @@ function upsertPackageScripts(): void {
   console.log("Updated package.json with pom:init, pom:update, pom:help, pom:lint, and pom:wiki:render scripts.");
 }
 
-function installPreCommitHook(): void {
+function installPreCommitHook(config: ProjectConfig): void {
   const gitContext = getGitContext();
   if (!gitContext.insideWorkTree) {
     console.log("Git hooks not installed: target project is not in a Git worktree.");
@@ -597,6 +599,8 @@ function installPreCommitHook(): void {
   const hookPath = resolveRootPath(hookGitPath);
   mkdirSync(dirname(hookPath), { recursive: true });
   const current = existsSync(hookPath) ? readFileSync(hookPath, "utf8") : "#!/bin/sh\n";
+  const governedPathArgs = governedMemoryPaths(config).map(shellQuote).join(" ");
+  const projectStatePath = shellQuote(configuredPath(config, "handoff.projectStatePath", "PROJECT_STATE.md"));
   const hookBlock = `${HOOK_START_MARKER}
 echo "POM pre-commit: running npm run pom:lint"
 npm run pom:lint
@@ -606,9 +610,9 @@ if [ "$pom_lint_status" -ne 0 ]; then
   exit "$pom_lint_status"
 fi
 
-if [ -f "PROJECT_STATE.md" ]; then
-  pom_changed="$(git diff --cached --name-only -- wiki decisions docs analysis mockups pom.config.json CURRENT_PLAN.md specs 2>/dev/null)"
-  pom_state_changed="$(git diff --cached --name-only -- PROJECT_STATE.md 2>/dev/null)"
+if [ -f ${projectStatePath} ]; then
+  pom_changed="$(git diff --cached --name-only -- ${governedPathArgs} 2>/dev/null)"
+  pom_state_changed="$(git diff --cached --name-only -- ${projectStatePath} 2>/dev/null)"
   if [ -n "$pom_changed" ] && [ -z "$pom_state_changed" ]; then
     echo "POM pre-commit notice: this commit touches governed project-memory files but not PROJECT_STATE.md."
     echo "Most commits do not need a PROJECT_STATE.md update. Update it only when the next person resuming would otherwise see a wrong starting picture: a closed important task, a new risk or open decision, a substantial ADR/spec/roadmap change, or an explicit handoff request."
@@ -631,26 +635,109 @@ ${HOOK_END_MARKER}`;
   }
 }
 
-function createOrUpdateConfig(adoption: AdoptionConfig, ownership: OwnershipMode | undefined): void {
+function createOrUpdateConfig(adoption: AdoptionConfig, ownership: OwnershipMode | undefined): ProjectConfig {
   const configPath = "pom.config.json";
   if (!pathExists(configPath)) {
     const template = JSON.parse(readText(resolveTemplate("POM_CONFIG_TEMPLATE.json"))) as Record<string, unknown>;
     template.ownership = ownershipConfig(ownership);
     template.adoption = adoption;
+    alignDecisionDefaults(template);
     writeText(configPath, `${JSON.stringify(template, null, 2)}\n`);
     console.log(`Created ${configPath} with ${adoption.profile} adoption profile.`);
-    return;
+    return template;
   }
 
-  const config = JSON.parse(readText(configPath)) as Record<string, unknown>;
+  const config = readRequiredProjectConfig(configPath);
   if (ownership) {
     config.ownership = ownershipConfig(ownership, config.ownership);
   } else if (!config.ownership) {
     config.ownership = ownershipConfig(undefined);
   }
   config.adoption = adoption;
+  alignDecisionDefaults(config);
   writeText(configPath, `${JSON.stringify(config, null, 2)}\n`);
   console.log(`Updated ${configPath} adoption profile to ${adoption.profile}.`);
+  return config;
+}
+
+function readProjectConfigIfPresent(): ProjectConfig {
+  if (!pathExists("pom.config.json")) return {};
+  try {
+    const parsed = JSON.parse(readText("pom.config.json"));
+    return isRecord(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function readRequiredProjectConfig(path: string): ProjectConfig {
+  const parsed = JSON.parse(readText(path));
+  if (!isRecord(parsed)) throw new Error(`${path} must contain a JSON object.`);
+  return parsed;
+}
+
+function configuredPath(config: ProjectConfig, path: string, fallback: string): string {
+  const value = configString(config, path, fallback);
+  const normalized = value.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+  if (!normalized || normalized === "." || normalized.includes("../") || normalized.startsWith("..")) return fallback;
+  return normalized;
+}
+
+function alignDecisionDefaults(config: ProjectConfig): void {
+  if (!isRecord(config.decisions)) return;
+  const root = configuredPath(config, "decisions.root", "decisions");
+  if (root === "decisions") return;
+
+  const defaultPattern = String.raw`^decisions/ADR-\d{4}-.+\.md$`;
+  if (typeof config.decisions.adrPathPattern !== "string" || config.decisions.adrPathPattern === defaultPattern) {
+    config.decisions.adrPathPattern = `^${escapeRegex(root)}/ADR-\\d{4}-.+\\.md$`;
+  }
+  if (
+    typeof config.decisions.indexPath !== "string" ||
+    config.decisions.indexPath === "decisions/DECISIONS_INDEX.md"
+  ) {
+    config.decisions.indexPath = defaultDecisionIndexPath(root);
+  }
+}
+
+function defaultDecisionIndexPath(root: string): string {
+  const folderName = root.split("/").filter(Boolean).at(-1) || "decisions";
+  return `${root}/${folderName.toUpperCase()}_INDEX.md`;
+}
+
+function configString(config: ProjectConfig, path: string, fallback: string): string {
+  const value = path.split(".").reduce<unknown>((current, part) => {
+    if (!isRecord(current)) return undefined;
+    return current[part];
+  }, config);
+  return typeof value === "string" ? value : fallback;
+}
+
+function governedMemoryPaths(config: ProjectConfig): string[] {
+  const paths = [
+    "wiki",
+    configuredPath(config, "decisions.root", "decisions"),
+    configuredPath(config, "documentation.officialRoot", "docs"),
+    configuredPath(config, "analysis.root", "analysis"),
+    firstPathSegment(configuredPath(config, "mockups.packagesDir", "mockups/packages")),
+    configuredPath(config, "taskPlans.root", "tasks"),
+    "pom.config.json",
+    "CURRENT_PLAN.md",
+    "specs",
+  ];
+  return [...new Set(paths.filter(Boolean))];
+}
+
+function firstPathSegment(path: string): string {
+  return path.split("/").filter(Boolean)[0] ?? path;
+}
+
+function shellQuote(value: string): string {
+  return `'${value.replaceAll("'", "'\"'\"'")}'`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function ownershipConfig(ownership: OwnershipMode | undefined, existing?: unknown): OwnershipConfig {
@@ -677,7 +764,7 @@ function ownershipConfig(ownership: OwnershipMode | undefined, existing?: unknow
   return base;
 }
 
-function createProfileFiles(adoption: AdoptionConfig): void {
+function createProfileFiles(adoption: AdoptionConfig, config: ProjectConfig): void {
   if (adoption.wiki === "enabled") {
     ensureDir("wiki");
     console.log("Ensured wiki/ exists.");
@@ -687,8 +774,9 @@ function createProfileFiles(adoption: AdoptionConfig): void {
     createWikiOverviewIfMissing();
   }
   if (adoption.decisions === "enabled") {
-    ensureDir("decisions");
-    console.log("Ensured decisions/ exists.");
+    const decisionsRoot = configuredPath(config, "decisions.root", "decisions");
+    ensureDir(decisionsRoot);
+    console.log(`Ensured ${decisionsRoot}/ exists.`);
   }
 
   if (adoption.mockups === "enabled") {
@@ -1016,6 +1104,7 @@ async function main(): Promise<void> {
   const profileName = selected.profile;
   const ownership = resolveOwnershipMode(preset?.ownership ?? ownershipArg ?? selected.ownership);
   const adoption = applyOwnershipDefaults(await customizeAdoption(profiles[profileName].adoption), ownership);
+  let projectConfig = readProjectConfigIfPresent();
 
   ensureGitRepository();
 
@@ -1027,14 +1116,15 @@ async function main(): Promise<void> {
   installCodingAgentFiles(buildPomInitCommand(presetName, profileName, ownership));
   installPomUpdateScript();
   upsertPackageScripts();
-  installPreCommitHook();
 
   if (adoption.profile !== "refresh") {
-    createOrUpdateConfig(adoption, ownership);
-    createProfileFiles(adoption);
+    projectConfig = createOrUpdateConfig(adoption, ownership);
+    createProfileFiles(adoption, projectConfig);
   } else {
     console.log("Refresh profile selected: pom.config.json and governance folders were not changed.");
   }
+
+  installPreCommitHook(projectConfig);
 
   console.log("POM init complete.");
 }

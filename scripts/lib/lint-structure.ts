@@ -16,10 +16,13 @@ export function checkRootMarkdown(context: LintContext): void {
     const path = entry;
     if (!path.toLowerCase().endsWith(".md")) continue;
     if (!context.allowedRootMarkdown.has(path)) {
+      const analysisRoot = context.config.analysis.root || "analysis";
+      const decisionsRoot = context.config.decisions.root || "decisions";
+      const docsRoot = context.config.documentation.officialRoot || "docs";
       context.add(
         "error",
         "root-markdown",
-        "Keep the project root clean: move Markdown documents to analysis/, wiki/, decisions/, or docs/.",
+        `Keep the project root clean: move Markdown documents to ${analysisRoot}/, wiki/, ${decisionsRoot}/, or ${docsRoot}/.`,
         path,
       );
     }

@@ -5,7 +5,7 @@ The wiki is persistent and cumulative memory, not a temporary research output.
 Rules:
 
 - keep the wiki as the current synthesis of the project;
-- keep decision rationale history in `decisions/`;
+- keep decision rationale history in the configured decisions root (`decisions.root`, default `decisions/`);
 - update `wiki/index.md` when wiki pages are added or changed;
 - update `wiki/log.md` when the wiki changes materially;
 - create new wiki pages when an answer, analysis, or synthesis becomes reusable knowledge;

@@ -27,6 +27,7 @@ Use `stale` when files changed and you want to find which wiki pages cite them. 
 ## Key Rules
 
 - Do not automatically update the whole wiki.
+- Do not use the wiki as the primary home for analysis, ADRs, specs, or task plans; summarize and link to those sources instead.
 - Work in small, approved batches.
 - Use `wiki/index.md` as the map.
 - Use `wiki/log.md` as the chronological register.

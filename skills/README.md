@@ -19,7 +19,7 @@ Before applying a skill, read `pom.config.json` when present.
 The config defines project-specific conventions, including:
 
 - repository ownership and operating posture (`ownership`);
-- decisions/ADR roots and patterns (`decisions`);
+- Decision Record roots and patterns (`decisions`);
 - documentation roots (`documentation`);
 - source roots (`source`);
 - analysis roots, recommended paths, and namespace conventions (`analysis`);

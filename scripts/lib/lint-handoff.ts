@@ -85,7 +85,7 @@ export function checkProjectStateShape(context: LintContext): void {
     context.add(
       "warning",
       "project-state-too-long",
-      `${statePath} has ${lines.length} lines: keep it concise and under ${context.config.handoff.maxLines} lines, moving history to wiki/log.md, decisions/, or Git.`,
+      `${statePath} has ${lines.length} lines: keep it concise and under ${context.config.handoff.maxLines} lines, moving history to wiki/log.md, ${context.config.decisions.root || "decisions"}/, or Git.`,
       statePath,
     );
   }

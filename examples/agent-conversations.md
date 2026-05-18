@@ -52,7 +52,7 @@ I want wiki and decisions. No mockups, no docs for now. Tests are in __tests__/ 
 **Agent will:**
 1. Create `AGENTS.md` with the POM section
 2. Create `wiki/index.md` and `wiki/log.md`
-3. Create `decisions/` directory
+3. Create the configured decisions root (default `decisions/`)
 4. Create `PROJECT_STATE.md`
 5. Create `pom.config.json` with `tests.root` set to match your existing structure
 6. Run lint

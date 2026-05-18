@@ -14,7 +14,7 @@ Before modifying files:
    - mockups;
    - docs/doc;
    - analysis;
-   - decisions/ADR;
+   - ADRs in the configured decisions root;
    - specs;
    - README and project notes;
 5. propose an initial wiki taxonomy;
@@ -32,6 +32,8 @@ Recommended batch priority:
 Rules:
 - do not try to cover everything in one pass;
 - work in small, verifiable batches;
+- do not move source authority into the wiki: analysis stays in `analysis/`, decisions stay in ADRs, specs stay in specs, and tasks stay in task plans;
+- wiki pages should summarize and link to authoritative sources, not duplicate whole analysis documents or decision records;
 - use `pom/templates/WIKI_INDEX_TEMPLATE.md` for `wiki/index.md`;
 - use `pom/templates/WIKI_LOG_TEMPLATE.md` for `wiki/log.md`;
 - use `pom/templates/WIKI_PAGE_TEMPLATE.md` for new generic pages;

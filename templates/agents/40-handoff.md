@@ -16,8 +16,8 @@ not just because a session is ending.
 Do not update Static Context for operational changes. Do not update Dynamic Context for permanent structural changes — create or update an ADR instead.
 
 Compaction rules:
-- if the file exceeds the maxLines limit, compact Dynamic Context: remove completed actions, archive closed decisions to `decisions/` or `wiki/log.md`, delete resolved risks;
-- if a section of Dynamic Context is becoming a log, move it to `wiki/log.md` or `decisions/` and remove it from `PROJECT_STATE.md`;
+- if the file exceeds the maxLines limit, compact Dynamic Context: remove completed actions, archive closed decisions to the configured decisions root or `wiki/log.md`, delete resolved risks;
+- if a section of Dynamic Context is becoming a log, move it to `wiki/log.md` or the configured decisions root and remove it from `PROJECT_STATE.md`;
 - never compact Static Context.
 
 ## POM Lint Workflow

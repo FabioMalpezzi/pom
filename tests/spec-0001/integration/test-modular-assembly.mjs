@@ -19,6 +19,7 @@
  * Scenario 14: bootstrap stops when run from the POM Source root
  * Scenario 15: installer initializes Git and installs the hook in a new target root
  * Scenario 16: installer does not create nested Git or parent hook from a subdirectory target
+ * Scenario 17: installer respects configured ADR root instead of forcing decisions/
  */
 
 import { execFileSync } from "node:child_process";
@@ -626,6 +627,45 @@ function scenario16() {
   }
 }
 
+function scenario17() {
+  console.log("\nScenario 17: installer respects configured ADR root instead of forcing decisions/");
+  const dir = createTempProject();
+  try {
+    writeFileSync(
+      join(dir, "pom.config.json"),
+      JSON.stringify(
+        {
+          decisions: {
+            root: "adr",
+            adrPathPattern: "^decisions/ADR-\\d{4}-.+\\.md$",
+            indexPath: "decisions/DECISIONS_INDEX.md",
+          },
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    runInstaller(dir, "decisions");
+    execFileSync("node", ["--experimental-strip-types", "pom/scripts/lint-doc-governance.ts"], {
+      cwd: dir,
+      stdio: "pipe",
+    });
+
+    const config = JSON.parse(readFileSync(join(dir, "pom.config.json"), "utf8"));
+    const hook = readFileSync(join(dir, ".git", "hooks", "pre-commit"), "utf8");
+    assert("configured ADR root preserved", config.decisions?.root === "adr", JSON.stringify(config.decisions));
+    assert("ADR pattern follows configured root", config.decisions?.adrPathPattern?.startsWith("^adr/"), JSON.stringify(config.decisions));
+    assert("ADR index follows configured root", config.decisions?.indexPath === "adr/ADR_INDEX.md", JSON.stringify(config.decisions));
+    assert("configured ADR root created", existsSync(join(dir, "adr")), "adr/ should be created");
+    assert("default decisions root not forced", !existsSync(join(dir, "decisions")), "decisions/ should not be created");
+    assert("configured ADR index generated", existsSync(join(dir, "adr", "ADR_INDEX.md")), "ADR index missing");
+    assert("pre-commit watches configured ADR root", hook.includes("'adr'"), hook);
+  } finally {
+    cleanup(dir);
+  }
+}
+
 console.log("SPEC-0001 Completion Verification Tests");
 console.log("========================================");
 
@@ -638,6 +678,7 @@ scenario13();
 scenario14();
 scenario15();
 scenario16();
+scenario17();
 scenario1();
 scenario2();
 scenario3();

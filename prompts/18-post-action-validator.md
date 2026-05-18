@@ -42,12 +42,13 @@ lint, or `skills/check.md` for ordinary local verification.
 - Check if "Next Actions" still reference completed work as pending.
 - If stale → **NEEDS UPDATE**. If current → **OK**.
 
-### Rule 2 — Wiki reflects completed work
+### Rule 2 — Wiki reflects completed work without replacing source authority
 
-When a task or phase closes, the wiki should capture reusable knowledge. New entities, processes, screens, or controls discovered during implementation should be documented.
+When a task or phase closes, the wiki should capture reusable current knowledge only when that knowledge is stable, cross-cutting, and not already adequately represented by its authoritative source. Analysis belongs in `analysis/`; decisions belong in ADRs; task execution belongs in task plans. The wiki may summarize and link to those sources, but it must not replace them.
 
 **How to verify:**
 - Identify what the completed action produced (new API, new model, new screen, new process).
+- If the output is an analysis document, ADR, spec, or task plan, first verify that it lives in the configured authoritative location.
 - Check `wiki/index.md` for a page covering that topic.
 - If the topic is missing or the existing page contradicts the implementation → **NEEDS REVIEW**.
 - If no wiki-worthy knowledge was produced → **N/A**.

@@ -242,6 +242,7 @@ export function loadLintConfig(root: string): { config: LintConfig; findings: Fi
 
   const readers = createReaders(add);
   const merged = mergeConfig(defaultConfig, parsed, readers);
+  applyDerivedDecisionDefaults(merged, parsed);
   validateConfig(merged, add);
   return { config: merged, findings };
 }
@@ -476,6 +477,36 @@ function readPath(root: Record<string, unknown>, path: string): unknown {
     if (!isRecord(current)) return undefined;
     return current[part];
   }, root);
+}
+
+function applyDerivedDecisionDefaults(current: LintConfig, raw: Record<string, unknown>): void {
+  const rootWasConfigured = readPath(raw, "decisions.root") !== undefined;
+  if (!rootWasConfigured) return;
+
+  const cleanRoot = current.decisions.root.replace(/\\/g, "/").replace(/\/$/, "");
+  if (!cleanRoot || cleanRoot === defaultConfig.decisions.root) return;
+
+  if (
+    readPath(raw, "decisions.adrPathPattern") === undefined ||
+    current.decisions.adrPathPattern === defaultConfig.decisions.adrPathPattern
+  ) {
+    current.decisions.adrPathPattern = `^${escapeRegex(cleanRoot)}/ADR-\\d{4}-.+\\.md$`;
+  }
+  if (
+    readPath(raw, "decisions.indexPath") === undefined ||
+    current.decisions.indexPath === defaultConfig.decisions.indexPath
+  ) {
+    current.decisions.indexPath = defaultDecisionIndexPath(cleanRoot);
+  }
+}
+
+function defaultDecisionIndexPath(root: string): string {
+  const folderName = root.split("/").filter(Boolean).at(-1) || "decisions";
+  return `${root}/${folderName.toUpperCase()}_INDEX.md`;
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function validateConfig(

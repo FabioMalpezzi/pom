@@ -331,7 +331,7 @@ node --experimental-strip-types pom/scripts/install-pom.ts
 
 In the common Git-managed install, `pom/` is a full checkout of the POM Source and may contain its own `.git`, `README.md`, `AGENTS.MD`, `bootstrap-pom.mjs`, and `package.json`. That is expected. The wrong layout is POM Source files directly at the target project root.
 
-On a new project, the root may initially contain only `pom/`, agent instructions, `package.json`, `pom-update.mjs`, and `pom.config.json`. That is a valid day-zero state: create `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or `decisions/` only when the selected adoption profile enables them or current work needs them.
+On a new project, the root may initially contain only `pom/`, agent instructions, `package.json`, `pom-update.mjs`, and `pom.config.json`. That is a valid day-zero state: create `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or the configured decisions root only when the selected adoption profile enables them or current work needs them.
 
 ```text
 my-project/
@@ -346,7 +346,7 @@ my-project/
   pom.config.json       <- project-specific config
   wiki.html             <- shortcut to the generated wiki reader, if wiki profile enabled
   wiki/                 <- if wiki profile enabled
-  decisions/            <- if decisions profile enabled
+  decisions/            <- default decisions root, if decisions profile enabled
   ...
 ```
 
@@ -446,7 +446,7 @@ POM does not use one universal source of truth. It uses source authority by doma
 |---|---|
 | What does the system currently do? | code and tests, when present |
 | What do we currently know about the project? | `wiki/` |
-| Why did we decide this? | `decisions/` |
+| Why did we decide this? | configured decisions root (`decisions.root`, default `decisions/`) |
 | What analysis supports or challenges a choice? | `analysis/` |
 | What does the intended experience show? | `mockups/`, when present |
 | What can be shared as official documentation? | `docs/`, when present |
@@ -548,7 +548,7 @@ Rules:
 - do not maintain manual changelogs inside specs/ADRs unless explicitly requested;
 - every ADR should expose `Category` and `Area` in the opening metadata table;
 - lint generates an ADR index from those metadata fields as a search/navigation view, not as a second source of truth;
-- do not introduce workflow states in ADRs: if a document is in `decisions/`, it is a valid decision; replacements are handled through `Replaces` and `Replaced by`.
+- do not introduce workflow states in ADRs: if a document is in the configured decisions root, it is a valid decision; replacements are handled through `Replaces` and `Replaced by`.
 
 ## Temporary Experiments
 
@@ -566,7 +566,7 @@ Rules:
 
 - the wiki contains the current synthesis, not the full history of decisions;
 - sources, code, mockups, and analysis feed the wiki;
-- `decisions/` keeps decision rationale and decision history;
+- the configured decisions root keeps decision rationale and decision history;
 - `wiki/index.md` is the content map;
 - `wiki/log.md` is the append-only chronological register and is not rendered as a reader page;
 - `npm run pom:wiki:render` generates `wiki/_site/` as a static reader view;
@@ -621,7 +621,7 @@ agent instruction file or rule
 PROJECT_STATE.md
 wiki/index.md
 wiki/log.md
-decisions/
+configured decisions root (default `decisions/`)
 optional pom.config.json
 ```
 
@@ -899,11 +899,11 @@ Semantics:
 - `optional` means ask before creating the module unless the current work clearly needs it;
 - `enabled` means the module is part of the active project method and should be maintained.
 
-POM lint may also generate derived artifacts when the rule is explicit and the generated file is not an autonomous source. Example: `decisions/ADR_INDEX.md` is generated from ADRs and is only used for navigation/search. Generated files must declare that they should not be edited manually.
+POM lint may also generate derived artifacts when the rule is explicit and the generated file is not an autonomous source. Example: `decisions/DECISIONS_INDEX.md` is generated from ADRs and is only used for navigation/search when `decisions.root` keeps the default path. Generated files must declare that they should not be edited manually.
 
 For existing projects, existing structures do not have to be moved into canonical POM folders immediately. Configure the relevant roots and patterns to map the active convention:
 
-- decisions: `decisions.root`, `decisions.adrPathPattern`, `decisions.indexPath`, and `decisions.requireTemplateSections`;
+- decisions: `decisions.root`, `decisions.adrPathPattern`, `decisions.indexPath`, and `decisions.requireTemplateSections`; when only `decisions.root` changes, POM derives the default ADR pattern and generated index path from that root;
 - documentation: `documentation.officialRoot`, `documentation.existingRoots`, and migration policy flags;
 - source: `source.roots`, `source.knownRootCandidates`, and migration policy flags;
 - tests: `tests.root`, `tests.areas`, optional `tests.recommendedPath`, optional `tests.namespaceConvention`, `tests.recommendedLayout`, and migration policy flags;

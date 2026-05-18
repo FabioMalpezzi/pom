@@ -38,7 +38,7 @@ Rules:
 - do not update Static Context for operational changes — it describes the project, not the session;
 - do not update Dynamic Context for permanent structural changes — create or update an ADR instead;
 - keep the total file under the configured maxLines limit (default 220);
-- compaction rule 1: if the file exceeds the limit, compact Dynamic Context — remove completed actions, archive closed decisions to decisions/ or wiki/log.md, delete resolved risks; never compact Static Context;
-- compaction rule 2: Dynamic Context must describe current state and next steps only — if a section is becoming a log or changelog, move it to wiki/log.md, decisions/, or Git and remove it from PROJECT_STATE.md;
+- compaction rule 1: if the file exceeds the limit, compact Dynamic Context — remove completed actions, archive closed decisions to the configured decisions root or wiki/log.md, delete resolved risks; never compact Static Context;
+- compaction rule 2: Dynamic Context must describe current state and next steps only — if a section is becoming a log or changelog, move it to wiki/log.md, the configured decisions root, or Git and remove it from PROJECT_STATE.md;
 - if you find uncertainty or contradictions, add a "To clarify" section under Dynamic Context.
 ```

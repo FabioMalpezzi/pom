@@ -30,7 +30,7 @@ Then update, when present and relevant:
 - wiki/log.md;
 - wiki/index.md;
 - wiki pages impacted by new knowledge;
-- ADRs in decisions/;
+- ADRs in the configured decisions root;
 - README and agent instruction files if the method changed.
 
 Git:
@@ -44,7 +44,7 @@ Lint-driven closeout:
 - if a warning is intentionally accepted, document the reason and next action;
 - do not hide divergence between code, docs, tasks, ADRs, and project state.
 
-Do not update everything automatically: update only what is actually impacted. If an answer, analysis, or decision has reusable value, consider archiving it in the wiki instead of leaving it only in chat.
+Do not update everything automatically: update only what is actually impacted. Route each artifact to its authoritative memory element first: analysis belongs in `analysis/`, durable decisions belong in ADRs, and task execution belongs in task plans. The wiki may summarize and link to those sources after they exist, but it must not become the primary home for an analysis document, an ADR, or a task plan.
 
 The final summary must include:
 - files updated;

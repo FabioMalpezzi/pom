@@ -19,11 +19,12 @@ Rules:
 - do not modify the wiki without approval.
 
 If the answer has reusable value:
-1. propose whether to archive it as a new wiki page or update an existing page;
-2. indicate title, path, sources, and linked pages;
-3. wait for approval;
-4. after approval, update the page, `wiki/index.md`, and `wiki/log.md`;
-5. run `npm run pom:lint`, if available.
+1. first classify whether it is current reference knowledge, analysis, a decision, or a task; do not archive analysis or decisions directly as wiki pages;
+2. propose whether to archive current reference knowledge as a new wiki page or update an existing page;
+3. indicate title, path, sources, and linked pages;
+4. wait for approval;
+5. after approval, update the page, `wiki/index.md`, and `wiki/log.md`;
+6. run `npm run pom:lint`, if available.
 
 Output:
 - answer with wiki references;

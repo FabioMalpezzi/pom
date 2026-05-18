@@ -6,7 +6,8 @@
 
 ## How To Read This Wiki
 
-- Each page documents a concept, screen, process, entity, control, decision, or technical area.
+- Each page documents current reference knowledge: concepts, screens, processes, entities, controls, or technical areas.
+- Decisions, analysis documents, specs, and task plans remain in their configured authoritative locations; the wiki links to them.
 - `[[page-name]]` or Markdown links connect pages.
 - The index is a content map, not a history.
 - Update history lives in `wiki/log.md`.
@@ -34,7 +35,7 @@ Use the areas relevant to the project. Not all are mandatory.
 | Controls | permissions, policies, audit, SLA, security |  |
 | Architecture | services, integrations, technical model |  |
 | Design system | components, patterns, tokens, responsive behavior |  |
-| Linked decisions | ADRs and relevant choices |  |
+| Linked decisions | Links to ADRs and relevant choices; do not store ADR content here |  |
 | Other | project-specific categories |  |
 
 ---

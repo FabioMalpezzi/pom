@@ -14,7 +14,7 @@ Before modifying files:
 The method must include:
 - wiki as persistent memory and consolidated current state, using configured wiki paths when present;
 - wiki/index.md and wiki/log.md, or the approved project equivalents if the project maps them explicitly;
-- decisions as rationale history, mapped to `decisions/` or to the existing ADR root declared in `pom.config.json.decisions.root`;
+- decisions as rationale history, mapped to the configured decisions root (`decisions.root`, default `decisions/`) or to the existing ADR root declared in `pom.config.json.decisions.root`;
 - docs as official output, mapped through `documentation.officialRoot` and `documentation.existingRoots`;
 - analysis as bridge documents, respecting configured analysis taxonomy;
 - mockups as autonomous packages with MOCK_MANIFEST.md, if the project uses mockups;

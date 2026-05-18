@@ -64,7 +64,7 @@ Do not rename folders, move files, or impose a standard structure until I approv
 
 If you find an existing test structure different from `tests/<analysis-or-workstream-or-module>/...`, ask whether to adapt to the existing structure or introduce/adapt the POM proposal. Do not move tests without approval. The user's choice must guide the `tests` section of `pom.config.json`. When configuring new POM-owned analysis/task/test material, prefer `analysis/<analysis-or-workstream>/...`, `tasks/<analysis-or-workstream>/P<priority-or-phase>/...`, and reuse the same namespace for related tests/evidence where practical.
 
-If you find existing ADRs or architecture decisions outside `decisions/`, prefer mapping `decisions.root`, `decisions.adrPathPattern`, and `decisions.indexPath` to the existing convention before proposing a migration. Do not move decision files without approval.
+If you find existing ADRs or architecture decisions outside the default `decisions/` root, prefer mapping `decisions.root`; set `decisions.adrPathPattern` and `decisions.indexPath` only when the project needs non-default ADR filenames or index naming. Do not move decision files without approval.
 
 If you find documentation or source structures different from `docs/` and `src/`, ask whether to adapt to the existing structure or introduce/adapt the POM proposal. Do not move documents or source files without approval. The user's choice must guide the `documentation` and `source` sections of `pom.config.json`.
 

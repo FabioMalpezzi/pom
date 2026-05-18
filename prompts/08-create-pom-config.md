@@ -9,7 +9,7 @@ Before modifying files:
 1. read `pom/templates/POM_CONFIG_TEMPLATE.json`;
 2. read `README.md` and supported agent instruction files, if present;
 3. read the main folder structure without analyzing all content;
-4. check whether `wiki/`, `analysis/`, `decisions/`, `docs/`, `doc/`, `mockups/`, `tests/`, `src/`, `apps/`, `packages/`, `services/`, `frontend/`, `backend/`, and `PROJECT_STATE.md` exist;
+4. check whether `wiki/`, `analysis/`, `decisions/`, `adr/`, `docs/`, `doc/`, `mockups/`, `tests/`, `src/`, `apps/`, `packages/`, `services/`, `frontend/`, `backend/`, and `PROJECT_STATE.md` exist;
 5. classify or ask repository ownership: `owned`, `team`, or `external_overlay`;
 6. propose or preserve an `adoption` profile;
 7. propose a `pom.config.json` configuration;
@@ -32,7 +32,7 @@ Rules:
 - if `tests/` exists, detect the real structure and ask whether to adapt lint to it or use/adapt the POM proposal;
 - if `tests/` does not exist, ask whether the user prefers the POM proposal or a different structure;
 - do not move tests without approval;
-- if ADRs already exist outside `decisions/`, ask whether to enable `adoption.decisions` against the existing ADR root (for example `doc/architecture`) instead of migrating files immediately;
+- if ADRs already exist outside the default `decisions/` root, ask whether to enable `adoption.decisions` against the existing ADR root (for example `adr/` or `doc/architecture`) instead of migrating files immediately;
 - if `doc/`, `docs/`, or other documentation folders exist, ask which one to map as official documentation and which ones to leave as legacy/existing;
 - if `src/`, `apps/`, `packages/`, `services/`, `frontend/`, `backend/`, or other source folders exist, ask which to declare as source roots;
 - if tests, wiki, analysis, mockups, planning, or handoff files already exist in non-POM locations, prefer mapping or documenting the existing convention before proposing moves;
@@ -84,7 +84,7 @@ The configuration should cover, when applicable:
 - analysis taxonomy, root, optional recommended path, namespace convention, and whether analysis root files are allowed;
 - POM template paths and any project-owned template overrides;
 - wiki index/log expectations and project-specific wiki categories/sections;
-- ADR root, patterns, index path, and whether existing ADRs must follow the POM ADR template exactly;
+- ADR root, patterns, index path, and whether existing ADRs must follow the POM ADR template exactly; if only the ADR root changes, POM derives the default ADR filename pattern and generated index path from that root;
 - `decisions.docsPathsRequiringAdr`: list of `docs/` path prefixes that trigger the `docs-without-adr` warning. When empty (default), any change under `docs/` triggers the warning. When populated, only changes matching at least one prefix trigger it. Example: `["docs/server-canonical/requirements/"]` means only requirement changes require an ADR, not plans or working notes;
 - task-plan root, task file pattern, index path, and whether task files must follow the POM task template exactly;
 - analysis preferences and structure: `analysis.root`, optional `analysis.recommendedPath`, optional `analysis.namespaceConvention`, allowed dirs, and whether existing analysis namespaces should be preserved;
