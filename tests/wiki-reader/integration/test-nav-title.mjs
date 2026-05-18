@@ -51,6 +51,8 @@ navTitle: Short Index
 ## Summary
 
 This page keeps a full title but uses a concise reader navigation label.
+
+See [wiki page](capability-long.md), [analysis note](../analysis/source.md), and [root README](../README.md).
 `,
     );
 
@@ -81,6 +83,9 @@ Long page title, short navigation title.
     assert("frontmatter is not rendered as page content", !html.includes("navTitle:"), html);
     assert("search index carries page navTitle", first?.navTitle === "Short Index", JSON.stringify(first));
     assert("search index carries capability navTitle", second?.navTitle === "Architecture", JSON.stringify(second));
+    assert("same-directory wiki markdown links become reader html links", html.includes('href="capability-long.html"'), html);
+    assert("parent-directory markdown links stay markdown links", html.includes('href="../analysis/source.md"'), html);
+    assert("root markdown links stay markdown links", html.includes('href="../README.md"'), html);
   } finally {
     cleanup(dir);
   }

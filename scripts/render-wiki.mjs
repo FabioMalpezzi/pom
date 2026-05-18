@@ -541,7 +541,9 @@ function inline(text) {
 }
 
 function rewriteHref(href) {
-  if (/^https?:\/\//.test(href) || href.startsWith("#")) return href;
+  if (/^(https?:|mailto:)/.test(href) || href.startsWith("#") || href.startsWith("../") || href.startsWith("/")) {
+    return href;
+  }
   return href.replace(/\.md($|#)/, ".html$1");
 }
 
