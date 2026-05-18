@@ -103,6 +103,14 @@ If your goal is to improve POM itself, clone this repository as its own working 
 
 When asking an AI agent to install this method, say `POM - Project Operating Memory from FabioMalpezzi/pom` and ask it to run the bootstrap from the target project root. That wording distinguishes POM from Maven `pom.xml`, Page Object Model, and other common meanings.
 
+Suggested AI-agent prompt:
+
+```text
+Install POM - Project Operating Memory from https://github.com/FabioMalpezzi/pom in this target project. Treat that repository's README as the installation authority for this turn. Fetch or read the README first, then follow its Installation section. Do not use Maven, Page Object Model, or a remembered POM workflow. Do not clone the repository into the project root; use the bootstrap from the target project root. If I have not stated a preset, ask me to choose one of owned, team, overlay, or minimal.
+```
+
+If you already know the preset, include it in the prompt, for example: `Use preset owned.`
+
 Do not pipe a remote bootstrap script directly into `node`. Download it first, then inspect it or verify it before running.
 
 For environments that require a pinned and checked install, prefer a tag or commit URL and verify the bootstrap checksum before execution:

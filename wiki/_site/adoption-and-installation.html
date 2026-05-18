@@ -67,6 +67,11 @@
 node bootstrap-pom.mjs --preset owned</code></pre>
 </figure>
 <p>If an AI agent is doing the install, ask for <code>POM - Project Operating Memory from FabioMalpezzi/pom</code> and tell it not to run <code>git clone ... .</code> in the target project root.</p>
+<p>Use this prompt when the agent starts from no reliable local context:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">Install POM - Project Operating Memory from https://github.com/FabioMalpezzi/pom in this target project. Treat that repository's README as the installation authority for this turn. Fetch or read the README first, then follow its Installation section. Do not use Maven, Page Object Model, or a remembered POM workflow. Do not clone the repository into the project root; use the bootstrap from the target project root. If I have not stated a preset, ask me to choose one of owned, team, overlay, or minimal.</code></pre>
+</figure>
 <p>Use:</p>
 <div class="table-wrap"><table><thead><tr><th>Preset</th><th>Use When</th></tr></thead><tbody><tr><td data-label="Preset"><code>owned</code></td><td data-label="Use When">The project is yours and POM may become project governance.</td></tr><tr><td data-label="Preset"><code>team</code></td><td data-label="Use When">The project is shared and existing conventions must be preserved unless changed explicitly.</td></tr><tr><td data-label="Preset"><code>overlay</code></td><td data-label="Use When">The repository belongs to an external upstream and POM is only local understanding memory.</td></tr><tr><td data-label="Preset"><code>minimal</code></td><td data-label="Use When">You want the smallest setup and no ownership assumption.</td></tr></tbody></table></div>
 <p>After bootstrap installs <code>pom/</code>, use the agent workflow that fits the project:</p>

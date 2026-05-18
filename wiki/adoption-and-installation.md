@@ -27,6 +27,12 @@ node bootstrap-pom.mjs --preset owned
 
 If an AI agent is doing the install, ask for `POM - Project Operating Memory from FabioMalpezzi/pom` and tell it not to run `git clone ... .` in the target project root.
 
+Use this prompt when the agent starts from no reliable local context:
+
+```text
+Install POM - Project Operating Memory from https://github.com/FabioMalpezzi/pom in this target project. Treat that repository's README as the installation authority for this turn. Fetch or read the README first, then follow its Installation section. Do not use Maven, Page Object Model, or a remembered POM workflow. Do not clone the repository into the project root; use the bootstrap from the target project root. If I have not stated a preset, ask me to choose one of owned, team, overlay, or minimal.
+```
+
 Use:
 
 | Preset | Use When |
