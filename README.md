@@ -333,6 +333,8 @@ In the common Git-managed install, `pom/` is a full checkout of the POM Source a
 
 On a new project, the root may initially contain only `pom/`, agent instructions, `package.json`, `pom-update.mjs`, and `pom.config.json`. That is a valid day-zero state: create `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or the configured decisions root only when the selected adoption profile enables them or current work needs them.
 
+If a new project has no application infrastructure yet, POM must not infer the stack, source layout, package manager, deployment model, database, authentication system, test framework, or hosting strategy on its own. Treat infrastructure as a project decision: ask the user how they want it realized, or create analysis and Draft ADRs for the alternatives, before scaffolding code or committing to a technical structure.
+
 ```text
 my-project/
   pom/                  <- POM method (this repository)

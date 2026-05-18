@@ -24,6 +24,8 @@ In a target project, `pom/` is the POM Source. It may contain `.git`, `README.md
 The error case is POM Source files at the target root, for example `WIKI_METHOD.md`, `prompts/`, `skills/`, `templates/`, and `scripts/install-pom.ts` beside project files.
 If the root has only `pom/`, `AGENTS.md`, `package.json`, `pom-update.mjs`, `pom.config.json`, and optional agent folders, treat it as a day-zero project. Read `pom.config.json`, report that project memory has not started yet, and create no `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or configured decisions root unless the active profile enables them or current work needs them.
 
+If a day-zero project has no application infrastructure yet, do not choose or scaffold the technical implementation on your own. Ask how the user wants to realize the project, or create analysis and Draft ADRs for the alternatives, before selecting source layout, package manager, runtime/framework, database, authentication, deployment, or test framework.
+
 ## Principle
 
 There is no single source of truth for everything. Each domain has its own authoritative source:

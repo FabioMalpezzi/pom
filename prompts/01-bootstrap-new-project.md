@@ -18,6 +18,17 @@ If the repository root contains only an installed POM baseline (`pom/`, supporte
 
 For a day-zero project, read `pom.config.json`, state which modules are enabled, optional, or disabled, and do not create `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or the configured decisions root unless the active adoption profile enables them or current work needs them.
 
+If the project has no application infrastructure yet, do not choose or scaffold the technical implementation on your own. Ask how the user wants to realize the project before selecting:
+- source layout (`src/`, `apps/`, `packages/`, `services/`, frontend/backend split);
+- package manager and build tool;
+- runtime/framework/language choices;
+- database/storage;
+- authentication and authorization;
+- deployment/hosting;
+- test framework and test layout.
+
+When the user has not decided yet, create analysis and Draft ADRs for the alternatives instead of committing the repository to a technical structure. Scaffolding source code is allowed only after the relevant infrastructure decisions are explicit or the user asks for a disposable prototype.
+
 Adoption profiles:
 - minimal: agent instruction hook + package scripts + `pom.config.json`; no wiki, docs, analysis, mockups, or tests.
 - wiki: minimal + `wiki/index.md` and `wiki/log.md` for persistent project knowledge.
