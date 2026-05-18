@@ -17,6 +17,8 @@
  * Scenario 12: installer leaves the POM source repo untouched when pom/ is a symlink
  * Scenario 13: pom-update leaves the POM source repo untouched when pom/ is a symlink
  * Scenario 14: bootstrap stops when run from the POM Source root
+ * Scenario 15: installer initializes Git and installs the hook in a new target root
+ * Scenario 16: installer does not create nested Git or parent hook from a subdirectory target
  */
 
 import { execFileSync } from "node:child_process";
@@ -102,6 +104,8 @@ function scenario1() {
     const packageJson = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
     assert("package.json contains pom:update", packageJson.scripts["pom:update"] === "node pom-update.mjs", "pom:update script missing");
     assert("pom-update.mjs exists", existsSync(join(dir, "pom-update.mjs")), "pom-update.mjs not installed");
+    assert("installer initializes Git", existsSync(join(dir, ".git")), ".git should be created for a new target project");
+    assert("installer installs pre-commit hook", readFileSync(join(dir, ".git", "hooks", "pre-commit"), "utf8").includes("POM pre-commit"), "POM hook missing");
   } finally {
     cleanup(dir);
   }
@@ -577,6 +581,49 @@ function scenario14() {
   }
 }
 
+function scenario15() {
+  console.log("\nScenario 15: installer initializes Git and installs the hook in a new target root");
+  const dir = createTempProject();
+  try {
+    const stdout = execFileSync(
+      "node",
+      ["--experimental-strip-types", "pom/scripts/install-pom.ts", "--profile", "minimal"],
+      { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    const hookPath = join(dir, ".git", "hooks", "pre-commit");
+    assert("installer reports Git initialization", stdout.includes("Initialized Git repository"), stdout);
+    assert("target root has Git repository", existsSync(join(dir, ".git")), ".git missing");
+    assert("target root has POM pre-commit hook", readFileSync(hookPath, "utf8").includes("POM pre-commit"), "POM hook missing");
+  } finally {
+    cleanup(dir);
+  }
+}
+
+function scenario16() {
+  console.log("\nScenario 16: installer does not create nested Git or parent hook from a subdirectory target");
+  const parent = mkdtempSync(join(tmpdir(), "pom-nested-git-test-"));
+  const appDir = join(parent, "app");
+  try {
+    execFileSync("git", ["init"], { cwd: parent, stdio: "pipe" });
+    mkdirSync(appDir);
+    execFileSync("ln", ["-s", POM_ROOT, join(appDir, "pom")]);
+
+    const stdout = execFileSync(
+      "node",
+      ["--experimental-strip-types", "pom/scripts/install-pom.ts", "--profile", "minimal"],
+      { cwd: appDir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    assert("installer reports enclosing worktree", stdout.includes("inside an existing Git worktree"), stdout);
+    assert("installer reports skipped hook", stdout.includes("Git hook not installed automatically"), stdout);
+    assert("target subdirectory has no nested .git", !existsSync(join(appDir, ".git")), "nested .git should not be created");
+    assert("parent hook was not installed from subdirectory", !existsSync(join(parent, ".git", "hooks", "pre-commit")), "parent hook should not be installed");
+  } finally {
+    cleanup(parent);
+  }
+}
+
 console.log("SPEC-0001 Completion Verification Tests");
 console.log("========================================");
 
@@ -587,6 +634,8 @@ console.log("========================================");
 scenario12();
 scenario13();
 scenario14();
+scenario15();
+scenario16();
 scenario1();
 scenario2();
 scenario3();

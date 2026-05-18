@@ -8,7 +8,7 @@ I want to set up this repository with POM - Project Operating Memory.
 Before modifying files:
 1. analyze the current repository structure;
 2. check whether the repository is under Git;
-3. if it is not under Git, propose `git init` before applying POM structurally;
+3. if it is not under Git, initialize Git before applying POM structurally; the installer does this automatically during setup;
 4. if POM is installed as `pom/`, prefer `npm run pom:init -- --preset minimal` to install/reconfigure POM and `npm run pom:update` to update an existing installation;
 5. explain and propose an adoption profile before creating folders;
 6. propose a minimal, non-invasive structure based on that profile;
@@ -96,7 +96,7 @@ If documentation lint should be enabled:
 - collect the user's preferences for `docs/doc` and source roots (`src`, `apps`, `packages`, `services`, etc.) before configuring `documentation` and `source`;
 - if `npm run pom:lint` or `npm run pom:update` does not exist and POM is installed as `pom/`, run or propose `npm run pom:init -- --preset minimal`;
 - if lint is installed, document the command in `package.json`, `README.md`, and project agent instruction files;
-- propose a pre-commit hook only after lint passes at least once.
+- if the installer could not install a pre-commit hook because the target is a subdirectory inside a larger Git worktree, document the manual hook step only after lint passes at least once.
 
 When I approve, create only the minimum necessary structure and document:
 - operating rules in supported project agent instruction files;

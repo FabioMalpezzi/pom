@@ -8,7 +8,7 @@ I want to apply POM - Project Operating Memory to this existing repository witho
 Before modifying files:
 1. read the repository structure;
 2. check Git status with `git status`;
-3. if the repository is not under Git, propose `git init` before reorganizations or structural governance;
+3. if the repository is not under Git, initialize Git before reorganizations or structural governance; the installer does this automatically during setup;
 4. classify or ask the user's relationship to the repository: `owned`, `team`, or `external_overlay`;
 5. identify existing folders and their roles;
 6. propose an adoption profile that fits the existing project;
@@ -80,7 +80,7 @@ After approval:
 - configure `documentation.officialRoot`, `documentation.existingRoots`, and `source.roots` according to the existing structure or the user's approved preference;
 - create or update wiki index/log using the `WIKI_*` templates, if the wiki is enabled;
 - if `npm run pom:lint` or `npm run pom:update` does not exist and POM is installed as `pom/`, run or propose `npm run pom:init -- --preset team`, or `--preset owned` / `--preset overlay` when that relationship was explicitly selected;
-- if lint is added, document command, config, and pre-commit hook only after a first successful run;
+- if lint is added, document command and config after a first successful run; document manual pre-commit hook steps only when the installer could not install the hook automatically;
 - run `npm run pom:lint`, if available;
 - do not delete existing material.
 ```

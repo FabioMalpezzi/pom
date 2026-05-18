@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
+import { execFileSync } from "node:child_process";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { pullPomIfGitRepo } from "./lib/install-git.ts";
 
 const ROOT = process.cwd();
@@ -106,6 +107,12 @@ type OwnershipConfig = {
 type PackageJson = {
   scripts?: Record<string, string>;
   [key: string]: unknown;
+};
+
+type GitContext = {
+  insideWorkTree: boolean;
+  topLevel?: string;
+  isProjectRoot: boolean;
 };
 
 const profiles: Record<ProfileName, { label: string; description: string; adoption: AdoptionConfig }> = {
@@ -257,6 +264,48 @@ function readText(path: string): string {
 
 function writeText(path: string, content: string): void {
   writeFileSync(join(ROOT, path), content);
+}
+
+function resolveRootPath(path: string): string {
+  return isAbsolute(path) ? path : join(ROOT, path);
+}
+
+function runGit(args: string[]): string | undefined {
+  try {
+    return execFileSync("git", args, {
+      cwd: ROOT,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  } catch {
+    return undefined;
+  }
+}
+
+function getGitContext(): GitContext {
+  const inside = runGit(["rev-parse", "--is-inside-work-tree"]);
+  if (inside !== "true") {
+    return { insideWorkTree: false, isProjectRoot: false };
+  }
+
+  const topLevel = runGit(["rev-parse", "--show-toplevel"]);
+  const isProjectRoot = topLevel ? resolve(topLevel) === resolve(ROOT) : false;
+  return { insideWorkTree: true, topLevel, isProjectRoot };
+}
+
+function ensureGitRepository(): GitContext {
+  const current = getGitContext();
+  if (current.insideWorkTree) {
+    if (!current.isProjectRoot && current.topLevel) {
+      console.log(`Target project root is inside an existing Git worktree at ${current.topLevel}.`);
+      console.log("POM will not create a nested Git repository or install a pre-commit hook automatically from this subdirectory.");
+    }
+    return current;
+  }
+
+  execFileSync("git", ["init"], { cwd: ROOT, stdio: "pipe" });
+  console.log("Initialized Git repository in the target project root.");
+  return getGitContext();
 }
 
 function ensureDir(path: string): void {
@@ -518,13 +567,25 @@ function upsertPackageScripts(): void {
 }
 
 function installPreCommitHook(): void {
-  if (!pathExists(".git/hooks")) {
-    console.log("Git hooks not installed: .git/hooks not found. Run git init first if you want the POM pre-commit hook.");
+  const gitContext = getGitContext();
+  if (!gitContext.insideWorkTree) {
+    console.log("Git hooks not installed: target project is not in a Git worktree.");
+    return;
+  }
+  if (!gitContext.isProjectRoot) {
+    console.log("Git hook not installed automatically: target project root is not the Git worktree root.");
     return;
   }
 
-  const hookPath = ".git/hooks/pre-commit";
-  const current = pathExists(hookPath) ? readText(hookPath) : "#!/bin/sh\n";
+  const hookGitPath = runGit(["rev-parse", "--git-path", "hooks/pre-commit"]);
+  if (!hookGitPath) {
+    console.log("Git hook not installed automatically: could not resolve the Git hook path.");
+    return;
+  }
+
+  const hookPath = resolveRootPath(hookGitPath);
+  mkdirSync(dirname(hookPath), { recursive: true });
+  const current = existsSync(hookPath) ? readFileSync(hookPath, "utf8") : "#!/bin/sh\n";
   const hookBlock = `${HOOK_START_MARKER}
 echo "POM pre-commit: running npm run pom:lint"
 npm run pom:lint
@@ -550,12 +611,12 @@ ${HOOK_END_MARKER}`;
     : `${current.trimEnd()}\n\n${hookBlock}\n`;
 
   if (next !== current) {
-    writeText(hookPath, next);
-    chmodSync(join(ROOT, hookPath), 0o755);
-    console.log("Installed or updated .git/hooks/pre-commit with POM checks.");
+    writeFileSync(hookPath, next);
+    chmodSync(hookPath, 0o755);
+    console.log("Installed or updated Git pre-commit hook with POM checks.");
   } else {
-    chmodSync(join(ROOT, hookPath), 0o755);
-    console.log(".git/hooks/pre-commit already contains the current POM block.");
+    chmodSync(hookPath, 0o755);
+    console.log("Git pre-commit hook already contains the current POM block.");
   }
 }
 
@@ -944,6 +1005,8 @@ async function main(): Promise<void> {
   const profileName = selected.profile;
   const ownership = resolveOwnershipMode(preset?.ownership ?? ownershipArg ?? selected.ownership);
   const adoption = applyOwnershipDefaults(await customizeAdoption(profiles[profileName].adoption), ownership);
+
+  ensureGitRepository();
 
   if (adoption.profile === "refresh") {
     pullPomIfGitRepo(ROOT);

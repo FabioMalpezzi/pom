@@ -168,10 +168,11 @@ The bootstrap script:
 
 - clones POM into `pom/` (or pulls if it already exists);
 - runs the installer using the selected preset;
+- initializes Git in the target project root when the target is not already inside a Git worktree;
 - lets advanced users choose an adoption profile directly (minimal, wiki, decisions, full, adopt, refresh, custom);
 - updates the POM section in every existing supported agent instruction file, or creates `AGENTS.md` if none exists;
 - creates `package.json` scripts, `pom-update.mjs`, `pom.config.json`, and governance folders based on the chosen profile.
-- installs or updates `.git/hooks/pre-commit` with POM checks when the project is a Git repository.
+- installs or updates the Git pre-commit hook with POM checks when the target project root is the Git worktree root.
 
 You can also pass a profile directly for advanced use:
 
@@ -370,7 +371,9 @@ Use the skill that matches your situation (see Quickstart table above). The agen
 
 ### Pre-commit hook
 
-When `.git/hooks/` exists, `pom:init` installs a managed POM block in `.git/hooks/pre-commit`.
+`pom:init` initializes Git in the target project root when the target is not already inside a Git worktree. When the target project root is the Git worktree root, it installs a managed POM block in the resolved Git `pre-commit` hook path.
+
+If the target project is a subdirectory inside a larger Git worktree, `pom:init` does not create a nested repository and does not install a hook automatically. Install POM from the Git root, or adapt the hook manually so it runs the target project's `npm run pom:lint` from the correct directory.
 
 The hook:
 
@@ -514,7 +517,7 @@ Rules:
 - Git keeps fine-grained history for specs, ADRs, wiki pages, and code;
 - do not duplicate detailed history inside ADRs, specs, or `PROJECT_STATE.md`;
 - check `git status` before major reorganizations;
-- if the project is not under Git, propose `git init` before applying POM structurally;
+- if the project is not under Git, initialize Git before applying POM structurally; the installer does this automatically during setup;
 - after structural changes, run available lint/tests and create a descriptive commit.
 
 ### Branching Policy

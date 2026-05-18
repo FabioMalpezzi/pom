@@ -74,11 +74,14 @@ The bootstrap script:
 
 - clones or updates POM under `pom/`;
 - runs the installer with the chosen preset;
+- initializes Git in the target project root when the target is not already inside a Git worktree;
 - creates or updates `pom.config.json`;
 - creates package scripts such as `pom:init`, `pom:update`, `pom:help`, and `pom:lint`;
 - updates supported agent instruction files, or creates `AGENTS.md` when none exists;
 - creates governance folders only when the selected profile needs them;
-- installs or updates the Git pre-commit hook when the project is a Git repository.
+- installs or updates the Git pre-commit hook when the target project root is the Git worktree root.
+
+If the target project is a subdirectory inside a larger Git worktree, POM does not create a nested repository and does not install a hook automatically. Install from the Git root, or adapt the hook manually so it runs the target project's `npm run pom:lint` from the correct directory.
 
 In a Git-managed install, `pom/` is a full checkout of the POM Source and may contain `.git`, `README.md`, `AGENTS.MD`, `bootstrap-pom.mjs`, and `package.json`. That is expected. The wrong layout is POM Source files directly at the target project root.
 

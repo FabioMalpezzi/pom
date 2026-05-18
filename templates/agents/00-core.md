@@ -49,7 +49,8 @@ POM requires Git for history, rollback, and comparison between versions.
 Rules:
 
 - check `git status` before structural changes or experiments;
-- if the project is not under Git, propose `git init` before applying POM structurally;
+- if the project is not under Git, initialize Git before applying POM structurally; the installer does this automatically during setup;
+- if this project is a subdirectory inside a larger Git worktree, do not create a nested repository without approval;
 - leave fine-grained history of specs, ADRs, wiki pages, and code to Git;
 - do not add manual changelogs to specs/ADRs unless explicitly requested;
 - after structural changes, run available lint/tests and create a descriptive commit if required by the workflow.
