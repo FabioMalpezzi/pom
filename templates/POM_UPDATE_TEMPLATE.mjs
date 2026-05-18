@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, lstatSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, relative } from "node:path";
 
@@ -243,7 +243,18 @@ function updateVendoredPom() {
   }
 }
 
+function pomIsSymbolicLink() {
+  return existsSync(POM_DIR) && lstatSync(POM_DIR).isSymbolicLink();
+}
+
 function updatePom() {
+  // When pom/ is a symlink (integration tests, developer setups linking a
+  // local POM clone into a target), checkout/pull or rm+copy would mutate
+  // the linked source repo rather than update an installation.
+  if (pomIsSymbolicLink()) {
+    console.log("pom/ is a symbolic link; skipping framework update to avoid mutating the linked source.");
+    return;
+  }
   if (pomHasOwnGitMetadata()) {
     ensurePomIsCleanGitCheckout();
     updateGitPom();

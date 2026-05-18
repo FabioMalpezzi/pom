@@ -14,6 +14,8 @@
  * Scenario 9: pom:update rejects adoption mode changes
  * Scenario 10: bootstrap without preset does not install implicitly
  * Scenario 11: non-interactive init without preset does not install implicitly
+ * Scenario 12: installer leaves the POM source repo untouched when pom/ is a symlink
+ * Scenario 13: pom-update leaves the POM source repo untouched when pom/ is a symlink
  */
 
 import { execFileSync } from "node:child_process";
@@ -416,9 +418,131 @@ function scenario11() {
   }
 }
 
+function scenario12() {
+  console.log("\nScenario 12: installer leaves POM source untouched when pom/ is a symlink");
+  // When pom/ in the target project is a symbolic link to the POM source
+  // repository (typical of integration tests, and of developer setups where a
+  // local POM clone is linked into a target), the installer must not run git
+  // checkout or git pull on it: that would mutate the linked source repo.
+  const dir = createTempProject();
+  try {
+    const branchBefore = execFileSync("git", ["-C", POM_ROOT, "rev-parse", "--abbrev-ref", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+    const headBefore = execFileSync("git", ["-C", POM_ROOT, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+
+    let result;
+    try {
+      const stdout = execFileSync(
+        "node",
+        ["--experimental-strip-types", "pom/scripts/install-pom.ts", "--profile", "refresh"],
+        { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+      );
+      result = { status: 0, stdout };
+    } catch (error) {
+      result = { status: error.status ?? 1, stdout: error.stdout?.toString() ?? "" };
+    }
+
+    const branchAfter = execFileSync("git", ["-C", POM_ROOT, "rev-parse", "--abbrev-ref", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+    const headAfter = execFileSync("git", ["-C", POM_ROOT, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+
+    assert("installer exits cleanly on refresh profile", result.status === 0, result.stdout);
+    assert(
+      "installer announces it is skipping the symlink",
+      result.stdout.includes("symbolic link"),
+      result.stdout,
+    );
+    assert(
+      "POM source branch is unchanged after the installer ran",
+      branchBefore === branchAfter,
+      `branch before=${branchBefore} after=${branchAfter}`,
+    );
+    assert(
+      "POM source HEAD commit is unchanged after the installer ran",
+      headBefore === headAfter,
+      `head before=${headBefore} after=${headAfter}`,
+    );
+  } finally {
+    cleanup(dir);
+  }
+}
+
+function scenario13() {
+  console.log("\nScenario 13: pom-update leaves POM source untouched when pom/ is a symlink");
+  // Symmetric to scenario 12 but for pom-update.mjs: when pom/ in a target
+  // is a symlink to the POM source repo, running pom-update must not run
+  // git checkout/pull or rm+copy on it, otherwise it would mutate the linked
+  // source rather than update a target installation.
+  const dir = createTempProject();
+  try {
+    writeFileSync(
+      join(dir, "pom-update.mjs"),
+      readFileSync(join(POM_ROOT, "templates", "POM_UPDATE_TEMPLATE.mjs"), "utf8"),
+    );
+
+    const branchBefore = execFileSync("git", ["-C", POM_ROOT, "rev-parse", "--abbrev-ref", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+    const headBefore = execFileSync("git", ["-C", POM_ROOT, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+
+    let result;
+    try {
+      const stdout = execFileSync("node", ["pom-update.mjs"], {
+        cwd: dir,
+        encoding: "utf8",
+        env: { ...process.env, POM_LANG: "en" },
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      result = { status: 0, stdout };
+    } catch (error) {
+      result = { status: error.status ?? 1, stdout: error.stdout?.toString() ?? "" };
+    }
+
+    const branchAfter = execFileSync("git", ["-C", POM_ROOT, "rev-parse", "--abbrev-ref", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+    const headAfter = execFileSync("git", ["-C", POM_ROOT, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+
+    assert("pom-update exits cleanly", result.status === 0, result.stdout);
+    assert(
+      "pom-update announces it is skipping the symlink",
+      result.stdout.includes("symbolic link"),
+      result.stdout,
+    );
+    assert(
+      "POM source branch is unchanged after pom-update ran",
+      branchBefore === branchAfter,
+      `branch before=${branchBefore} after=${branchAfter}`,
+    );
+    assert(
+      "POM source HEAD commit is unchanged after pom-update ran",
+      headBefore === headAfter,
+      `head before=${headBefore} after=${headAfter}`,
+    );
+  } finally {
+    cleanup(dir);
+  }
+}
+
 console.log("SPEC-0001 Completion Verification Tests");
 console.log("========================================");
 
+// Scenarios 12 and 13 must run first: they assert that neither the installer
+// nor pom-update mutates the POM source repo when pom/ is a symlink. Scenarios
+// that exercise `--profile refresh` or update flows (e.g. scenario3) would
+// otherwise have moved the branch before they could observe the unmoved state.
+scenario12();
+scenario13();
 scenario1();
 scenario2();
 scenario3();
