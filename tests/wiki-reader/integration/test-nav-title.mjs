@@ -92,9 +92,9 @@ Long page title, short navigation title.
     assert("search index carries page navTitle", first?.navTitle === "Short Index", JSON.stringify(first));
     assert("search index carries capability navTitle", second?.navTitle === "Architecture", JSON.stringify(second));
     assert("same-directory wiki markdown links become reader html links", html.includes('href="capability-long.html"'), html);
-    assert("parent-directory markdown links stay markdown links", html.includes('href="../analysis/source.md"'), html);
-    assert("root markdown links stay markdown links", html.includes('href="../README.md"'), html);
-    assert("non-html source links open in a new page", html.includes('href="../analysis/source.md" target="_blank" rel="noopener noreferrer"'), html);
+    assert("parent-directory markdown links stay markdown links", html.includes('href="../../analysis/source.md"'), html);
+    assert("root markdown links stay markdown links", html.includes('href="../../README.md"'), html);
+    assert("non-html source links open in a new page", html.includes('href="../../analysis/source.md" target="_blank" rel="noopener noreferrer"'), html);
     assert("same-directory reader html links stay in the reader page", !html.includes('href="capability-long.html" target="_blank"'), html);
     assert("outline groups h3 headings under collapsible h2 sections", html.includes('<details class="outline-section" open>') && html.includes('href="#child-section"'), html);
   } finally {

@@ -553,7 +553,8 @@ function shouldOpenInNewPage(href) {
 }
 
 function rewriteHref(href) {
-  if (/^(https?:|mailto:)/.test(href) || href.startsWith("#") || href.startsWith("../") || href.startsWith("/")) {
+  if (href.startsWith("../")) return `../${href}`;
+  if (/^(https?:|mailto:)/.test(href) || href.startsWith("#") || href.startsWith("/")) {
     return href;
   }
   return href.replace(/\.md($|#)/, ".html$1");
