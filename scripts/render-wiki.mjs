@@ -581,11 +581,7 @@ function renderPage(page, pages, config) {
     })
     .join("\n");
 
-  const outline = page.outline.length
-    ? page.outline
-        .map((heading) => `<a class="level-${heading.level}" href="#${heading.id}">${escapeHtml(heading.text)}</a>`)
-        .join("\n")
-    : `<span class="empty-outline">No page sections</span>`;
+  const outline = renderOutline(page.outline);
 
   const index = pages.findIndex((item) => item.output === page.output);
   const previous = pages[index - 1];
@@ -653,6 +649,47 @@ function renderPage(page, pages, config) {
 </body>
 </html>
 `;
+}
+
+function renderOutline(outline) {
+  if (!outline.length) return `<span class="empty-outline">No page sections</span>`;
+
+  const blocks = [];
+  let current = null;
+
+  const flushCurrent = () => {
+    if (!current) return;
+    blocks.push(renderOutlineBlock(current.heading, current.children));
+    current = null;
+  };
+
+  for (const heading of outline) {
+    if (heading.level <= 2) {
+      flushCurrent();
+      current = { heading, children: [] };
+    } else if (current) {
+      current.children.push(heading);
+    } else {
+      blocks.push(renderOutlineLink(heading));
+    }
+  }
+
+  flushCurrent();
+  return blocks.join("\n");
+}
+
+function renderOutlineBlock(heading, children) {
+  if (!children.length) return renderOutlineLink(heading);
+  return `<details class="outline-section" open>
+    <summary>${renderOutlineLink(heading)}</summary>
+    <div class="outline-children">
+      ${children.map(renderOutlineLink).join("\n")}
+    </div>
+  </details>`;
+}
+
+function renderOutlineLink(heading) {
+  return `<a class="level-${heading.level}" href="#${heading.id}">${escapeHtml(heading.text)}</a>`;
 }
 
 function renderPager(previous, next) {
