@@ -449,22 +449,26 @@ Design and analysis must rely on the current state of code and documents, never 
 
 ### File Size And Static Analysis
 
-Source files must remain readable and verifiable by automated tooling.
+Source files should remain readable and verifiable by automated tooling. POM enforces a structural limit on file size; surrounding tooling is recommended, not imposed.
 
-- **Hard cap at 1000 lines.** No code file should exceed 1000 lines. Above that, split it along a natural seam.
+- **Hard cap at 1000 lines.** No code file should exceed 1000 lines. Above that, split it along a natural seam. This is a POM rule.
 - **Aim for under 800.** Treat 800 lines as the working target.
 - **Cap applies to hand-written source.** Generated code, large fixtures, and data dumps are exempt.
-- **Use a linter.** Configure a language-appropriate linter and run it as part of the routine cycle.
-- **Use a type checker.** When the language and environment support it, configure a type checker alongside the linter.
+- **Recommended: configure a linter.** POM does not bundle one. Target projects are encouraged to add a language-appropriate linter and run it as part of the routine cycle.
+- **Recommended: configure a type checker.** When the language and environment support it, target projects are encouraged to add a type checker alongside the linter.
 
 ### Complexity Standards
 
-Code complexity must stay within the conventions of the language and the architecture chosen for the project.
+Code complexity should stay within the conventions of the language and the architecture chosen for the project. POM proposes the guardrails below; the target project owns their installation and threshold tuning.
 
-- **Configure a complexity checker.** Use a language-appropriate tool (e.g. ESLint `complexity`/`sonarjs`, `gocyclo`, `radon`, `pmd`, `checkstyle`) with binding thresholds, not advisory ones.
+- **Recommended: configure a complexity checker.** Suggested tools include ESLint `complexity`/`sonarjs`, `gocyclo`, `radon`, `pmd`, `checkstyle`. When adopted, prefer binding thresholds over advisory ones so they actually shape merges.
 - **Architectural boundaries are limits too.** When the project adopts a style (layered, hexagonal, clean, MVC), respect its layer boundaries, allowed dependencies, and module sizes.
 - **Refactor before exception.** When a unit crosses the threshold, split it before merging. Bypassing the limit requires an explicit decision recorded in an ADR.
 - **Tests are not exempt.** Excessive complexity in tests indicates a design problem in the code; address the cause.
+
+### Continuous Integration
+
+CI is optional. POM runs entirely on local commands and the pre-commit hook; nothing breaks if a project never sets up a remote pipeline. When the target project does want CI, see `pom/templates/CI_GUIDE_TEMPLATE.md` for provider-agnostic snippets (GitHub Actions, GitLab CI, CircleCI, generic shell). POM does not install or generate workflow files; the template is a starting point the project copies and adapts.
 
 ## Git And History
 
@@ -867,7 +871,7 @@ For existing projects, existing structures do not have to be moved into canonica
 
 Example: a project can enable decisions while keeping ADRs under `doc/architecture/ADR-###-*.md`. If existing documents use a legacy format, relax only the necessary checks, such as `decisions.requireTemplateSections: false`, while preserving or gradually improving the documents.
 
-If generators increase or become expensive, keep them in dedicated commands rather than hiding them inside lint. The lightweight wiki reader is the exception: `pom:lint` refreshes it only when Markdown pages under `wiki/` changed. In version `0.1.0`, the supported commands are `pom:init`, `pom:update`, `pom:help`, `pom:lint`, and `pom:wiki:render`.
+If generators increase or become expensive, keep them in dedicated commands rather than hiding them inside lint. The lightweight wiki reader is the exception: `pom:lint` refreshes it only when Markdown pages under `wiki/` changed. In version `0.1.0`, the commands installed in target projects are `pom:init`, `pom:update`, `pom:help`, `pom:lint`, and `pom:wiki:render`. The POM source repository also exposes `pom:test`, which runs the integration suite under `tests/<area>/integration/*.mjs`; this command is intentionally not propagated to target projects.
 
 ## Porting Lint To Another Project
 
@@ -905,6 +909,7 @@ Canonical templates:
 |---|---|
 | `ADR_TEMPLATE.md` | decision record |
 | `AGENTS_POM_SECTION_TEMPLATE.md` | POM section for agent instruction files |
+| `CI_GUIDE_TEMPLATE.md` | optional CI starting point (GitHub Actions, GitLab CI, CircleCI, generic shell) |
 | `CURRENT_PLAN_TEMPLATE.md` | short roadmap and current activities |
 | `POM_CONFIG_TEMPLATE.json` | portable documentation lint config |
 | `EXPERIMENT_TEMPLATE.md` | versioned experiment or one-shot work |

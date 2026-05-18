@@ -90,26 +90,35 @@ documents, never on a recollection of them.
 ## File Size And Static Analysis
 
 Source files must remain readable and verifiable by automated
-tooling.
+tooling. POM enforces structural limits on the files it ships;
+the surrounding tooling is recommended, not imposed.
 
 - **Hard cap at 1000 lines.** No code file should exceed 1000
-  lines. Above that, split it along a natural seam.
+  lines. Above that, split it along a natural seam. This is a
+  POM rule and applies to the POM repository itself.
 - **Aim for under 800.** Treat 800 lines as the working target.
 - **Cap applies to hand-written source.** Generated code, large
   fixtures, and data dumps are exempt.
-- **Use a linter.** Configure a language-appropriate linter and
-  run it as part of the routine cycle.
-- **Use a type checker.** When the language and environment
-  support it, configure a type checker alongside the linter.
+- **Recommended: configure a linter.** POM does not bundle one,
+  and the POM repository does not install a linter just to satisfy
+  this rule. Target projects are encouraged to add a
+  language-appropriate linter and run it as part of the routine
+  cycle.
+- **Recommended: configure a type checker.** When the language and
+  environment support it, target projects are encouraged to add a
+  type checker alongside the linter.
 
 ## Complexity Standards
 
-Code complexity must stay within the conventions of the language
-and the architecture chosen for the project.
+Code complexity should stay within the conventions of the language
+and the architecture chosen for the project. POM proposes the
+guardrails below; the target project owns their installation and
+threshold tuning.
 
-- **Configure a complexity checker.** Use a language-appropriate
-  tool (e.g. ESLint `complexity`/`sonarjs`, `gocyclo`, `radon`,
-  `pmd`, `checkstyle`) with binding thresholds, not advisory ones.
+- **Recommended: configure a complexity checker.** Suggested tools
+  include ESLint `complexity`/`sonarjs`, `gocyclo`, `radon`, `pmd`,
+  `checkstyle`. When adopted, prefer binding thresholds over
+  advisory ones so they actually shape merges.
 - **Architectural boundaries are limits too.** When the project
   adopts a style (layered, hexagonal, clean, MVC), respect its
   layer boundaries, allowed dependencies, and module sizes.

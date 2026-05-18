@@ -33,6 +33,7 @@ Use this skill when governance rules, lint configuration, or agent operating rul
 - `pom/templates/POM_CONFIG_TEMPLATE.json`
 - `pom/templates/ADR_TEMPLATE.md`
 - `pom/templates/MOCK_MANIFEST_TEMPLATE.md`
+- `pom/templates/CI_GUIDE_TEMPLATE.md` — optional continuous integration starting point (provider-agnostic snippets)
 
 ## Config
 

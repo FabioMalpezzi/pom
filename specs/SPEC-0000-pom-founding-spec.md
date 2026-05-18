@@ -3,7 +3,8 @@
 | Field | Value |
 |---|---|
 | Date | 2026-05-02 |
-| Status | Draft |
+| Status | Accepted |
+| Accepted on | 2026-05-18 |
 | Area | governance |
 | Summary | Founding spec: declares what POM is, why it exists, and which requirements all other specs, decisions, and prompts must respect |
 
@@ -163,6 +164,16 @@ If any truth does not hold, the spec cannot be accepted.
 ### Exception
 
 Exception reason: none.
+
+### Acceptance Note (2026-05-18)
+
+The completion verification gate is satisfied:
+
+- the four goal-backward truths are checked against the current state of README.md, AGENTS.MD, templates/, prompts/, skills/, scripts/install-pom.ts, and templates/POM_CONFIG_TEMPLATE.json;
+- four theses prove the validity of the three-pillar model, the completion gate, the adoption profile, and the alive-not-museum rule;
+- three antitheses are confuted in writing and no antithesis remains open.
+
+The status moves from Draft to Accepted on this basis. Fine-grained chronology stays in Git per D7.
 
 ## Sources And Decisions
 
