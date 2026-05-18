@@ -95,6 +95,12 @@ function printHelp(): void {
   console.log("   cat pom/skills/validate.md");
   console.log("   Show the validation skill used after significant work, before handoff or commit.");
   console.log("");
+  console.log("Source-only commands (POM repository itself, not installed in target projects):");
+  console.log("");
+  console.log("- npm run pom:test");
+  console.log("  Discover tests/<area>/integration/*.mjs and run them in sequence.");
+  console.log("  Defined only in the POM source package.json. The installer does not propagate it to targets.");
+  console.log("");
   console.log("Direct skill usage:");
   console.log("");
   console.log("  Ask the coding agent to use a POM skill, for example:");
@@ -158,6 +164,12 @@ function printHelpIt(): void {
   console.log("");
   console.log("7. Skill di validazione post-azione");
   console.log("   cat pom/skills/validate.md");
+  console.log("");
+  console.log("Comandi solo nel repo POM sorgente (non installati nei progetti target):");
+  console.log("");
+  console.log("- npm run pom:test");
+  console.log("  Scopre tests/<area>/integration/*.mjs e li esegue in sequenza.");
+  console.log("  Definito solo nel package.json del repo POM. L'installer non lo propaga ai target.");
   console.log("");
   console.log("Uso diretto delle skill:");
   console.log("");

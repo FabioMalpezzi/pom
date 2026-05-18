@@ -346,6 +346,7 @@ function scenario9() {
       execFileSync("node", ["pom-update.mjs", "--preset", "overlay"], {
         cwd: dir,
         encoding: "utf8",
+        env: { ...process.env, POM_LANG: "en" },
         stdio: ["ignore", "pipe", "pipe"],
       });
       result = { status: 0, stderr: "" };
