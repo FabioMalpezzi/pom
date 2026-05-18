@@ -213,6 +213,19 @@ a:hover { color: var(--accent); }
   text-decoration: none;
 }
 
+#page-nav a {
+  max-height: calc((1.34em * 2) + 16px);
+  overflow: hidden;
+}
+
+@supports (-webkit-line-clamp: 2) {
+  #page-nav a {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+}
+
 #page-nav a[hidden] { display: none !important; }
 
 #page-nav a:hover,

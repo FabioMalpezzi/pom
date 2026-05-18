@@ -15,7 +15,7 @@ function updateSearch() {
   for (const link of links) {
     const href = link.getAttribute("href");
     const item = byOutput.get(href);
-    const haystack = normalize([link.dataset.title, item && item.summary, item && item.text].join(" "));
+    const haystack = normalize([link.dataset.title, link.dataset.navTitle, item && item.summary, item && item.text].join(" "));
     const match = !query || haystack.includes(query);
     link.hidden = !match;
     if (match) visible += 1;

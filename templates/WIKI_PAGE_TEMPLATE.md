@@ -1,3 +1,7 @@
+---
+navTitle: Page Title
+---
+
 # Page Title
 
 ## Summary

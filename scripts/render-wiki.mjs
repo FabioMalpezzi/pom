@@ -49,6 +49,7 @@ function main() {
 
   const searchIndex = pages.map((page) => ({
     title: page.title,
+    navTitle: page.navTitle,
     summary: page.summary,
     output: page.output,
     text: page.searchText,
@@ -134,19 +135,22 @@ function loadPages(config) {
 
   return files.map((file) => {
     const markdown = readFileSync(join(config.source, file), "utf8");
-    const title = extractTitle(markdown, file);
-    const summary = extractSummary(markdown);
-    const rendered = renderMarkdown(markdown, config);
+    const parsed = splitFrontmatter(markdown);
+    const title = extractTitle(parsed.body, file);
+    const navTitle = extractNavTitle(parsed.metadata, title);
+    const summary = extractSummary(parsed.body);
+    const rendered = renderMarkdown(parsed.body, config);
     return {
       file,
       slug: file.replace(/\.md$/, ""),
       output: file.replace(/\.md$/, ".html"),
       markdown,
       title,
+      navTitle,
       summary,
       body: rendered.html,
       outline: rendered.outline,
-      searchText: normalizeSearchText(`${title} ${summary} ${stripMarkdown(markdown)}`),
+      searchText: normalizeSearchText(`${title} ${navTitle} ${summary} ${stripMarkdown(parsed.body)}`),
     };
   });
 }
@@ -184,9 +188,42 @@ function rank(index) {
   return index === -1 ? 999 : index;
 }
 
+function splitFrontmatter(markdown) {
+  const normalized = markdown.replace(/\r\n/g, "\n");
+  const match = normalized.match(/^---\n([\s\S]*?)\n---[ \t]*\n?/);
+  if (!match) return { metadata: {}, body: markdown };
+  return { metadata: parseFrontmatter(match[1]), body: normalized.slice(match[0].length) };
+}
+
+function parseFrontmatter(rawMetadata) {
+  const metadata = {};
+  for (const line of rawMetadata.split("\n")) {
+    const match = line.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/);
+    if (!match) continue;
+    const key = match[1];
+    const value = unquoteYamlString(match[2].trim());
+    if (value) metadata[key] = value;
+  }
+  return metadata;
+}
+
+function unquoteYamlString(value) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
+    return value.slice(1, -1).trim();
+  }
+  return value.trim();
+}
+
 function extractTitle(markdown, file) {
   const match = markdown.match(/^#\s+(.+)$/m);
   return match ? match[1].trim() : basename(file, ".md");
+}
+
+function extractNavTitle(metadata, title) {
+  return metadata.navTitle || metadata.nav_title || title;
 }
 
 function extractSummary(markdown) {
@@ -526,7 +563,7 @@ function renderPage(page, pages, config) {
   const nav = pages
     .map((item) => {
       const active = item.output === page.output ? " aria-current=\"page\"" : "";
-      return `<a href="${item.output}" data-title="${escapeAttr(item.title)}"${active}>${escapeHtml(item.title)}</a>`;
+      return `<a href="${item.output}" data-title="${escapeAttr(item.title)}" data-nav-title="${escapeAttr(item.navTitle)}" title="${escapeAttr(item.title)}"${active}>${escapeHtml(item.navTitle)}</a>`;
     })
     .join("\n");
 
@@ -573,7 +610,7 @@ function renderPage(page, pages, config) {
     <main class="content">
       <article class="page">
         <header class="page-head">
-          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span>${escapeHtml(page.title)}</span></nav>
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span title="${escapeAttr(page.title)}">${escapeHtml(page.navTitle)}</span></nav>
           <p class="eyebrow">${escapeHtml(config.label)}</p>
           <h1>${escapeHtml(page.title)}</h1>
           <p class="dek">${escapeHtml(page.summary)}</p>
@@ -607,8 +644,8 @@ function renderPage(page, pages, config) {
 function renderPager(previous, next) {
   if (!previous && !next) return "";
   return `<nav class="page-pager" aria-label="Previous and next pages">
-    ${previous ? `<a class="pager-prev" href="${previous.output}"><span>Previous</span>${escapeHtml(previous.title)}</a>` : "<span></span>"}
-    ${next ? `<a class="pager-next" href="${next.output}"><span>Next</span>${escapeHtml(next.title)}</a>` : "<span></span>"}
+    ${previous ? `<a class="pager-prev" href="${previous.output}" title="${escapeAttr(previous.title)}"><span>Previous</span>${escapeHtml(previous.navTitle)}</a>` : "<span></span>"}
+    ${next ? `<a class="pager-next" href="${next.output}" title="${escapeAttr(next.title)}"><span>Next</span>${escapeHtml(next.navTitle)}</a>` : "<span></span>"}
   </nav>`;
 }
 
@@ -646,7 +683,7 @@ function updateSearch() {
   for (const link of links) {
     const href = link.getAttribute("href");
     const item = byOutput.get(href);
-    const haystack = normalize([link.dataset.title, item && item.summary, item && item.text].join(" "));
+    const haystack = normalize([link.dataset.title, link.dataset.navTitle, item && item.summary, item && item.text].join(" "));
     const match = !query || haystack.includes(query);
     link.hidden = !match;
     if (match) visible += 1;
