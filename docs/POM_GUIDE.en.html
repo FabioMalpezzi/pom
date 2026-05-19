@@ -62,7 +62,7 @@
         <a href="#why">Why it exists</a>
         <a href="#principles">Principles</a>
         <a href="#tools">Tools</a>
-        <a href="#workflow">Workflow</a>
+        <a href="#workflow">Practice</a>
         <a href="#install">Install</a>
         <a href="#overlay">Overlay</a>
         <a href="#adoption">Adoption</a>
@@ -73,19 +73,19 @@
   </header>
 
   <main class="wrap">
-    <section class="note" id="status">
-      <h2>This guide is explanatory</h2>
-      <p>This page helps a reader understand POM. It is not the operational rulebook. The canonical operating rules remain in <code>README.md</code>, <code>AGENTS.MD</code>, <code>prompts/</code>, <code>skills/</code>, and <code>templates/</code>.</p>
-      <p>The generated <a href="../wiki.html">POM Wiki Reader</a> is the browsable view of the root Persistent Wiki. Use it for current operating memory; use this page as an introductory guide.</p>
-      <p>To enable the wiki in a target project, install POM with a wiki-enabled profile or ask the agent to read <code>pom/skills/wiki.md</code> in build mode. Maintain the source in <code>wiki/*.md</code>: Markdown is the agent-readable operating memory, while <code>wiki.html</code> and the generated <code>wiki/_site/</code> pages are the human reader view. Running <code>npm run pom:lint</code> after wiki changes refreshes the HTML reader automatically when needed.</p>
-      <p>When POM changes, this guide should be reviewed so it remains useful to humans who are learning the method.</p>
-    </section>
-
     <section id="what">
       <h2>What POM is</h2>
-      <p>POM stands for <strong>Project Operating Memory</strong>. It is a reusable method for preserving the minimum reliable context needed to understand where a project is, why it is there, and what the next safe step is.</p>
-      <p>A safe step is an action the next reader or agent can take without reconstructing context, repeating settled decisions, or touching stable parts of the project blindly.</p>
-      <p>POM connects source code, decisions, specifications, task plans, wiki pages, mockups, tests, and agent instructions. The point is not to document everything. The point is to make the project restartable after a pause, a handoff, or a change of agent.</p>
+      <p>POM stands for <strong>Project Operating Memory</strong>. In practice, it is the small set of project notes that explains what matters now: what the project is trying to do, what has already been decided, what is still being discussed, and where the next person or AI agent should look before acting.</p>
+      <p>It exists because projects lose context quickly. A useful idea may stay in a chat thread, a design reason may remain in someone's memory, and an open question may never become visible to the next person. POM gives those pieces of knowledge a stable place inside the repository.</p>
+      <p>The method is intentionally lightweight. It should not force every project into the same folder structure, and it should not create documents just because a template exists. It adds only the memory that helps the next step be clearer and safer.</p>
+    </section>
+
+    <section class="note" id="status">
+      <h2>This guide is only an introduction</h2>
+      <p>This page explains POM in plain language for someone who is seeing it for the first time. It is not the rulebook that agents must follow while they work. The operational rules live in <code>README.md</code>, <code>AGENTS.MD</code>, <code>prompts/</code>, <code>skills/</code>, and <code>templates/</code>.</p>
+      <p>The generated <a href="../wiki.html">POM Wiki Reader</a> is a browser-friendly copy of the root wiki. The wiki is for current project memory; this page is for understanding what POM is and why the pieces exist.</p>
+      <p>In a target project, the wiki is added only when the project needs knowledge that should survive beyond the current chat. Its source is Markdown under <code>wiki/</code>. The HTML reader is only a convenient view and can be regenerated.</p>
+      <p>When POM changes, this guide should be reviewed so it continues to help people who are learning the method.</p>
     </section>
 
     <section id="why">
@@ -94,17 +94,17 @@
         <div class="item">
           <span class="tag teal">Continuity</span>
           <h3>Projects lose context</h3>
-          <p>Important reasoning often lives in chat, memory, or a person's head. POM moves durable context into the repository.</p>
+          <p>Important reasoning often lives in chat, memory, or a person's head. POM moves only the parts worth keeping into project files.</p>
         </div>
         <div class="item">
           <span class="tag">Verification</span>
           <h3>Done needs evidence</h3>
-          <p>POM treats completion as a claim to verify, not as a checkbox to trust.</p>
+          <p>When a task, specification, or decision is called complete, POM asks what proves that claim: tests, reviewed documents, working behavior, or another clear check.</p>
         </div>
         <div class="item">
           <span class="tag gold">Navigation</span>
-          <h3>Agents need source authority</h3>
-          <p>Different questions belong to different sources. POM helps the agent read the right file before acting.</p>
+          <h3>Agents need the right source</h3>
+          <p>Code, notes, decisions, specifications, and wiki pages answer different questions. POM helps the agent read the file that can actually answer the question before it changes anything.</p>
         </div>
       </div>
     </section>
@@ -122,7 +122,7 @@
         </div>
         <div class="item">
           <h3>Not a document dump</h3>
-          <p>More files are not automatically better. Memory must be useful, current, and connected to source authority.</p>
+          <p>More files are not automatically better. A POM document should help someone act, and it should be clear which project source supports it.</p>
         </div>
         <div class="item">
           <h3>Not a substitute for Git</h3>
@@ -136,21 +136,22 @@
       <div class="grid">
         <div class="item principle">
           <h3>1. Operating memory</h3>
-          <p>Keep the minimum reliable context that lets someone resume work safely. Avoid logs, archives, and decorative documentation.</p>
+          <p>Keep just enough reliable context for someone to restart safely. POM is not a diary of everything that happened; it is the useful summary for what to do next.</p>
         </div>
         <div class="item principle">
           <h3>2. Verification</h3>
-          <p>A spec, task, or decision is not complete until its stated goal is actually met and the evidence supports that claim.</p>
+          <p>A specification, task, or decision is not complete just because it was written down. It is complete when the stated goal is actually met and the evidence supports that claim.</p>
         </div>
         <div class="item principle">
           <h3>3. Organization</h3>
-          <p>Structure helps only when it protects memory and verification. Organization serves the work, not the other way around.</p>
+          <p>Folders and templates help only when they make the next step clearer. POM should follow the shape of the project before it asks the project to change shape.</p>
         </div>
       </div>
     </section>
 
     <section id="tools">
       <h2>POM tools</h2>
+      <p>The names below are the vocabulary of the method. They are deliberately small pieces: each one answers a different practical question.</p>
       <table>
         <thead>
           <tr>
@@ -162,47 +163,57 @@
         <tbody>
           <tr>
             <td data-label="Tool">Persistent Wiki</td>
-            <td data-label="Purpose">Reusable synthesis of project knowledge.</td>
+            <td data-label="Purpose">A maintained project memory: what is known now, why it matters, and where the knowledge came from.</td>
             <td data-label="Typical file"><code>wiki/</code></td>
           </tr>
           <tr>
+            <td data-label="Tool">Open Discussion</td>
+            <td data-label="Purpose">A place for wishes, hypotheses, alternatives, and open questions while they are still being discussed. It is not yet a decision or a requirement.</td>
+            <td data-label="Typical file"><code>analysis/</code> or project-approved path</td>
+          </tr>
+          <tr>
             <td data-label="Tool">Project State</td>
-            <td data-label="Purpose">Short restart memory with current position and next safe actions.</td>
+            <td data-label="Purpose">A short handoff note: current position, recent relevant work, and the next safe actions.</td>
             <td data-label="Typical file"><code>PROJECT_STATE.md</code></td>
           </tr>
           <tr>
             <td data-label="Tool">ADR and Spec</td>
-            <td data-label="Purpose">Durable decisions and intended behavior.</td>
+            <td data-label="Purpose">ADRs are decision records: they explain what was chosen and why. Specifications describe the behavior the project expects.</td>
             <td data-label="Typical file"><code>decisions/</code>, <code>specs/</code></td>
           </tr>
           <tr>
             <td data-label="Tool">Task Plan</td>
-            <td data-label="Purpose">Verifiable breakdown of work, scenarios, and done criteria.</td>
+            <td data-label="Purpose">A work breakdown that says what must happen and how completion will be checked.</td>
             <td data-label="Typical file"><code>tasks/</code></td>
           </tr>
           <tr>
             <td data-label="Tool">Config</td>
-            <td data-label="Purpose">Maps POM to the project's actual structure.</td>
+            <td data-label="Purpose">Tells POM where this project keeps source code, docs, tests, decisions, generated files, and other important paths.</td>
+            <td data-label="Typical file"><code>pom.config.json</code></td>
+          </tr>
+          <tr>
+            <td data-label="Tool">Artifact Policy</td>
+            <td data-label="Purpose">Tells the agent whether a file can be edited, needs approval, is generated, or should stay historical.</td>
             <td data-label="Typical file"><code>pom.config.json</code></td>
           </tr>
           <tr>
             <td data-label="Tool">Lint</td>
-            <td data-label="Purpose">Automates stable, objective governance checks.</td>
+            <td data-label="Purpose">Runs repeatable checks for rules that should not depend on memory or interpretation.</td>
             <td data-label="Typical file"><code>npm run pom:lint</code></td>
           </tr>
           <tr>
             <td data-label="Tool">Skills</td>
-            <td data-label="Purpose">Short entry points that tell an agent which workflow to use.</td>
+            <td data-label="Purpose">Short entry points that tell an agent which kind of work it is doing and which instructions to read.</td>
             <td data-label="Typical file"><code>skills/</code></td>
           </tr>
           <tr>
             <td data-label="Tool">Prompts</td>
-            <td data-label="Purpose">Canonical procedures for applying the method.</td>
+            <td data-label="Purpose">Step-by-step procedures for applying the method in recurring situations.</td>
             <td data-label="Typical file"><code>prompts/</code></td>
           </tr>
           <tr>
             <td data-label="Tool">Templates</td>
-            <td data-label="Purpose">Reusable shapes for governed memory elements.</td>
+            <td data-label="Purpose">Reusable document shapes so similar notes, plans, and decisions stay easy to read.</td>
             <td data-label="Typical file"><code>templates/</code></td>
           </tr>
         </tbody>
@@ -211,7 +222,7 @@
 
     <section id="workflow">
       <h2>How POM works in practice</h2>
-      <p>POM can be read as a compact operating flow: the user states the work, the agent chooses the workflow, the result becomes project memory, and POM verifies that the artifact is reliable.</p>
+      <p>POM can be read as a simple loop: understand the request, choose the right way of working, write only useful memory, and verify important claims before closing the work.</p>
       <div class="grid">
         <div class="item">
           <span class="tag teal">1. Request</span>
@@ -221,17 +232,17 @@
         <div class="item">
           <span class="tag">2. Workflow</span>
           <h3>The agent chooses the procedure</h3>
-          <p>The agent chooses the skill, reads the canonical prompt, and uses the right template. Example: it uses <code>plan</code>, reads the task-plan prompt, and applies the task template.</p>
+          <p>The agent chooses a short skill, reads the linked instructions, and uses a template only when a real document is needed.</p>
         </div>
         <div class="item">
           <span class="tag gold">3. Memory</span>
           <h3>The result enters the repository</h3>
-          <p>The result does not remain in chat: it becomes a project document, for example <code>tasks/recovery/P0/password-reset.md</code>.</p>
+          <p>If the result matters later, it becomes a project document instead of staying buried in chat.</p>
         </div>
         <div class="item">
           <span class="tag teal">4. Verification</span>
           <h3>POM checks reliability</h3>
-          <p>POM checks that the artifact is reliable: lint, goal-backward review, positive scenarios, and error cases when code exists.</p>
+          <p>POM checks that the result is reliable. For code this usually means tests. For documents it means checking the sources, looking for contradictions, and challenging the conclusion before treating it as settled.</p>
         </div>
       </div>
     </section>
@@ -283,9 +294,10 @@
     <section id="new-project">
       <h2>Using POM on a new project</h2>
       <ol>
-        <li>Start small. Choose the lightest adoption profile that gives the project a reliable restart point.</li>
-        <li>Create the basic memory: agent instructions, config, and project state.</li>
-        <li>Add wiki, decisions, task plans, or structured tests only when the project needs them.</li>
+        <li>Start small. Choose only the amount of POM that gives the project a reliable restart point.</li>
+        <li>Create the basic memory: instructions for agents, a configuration file, and a short project state.</li>
+        <li>Do not create application folders, decision records (ADRs), or specifications before the project direction is explicit. Use Open Discussion for unresolved alternatives.</li>
+        <li>Add wiki pages, decisions, task plans, or structured tests only when the project needs them.</li>
         <li>Let Git carry detailed history. Let POM carry the current synthesis.</li>
       </ol>
       <div class="callout">Good first request: <code>Read pom/skills/seed.md and set up POM for this project.</code></div>
@@ -293,24 +305,25 @@
 
     <section id="existing-project">
       <h2>Using POM on an existing project</h2>
-      <p>For an existing repository, POM should first observe and map. It should not reorganize the project just to fit a canonical example.</p>
+      <p>For an existing repository, POM should first observe and map how the project already works. It should not reorganize the project just to make it resemble an example.</p>
       <ol>
         <li>Read existing documentation, source roots, tests, decisions, and conventions.</li>
         <li>Record the actual structure in <code>pom.config.json</code>.</li>
-        <li>Identify the smallest memory gap that hurts restart, verification, or source authority.</li>
+        <li>Record the Artifact Policy: which files are generated, which are historical, and which need explicit approval before editing.</li>
+        <li>Identify the smallest memory gap that makes restart, verification, or alignment with project sources harder.</li>
         <li>Adopt incrementally. Migrations are explicit decisions, not installation side effects.</li>
       </ol>
-      <div class="callout"><code>owned</code> means POM may help shape project governance. <code>team</code> means POM must preserve shared conventions unless the team explicitly changes them.</div>
+      <div class="callout"><code>owned</code> means POM may help define project rules. <code>team</code> means POM must preserve shared conventions unless the team explicitly changes them.</div>
       <div class="callout">Good first request: <code>Read pom/skills/adopt.md and adopt POM without changing the existing structure.</code></div>
     </section>
 
     <section id="overlay">
       <h2>Overlay on external projects</h2>
-      <p>When the repository is cloned from an upstream you do not own, POM should act as a local understanding overlay, not as project governance.</p>
+      <p>Sometimes the repository belongs to another project, and POM is only there to help you understand it locally. In that case, POM should act as a private layer of notes, not as rules for the upstream project.</p>
       <ul>
         <li>Do not impose POM conventions on upstream <code>docs/</code>, <code>tests/</code>, ADRs, source layout, release process, or pull-request contents.</li>
         <li>Use local memory to map architecture, entrypoints, modules, tests, conventions, risks, and open questions.</li>
-        <li>Keep overlay artifacts out of upstream contributions unless the project explicitly wants them.</li>
+        <li>Keep local POM notes out of upstream contributions unless the project explicitly wants them.</li>
         <li>Keep overlay work on its own branch or worktree; do not merge that branch into the contribution branch.</li>
         <li>Before a PR, transfer only selected non-POM changes, stage the real upstream change, and run the upstream project's own checks.</li>
       </ul>
@@ -318,7 +331,7 @@
         <code>node bootstrap-pom.mjs --preset overlay</code>
         <code>npm run pom:init -- --preset overlay</code>
       </div>
-      <div class="callout">Documented mode: <code>Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding overlay.</code></div>
+      <div class="callout">Documented mode: <code>Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding layer.</code></div>
     </section>
 
     <section id="adoption">
@@ -327,17 +340,17 @@
         <div class="item">
           <span class="tag teal">Minimal</span>
           <h3>Restart memory</h3>
-          <p>Use POM for agent instructions, config, and project state. Best when the project is small or still forming.</p>
+          <p>Use POM for agent instructions, configuration, and project state. This is enough when the project is small or still forming.</p>
         </div>
         <div class="item">
           <span class="tag gold">Light</span>
           <h3>Focused memory</h3>
-          <p>Add the wiki or decision records where they solve a real coordination problem. This maps to profiles such as <code>wiki</code> or <code>decisions</code>.</p>
+          <p>Add the wiki or decision records only where they solve a real coordination problem. This maps to profiles such as <code>wiki</code> or <code>decisions</code>.</p>
         </div>
         <div class="item">
           <span class="tag gold">Full</span>
-          <h3>Governed memory</h3>
-          <p>Use wiki, decisions, planning, verification, lint, and stronger handoff rules for larger or long-running projects.</p>
+          <h3>Stronger memory</h3>
+          <p>Use wiki, decisions, planning, verification, automated checks, and stronger handoff rules for larger or long-running projects.</p>
         </div>
       </div>
       <p class="callout">The installer also supports practical profiles such as <code>adopt</code>, <code>refresh</code>, and <code>custom</code>. The profile is a starting point, not a badge of maturity.</p>
@@ -345,7 +358,7 @@
 
     <section id="experiments">
       <h2>Isolated experiments</h2>
-      <p>Experiments are valuable, but they should not contaminate stable source before evaluation. POM treats experiments as temporary work until they are deliberately consolidated.</p>
+      <p>Experiments are valuable, but they should not change the stable project before they are evaluated. POM treats experiments as temporary work until someone deliberately chooses what to keep.</p>
       <ul>
         <li>Use a branch or Git worktree such as <code>exp/&lt;topic&gt;</code> for broad or risky work.</li>
         <li>Use <code>/tmp</code> or <code>experiments/&lt;topic&gt;</code> for short trials and disposable evidence.</li>
@@ -356,7 +369,7 @@
 
     <section id="git">
       <h2>Git and POM</h2>
-      <p>Git is the fine-grained historical memory. It records what changed and when. POM is the operating synthesis. It explains what matters now, why it matters, and where to resume.</p>
+      <p>Git is the detailed historical memory. It records what changed and when. POM is the current operating synthesis. It explains what matters now, why it matters, and where to resume.</p>
       <p>Do not turn POM documents into manual changelogs. If historical detail is needed, read Git. If restart context is needed, read POM.</p>
     </section>
 
@@ -370,16 +383,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td data-label="Need">Choose a workflow or understand available tools</td><td data-label="Skill"><code>help</code></td></tr>
+          <tr><td data-label="Need">Choose how to work or understand available tools</td><td data-label="Skill"><code>help</code></td></tr>
           <tr><td data-label="Need">Clarify ambiguous work before creating memory</td><td data-label="Skill"><code>clarify</code></td></tr>
           <tr><td data-label="Need">Start POM on a new project</td><td data-label="Skill"><code>seed</code></td></tr>
           <tr><td data-label="Need">Adopt POM in an existing project</td><td data-label="Skill"><code>adopt</code></td></tr>
           <tr><td data-label="Need">Create or refresh restart memory</td><td data-label="Skill"><code>pulse</code></td></tr>
-          <tr><td data-label="Need">Set governance guardrails</td><td data-label="Skill"><code>guard</code></td></tr>
+          <tr><td data-label="Need">Set project documentation rules</td><td data-label="Skill"><code>guard</code></td></tr>
           <tr><td data-label="Need">Create a verifiable task plan</td><td data-label="Skill"><code>plan</code></td></tr>
           <tr><td data-label="Need">Verify completed work</td><td data-label="Skill"><code>check</code></td></tr>
           <tr><td data-label="Need">Close a significant session</td><td data-label="Skill"><code>handoff</code></td></tr>
           <tr><td data-label="Need">Reshape a patch around the intended final product surface</td><td data-label="Skill"><code>zero-tech-debt</code></td></tr>
+          <tr><td data-label="Need">Challenge a non-code spec or decision before closure</td><td data-label="Skill"><code>challenge</code></td></tr>
           <tr><td data-label="Need">Configure local mappings and lint</td><td data-label="Skill"><code>config</code></td></tr>
           <tr><td data-label="Need">Run or consolidate an experiment</td><td data-label="Skill"><code>spike</code></td></tr>
           <tr><td data-label="Need">Build, query, or maintain wiki memory</td><td data-label="Skill"><code>wiki</code></td></tr>
@@ -388,8 +402,8 @@
           <tr><td data-label="Need">Park work without implementation</td><td data-label="Skill"><code>defer</code></td></tr>
           <tr><td data-label="Need">Refresh or sync POM in a target project</td><td data-label="Skill"><code>sync</code></td></tr>
           <tr><td data-label="Need">Resolve divergence between sources</td><td data-label="Skill"><code>reconcile</code></td></tr>
-          <tr><td data-label="Need">Run a read-only governance audit</td><td data-label="Skill"><code>validate</code></td></tr>
-          <tr><td data-label="Need">Reduce method bloat</td><td data-label="Skill"><code>prune</code></td></tr>
+          <tr><td data-label="Need">Review POM rules without editing files</td><td data-label="Skill"><code>validate</code></td></tr>
+          <tr><td data-label="Need">Reduce unnecessary method weight</td><td data-label="Skill"><code>prune</code></td></tr>
           <tr><td data-label="Need">Debug a POM problem</td><td data-label="Skill"><code>diagnose</code></td></tr>
         </tbody>
       </table>
@@ -401,9 +415,11 @@
         <li>Start with the smallest useful POM profile.</li>
         <li>Create memory only when it helps future work restart, verify, or avoid rediscovery.</li>
         <li>Read current sources before making claims about the project.</li>
+        <li>Keep desiderata and unresolved alternatives in Open Discussion until they are promoted to a spec, decision, wiki update, or task plan.</li>
+        <li>Check the Artifact Policy before editing files with special rules.</li>
         <li>Use Git for history and POM for current operating synthesis.</li>
         <li>Keep experiments isolated until their learning is selected for promotion.</li>
-        <li>Prune rules that add process without protecting memory.</li>
+        <li>Remove rules that add process without protecting memory.</li>
         <li>When using or evolving POM itself, ask what a future reader or agent will need to know to take the next safe step in the project.</li>
       </ul>
     </section>
@@ -421,7 +437,7 @@
         <text x="32" y="37" text-anchor="middle">O</text>
         <text x="47" y="37" text-anchor="middle">M</text>
       </svg>
-      <p>POM - Project Operating Memory. This guide is a readable overview for people approaching the method. Operational rules live in the repository's canonical POM files.</p>
+      <p>POM - Project Operating Memory. This guide is a readable overview for people approaching the method. Operational rules live in the repository's main POM files.</p>
     </div>
   </footer>
 </body>

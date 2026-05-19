@@ -33,6 +33,8 @@ Then update, when present and relevant:
 - ADRs in the configured decisions root;
 - README and agent instruction files if the method changed.
 
+Respect artifact policy: do not hand-edit generated files, do not rewrite historical records, and ask before changing approval-required paths.
+
 Git:
 - use Git for fine-grained change history;
 - do not add manual changelogs to specs/ADRs/PROJECT_STATE unless explicitly requested;

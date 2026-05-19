@@ -45,6 +45,7 @@ Use the smallest workflow that matches your situation:
 | Reduce method bloat | `skills/prune.md` |
 | Diagnose a POM problem | `skills/diagnose.md` |
 | Rework a patch around the intended final shape | `skills/zero-tech-debt.md` |
+| Challenge a spec or decision before closure | `skills/challenge.md` |
 | Defer work without implementing | `skills/defer.md` |
 | Refresh or sync POM in a project | `skills/sync.md` |
 | See available commands | `npm run pom:help` |
@@ -77,6 +78,9 @@ Read pom/skills/defer.md and park this topic without implementing it.
 
 # Rework a patch around the intended final shape
 Read pom/skills/zero-tech-debt.md and reshape the current change before closure.
+
+# Challenge a non-code spec or decision
+Read pom/skills/challenge.md and run an adversarial thesis/antithesis review of specs/my-feature.md.
 
 # End-of-session handoff
 Read pom/skills/handoff.md and update the project state.
@@ -333,7 +337,7 @@ In the common Git-managed install, `pom/` is a full checkout of the POM Source a
 
 On a new project, the root may initially contain only `pom/`, agent instructions, `package.json`, `pom-update.mjs`, and `pom.config.json`. That is a valid day-zero state: create `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or the configured decisions root only when the selected adoption profile enables them or current work needs them.
 
-If a new project has no application infrastructure yet, POM must not infer the stack, source layout, package manager, deployment model, database, authentication system, test framework, or hosting strategy on its own. Treat infrastructure as a project decision: ask the user how they want it realized, or create analysis and Draft ADRs for the alternatives, before scaffolding code or committing to a technical structure.
+If a new project has no application infrastructure yet, POM must not infer the stack, source layout, package manager, deployment model, database, authentication system, test framework, or hosting strategy on its own. Treat infrastructure as a project decision: ask the user how they want it realized, or create an approved Open Discussion or analysis note for the alternatives, before scaffolding code or committing to a technical structure.
 
 ```text
 my-project/
@@ -450,11 +454,16 @@ POM does not use one universal source of truth. It uses source authority by doma
 | What do we currently know about the project? | `wiki/` |
 | Why did we decide this? | configured decisions root (`decisions.root`, default `decisions/`) |
 | What analysis supports or challenges a choice? | `analysis/` |
+| What is still desiderata, hypotheses, or unresolved discussion? | Open Discussion or `analysis/`, not implementation authority |
 | What does the intended experience show? | `mockups/`, when present |
 | What can be shared as official documentation? | `docs/`, when present |
 | Where do I restart after a pause? | `PROJECT_STATE.md` or current plan |
 
 When sources diverge, the divergence must not be hidden. It must be made visible, analyzed, and resolved with a decision when needed.
+
+## Artifact Policy
+
+POM separates source authority from edit permission. Before changing a governed artifact, check project config or the file itself: `editable` may be changed directly when the source authority supports it; `approvalRequired` needs explicit user approval; `generated` must be regenerated from its source; `historical` should not be rewritten after closure.
 
 ## Operating Discipline
 
@@ -541,6 +550,7 @@ Create a feature branch (`feat/<topic>`) only when the first task plan step modi
 Specs are living documents: edit them directly and let Git keep fine-grained history.
 
 ADRs represent decisions. If a decision changes substantially, do not simply rewrite the previous ADR. Create a new ADR that supersedes or replaces it, or update the existing ADR only when the change is administrative.
+Use Open Discussion or analysis for undecided alternatives; do not create Draft ADRs for options that have not been chosen.
 
 Rules:
 
@@ -720,6 +730,7 @@ POM skills are short operational aliases for the main prompts. They do not repla
 | `handoff` | session closeout |
 | `diagnose` | focused POM troubleshooting |
 | `zero-tech-debt` | scoped end-state refactor |
+| `challenge` | adversarial thesis/antithesis review |
 | `config` | lint configuration |
 | `spike` | temporary experiments |
 | `wiki` | build, query, lightweight lint, and stale wiki maintenance |
@@ -960,6 +971,7 @@ Canonical templates:
 | `POM_CONFIG_TEMPLATE.json` | portable documentation lint config |
 | `EXPERIMENT_TEMPLATE.md` | versioned experiment or one-shot work |
 | `MOCK_MANIFEST_TEMPLATE.md` | mockup package manifest |
+| `OPEN_DISCUSSION_TEMPLATE.md` | non-authoritative desiderata, hypotheses, alternatives, and questions |
 | `PROJECT_STATE_TEMPLATE.md` | project restart point |
 | `TASK_PLAN_TEMPLATE.md` | verifiable task plan |
 | `SPEC_TEMPLATE.md` | specifications |

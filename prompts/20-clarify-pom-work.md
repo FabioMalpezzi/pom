@@ -10,6 +10,7 @@ Before modifying files:
 4. restate the user's objective in one sentence;
 5. classify the next route:
    - no persistent memory needed;
+   - open discussion / analysis;
    - wiki memory;
    - decision record / ADR;
    - spec;
@@ -17,11 +18,14 @@ Before modifying files:
    - temporary experiment;
    - project config;
    - prompt, skill, template, or lint extension;
+   - artifact policy check;
 6. ask only the unresolved questions that cannot be answered from the repository.
 
 Rules:
 - preserve POM's founding idea: create memory only when it changes the next safe step, reduces ambiguity, or prevents rediscovery;
 - prefer the smallest artifact and lowest POM extension level;
+- treat desiderata and open discussions as input, not as implementation authority, until promoted to the correct source;
+- check artifact policy before proposing edits to governed documents;
 - use terms from `CONTEXT.md` when available;
 - if a term is ambiguous or repeated across documents, propose a glossary update instead of inventing a parallel vocabulary;
 - do not implement until the route and open decisions are clear, unless the user explicitly says to proceed.

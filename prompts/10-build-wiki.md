@@ -16,6 +16,7 @@ Before modifying files:
    - analysis;
    - ADRs in the configured decisions root;
    - specs;
+   - open discussions and desiderata;
    - README and project notes;
 5. propose an initial wiki taxonomy;
 6. propose the first batch of pages to create;
@@ -34,6 +35,7 @@ Rules:
 - work in small, verifiable batches;
 - do not move source authority into the wiki: analysis stays in `analysis/`, decisions stay in ADRs, specs stay in specs, and tasks stay in task plans;
 - wiki pages should summarize and link to authoritative sources, not duplicate whole analysis documents or decision records;
+- open discussions and desiderata are input, not source authority for implementation;
 - use `pom/templates/WIKI_INDEX_TEMPLATE.md` for `wiki/index.md`;
 - use `pom/templates/WIKI_LOG_TEMPLATE.md` for `wiki/log.md`;
 - use `pom/templates/WIKI_PAGE_TEMPLATE.md` for new generic pages;

@@ -101,6 +101,7 @@ Every completed spec, task, or ADR must pass the completion verification gate. T
 - Read the task/spec/ADR "Verification" or "Completion Verification" section.
 - For code: check that scenario tests exist in the test suite, cover the required cases, and pass.
 - For non-code: check that thesis and antithesis are documented and each antithesis has a confutation.
+- For non-code with material risk: use `skills/challenge.md` before accepting the thesis.
 - If "Complete with exceptions" is used, verify the exception reason is explicit and credible → **EXCEPTIONS NOTED**.
 - If verification is missing or incomplete → **VERIFICATION MISSING**.
 - If satisfied → **OK**.

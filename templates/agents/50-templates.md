@@ -1,6 +1,7 @@
 ## Templates
 
 Before creating governed documents, read and use the relevant template in `pom/templates/`.
+Use `pom/templates/OPEN_DISCUSSION_TEMPLATE.md` for desiderata, unresolved alternatives, and questions that are not yet specs or ADRs.
 
 If the project has customized or localized templates configured in `pom.config.json.templates`, use those project templates instead of the defaults in `pom/templates/`.
 

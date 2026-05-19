@@ -24,6 +24,7 @@ Before modifying files:
    - tests, if present;
    - temporary work;
    - project state / roadmap / current plan;
+   - artifact policy for approval-required, generated, and historical files;
 8. report conflicts or ambiguities;
 9. wait for approval.
 
@@ -51,7 +52,7 @@ Use presets for normal adoption. Use explicit `--profile` and `--ownership` only
 
 If the relationship is `external_overlay`, do not configure POM as project governance. Read `pom/specs/SPEC-0004-external-project-overlay.md`. Preserve upstream `docs/`, `tests/`, ADRs, source layout, agent instruction files, release process, and PR contents. Use local memory only to understand the project and prepare safe work.
 
-General mapping rule: map existing project structures first, then propose migrations separately only when the user asks for cleanup. This applies to decisions, docs, source, tests, wiki, analysis, mockups, planning, and handoff files. For new POM-owned analysis/task/test material, prefer a shared analysis/workstream namespace such as `analysis/governance-core/...`, `tasks/governance-core/P0/...`, and `tests/governance-core/...`.
+General mapping rule: map existing project structures first, then propose migrations separately only when the user asks for cleanup. This applies to decisions, docs, source, tests, wiki, analysis, mockups, planning, handoff files, and artifact policy. For new POM-owned analysis/task/test material, prefer a shared analysis/workstream namespace such as `analysis/governance-core/...`, `tasks/governance-core/P0/...`, and `tests/governance-core/...`.
 
 The wiki, when present, must become the project's persistent and consolidated memory. It must not replace decisions, code, tests, or official documentation.
 

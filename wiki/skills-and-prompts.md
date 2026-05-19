@@ -21,10 +21,11 @@ Important skill families:
 | `spike` | Run isolated temporary experiments. |
 | `reconcile` | Classify and resolve a divergence between source and memory. |
 | `validate` | Audit governance after significant POM actions. |
+| `challenge` | Run adversarial thesis/antithesis review before accepting or completing non-code work. |
 | `config` | Create or update project-specific POM configuration. |
 | `sync` | Refresh an existing POM installation or align source and target POM. |
 
-The prompt set covers bootstrap, adoption, state, governance, planning, review, handoff, config, experiments, wiki operations, extension, classification, deferral, sync, validation, reconciliation, clarification, pruning, and diagnosis. Together they make POM less dependent on an agent remembering the right procedure for each task.
+The prompt set covers bootstrap, adoption, state, governance, planning, review, handoff, config, experiments, wiki operations, extension, classification, deferral, sync, validation, reconciliation, clarification, pruning, diagnosis, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.
 
 Reader generation is currently a script command, not a separate skill. Use `npm run pom:wiki:render` to regenerate the static HTML view from the root wiki.
 
@@ -38,6 +39,8 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 | `prompts/09-run-temporary-experiment.md` | Full temporary experiment procedure. |
 | `skills/extend.md` | Extension-level selection rules. |
 | `prompts/12-extend-pom.md` | Controlled POM extension procedure. |
+| `skills/challenge.md` | Skill card for adversarial thesis/antithesis review. |
+| `prompts/24-challenge-antithesis.md` | Read-only challenge procedure that looks for material antitheses before acceptance or completion. |
 | `specs/SPEC-0002-skill-yaml-frontmatter.md` | YAML frontmatter requirements for skill discovery. |
 
 ## Linked Decisions
@@ -53,6 +56,7 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 |---|---|
 | Should reader generation be a new wiki mode, a separate skill, or only a script? | Answered for now: script command. |
 | Should prompt usage tracking include reader commands if promoted? | Open. |
+| Should `challenge` become part of every non-code completion gate or remain invoked for material risk? | Open; current rule keeps it targeted to avoid noise. |
 
 ## Related Links
 

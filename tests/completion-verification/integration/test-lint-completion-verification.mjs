@@ -236,6 +236,7 @@ function scenarioMetadataIgnoresLaterTables() {
     const index = readFileSync(join(dir, "decisions", "DECISIONS_INDEX.md"), "utf8");
 
     assert("lint exits without errors", result.status === 0, `expected exit 0, got ${result.status}\n${result.stdout}\n${result.stderr}`);
+    assert("draft ADR status warns", result.stdout.includes("adr-provisional-status"), result.stdout);
     assert("ADR index uses opening Area metadata", index.includes("### governance / lint"), index);
     assert("ADR index ignores later Area table", !index.includes("### governance / Impact"), index);
   } finally {

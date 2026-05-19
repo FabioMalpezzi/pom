@@ -33,6 +33,7 @@ const DEFAULT_TEMPLATE_PATHS: Record<string, string> = {
   doc: "pom/templates/DOC_TEMPLATE.md",
   experiment: "pom/templates/EXPERIMENT_TEMPLATE.md",
   mockManifest: "pom/templates/MOCK_MANIFEST_TEMPLATE.md",
+  openDiscussion: "pom/templates/OPEN_DISCUSSION_TEMPLATE.md",
   reconciliation: "pom/templates/RECONCILIATION_TEMPLATE.md",
   taskPlan: "pom/templates/TASK_PLAN_TEMPLATE.md",
   wikiIndex: "pom/templates/WIKI_INDEX_TEMPLATE.md",

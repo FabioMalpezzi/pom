@@ -8,13 +8,14 @@ Classify the requested artifact before writing it.
 
 First decide the document type. Apply precedence before choosing:
 
-- durable decision or boundary -> ADR, even when the decision is reusable knowledge;
-- exploratory reasoning, comparison, synthesis, or evidence -> analysis, even when it will later inform the wiki;
+- durable approved decision or boundary -> ADR, even when the decision is reusable knowledge;
+- desiderata, unresolved alternatives, exploratory reasoning, comparison, synthesis, or evidence -> Open Discussion or analysis, even when it will later inform the wiki;
 - current consolidated reference knowledge -> wiki, only after source authority is clear.
 
 | Question | Document |
 |---|---|
 | Is this a durable decision or boundary? | ADR |
+| Is this desiderata, an unresolved hypothesis, or a choice still being discussed? | Open Discussion / analysis |
 | Is this intended behavior or capability, without immediate implementation? | Spec |
 | Is this verifiable work to execute? | Task plan |
 | Is this current restart memory? | PROJECT_STATE |
@@ -34,6 +35,7 @@ Then choose the status:
 | Accepted | Approved decision | ADR, not an operational task |
 
 Rules:
+- do not use ADRs for undecided alternatives; write an Open Discussion or analysis note until a decision is explicit;
 - do not use Waiting when the team simply decided to postpone work; use Deferred;
 - do not use Blocked unless there is a concrete impediment;
 - do not use Accepted for operational tasks;

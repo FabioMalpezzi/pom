@@ -19,6 +19,7 @@ description: Use this helper skill when a document type or status field is ambig
 ## Main Templates
 
 - `templates/ADR_TEMPLATE.md`
+- `templates/OPEN_DISCUSSION_TEMPLATE.md`
 - `templates/SPEC_TEMPLATE.md`
 - `templates/TASK_PLAN_TEMPLATE.md`
 - `templates/CURRENT_PLAN_TEMPLATE.md`

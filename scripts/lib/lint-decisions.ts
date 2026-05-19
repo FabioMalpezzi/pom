@@ -65,6 +65,15 @@ export function checkDecisions(context: LintContext): void {
       context.add("warning", "adr-status", "ADR is missing a Status field in the opening metadata.", file);
     }
 
+    if (isProvisionalAdrStatus(status)) {
+      context.add(
+        "warning",
+        "adr-provisional-status",
+        "ADR status looks provisional. Keep undecided alternatives in Open Discussion or analysis until the decision is explicit.",
+        file,
+      );
+    }
+
     if (isAcceptedStatus(status)) {
       checkCompletionVerification(context, text, file, "adr");
     }
@@ -97,6 +106,13 @@ function parseAdrTitle(context: LintContext, text: string, file: string): string
   const firstHeading = text.match(/^#\s+(.+)$/m)?.[1]?.trim();
   if (firstHeading) return firstHeading;
   return stripDecisionRoot(context, file).replace(/\.md$/, "");
+}
+
+function isProvisionalAdrStatus(status: string): boolean {
+  const normalized = status.toLowerCase().trim();
+  return ["draft", "planned", "backlog", "waiting", "blocked", "bozza", "pianificato", "pianificata"].includes(
+    normalized,
+  );
 }
 
 function stripDecisionRoot(context: LintContext, file: string): string {

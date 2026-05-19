@@ -24,6 +24,10 @@ _Avoid_: RAG index, scratch notes, document dump
 A durable record of a consequential choice and its rationale.
 _Avoid_: changelog, meeting note, preference
 
+**Open Discussion**:
+A non-authoritative artifact for desiderata, hypotheses, alternatives, and unresolved questions before they become a spec, decision, wiki synthesis, or task plan.
+_Avoid_: draft decision, implementation requirement, source of truth
+
 **Project State**:
 The short restart artifact that explains the current project position and next safe actions.
 _Avoid_: status report, session log, timeline
@@ -47,6 +51,10 @@ _Avoid_: markdown file, doc, artifact
 **Source Authority**:
 The rule that each kind of project question has the source best qualified to answer it.
 _Avoid_: single source of truth
+
+**Artifact Policy**:
+The edit rule for a project artifact: editable, approval-required, generated, or historical.
+_Avoid_: document status, source authority, ownership
 
 **Divergence**:
 A meaningful mismatch between two sources that should agree or be reconciled.
@@ -79,12 +87,14 @@ _Avoid_: upstream codebase, framework code
 ## Relationships
 
 - **POM** maintains **Operating Memory** through one or more **Memory Elements**.
-- A **Memory Element** can be a **Persistent Wiki**, **Decision Record**, **Project State**, **Current Plan**, or **Task Plan**.
+- A **Memory Element** can be a **Persistent Wiki**, **Open Discussion**, **Decision Record**, **Project State**, **Current Plan**, or **Task Plan**.
+- An **Open Discussion** can inform a **Decision Record**, spec, wiki update, or **Task Plan**, but it is not an implementation authority until promoted through the appropriate source.
 - An **Adoption Profile** determines which **Memory Elements** are active in a **Target Project**.
 - A **Governed Document** must satisfy the **Completion Verification Gate** before it is closed.
 - The **Completion Verification Gate** starts with a **Goal-Backward Check**.
 - Technical work uses **Scenario Tests**; non-code work uses **Semantic Validation**.
 - **Source Authority** decides which source resolves a question; **Divergence** records when sources disagree.
+- **Artifact Policy** decides whether an artifact may be edited directly, needs approval, must be regenerated, or should stay historical.
 - **POM Source** supplies reusable rules, while each **Target Project** owns its memory products.
 
 ## Example Dialogue

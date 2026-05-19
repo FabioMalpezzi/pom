@@ -62,7 +62,7 @@
         <a href="#why">Perché esiste</a>
         <a href="#principles">Principi</a>
         <a href="#tools">Strumenti</a>
-        <a href="#workflow">Workflow</a>
+        <a href="#workflow">Pratica</a>
         <a href="#install">Installa</a>
         <a href="#overlay">Overlay</a>
         <a href="#adoption">Adozione</a>
@@ -73,19 +73,19 @@
   </header>
 
   <main class="wrap">
-    <section class="note" id="status">
-      <h2>Questa guida è esplicativa</h2>
-      <p>Questa pagina aiuta chi legge a capire POM. Non è il regolamento operativo. Le regole canoniche restano in <code>README.md</code>, <code>AGENTS.MD</code>, <code>prompts/</code>, <code>skills/</code> e <code>templates/</code>.</p>
-      <p>Il <a href="../wiki.html">POM Wiki Reader</a> generato è la vista navigabile della Persistent Wiki radice. Usalo per la memoria operativa corrente; usa questa pagina come guida introduttiva.</p>
-      <p>Per abilitare la wiki in un progetto target, installa POM con un profilo che include la wiki oppure chiedi all'agente di leggere <code>pom/skills/wiki.md</code> in modalità build. Mantieni la fonte in <code>wiki/*.md</code>: il Markdown è la memoria operativa leggibile dall'agente, mentre <code>wiki.html</code> e le pagine generate in <code>wiki/_site/</code> sono la vista HTML per le persone. Dopo una modifica alla wiki, <code>npm run pom:lint</code> aggiorna automaticamente il reader HTML quando serve.</p>
-      <p>Quando POM cambia, questa guida va riletta e riallineata perché continui a essere utile a chi sta imparando il metodo.</p>
-    </section>
-
     <section id="what">
       <h2>Cos'è POM</h2>
-      <p>POM significa <strong>Project Operating Memory</strong>. È un metodo riusabile per conservare il minimo contesto affidabile necessario a capire dove si trova un progetto, perché si trova lì e qual è il prossimo passo sicuro.</p>
-      <p>Un passo sicuro è un'azione che il prossimo lettore o agente può compiere senza dover ricostruire il contesto, ripetere decisioni già prese o modificare parti stabili del progetto alla cieca.</p>
-      <p>POM collega codice sorgente, decisioni, specifiche, piani di lavoro, pagine wiki, mockup, test e istruzioni per agenti. Lo scopo non è documentare tutto. Lo scopo è rendere il progetto riprendibile dopo una pausa, un passaggio di mano o un cambio di agente.</p>
+      <p>POM significa <strong>Project Operating Memory</strong>. In pratica, è il piccolo insieme di note di progetto che spiega che cosa conta adesso: che cosa il progetto sta cercando di fare, che cosa è già stato deciso, che cosa è ancora in discussione e dove la prossima persona o il prossimo agente AI deve guardare prima di agire.</p>
+      <p>Serve perché i progetti perdono contesto in fretta. Un'idea utile può restare in una chat, una motivazione tecnica può rimanere nella memoria di qualcuno e una domanda aperta può non essere visibile a chi arriva dopo. POM dà a queste conoscenze un posto stabile dentro il repository.</p>
+      <p>Il metodo è volutamente leggero. Non deve obbligare ogni progetto a usare le stesse cartelle e non deve creare documenti solo perché esiste un template. Aggiunge solo la memoria che rende più chiaro e più sicuro il prossimo passo.</p>
+    </section>
+
+    <section class="note" id="status">
+      <h2>Questa guida è solo un'introduzione</h2>
+      <p>Questa pagina spiega POM con un linguaggio diretto, per chi lo incontra per la prima volta. Non è il regolamento che gli agenti devono seguire mentre lavorano. Le regole operative vivono in <code>README.md</code>, <code>AGENTS.MD</code>, <code>prompts/</code>, <code>skills/</code> e <code>templates/</code>.</p>
+      <p>Il <a href="../wiki.html">POM Wiki Reader</a> generato è una copia comoda da leggere nel browser della wiki radice. La wiki serve alla memoria corrente del progetto; questa pagina serve a capire che cos'è POM e perché esistono i suoi pezzi.</p>
+      <p>In un progetto target, la wiki viene aggiunta solo quando il progetto ha conoscenze che devono sopravvivere alla chat corrente. La fonte è il Markdown sotto <code>wiki/</code>. Il reader HTML è solo una vista comoda e può essere rigenerato.</p>
+      <p>Quando POM cambia, questa guida va riletta e riallineata perché continui ad aiutare chi sta imparando il metodo.</p>
     </section>
 
     <section id="why">
@@ -94,17 +94,17 @@
         <div class="item">
           <span class="tag teal">Continuità</span>
           <h3>I progetti perdono contesto</h3>
-          <p>Molti ragionamenti importanti restano in chat, memoria o nella testa di qualcuno. POM porta il contesto durevole nel repository.</p>
+          <p>Molti ragionamenti importanti restano in chat, memoria o nella testa di qualcuno. POM porta nei file di progetto solo le parti che vale la pena conservare.</p>
         </div>
         <div class="item">
           <span class="tag">Verifica</span>
           <h3>Fatto richiede evidenza</h3>
-          <p>POM tratta il completamento come una tesi da verificare, non come una casella da fidarsi a occhi chiusi.</p>
+          <p>Quando un task, una specifica o una decisione vengono dichiarati completi, POM chiede che cosa lo dimostra: test, documenti controllati, comportamento funzionante o un'altra verifica chiara.</p>
         </div>
         <div class="item">
           <span class="tag gold">Orientamento</span>
           <h3>Gli agenti devono leggere le fonti giuste</h3>
-          <p>Domande diverse appartengono a fonti diverse. POM aiuta l'agente a leggere il file corretto prima di agire.</p>
+          <p>Codice, appunti, decisioni, specifiche e wiki rispondono a domande diverse. POM aiuta l'agente a leggere il file che può davvero rispondere alla domanda prima di cambiare qualcosa.</p>
         </div>
       </div>
     </section>
@@ -122,7 +122,7 @@
         </div>
         <div class="item">
           <h3>Non è un archivio di documenti</h3>
-          <p>Avere più file non è automaticamente meglio. La memoria deve essere utile, corrente e collegata a una fonte autorevole.</p>
+          <p>Avere più file non è automaticamente meglio. Un documento POM deve aiutare qualcuno ad agire, e deve essere chiaro quale fonte del progetto lo sostiene.</p>
         </div>
         <div class="item">
           <h3>Non sostituisce Git</h3>
@@ -136,21 +136,22 @@
       <div class="grid">
         <div class="item principle">
           <h3>1. Memoria operativa</h3>
-          <p>Conservare il minimo contesto affidabile che consente di riprendere il lavoro in sicurezza. Evitare log, archivi e documentazione decorativa.</p>
+          <p>Conservare solo il contesto affidabile che consente di riprendere il lavoro in sicurezza. POM non è il diario di tutto quello che è successo; è la sintesi utile per capire che cosa fare dopo.</p>
         </div>
         <div class="item principle">
           <h3>2. Verifica</h3>
-          <p>Una specifica, un task o una decisione non sono completi finché l'obiettivo dichiarato non è davvero soddisfatto e l'evidenza lo dimostra.</p>
+          <p>Una specifica, un task o una decisione non sono completi solo perché sono stati scritti. Sono completi quando l'obiettivo dichiarato è davvero soddisfatto e l'evidenza lo dimostra.</p>
         </div>
         <div class="item principle">
           <h3>3. Organizzazione</h3>
-          <p>La struttura aiuta solo quando protegge memoria e verifica. L'organizzazione serve il lavoro, non il contrario.</p>
+          <p>Cartelle e template aiutano solo quando rendono più chiaro il prossimo passo. POM deve seguire la forma del progetto prima di chiedere al progetto di cambiare forma.</p>
         </div>
       </div>
     </section>
 
     <section id="tools">
       <h2>Strumenti di POM</h2>
+      <p>I nomi qui sotto sono il vocabolario del metodo. Sono pezzi volutamente piccoli: ognuno risponde a una domanda pratica diversa.</p>
       <table>
         <thead>
           <tr>
@@ -162,47 +163,57 @@
         <tbody>
           <tr>
             <td data-label="Strumento">Wiki persistente</td>
-            <td data-label="Scopo">Sintesi riusabile della conoscenza di progetto.</td>
+            <td data-label="Scopo">Memoria mantenuta del progetto: che cosa si sa adesso, perché conta e da dove arriva quella conoscenza.</td>
             <td data-label="File tipico"><code>wiki/</code></td>
           </tr>
           <tr>
+            <td data-label="Strumento">Open Discussion</td>
+            <td data-label="Scopo">Spazio per desideri, ipotesi, alternative e domande aperte mentre sono ancora in discussione. Non è ancora una decisione o un requisito.</td>
+            <td data-label="File tipico"><code>analysis/</code> o percorso approvato dal progetto</td>
+          </tr>
+          <tr>
             <td data-label="Strumento">Project State</td>
-            <td data-label="Scopo">Memoria breve di ripartenza con stato corrente e prossime azioni sicure.</td>
+            <td data-label="Scopo">Nota breve di passaggio: posizione corrente, lavoro recente rilevante e prossime azioni sicure.</td>
             <td data-label="File tipico"><code>PROJECT_STATE.md</code></td>
           </tr>
           <tr>
             <td data-label="Strumento">ADR e spec</td>
-            <td data-label="Scopo">Decisioni durevoli e comportamento atteso.</td>
+            <td data-label="Scopo">Gli ADR sono registri di decisione: spiegano che cosa è stato scelto e perché. Le specifiche descrivono il comportamento che il progetto si aspetta.</td>
             <td data-label="File tipico"><code>decisions/</code>, <code>specs/</code></td>
           </tr>
           <tr>
             <td data-label="Strumento">Task plan</td>
-            <td data-label="Scopo">Scomposizione verificabile del lavoro, scenari e criteri di completamento.</td>
+            <td data-label="Scopo">Scomposizione del lavoro che dice che cosa deve succedere e come verrà controllato il completamento.</td>
             <td data-label="File tipico"><code>tasks/</code></td>
           </tr>
           <tr>
             <td data-label="Strumento">Config</td>
-            <td data-label="Scopo">Mappa POM sulla struttura reale del progetto.</td>
+            <td data-label="Scopo">Dice a POM dove questo progetto tiene codice, documenti, test, decisioni, file generati e altri percorsi importanti.</td>
+            <td data-label="File tipico"><code>pom.config.json</code></td>
+          </tr>
+          <tr>
+            <td data-label="Strumento">Artifact Policy</td>
+            <td data-label="Scopo">Dice all'agente se un file si può modificare, richiede approvazione, è generato o deve restare storico.</td>
             <td data-label="File tipico"><code>pom.config.json</code></td>
           </tr>
           <tr>
             <td data-label="Strumento">Lint</td>
-            <td data-label="Scopo">Automatizza controlli di governance stabili e oggettivi.</td>
+            <td data-label="Scopo">Esegue controlli ripetibili per regole che non dovrebbero dipendere dalla memoria o dall'interpretazione.</td>
             <td data-label="File tipico"><code>npm run pom:lint</code></td>
           </tr>
           <tr>
             <td data-label="Strumento">Skill</td>
-            <td data-label="Scopo">Punti di ingresso brevi che dicono all'agente quale workflow usare.</td>
+            <td data-label="Scopo">Punti di ingresso brevi che dicono all'agente che tipo di lavoro sta facendo e quali istruzioni leggere.</td>
             <td data-label="File tipico"><code>skills/</code></td>
           </tr>
           <tr>
             <td data-label="Strumento">Prompt</td>
-            <td data-label="Scopo">Procedure canoniche per applicare il metodo.</td>
+            <td data-label="Scopo">Procedure passo passo per applicare il metodo in situazioni ricorrenti.</td>
             <td data-label="File tipico"><code>prompts/</code></td>
           </tr>
           <tr>
             <td data-label="Strumento">Template</td>
-            <td data-label="Scopo">Forme riusabili per gli elementi di memoria governati.</td>
+            <td data-label="Scopo">Forme riusabili per mantenere leggibili note, piani e decisioni simili tra loro.</td>
             <td data-label="File tipico"><code>templates/</code></td>
           </tr>
         </tbody>
@@ -211,7 +222,7 @@
 
     <section id="workflow">
       <h2>Come funziona in pratica</h2>
-      <p>POM si può leggere come un flusso operativo compatto: l'utente dichiara il lavoro, l'agente sceglie il workflow, il risultato diventa memoria del progetto e POM verifica che l'artefatto sia affidabile.</p>
+      <p>POM si può leggere come un ciclo semplice: capire la richiesta, scegliere il modo giusto di lavorare, scrivere solo memoria utile e verificare le affermazioni importanti prima di chiudere il lavoro.</p>
       <div class="grid">
         <div class="item">
           <span class="tag teal">1. Richiesta</span>
@@ -221,17 +232,17 @@
         <div class="item">
           <span class="tag">2. Workflow</span>
           <h3>L'agente sceglie la procedura</h3>
-          <p>L'agente sceglie la skill, legge il prompt canonico e usa il template giusto. Esempio: usa <code>plan</code>, legge il prompt per creare task plan e applica il template dei task.</p>
+          <p>L'agente sceglie una skill breve, legge le istruzioni collegate e usa un template solo quando serve davvero un documento.</p>
         </div>
         <div class="item">
           <span class="tag gold">3. Memoria</span>
           <h3>Il risultato entra nel repository</h3>
-          <p>Il risultato non resta nella chat: diventa un documento nel progetto, per esempio <code>tasks/recovery/P0/password-reset.md</code>.</p>
+          <p>Se il risultato servirà più avanti, diventa un documento del progetto invece di restare sepolto nella chat.</p>
         </div>
         <div class="item">
           <span class="tag teal">4. Verifica</span>
           <h3>POM controlla l'affidabilità</h3>
-          <p>POM controlla che l'artefatto sia affidabile: lint, controllo goal-backward, scenari positivi e casi di errore quando c'è codice.</p>
+          <p>POM controlla che il risultato sia affidabile. Per il codice di solito significa test. Per i documenti significa controllare le fonti, cercare contraddizioni e sfidare la conclusione prima di considerarla chiusa.</p>
         </div>
       </div>
     </section>
@@ -283,9 +294,10 @@
     <section id="new-project">
       <h2>Usare POM su un nuovo progetto</h2>
       <ol>
-        <li>Partire piccoli. Scegliere il profilo di adozione più leggero che dia al progetto un punto di ripartenza affidabile.</li>
-        <li>Creare la memoria di base: istruzioni per agenti, configurazione e stato di progetto.</li>
-        <li>Aggiungere wiki, decisioni, task plan o test strutturati solo quando il progetto ne ha bisogno.</li>
+        <li>Partire piccoli. Scegliere solo la quantità di POM che dà al progetto un punto di ripartenza affidabile.</li>
+        <li>Creare la memoria di base: istruzioni per agenti, file di configurazione e breve stato di progetto.</li>
+        <li>Non creare cartelle applicative, decisioni formali (ADR) o specifiche prima che la direzione del progetto sia esplicita. Usare Open Discussion per alternative non risolte.</li>
+        <li>Aggiungere pagine wiki, decisioni, task plan o test strutturati solo quando il progetto ne ha bisogno.</li>
         <li>Lasciare a Git la storia dettagliata. Lasciare a POM la sintesi corrente.</li>
       </ol>
       <div class="callout">Prima richiesta utile: <code>Leggi pom/skills/seed.md e configura POM per questo progetto.</code></div>
@@ -293,24 +305,25 @@
 
     <section id="existing-project">
       <h2>Usare POM su un progetto esistente</h2>
-      <p>In un repository esistente, POM deve prima osservare e mappare. Non deve riorganizzare il progetto solo per farlo assomigliare a un esempio canonico.</p>
+      <p>In un repository esistente, POM deve prima osservare e mappare come il progetto lavora già. Non deve riorganizzare il progetto solo per farlo assomigliare a un esempio.</p>
       <ol>
         <li>Leggere documentazione esistente, radici del sorgente, test, decisioni e convenzioni.</li>
         <li>Registrare la struttura reale in <code>pom.config.json</code>.</li>
-        <li>Individuare il più piccolo vuoto di memoria che danneggia ripartenza, verifica o fonte autorevole.</li>
+        <li>Registrare l'Artifact Policy: quali file sono generati, quali sono storici e quali richiedono approvazione esplicita prima della modifica.</li>
+        <li>Individuare il più piccolo vuoto di memoria che rende più difficile ripartire, verificare o restare allineati alle fonti del progetto.</li>
         <li>Adottare in modo incrementale. Le migrazioni sono decisioni esplicite, non effetti collaterali dell'installazione.</li>
       </ol>
-      <div class="callout"><code>owned</code> significa che POM può aiutare a definire la governance del progetto. <code>team</code> significa che POM deve preservare le convenzioni condivise salvo cambio esplicito del team.</div>
+      <div class="callout"><code>owned</code> significa che POM può aiutare a definire le regole del progetto. <code>team</code> significa che POM deve preservare le convenzioni condivise salvo cambio esplicito del team.</div>
       <div class="callout">Prima richiesta utile: <code>Leggi pom/skills/adopt.md e adotta POM senza cambiare la struttura esistente.</code></div>
     </section>
 
     <section id="overlay">
       <h2>Overlay su progetti esterni</h2>
-      <p>Quando il repository è clonato da un upstream che non controlliamo, POM deve comportarsi come overlay locale di comprensione, non come governance del progetto.</p>
+      <p>A volte il repository appartiene a un altro progetto, e POM serve solo ad aiutare chi lavora localmente a capirlo. In quel caso POM deve comportarsi come uno strato privato di note, non come regole per il progetto originale upstream.</p>
       <ul>
         <li>Non imporre convenzioni POM a <code>docs/</code>, <code>tests/</code>, ADR, struttura sorgente, processo di release o contenuto delle pull request upstream.</li>
         <li>Usare la memoria locale per mappare architettura, entrypoint, moduli, test, convenzioni, rischi e domande aperte.</li>
-        <li>Tenere gli artefatti overlay fuori dai contributi upstream, salvo richiesta esplicita del progetto.</li>
+        <li>Tenere le note POM locali fuori dai contributi upstream, salvo richiesta esplicita del progetto.</li>
         <li>Tenere il lavoro overlay su un suo branch o worktree; non fare merge di quel branch nella branch di contributo.</li>
         <li>Prima di una PR, trasferire solo modifiche selezionate non-POM, stageare la modifica reale per upstream ed eseguire i controlli propri del progetto.</li>
       </ul>
@@ -318,7 +331,7 @@
         <code>node bootstrap-pom.mjs --preset overlay</code>
         <code>npm run pom:init -- --preset overlay</code>
       </div>
-      <div class="callout">Modalità documentata: <code>Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding overlay.</code></div>
+      <div class="callout">Modalità documentata: <code>Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding layer.</code></div>
     </section>
 
     <section id="adoption">
@@ -327,17 +340,17 @@
         <div class="item">
           <span class="tag teal">Minimal</span>
           <h3>Memoria di ripartenza</h3>
-          <p>Usa POM per istruzioni agenti, configurazione e stato di progetto. È adatto quando il progetto è piccolo o ancora in formazione.</p>
+          <p>Usa POM per istruzioni agenti, configurazione e stato di progetto. È sufficiente quando il progetto è piccolo o ancora in formazione.</p>
         </div>
         <div class="item">
           <span class="tag gold">Light</span>
           <h3>Memoria mirata</h3>
-          <p>Aggiunge wiki o decisioni quando risolvono un vero problema di coordinamento. Può corrispondere a profili come <code>wiki</code> o <code>decisions</code>.</p>
+          <p>Aggiunge wiki o decisioni solo quando risolvono un vero problema di coordinamento. Può corrispondere a profili come <code>wiki</code> o <code>decisions</code>.</p>
         </div>
         <div class="item">
           <span class="tag gold">Full</span>
-          <h3>Memoria governata</h3>
-          <p>Usa wiki, decisioni, pianificazione, verifica, lint e regole di handoff più forti per progetti grandi o di lunga durata.</p>
+          <h3>Memoria più strutturata</h3>
+          <p>Usa wiki, decisioni, pianificazione, verifica, controlli automatici e regole di passaggio più forti per progetti grandi o di lunga durata.</p>
         </div>
       </div>
       <p class="callout">L'installer supporta anche profili pratici come <code>adopt</code>, <code>refresh</code> e <code>custom</code>. Il profilo è un punto di partenza, non una medaglia di maturità.</p>
@@ -345,7 +358,7 @@
 
     <section id="experiments">
       <h2>Sperimentazioni isolate</h2>
-      <p>Gli esperimenti sono preziosi, ma non devono contaminare il sorgente stabile prima della valutazione. POM li tratta come lavoro temporaneo finché non vengono consolidati deliberatamente.</p>
+      <p>Gli esperimenti sono preziosi, ma non devono cambiare il progetto stabile prima della valutazione. POM li tratta come lavoro temporaneo finché qualcuno sceglie deliberatamente che cosa tenere.</p>
       <ul>
         <li>Usare un branch o una Git worktree come <code>exp/&lt;topic&gt;</code> per lavori ampi o rischiosi.</li>
         <li>Usare <code>/tmp</code> o <code>experiments/&lt;topic&gt;</code> per prove brevi ed evidenza eliminabile.</li>
@@ -356,7 +369,7 @@
 
     <section id="git">
       <h2>Git e POM</h2>
-      <p>Git è la memoria storica fine. Registra cosa è cambiato e quando. POM è la sintesi operativa. Spiega cosa conta adesso, perché conta e da dove riprendere.</p>
+      <p>Git è la memoria storica dettagliata. Registra cosa è cambiato e quando. POM è la sintesi operativa corrente. Spiega cosa conta adesso, perché conta e da dove riprendere.</p>
       <p>Non trasformare i documenti POM in changelog manuali. Se serve il dettaglio storico, si legge Git. Se serve il contesto di ripartenza, si legge POM.</p>
     </section>
 
@@ -370,16 +383,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td data-label="Esigenza">Scegliere un workflow o capire gli strumenti disponibili</td><td data-label="Skill"><code>help</code></td></tr>
+          <tr><td data-label="Esigenza">Scegliere come procedere o capire gli strumenti disponibili</td><td data-label="Skill"><code>help</code></td></tr>
           <tr><td data-label="Esigenza">Chiarire lavoro ambiguo prima di creare memoria</td><td data-label="Skill"><code>clarify</code></td></tr>
           <tr><td data-label="Esigenza">Avviare POM su un nuovo progetto</td><td data-label="Skill"><code>seed</code></td></tr>
           <tr><td data-label="Esigenza">Adottare POM in un progetto esistente</td><td data-label="Skill"><code>adopt</code></td></tr>
           <tr><td data-label="Esigenza">Creare o aggiornare la memoria di ripartenza</td><td data-label="Skill"><code>pulse</code></td></tr>
-          <tr><td data-label="Esigenza">Impostare guardrail di governance</td><td data-label="Skill"><code>guard</code></td></tr>
+          <tr><td data-label="Esigenza">Impostare regole per la documentazione di progetto</td><td data-label="Skill"><code>guard</code></td></tr>
           <tr><td data-label="Esigenza">Creare un task plan verificabile</td><td data-label="Skill"><code>plan</code></td></tr>
           <tr><td data-label="Esigenza">Verificare lavoro completato</td><td data-label="Skill"><code>check</code></td></tr>
           <tr><td data-label="Esigenza">Chiudere una sessione significativa</td><td data-label="Skill"><code>handoff</code></td></tr>
           <tr><td data-label="Esigenza">Rimodellare una patch intorno alla forma finale prevista</td><td data-label="Skill"><code>zero-tech-debt</code></td></tr>
+          <tr><td data-label="Esigenza">Sfidare una spec o decisione senza codice prima della chiusura</td><td data-label="Skill"><code>challenge</code></td></tr>
           <tr><td data-label="Esigenza">Configurare mapping locali e lint</td><td data-label="Skill"><code>config</code></td></tr>
           <tr><td data-label="Esigenza">Eseguire o consolidare un esperimento</td><td data-label="Skill"><code>spike</code></td></tr>
           <tr><td data-label="Esigenza">Costruire, interrogare o mantenere la wiki</td><td data-label="Skill"><code>wiki</code></td></tr>
@@ -388,8 +402,8 @@
           <tr><td data-label="Esigenza">Parcheggiare lavoro senza implementarlo</td><td data-label="Skill"><code>defer</code></td></tr>
           <tr><td data-label="Esigenza">Aggiornare o sincronizzare POM in un progetto target</td><td data-label="Skill"><code>sync</code></td></tr>
           <tr><td data-label="Esigenza">Risolvere divergenze tra fonti</td><td data-label="Skill"><code>reconcile</code></td></tr>
-          <tr><td data-label="Esigenza">Eseguire un audit di governance read-only</td><td data-label="Skill"><code>validate</code></td></tr>
-          <tr><td data-label="Esigenza">Ridurre bloat del metodo</td><td data-label="Skill"><code>prune</code></td></tr>
+          <tr><td data-label="Esigenza">Controllare le regole POM senza modificare file</td><td data-label="Skill"><code>validate</code></td></tr>
+          <tr><td data-label="Esigenza">Ridurre il peso inutile del metodo</td><td data-label="Skill"><code>prune</code></td></tr>
           <tr><td data-label="Esigenza">Diagnosticare un problema POM</td><td data-label="Skill"><code>diagnose</code></td></tr>
         </tbody>
       </table>
@@ -401,9 +415,11 @@
         <li>Partire dal profilo POM più piccolo che sia davvero utile.</li>
         <li>Creare memoria solo quando aiuta il lavoro futuro a ripartire, verificare o non riscoprire informazioni.</li>
         <li>Leggere le fonti correnti prima di fare affermazioni sul progetto.</li>
+        <li>Tenere desiderata e alternative non risolte in Open Discussion finché non vengono promosse a spec, decisione, wiki o task plan.</li>
+        <li>Controllare l'Artifact Policy prima di modificare file con regole speciali.</li>
         <li>Usare Git per la storia e POM per la sintesi operativa corrente.</li>
         <li>Tenere isolati gli esperimenti finché il loro apprendimento non viene selezionato per la promozione.</li>
-        <li>Potare le regole che aggiungono processo senza proteggere la memoria.</li>
+        <li>Togliere le regole che aggiungono processo senza proteggere la memoria.</li>
         <li>Quando si usa o si evolve POM stesso, chiedersi cosa servirà al prossimo lettore o agente per compiere il prossimo passo sicuro nel progetto.</li>
       </ul>
     </section>
@@ -421,7 +437,7 @@
         <text x="32" y="37" text-anchor="middle">O</text>
         <text x="47" y="37" text-anchor="middle">M</text>
       </svg>
-      <p>POM - Project Operating Memory. Questa guida è una panoramica leggibile per chi si avvicina al metodo. Le regole operative vivono nei file canonici del repository.</p>
+      <p>POM - Project Operating Memory. Questa guida è una panoramica leggibile per chi si avvicina al metodo. Le regole operative vivono nei file principali di POM nel repository.</p>
     </div>
   </footer>
 </body>

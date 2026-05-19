@@ -81,6 +81,7 @@ Module semantics:
 The configuration should cover, when applicable:
 - ownership mode and whether POM is local-only overlay memory;
 - Markdown allowed in root;
+- artifact policy for approval-required, generated, and historical paths;
 - analysis taxonomy, root, optional recommended path, namespace convention, and whether analysis root files are allowed;
 - POM template paths and any project-owned template overrides;
 - wiki index/log expectations and project-specific wiki categories/sections;

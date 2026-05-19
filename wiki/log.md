@@ -45,3 +45,9 @@ Sources used: `wiki.html`, `templates/WIKI_READER_SHORTCUT.html`, `README.md`, a
 Clarified that the wiki reader does not load Mermaid by default, and that projects using a remote Mermaid runtime create an external browser dependency without Subresource Integrity.
 
 Sources used: `README.md`, `scripts/render-wiki.mjs`, and `wiki/reader-capabilities.md`.
+
+## [2026-05-19] update | document open discussions, challenge review, and artifact policy
+
+Updated the wiki synthesis for the new Open Discussion memory element, the adversarial `challenge` skill, and Artifact Policy as the edit-permission layer for governed artifacts.
+
+Sources used: `CONTEXT.md`, `README.md`, `skills/challenge.md`, `prompts/24-challenge-antithesis.md`, `templates/OPEN_DISCUSSION_TEMPLATE.md`, `templates/ADR_TEMPLATE.md`, and `templates/POM_CONFIG_TEMPLATE.json`.

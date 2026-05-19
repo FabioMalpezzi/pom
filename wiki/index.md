@@ -2,7 +2,7 @@
 
 > Persistent Wiki for the POM source repository.
 > Primary source: current POM repository files.
-> Last updated: 2026-05-17
+> Last updated: 2026-05-19
 
 ## Summary
 
@@ -21,7 +21,7 @@ The reader-oriented guides under `docs/` remain introductory public guides. They
 | Page | Summary |
 |---|---|
 | [[overview]] | High-level map of what POM is, what it protects, and how this wiki should be read. |
-| [[operating-memory]] | Core domain model for restart-critical memory: Operating Memory, Memory Elements, Source Authority, and Divergence. |
+| [[operating-memory]] | Core domain model for restart-critical memory: Operating Memory, Memory Elements, Source Authority, Artifact Policy, and Divergence. |
 | [[wiki-method]] | How the Persistent Wiki turns project knowledge into a maintained synthesis rather than a temporary index. |
 
 ## Method Areas
@@ -32,7 +32,7 @@ The reader-oriented guides under `docs/` remain introductory public guides. They
 | Wiki and memory | Persistent Wiki creation, query, lint, stale review, and reconciliation | [[wiki-method]] |
 | Adoption | Installation posture, adoption profiles, ownership, and overlay mode | [[adoption-and-installation]] |
 | Agent procedures | Skill cards, canonical prompts, and how agents find the right workflow | [[skills-and-prompts]] |
-| Governance | Templates, lint, completion verification, and document discipline | [[templates-and-governance]] |
+| Governance | Templates, lint, artifact policy, completion verification, and document discipline | [[templates-and-governance]] |
 | Evolution | Experiments, extension, pruning, reader capabilities, and current specs | [[experiments-and-extension]], [[reader-capabilities]], [[current-specs]] |
 
 ## Sources And Legend

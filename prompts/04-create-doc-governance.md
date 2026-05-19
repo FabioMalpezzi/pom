@@ -20,6 +20,7 @@ The method must include:
 - mockups as autonomous packages with MOCK_MANIFEST.md, if the project uses mockups;
 - tests/source roots as project-owned structures, not folders imposed by POM;
 - project state as quick restart point;
+- artifact policy for paths that require approval, are generated, or should stay historical;
 - POM templates as reusable document rules;
 - `pom.config.json` as project-specific lint configuration;
 - documentation lint if the project allows it.

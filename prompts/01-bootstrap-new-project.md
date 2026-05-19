@@ -27,7 +27,7 @@ If the project has no application infrastructure yet, do not choose or scaffold 
 - deployment/hosting;
 - test framework and test layout.
 
-When the user has not decided yet, create analysis and Draft ADRs for the alternatives instead of committing the repository to a technical structure. Scaffolding source code is allowed only after the relevant infrastructure decisions are explicit or the user asks for a disposable prototype.
+When the user has not decided yet, create an approved Open Discussion or analysis note for the alternatives instead of committing the repository to a technical structure. Do not create Draft ADRs for undecided options. Scaffolding source code is allowed only after the relevant infrastructure decisions are explicit or the user asks for a disposable prototype.
 
 Adoption profiles:
 - minimal: agent instruction hook + package scripts + `pom.config.json`; no wiki, docs, analysis, mockups, or tests.
@@ -75,6 +75,7 @@ The method must distinguish:
 - wiki: living, persistent, consolidated knowledge;
 - wiki/index.md: content map;
 - wiki/log.md: append-only chronological register;
+- open discussion: non-authoritative input, hypotheses, alternatives, and questions;
 - analysis: non-official bridge analysis;
 - decisions: ADRs and decision history;
 - docs: publishable official documentation, only when needed;
@@ -98,6 +99,7 @@ Use POM templates:
 - pom/templates/WIKI_INDEX_TEMPLATE.md;
 - pom/templates/WIKI_LOG_TEMPLATE.md;
 - pom/templates/WIKI_PAGE_TEMPLATE.md;
+- pom/templates/OPEN_DISCUSSION_TEMPLATE.md;
 - other relevant templates when needed.
 
 If documentation lint should be enabled:

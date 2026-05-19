@@ -21,10 +21,9 @@ POM is documented in English for portability. When applying POM to this project,
 ## Installed Layout
 
 In a target project, `pom/` is the POM Source. It may contain `.git`, `README.md`, `AGENTS.MD`, `bootstrap-pom.mjs`, and `package.json`; that is normal for a Git-managed install.
-The error case is POM Source files at the target root, for example `WIKI_METHOD.md`, `prompts/`, `skills/`, `templates/`, and `scripts/install-pom.ts` beside project files.
-If the root has only `pom/`, `AGENTS.md`, `package.json`, `pom-update.mjs`, `pom.config.json`, and optional agent folders, treat it as a day-zero project. Read `pom.config.json`, report that project memory has not started yet, and create no `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or configured decisions root unless the active profile enables them or current work needs them.
+The error case is POM Source files at the target root, for example `WIKI_METHOD.md`, `prompts/`, `skills/`, `templates/`, and `scripts/install-pom.ts` beside project files. If the root has only `pom/`, `AGENTS.md`, `package.json`, `pom-update.mjs`, `pom.config.json`, and optional agent folders, treat it as a day-zero project. Read `pom.config.json`, report that project memory has not started yet, and create no `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or configured decisions root unless the active profile enables them or current work needs them.
 
-If a day-zero project has no application infrastructure yet, do not choose or scaffold the technical implementation on your own. Ask how the user wants to realize the project, or create analysis and Draft ADRs for the alternatives, before selecting source layout, package manager, runtime/framework, database, authentication, deployment, or test framework.
+If a day-zero project has no application infrastructure yet, do not choose or scaffold the technical implementation. Ask how the user wants to realize the project, or write an approved Open Discussion/analysis note for alternatives, before selecting source layout, package manager, runtime/framework, database, authentication, deployment, or test framework.
 
 ## Principle
 
@@ -36,13 +35,14 @@ There is no single source of truth for everything. Each domain has its own autho
 | What do we currently know about the project? | `wiki/` |
 | Why did we decide this? | configured decisions root (`decisions.root`, default `decisions/`) |
 | What analysis supports or challenges a choice? | `analysis/` |
+| What is still desiderata, hypotheses, or unresolved discussion? | Open Discussion or `analysis/`, not implementation authority |
 | What does the intended experience show? | `mockups/`, when present |
 | What can be shared as official documentation? | `docs/`, when present |
 | Where do I restart after a pause? | `PROJECT_STATE.md` or current plan |
 
 If sources diverge, do not hide the divergence: surface it, analyze it, and propose a decision or reconciliation.
 
-If the right document is unclear, optimize for the next safe step: write the smallest useful note where the next reader or agent will need it before acting.
+Before editing governed artifacts, check whether they are editable, approval-required, generated, or historical. If the right document is unclear, treat notes/desiderata as input and write the smallest approved Open Discussion or analysis note before creating specs, ADRs, folders, or code.
 
 ## Git And History
 
@@ -81,6 +81,8 @@ Summary:
 Specs are living documents: edit them directly and let Git keep fine-grained history.
 
 ADRs represent decisions. If a decision changes substantially, create a new ADR that replaces or supersedes the previous one. Do not retroactively rewrite an approved decision except for minor corrections.
+
+Do not use ADRs for undecided alternatives. Use an Open Discussion or analysis note until the choice is explicit.
 
 ## Temporary Experiments
 
@@ -218,6 +220,7 @@ Typos, regenerated indexes, link-only fixes, or changes that do not affect how t
 ## Templates
 
 Before creating governed documents, read and use the relevant template in `pom/templates/`.
+Use `pom/templates/OPEN_DISCUSSION_TEMPLATE.md` for desiderata, unresolved alternatives, and questions that are not yet specs or ADRs.
 
 If the project has customized or localized templates configured in `pom.config.json.templates`, use those project templates instead of the defaults in `pom/templates/`.
 
@@ -238,6 +241,7 @@ Do not customize files directly under `pom/` for project-specific needs. POM upd
 | Document | Template |
 |---|---|
 | AGENTS / agent instructions section | `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` |
+| open discussion | `pom/templates/OPEN_DISCUSSION_TEMPLATE.md` |
 | wiki page | `pom/templates/WIKI_PAGE_TEMPLATE.md` |
 | wiki index | `pom/templates/WIKI_INDEX_TEMPLATE.md` |
 | wiki log | `pom/templates/WIKI_LOG_TEMPLATE.md` |
@@ -276,6 +280,7 @@ Common entry points:
 | Defer or park future work | `pom/skills/defer.md` |
 | Diagnose a failing POM workflow | `pom/skills/diagnose.md` |
 | Rework a scoped change around the intended final shape | `pom/skills/zero-tech-debt.md` |
+| Challenge a non-code spec or decision before closure | `pom/skills/challenge.md` |
 | Prune overlapping or excessive POM rules | `pom/skills/prune.md` |
 | Refresh or sync POM in this project | `pom/skills/sync.md` |
 | Validate governance after significant work | `pom/skills/validate.md` |
@@ -344,6 +349,7 @@ A spec, task, or ADR cannot be marked Complete without passing the completion ve
    - at least 1 thesis: an argument or evidence that proves the spec/ADR is valid, based on use cases it generates or is involved in;
    - at least 1 antithesis: a case of incorrect or improper usage that is demonstrated to be false or inferior to the thesis (more is better);
    - the work cannot be marked Complete if any antithesis is not confuted.
+   - use `pom/skills/challenge.md` when an adversarial review is needed before acceptance or completion.
 
 3. **Governance check (third):** for significant or memory-changing closures, run `pom/skills/validate.md` to verify PROJECT_STATE, wiki, task status, decisions, and orphan artifacts.
 

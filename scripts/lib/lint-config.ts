@@ -30,6 +30,11 @@ export type LintConfig = {
   root: {
     allowedMarkdown: string[];
   };
+  artifactPolicy: {
+    approvalRequired: string[];
+    generated: string[];
+    historical: string[];
+  };
   analysis: {
     root: string;
     allowedDirs: string[];
@@ -135,6 +140,11 @@ const defaultConfig: LintConfig = {
       "WIKI_METHOD.md",
     ],
   },
+  artifactPolicy: {
+    approvalRequired: [],
+    generated: ["analysis/ANALYSIS_INDEX.md", "decisions/DECISIONS_INDEX.md", "tasks/README.md", "wiki/_site/**"],
+    historical: [],
+  },
   analysis: {
     root: "analysis",
     allowedDirs: [],
@@ -147,6 +157,7 @@ const defaultConfig: LintConfig = {
     doc: "pom/templates/DOC_TEMPLATE.md",
     experiment: "pom/templates/EXPERIMENT_TEMPLATE.md",
     mockManifest: "pom/templates/MOCK_MANIFEST_TEMPLATE.md",
+    openDiscussion: "pom/templates/OPEN_DISCUSSION_TEMPLATE.md",
     reconciliation: "pom/templates/RECONCILIATION_TEMPLATE.md",
     taskPlan: "pom/templates/TASK_PLAN_TEMPLATE.md",
     wikiIndex: "pom/templates/WIKI_INDEX_TEMPLATE.md",
@@ -283,6 +294,11 @@ function mergeConfig(base: LintConfig, raw: Record<string, unknown>, readers: Co
     },
     root: {
       allowedMarkdown: readStringArray(raw, "root.allowedMarkdown", base.root.allowedMarkdown),
+    },
+    artifactPolicy: {
+      approvalRequired: readStringArray(raw, "artifactPolicy.approvalRequired", base.artifactPolicy.approvalRequired),
+      generated: readStringArray(raw, "artifactPolicy.generated", base.artifactPolicy.generated),
+      historical: readStringArray(raw, "artifactPolicy.historical", base.artifactPolicy.historical),
     },
     analysis: {
       root: readString(raw, "analysis.root", base.analysis.root),

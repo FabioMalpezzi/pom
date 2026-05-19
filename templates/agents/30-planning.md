@@ -33,6 +33,7 @@ A spec, task, or ADR cannot be marked Complete without passing the completion ve
    - at least 1 thesis: an argument or evidence that proves the spec/ADR is valid, based on use cases it generates or is involved in;
    - at least 1 antithesis: a case of incorrect or improper usage that is demonstrated to be false or inferior to the thesis (more is better);
    - the work cannot be marked Complete if any antithesis is not confuted.
+   - use `pom/skills/challenge.md` when an adversarial review is needed before acceptance or completion.
 
 3. **Governance check (third):** run `pom/skills/validate.md` to verify PROJECT_STATE, wiki, task status, decisions, and orphan artifacts.
 

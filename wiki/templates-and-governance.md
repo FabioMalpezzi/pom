@@ -8,7 +8,7 @@ Templates define the shape of governed documents, and lint turns stable rules in
 
 The README states the rule: template equals rule, lint equals enforcement. The lint configuration can be copied into a target project as `pom.config.json` and adapted to local roots, templates, wiki categories, decisions, tests, and handoff behavior.
 
-The current repository provides templates for Decision Records, agent instruction sections, Current Plan, docs, experiments, mock manifests, Project State, reconciliation, specs, task plans, wiki index, wiki log, and wiki pages.
+The current repository provides templates for Decision Records, Open Discussion, agent instruction sections, Current Plan, docs, experiments, mock manifests, Project State, reconciliation, specs, task plans, wiki index, wiki log, and wiki pages.
 
 ## Details
 
@@ -28,6 +28,8 @@ Documentation discipline keeps POM lean:
 
 The generated wiki reader must respect this discipline. Generated HTML is derived output: useful to read, safe to regenerate, and never a second governed source.
 
+Artifact Policy adds the edit-permission layer that Source Authority does not answer. `pom.config.json` can mark paths as approval-required, generated, or historical. The portable defaults mark generated indexes and wiki reader output as generated; project-specific normative folders can be added by target projects without changing POM Source.
+
 ## Sources
 
 | Source | Use |
@@ -36,6 +38,7 @@ The generated wiki reader must respect this discipline. Generated HTML is derive
 | `templates/` | Current reusable document shapes. |
 | `templates/POM_CONFIG_TEMPLATE.json` | Portable lint and adoption configuration. |
 | `scripts/lib/lint-config.ts` | Default lint configuration used when project config is missing. |
+| `templates/OPEN_DISCUSSION_TEMPLATE.md` | Discussion template for non-authoritative desiderata and alternatives before promotion. |
 | `prompts/18-post-action-validator.md` | Post-action governance audit procedure. |
 | `specs/SPEC-0000-pom-founding-spec.md` | Requirements for verification, organization, and extensibility. |
 
@@ -51,7 +54,7 @@ The generated wiki reader must respect this discipline. Generated HTML is derive
 
 | Question | Status |
 |---|---|
-| Should generated HTML be linted, ignored, or treated as disposable output? | Open. |
+| Should generated HTML be linted, ignored, or treated as disposable output? | Answered for now: generated output governed by Artifact Policy; Markdown remains authoritative. |
 | Should a reader template live under `templates/` if promoted? | Answered for now: no; the reader is script output plus a script-owned CSS theme. |
 
 ## Related Links
