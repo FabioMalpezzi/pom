@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "0.1",
+  "proposalId": "proposal-hide-wiki-log-from-mini-ui-001",
+  "sourceEventId": "ui-event-20260519130408477-question",
+  "proposalStatus": "applied",
+  "proposalType": "project_doc_update",
+  "questionHandled": "The user reported that the wiki log was visible inside the web wiki even though it should stay out of the navigable wiki surface.",
+  "sourcesRead": [
+    {
+      "path": "experiments/wiki-agent-orchestration/evidence/ui-events/ui-event-20260519130408477-question.json",
+      "kind": "wiki_event",
+      "reason": "Input event created from the mini UI with the user's request and the active document path."
+    },
+    {
+      "path": "scripts/render-wiki.mjs",
+      "kind": "code",
+      "reason": "Checked the stable static wiki reader behavior and its exclusion list."
+    },
+    {
+      "path": "experiments/wiki-agent-orchestration/mini-ui/server.mjs",
+      "kind": "code",
+      "reason": "Checked how the experimental mini UI discovers and serves documents."
+    },
+    {
+      "path": "experiments/wiki-agent-orchestration/mini-ui/README.md",
+      "kind": "project_doc",
+      "reason": "Updated the prototype note so the mini UI document boundary is explicit."
+    }
+  ],
+  "authoritativeDestination": {
+    "kind": "project_doc",
+    "path": "experiments/wiki-agent-orchestration/mini-ui/server.mjs",
+    "reason": "The durable wiki reader already excludes wiki/log.md. The defect was in the experimental mini UI document set."
+  },
+  "factsObserved": [
+    "The event selected wiki/log.md as the active mini UI document.",
+    "scripts/render-wiki.mjs excludes log.md from generated wiki reader pages.",
+    "experiments/wiki-agent-orchestration/mini-ui/server.mjs listed all Markdown files under wiki/ except skipped directories, so wiki/log.md was still visible in the mini UI.",
+    "The requested behavior is a UI/document-discovery correction, not a new wiki governance decision."
+  ],
+  "assumptions": [
+    "wiki/log.md should remain in the repository as a source-side change register.",
+    "The mini UI should mirror the reader-visible wiki surface unless a future spec says otherwise."
+  ],
+  "gapsOrContradictions": [
+    "The mini UI and the stable static reader had two separate exclusion mechanisms. This is acceptable for the prototype, but a future implementation should centralize reader visibility rules."
+  ],
+  "proposedChange": {
+    "summary": "Exclude wiki/log.md from the experimental mini UI document set and document that the log is not a navigable wiki page.",
+    "targetPath": "experiments/wiki-agent-orchestration/mini-ui/server.mjs",
+    "content": "Add log.md to the wiki source skipFiles list, apply the same skip rule when serving documents by path, and note the exclusion in the mini UI README."
+  },
+  "approvalRequirement": "none",
+  "nonAutoApplyReason": "The user asked to fix the issue directly in the active session, and the change is limited to the experimental mini UI plus its README note.",
+  "nextQuestions": [
+    "Should reader-visible document rules become a shared helper if the web wiki prototype grows beyond the current experiment?"
+  ]
+}

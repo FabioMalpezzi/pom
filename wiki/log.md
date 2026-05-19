@@ -51,3 +51,15 @@ Sources used: `README.md`, `scripts/render-wiki.mjs`, and `wiki/reader-capabilit
 Updated the wiki synthesis for the new Open Discussion memory element, the adversarial `challenge` skill, and Artifact Policy as the edit-permission layer for governed artifacts.
 
 Sources used: `CONTEXT.md`, `README.md`, `skills/challenge.md`, `prompts/24-challenge-antithesis.md`, `templates/OPEN_DISCUSSION_TEMPLATE.md`, `templates/ADR_TEMPLATE.md`, and `templates/POM_CONFIG_TEMPLATE.json`.
+
+## [2026-05-19] update | add web wiki agent-extension draft spec
+
+Updated the current specs synthesis for `SPEC-0005`, which defines the draft boundary for a web wiki that extends an active coding agent session and produces reviewed proposals for POM and project documents.
+
+Sources used: `specs/SPEC-0005-web-wiki-agent-extension.md` and `experiments/wiki-agent-orchestration/EXPERIMENT.md`.
+
+## [2026-05-19] update | record web wiki baseline checkpoint
+
+Updated the current specs synthesis after the first web wiki baseline checkpoint. The synthesis now notes the destination triage rule promoted into `SPEC-0005` and records that the file/event baseline was validated before any persistent streaming integration.
+
+Sources used: `specs/SPEC-0005-web-wiki-agent-extension.md`, `tasks/TASK-0003-codex-web-wiki-baseline.md`, and `experiments/wiki-agent-orchestration/EXPERIMENT.md`.

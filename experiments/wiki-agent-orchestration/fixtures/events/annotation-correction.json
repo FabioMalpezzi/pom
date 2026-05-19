@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "0.1",
+  "eventId": "event-annotation-correction-001",
+  "createdAt": "2026-05-19T12:05:00Z",
+  "eventType": "annotation",
+  "userIntent": "The selected paragraph still sounds like the web wiki is separate from the agent. Propose a correction that makes it clear the web wiki extends the active agent session.",
+  "selection": {
+    "primaryDocument": {
+      "path": "experiments/wiki-agent-orchestration/EXPERIMENT.md",
+      "kind": "other",
+      "role": "preparatory open discussion inside experiment"
+    },
+    "sectionHeading": "Scenario Ideale: Web Wiki Come Estensione Dell'Agente",
+    "selectedText": "The web wiki should not behave like a separate app that occasionally sends events to the agent."
+  },
+  "context": {
+    "linkedDocuments": [
+      {
+        "path": "specs/SPEC-0005-web-wiki-agent-extension.md",
+        "kind": "spec",
+        "role": "draft spec"
+      }
+    ],
+    "sourceAuthorityHints": [
+      "The experiment can hold preparatory reasoning.",
+      "The spec owns draft requirements once promoted."
+    ],
+    "artifactPolicyHints": [
+      "Experiment notes are not durable source authority.",
+      "Spec updates require explicit review."
+    ]
+  },
+  "requestedOutput": "proposal"
+}

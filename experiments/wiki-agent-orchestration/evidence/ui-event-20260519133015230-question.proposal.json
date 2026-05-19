@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "0.1",
+  "proposalId": "proposal-destination-triage-spec-0005-001",
+  "sourceEventId": "ui-event-20260519133015230-question",
+  "proposalStatus": "applied",
+  "proposalType": "spec_update",
+  "questionHandled": "Clarify when a note produced from the web wiki should remain an Open Discussion and when it should become a spec, ADR, or task plan.",
+  "sourcesRead": [
+    {
+      "path": "experiments/wiki-agent-orchestration/evidence/ui-events/ui-event-20260519133015230-question.json",
+      "kind": "wiki_event",
+      "reason": "Input event created from the mini UI with the user's question and selected active document."
+    },
+    {
+      "path": "specs/SPEC-0005-web-wiki-agent-extension.md",
+      "kind": "spec",
+      "reason": "Target draft spec selected by the event and responsible for web wiki agent-extension behavior."
+    },
+    {
+      "path": "experiments/wiki-agent-orchestration/EXPERIMENT.md",
+      "kind": "open_discussion",
+      "reason": "Preparatory reasoning that already states candidate destination criteria for wiki, Open Discussion, spec, ADR, task plan, and project docs."
+    },
+    {
+      "path": "CONTEXT.md",
+      "kind": "project_doc",
+      "reason": "POM domain glossary defining Open Discussion, Decision Record, Task Plan, Source Authority, Artifact Policy, and Memory Element."
+    }
+  ],
+  "authoritativeDestination": {
+    "kind": "spec",
+    "path": "specs/SPEC-0005-web-wiki-agent-extension.md",
+    "reason": "The requested clarification affects expected behavior of the web wiki agent extension, so it belongs in the draft spec if promoted."
+  },
+  "factsObserved": [
+    "CONTEXT.md defines Open Discussion as non-authoritative material for desiderata, hypotheses, alternatives, and unresolved questions before promotion.",
+    "CONTEXT.md defines Task Plan as verifiable work and Decision Record as a consequential choice with rationale.",
+    "SPEC-0005 requires proposals to include an authoritative destination, approval requirement, and reason for not applying automatically.",
+    "SPEC-0005 says annotation and guided document creation require the agent to classify the right destination, but it does not state the destination triage rule directly.",
+    "EXPERIMENT.md contains the clearer candidate rule: Open Discussion for desiderata, hypotheses, or alternatives; spec for expected behavior; ADR only for explicit decisions; task plan for executable and verifiable work."
+  ],
+  "assumptions": [
+    "SPEC-0005 should include the minimum destination triage rule because the UI and agent adapter need predictable behavior.",
+    "The rule should stay short so the spec remains usable and does not duplicate the full experiment discussion."
+  ],
+  "gapsOrContradictions": [
+    "There is no contradiction between SPEC-0005 and the experiment, but SPEC-0005 currently relies on the experiment for a rule that should be visible in the spec itself.",
+    "Without a compact triage rule, agents may promote unresolved notes too quickly into specs, ADRs, or task plans."
+  ],
+  "proposedChange": {
+    "summary": "Add a compact destination triage rule to SPEC-0005 so the web wiki agent knows when to propose Open Discussion, spec, ADR, task plan, or wiki updates.",
+    "targetPath": "specs/SPEC-0005-web-wiki-agent-extension.md",
+    "content": "Add after the initial use cases or before Proposal lifecycle:\n\n### Destination triage\n\nWhen a wiki event produces or changes project memory, the agent must classify the destination before proposing a path.\n\n- Use Open Discussion for desiderata, hypotheses, alternatives, unresolved questions, or material that is not ready to become implementation authority.\n- Use a spec for expected behavior, capability boundaries, requirements, contracts, or user-visible workflows.\n- Use an ADR only for an explicit consequential decision with rationale, implications, and rejected alternatives.\n- Use a task plan for executable and verifiable work derived from an accepted spec, decision, or approved maintenance need.\n- Use the wiki for consolidated reusable knowledge that summarizes authoritative sources without replacing them.\n\nIf the destination, Source Authority, or approval requirement is unclear, the proposal must ask for clarification or remain an Open Discussion rather than updating a spec, ADR, task plan, or wiki page."
+  },
+  "approvalRequirement": "user_approval",
+  "nonAutoApplyReason": "This changes a governed draft spec. The live mini UI event asked for a proposal, so promotion was kept separate until the user approved it in chat.",
+  "nextQuestions": [
+    "Should this compact triage rule be promoted into SPEC-0005 now?",
+    "Should the same rule later become a reusable prompt or validation helper for the web wiki agent adapter?"
+  ]
+}

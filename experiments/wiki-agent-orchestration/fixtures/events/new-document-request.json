@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "0.1",
+  "eventId": "event-new-document-request-001",
+  "createdAt": "2026-05-19T12:10:00Z",
+  "eventType": "new_document_request",
+  "userIntent": "Create the next work document for validating the Codex baseline event/proposal contract before building the persistent streaming integration.",
+  "selection": {
+    "primaryDocument": {
+      "path": "specs/SPEC-0005-web-wiki-agent-extension.md",
+      "kind": "spec",
+      "role": "origin spec"
+    },
+    "sectionHeading": "Linked Tasks"
+  },
+  "context": {
+    "linkedDocuments": [
+      {
+        "path": "tasks/README.md",
+        "kind": "task_plan",
+        "role": "task index"
+      },
+      {
+        "path": "templates/TASK_PLAN_TEMPLATE.md",
+        "kind": "other",
+        "role": "task template"
+      }
+    ],
+    "sourceAuthorityHints": [
+      "Task plans own executable work and verification.",
+      "Specs own capability requirements."
+    ],
+    "artifactPolicyHints": [
+      "New task plans should be linked from the originating spec and task index."
+    ]
+  },
+  "requestedOutput": "proposal"
+}

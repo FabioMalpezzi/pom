@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "0.1",
+  "eventId": "ui-event-20260519133015230-question",
+  "createdAt": "2026-05-19T13:30:15.231Z",
+  "eventType": "question",
+  "userIntent": "Quando una nota prodotta dalla web wiki deve restare Open Discussion e quando invece deve diventare spec, ADR o task plan? Verifica se SPEC-0005 lo spiega abbastanza bene\n  o se serve una proposta di chiarimento",
+  "selection": {
+    "primaryDocument": {
+      "path": "specs/SPEC-0005-web-wiki-agent-extension.md",
+      "kind": "spec",
+      "role": "active mini UI document"
+    },
+    "sectionHeading": "",
+    "selectedText": ""
+  },
+  "context": {
+    "linkedDocuments": [],
+    "sourceAuthorityHints": [
+      "Wiki summarizes current knowledge and must not replace authoritative documents.",
+      "Specs, ADRs, task plans, code, and project docs own their respective domains."
+    ],
+    "artifactPolicyHints": [
+      "The UI event is not a decision.",
+      "Durable Markdown changes require reviewed promotion."
+    ]
+  },
+  "requestedOutput": "proposal"
+}

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "0.1",
+  "eventId": "event-question-wiki-vs-spec-001",
+  "createdAt": "2026-05-19T12:00:00Z",
+  "eventType": "question",
+  "userIntent": "Explain whether the current wiki reader behavior is already covered by existing specs or whether the new web wiki agent-extension spec should own it.",
+  "selection": {
+    "primaryDocument": {
+      "path": "wiki/current-specs.md",
+      "kind": "wiki",
+      "role": "current specs synthesis"
+    },
+    "sectionHeading": "Open Questions"
+  },
+  "context": {
+    "linkedDocuments": [
+      {
+        "path": "specs/SPEC-0005-web-wiki-agent-extension.md",
+        "kind": "spec",
+        "role": "draft capability boundary"
+      },
+      {
+        "path": "specs/SPEC-0000-pom-founding-spec.md",
+        "kind": "spec",
+        "role": "foundational source"
+      }
+    ],
+    "sourceAuthorityHints": [
+      "Specs own intended capability boundaries.",
+      "Wiki summarizes current consolidated knowledge and must not replace specs."
+    ],
+    "artifactPolicyHints": [
+      "Generated wiki reader output is derived.",
+      "Markdown files remain durable memory."
+    ]
+  },
+  "requestedOutput": "proposal"
+}

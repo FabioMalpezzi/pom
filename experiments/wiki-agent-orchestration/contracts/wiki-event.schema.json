@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pom.local/schemas/wiki-event.schema.json",
+  "title": "POM Wiki Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "eventId",
+    "createdAt",
+    "eventType",
+    "userIntent",
+    "selection",
+    "context"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "eventId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "eventType": {
+      "type": "string",
+      "enum": [
+        "question",
+        "annotation",
+        "correction_request",
+        "addition_request",
+        "new_document_request"
+      ]
+    },
+    "userIntent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primaryDocument"],
+      "properties": {
+        "primaryDocument": {
+          "$ref": "#/$defs/documentRef"
+        },
+        "sectionHeading": {
+          "type": "string"
+        },
+        "selectedText": {
+          "type": "string"
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["linkedDocuments", "sourceAuthorityHints", "artifactPolicyHints"],
+      "properties": {
+        "linkedDocuments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/documentRef"
+          }
+        },
+        "sourceAuthorityHints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "artifactPolicyHints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "requestedOutput": {
+      "type": "string",
+      "enum": [
+        "answer_only",
+        "proposal",
+        "clarification"
+      ]
+    }
+  },
+  "$defs": {
+    "documentRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "kind"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "wiki",
+            "open_discussion",
+            "spec",
+            "adr",
+            "task_plan",
+            "project_state",
+            "project_doc",
+            "code",
+            "test",
+            "other"
+          ]
+        },
+        "role": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

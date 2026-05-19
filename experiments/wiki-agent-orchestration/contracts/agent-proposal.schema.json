@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pom.local/schemas/agent-proposal.schema.json",
+  "title": "POM Agent Proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "proposalId",
+    "sourceEventId",
+    "proposalStatus",
+    "proposalType",
+    "questionHandled",
+    "sourcesRead",
+    "authoritativeDestination",
+    "factsObserved",
+    "assumptions",
+    "gapsOrContradictions",
+    "proposedChange",
+    "approvalRequirement",
+    "nonAutoApplyReason"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "proposalId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceEventId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "proposalStatus": {
+      "type": "string",
+      "enum": ["draft", "in_review", "approved", "applied", "parked", "discarded"]
+    },
+    "proposalType": {
+      "type": "string",
+      "enum": [
+        "answer",
+        "wiki_update",
+        "open_discussion",
+        "spec_update",
+        "adr_update",
+        "task_plan",
+        "project_doc_update",
+        "new_document",
+        "clarification"
+      ]
+    },
+    "questionHandled": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourcesRead": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/sourceRead"
+      }
+    },
+    "authoritativeDestination": {
+      "$ref": "#/$defs/destination"
+    },
+    "factsObserved": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "gapsOrContradictions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "proposedChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "targetPath", "content"],
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "targetPath": {
+          "type": ["string", "null"]
+        },
+        "content": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "approvalRequirement": {
+      "type": "string",
+      "enum": ["none", "user_approval", "document_owner_approval", "clarification_required"]
+    },
+    "nonAutoApplyReason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nextQuestions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "sourceRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "kind", "reason"],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path", "reason"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "wiki",
+            "open_discussion",
+            "spec",
+            "adr",
+            "task_plan",
+            "project_doc",
+            "none"
+          ]
+        },
+        "path": {
+          "type": ["string", "null"]
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

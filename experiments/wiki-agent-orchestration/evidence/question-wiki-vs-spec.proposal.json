@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "0.1",
+  "proposalId": "proposal-question-wiki-vs-spec-001",
+  "sourceEventId": "event-question-wiki-vs-spec-001",
+  "proposalStatus": "draft",
+  "proposalType": "wiki_update",
+  "questionHandled": "Explain whether the current wiki reader behavior is already covered by existing specs or whether the new web wiki agent-extension spec should own it.",
+  "sourcesRead": [
+    {
+      "path": "experiments/wiki-agent-orchestration/fixtures/events/question-wiki-vs-spec.json",
+      "kind": "wiki_event",
+      "reason": "Input event describing the user question, selected wiki section, linked specs, and source-authority hints."
+    },
+    {
+      "path": "wiki/current-specs.md",
+      "kind": "wiki",
+      "reason": "Current synthesis of specs and open questions about wiki reader and web wiki authority."
+    },
+    {
+      "path": "specs/SPEC-0005-web-wiki-agent-extension.md",
+      "kind": "spec",
+      "reason": "Draft capability boundary for a web wiki that extends an active agent session and keeps UI state derived from Markdown."
+    },
+    {
+      "path": "specs/SPEC-0000-pom-founding-spec.md",
+      "kind": "spec",
+      "reason": "Foundational source for persistent wiki, Source Authority, gradual adoption, Markdown/Git baseline, and cognitive-cost constraints."
+    }
+  ],
+  "authoritativeDestination": {
+    "kind": "wiki",
+    "path": "wiki/current-specs.md",
+    "reason": "The answer is a current synthesis about how existing specs relate; the durable requirements remain in SPEC-0000 and SPEC-0005."
+  },
+  "factsObserved": [
+    "SPEC-0000 defines the persistent wiki capability, Source Authority by domain, gradual adoption, minimum cognitive cost, and Markdown/Git as the method baseline.",
+    "wiki/current-specs.md already says the wiki reader relates to SPEC-0000, SPEC-0004, and SPEC-0005.",
+    "SPEC-0005 defines a future web wiki agent extension, not the whole static generated reader.",
+    "SPEC-0005 R2 requires Markdown files to remain durable source while generated HTML, indexes, and UI state stay derived."
+  ],
+  "assumptions": [
+    "The current static wiki reader remains an optional generated consultation view unless a future implementation makes it more central.",
+    "The web wiki agent extension should not retroactively own all existing reader behavior."
+  ],
+  "gapsOrContradictions": [
+    "wiki/current-specs.md still has an open question about whether a future spec should define wiki reader output as a supported generated artifact; SPEC-0005 answers only the agent-extension boundary, not the full static reader artifact contract.",
+    "The distinction between static reader output and agent-extension UI state could be stated more directly in the current specs synthesis."
+  ],
+  "proposedChange": {
+    "summary": "Clarify in wiki/current-specs.md that static wiki reader behavior remains grounded in SPEC-0000 and related reader work, while SPEC-0005 owns the new agent-extension boundary and its derived UI state.",
+    "targetPath": "wiki/current-specs.md",
+    "content": "Candidate synthesis: Static wiki reader behavior is still grounded mainly in SPEC-0000's persistent wiki, Markdown/Git, Source Authority, gradual adoption, and cognitive-cost requirements. SPEC-0005 does not replace that foundation. It defines the newer web wiki agent-extension boundary: active agent session integration, structured proposals, proposal review, and the rule that generated or UI state remains derived from Markdown. If reader output itself becomes a supported generated artifact with stronger guarantees, that should be specified separately or added explicitly to the relevant reader spec."
+  },
+  "approvalRequirement": "user_approval",
+  "nonAutoApplyReason": "This is a wiki synthesis change. It clarifies relationships between specs but should not be applied automatically because the current open questions may intentionally keep static reader artifact support unresolved.",
+  "nextQuestions": [
+    "Should static wiki reader output get its own explicit generated-artifact spec, or remain covered by existing reader/tooling documentation?",
+    "Should SPEC-0005 be limited to active agent-extension UI state and proposal workflows?"
+  ]
+}

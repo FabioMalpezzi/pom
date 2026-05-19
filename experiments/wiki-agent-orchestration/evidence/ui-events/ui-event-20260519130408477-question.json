@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "0.1",
+  "eventId": "ui-event-20260519130408477-question",
+  "createdAt": "2026-05-19T13:04:08.477Z",
+  "eventType": "question",
+  "userIntent": "ti avevo già evideniztao che non volevo che ofsse visibile il log delle wiki all'interno della stessa. Possimo sistemare?",
+  "selection": {
+    "primaryDocument": {
+      "path": "wiki/log.md",
+      "kind": "wiki",
+      "role": "active mini UI document"
+    },
+    "sectionHeading": "",
+    "selectedText": ""
+  },
+  "context": {
+    "linkedDocuments": [],
+    "sourceAuthorityHints": [
+      "Wiki summarizes current knowledge and must not replace authoritative documents.",
+      "Specs, ADRs, task plans, code, and project docs own their respective domains."
+    ],
+    "artifactPolicyHints": [
+      "The UI event is not a decision.",
+      "Durable Markdown changes require reviewed promotion."
+    ]
+  },
+  "requestedOutput": "proposal"
+}

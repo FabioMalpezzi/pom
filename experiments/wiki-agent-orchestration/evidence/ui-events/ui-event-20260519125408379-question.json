@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "0.1",
+  "eventId": "ui-event-20260519125408379-question",
+  "createdAt": "2026-05-19T12:54:08.379Z",
+  "eventType": "question",
+  "userIntent": "Smoke test: explain current wiki index purpose without editing files.",
+  "selection": {
+    "primaryDocument": {
+      "path": "wiki/index.md",
+      "kind": "wiki",
+      "role": "active mini UI document"
+    },
+    "sectionHeading": "",
+    "selectedText": "POM Wiki Index"
+  },
+  "context": {
+    "linkedDocuments": [],
+    "sourceAuthorityHints": [],
+    "artifactPolicyHints": [
+      "The UI event is not a decision.",
+      "Durable Markdown changes require reviewed promotion."
+    ]
+  },
+  "requestedOutput": "proposal"
+}
