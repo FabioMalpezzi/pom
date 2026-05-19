@@ -31,6 +31,8 @@ The first implementation should therefore separate:
 - the UI surface: reader, annotations, proposal review, document creation flow;
 - the agent adapter: Codex first, other coding agents later only after compatibility testing.
 
+`ADR-0001` decides that the primary user workflow must use a persistent connection to an active AI coding agent session. Codex is the first implementation target, not a permanent constraint. File/event artifacts remain useful for audit, fallback, fixtures, and tests; they are not the daily interaction path.
+
 This spec does not promote the preparatory experiment to authoritative wiki knowledge. It uses that experiment as input for defining a draft capability.
 
 ## Requirements
@@ -102,20 +104,22 @@ user action
 
 No proposal may update durable project memory without a reviewed promotion step.
 
-### Codex-first adapter
+### Persistent coding agent adapter
 
-The first adapter should target Codex because it is the most relevant initial agent for this repository and has automation surfaces that can support both baseline and target workflows.
+The first adapter targets Codex because it is the most relevant initial agent for this repository and has automation surfaces that can support both baseline and target workflows. The adapter boundary must remain open to other coding agents that can support a comparable persistent session.
 
-The adapter must not leak Codex-specific assumptions into the POM contract. It should translate between the common objects and the available Codex interface.
+The chosen primary path is a persistent coding agent session adapter. The next spike should evaluate Codex `app-server` and `remote-control` as candidate interfaces for the first implementation. One-shot execution remains useful for deterministic validation, CI, and replay, but it is not the primary interactive workflow.
+
+The adapter must not leak Codex-specific assumptions into the POM contract. It should translate between the common objects and the available interface of the chosen coding agent.
 
 Initial adapter questions:
 
 | Area | Question |
 |---|---|
-| Baseline | Can `codex exec` validate the event/proposal contract with deterministic files? |
-| Streaming | Can a Codex session be reused from the web wiki without losing working context? |
+| Session | Can an active coding agent session be reused from the web wiki without losing working context? |
+| Interface | For the first Codex implementation, should the spike use `app-server`, `remote-control`, or both? |
 | State | Which session identifiers, turn identifiers, or event streams must the UI track? |
-| Permissions | How are file edits proposed, reviewed, and applied under Codex permissions? |
+| Permissions | How are file edits proposed, reviewed, and applied under the chosen agent permissions? |
 | Tests | Which fixtures prove question, annotation, new document, and approval flows? |
 
 ### UI minimum
@@ -144,7 +148,7 @@ The minimum useful UI is not a landing page. It is a work surface with:
 | Area | Impact |
 |---|---|
 | Wiki | Defines a future web wiki extension beyond static reader output |
-| Decisions | No ADR required yet; adapter and MVP choices remain draft spec content |
+| Decisions | `ADR-0001` chooses a persistent AI coding agent session as the primary path, with Codex as the first implementation target |
 | Docs | Reader-facing docs may need updates if the capability is promoted beyond experiment |
 | Mockups | Future UI mockups are likely needed before implementation |
 | Code | Future code may touch wiki reader tooling, a web server, agent adapter code, and tests |
@@ -190,7 +194,7 @@ Exception reason: _none_
 - Source: `CONTEXT.md` for Operating Memory, Memory Element, Source Authority, Artifact Policy, and Open Discussion terms.
 - Source: `templates/OPEN_DISCUSSION_TEMPLATE.md`.
 - Source: `templates/EXPERIMENT_TEMPLATE.md`.
-- ADR: none yet.
+- ADR: `decisions/ADR-0001-persistent-coding-agent-session-for-web-wiki.md`.
 
 ## Evolution Rule
 

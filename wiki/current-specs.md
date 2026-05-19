@@ -19,7 +19,7 @@ The specs are living documents, but they are not a diary. Minor changes are trac
 | `SPEC-0004-external-project-overlay.md` | Draft | Defines overlay mode for repositories the operator does not own. |
 | `SPEC-0005-web-wiki-agent-extension.md` | Draft | Defines the first boundary for a web wiki that extends an active coding agent session, produces reviewed proposals, and classifies whether notes belong in Open Discussion, specs, ADRs, task plans, or wiki synthesis. |
 
-The wiki reader relates mainly to `SPEC-0000`, `SPEC-0004`, and `SPEC-0005`: it touches Operating Memory consultation, cognitive cost, reversibility, possible local-only wiki use, and agent-assisted proposal workflows. `SPEC-0005` now keeps proposal promotion explicit: Open Discussion holds unresolved material, specs hold expected behavior, ADRs hold explicit decisions, task plans hold executable work, and wiki pages summarize consolidated knowledge. If the reader or web wiki becomes more central, the specs must describe the authority of generated output clearly enough that HTML or UI state never competes with Markdown.
+The wiki reader relates mainly to `SPEC-0000`, `SPEC-0004`, and `SPEC-0005`: it touches Operating Memory consultation, cognitive cost, reversibility, possible local-only wiki use, and agent-assisted proposal workflows. `SPEC-0005` now keeps proposal promotion explicit: Open Discussion holds unresolved material, specs hold expected behavior, ADRs hold explicit decisions, task plans hold executable work, and wiki pages summarize consolidated knowledge. `ADR-0001` decides that the primary web wiki workflow uses a persistent connection to an active AI coding agent session; Codex is only the first implementation target. File/event artifacts remain audit, fallback, fixture, and test support. If the reader or web wiki becomes more central, the specs must describe the authority of generated output clearly enough that HTML or UI state never competes with Markdown.
 
 ## Sources
 
@@ -40,6 +40,7 @@ The wiki reader relates mainly to `SPEC-0000`, `SPEC-0004`, and `SPEC-0005`: it 
 | SPEC-0000 R12 | POM depends on Markdown and Git as the method baseline. |
 | SPEC-0004 R3 | Overlay mode supports a local wiki for understanding a project. |
 | SPEC-0005 R2 | Web wiki output and UI state stay derived; Markdown remains durable memory. |
+| ADR-0001 | The web wiki must avoid repeated cold agent runs by using a persistent active coding agent session as the primary path. |
 
 ## Open Questions
 
@@ -48,7 +49,7 @@ The wiki reader relates mainly to `SPEC-0000`, `SPEC-0004`, and `SPEC-0005`: it 
 | Should a future spec define wiki reader output as a supported generated artifact? | Open. |
 | Should the founding spec mention generated consultation views explicitly? | Open; probably only if reader generation becomes more than optional tooling. |
 | Should the first web wiki agent-extension prototype validate file + CLI before streaming session integration? | Resolved for this checkpoint: the file/event baseline was validated manually with the active Codex session. |
-| Which Codex interface should the first adapter use for a persistent active session? | Open; must be verified before implementation. |
+| Which interface should the first persistent adapter use? | Open at interface level; `ADR-0001` fixes the direction as persistent active coding agent session. Codex is the first implementation target, with `app-server` and `remote-control` to evaluate. |
 
 ## Related Links
 

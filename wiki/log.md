@@ -63,3 +63,9 @@ Sources used: `specs/SPEC-0005-web-wiki-agent-extension.md` and `experiments/wik
 Updated the current specs synthesis after the first web wiki baseline checkpoint. The synthesis now notes the destination triage rule promoted into `SPEC-0005` and records that the file/event baseline was validated before any persistent streaming integration.
 
 Sources used: `specs/SPEC-0005-web-wiki-agent-extension.md`, `tasks/TASK-0003-codex-web-wiki-baseline.md`, and `experiments/wiki-agent-orchestration/EXPERIMENT.md`.
+
+## [2026-05-19] update | record persistent coding agent session decision
+
+Updated the current specs synthesis after accepting the decision that the primary web wiki workflow must use a persistent connection to an active AI coding agent session. Codex is the first implementation target; file/event artifacts remain audit, fallback, fixture, and test support.
+
+Sources used: `decisions/ADR-0001-persistent-coding-agent-session-for-web-wiki.md`, `specs/SPEC-0005-web-wiki-agent-extension.md`, and `experiments/wiki-agent-orchestration/EXPERIMENT.md`.
