@@ -30,6 +30,7 @@
             </label>
             <button id="runSearch" class="secondary" type="button" data-i18n="search.content">Search content</button>
           </div>
+          <p id="configStatus" class="panel-note config-status"></p>
           <div id="searchResults" class="search-results"></div>
           <div class="nav-mode" aria-label="Navigation mode" data-i18n-aria-label="nav.aria">
             <button class="nav-mode-button active" type="button" data-nav-mode="thematic" data-i18n="nav.thematic">Topics</button>
@@ -62,7 +63,7 @@
               <span id="documentSearchCount" class="file-search-count" aria-live="polite"></span>
             </div>
             <div class="selection-tools">
-              <button id="useSelection" class="secondary selection-action" type="button" title="Send selected text to the note" data-i18n-title="selection.title"><span class="selection-action-icon" aria-hidden="true"></span><span data-i18n="selection.use">Send to note</span></button>
+              <button id="useSelection" class="secondary selection-action" type="button" title="Send selected text to the note" data-i18n-title="selection.title" disabled aria-disabled="true"><span class="selection-action-icon" aria-hidden="true"></span><span data-i18n="selection.use">Send to note</span></button>
               <button id="languageToggle" class="language-switch" type="button" title="Switch to Italian" aria-label="Switch to Italian" data-locale="en">
                 <span class="language-option" data-locale-option="en">EN</span>
                 <span class="language-option" data-locale-option="it">IT</span>

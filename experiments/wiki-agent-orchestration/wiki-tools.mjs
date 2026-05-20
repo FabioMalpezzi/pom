@@ -2,12 +2,11 @@
 
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
-import { basename, dirname, isAbsolute, join, normalize, relative, resolve } from "node:path";
+import { basename, isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const HERE = dirname(fileURLToPath(import.meta.url));
-export const ROOT = resolve(HERE, "../..");
-export const ANNOTATIONS_ROOT = join(ROOT, "experiments/wiki-agent-orchestration/evidence/annotations");
+export let ROOT = resolve(process.cwd());
+export let ANNOTATIONS_ROOT = annotationsRootFor(ROOT);
 
 const SEARCH_ROOTS = [
   "README.md",
@@ -35,7 +34,20 @@ const RG_GLOBS = [
 
 const STATUSES = new Set(["new", "triaged", "in_progress", "resolved", "parked", "discarded"]);
 
-export function searchProject({ query, regex = false, maxResults = 50, roots: inputRoots } = {}) {
+export function setProjectRoot(path) {
+  const root = resolve(String(path || "."));
+  if (!existsSync(root) || !statSync(root).isDirectory()) throw new Error(`Project root not found: ${root}`);
+  ROOT = root;
+  ANNOTATIONS_ROOT = annotationsRootFor(ROOT);
+  return ROOT;
+}
+
+export function setAnnotationsRoot(path) {
+  ANNOTATIONS_ROOT = resolveAnnotationRoot(path);
+  return ANNOTATIONS_ROOT;
+}
+
+export function searchProject({ query, regex = false, maxResults = 50, roots: inputRoots, ignoreGlobs = [] } = {}) {
   const pattern = String(query || "").trim();
   if (!pattern) throw new Error("Search query is required");
   const hasCustomRoots = Array.isArray(inputRoots);
@@ -50,9 +62,12 @@ export function searchProject({ query, regex = false, maxResults = 50, roots: in
     "never",
     "--max-count",
     "20",
+    "--max-filesize",
+    "1M",
   ];
   if (!regex) args.push("--fixed-strings");
   for (const glob of RG_GLOBS) args.push("--glob", glob);
+  for (const glob of normalizedIgnoreGlobs(ignoreGlobs)) args.push("--glob", glob);
   args.push("--", pattern, ...roots);
 
   const result = spawnSync("rg", args, {
@@ -106,6 +121,14 @@ function emptySearchResult(pattern, regex, maxResults) {
 function normalizeSearchRoots(inputRoots) {
   if (!Array.isArray(inputRoots)) return [];
   return [...new Set(inputRoots.map((path) => requireRepoPath(path, { mustExist: false })))];
+}
+
+function normalizedIgnoreGlobs(inputGlobs) {
+  if (!Array.isArray(inputGlobs)) return [];
+  return [...new Set(inputGlobs
+    .filter((glob) => typeof glob === "string")
+    .map((glob) => glob.trim())
+    .filter((glob) => glob.startsWith("!") && !glob.includes("\0")))];
 }
 
 export function gitHistory({ path, maxResults = 30 } = {}) {
@@ -166,9 +189,8 @@ export function createAnnotation(input = {}) {
   };
 
   mkdirSync(ANNOTATIONS_ROOT, { recursive: true });
-  const relativePath = annotationRelativePath(annotationId);
-  writeFileSync(join(ROOT, relativePath), `${JSON.stringify(record, null, 2)}\n`, "utf8");
-  return { path: relativePath, annotation: record };
+  writeFileSync(annotationFilePath(annotationId), `${JSON.stringify(record, null, 2)}\n`, "utf8");
+  return { path: annotationDisplayPath(annotationId), annotation: record };
 }
 
 export function listAnnotations({ status } = {}) {
@@ -182,7 +204,7 @@ export function listAnnotations({ status } = {}) {
 
 export function readAnnotation(id) {
   const annotationId = safeAnnotationId(id);
-  const file = join(ANNOTATIONS_ROOT, `${annotationId}.json`);
+  const file = annotationFilePath(annotationId);
   if (!existsSync(file)) throw new Error(`Annotation not found: ${annotationId}`);
   return normalizeAnnotationRecord(JSON.parse(readFileSync(file, "utf8")));
 }
@@ -192,7 +214,7 @@ export function deleteAnnotation(id) {
   if (annotation.agentReport || ["resolved", "discarded"].includes(annotation.status)) {
     throw new Error("Processed annotations cannot be deleted from the working queue");
   }
-  unlinkSync(join(ANNOTATIONS_ROOT, `${annotation.annotationId}.json`));
+  unlinkSync(annotationFilePath(annotation.annotationId));
   return { deleted: true, annotationId: annotation.annotationId };
 }
 
@@ -234,7 +256,7 @@ export function updateAnnotationStatus(id, status, { by = "agent", note = "", ex
       summary: note || next.resolution || "resolved",
     };
   }
-  writeFileSync(join(ANNOTATIONS_ROOT, `${annotation.annotationId}.json`), `${JSON.stringify(next, null, 2)}\n`, "utf8");
+  writeFileSync(annotationFilePath(annotation.annotationId), `${JSON.stringify(next, null, 2)}\n`, "utf8");
   return next;
 }
 
@@ -276,8 +298,31 @@ function optionalNumber(value) {
   return number;
 }
 
-function annotationRelativePath(annotationId) {
-  return `experiments/wiki-agent-orchestration/evidence/annotations/${annotationId}.json`;
+function annotationFilePath(annotationId) {
+  return join(ANNOTATIONS_ROOT, `${annotationId}.json`);
+}
+
+function annotationDisplayPath(annotationId) {
+  const file = annotationFilePath(annotationId);
+  const relativePath = relative(ROOT, file);
+  if (relativePath && !relativePath.startsWith("..") && !isAbsolute(relativePath)) return normalize(relativePath);
+  return file;
+}
+
+function annotationsRootFor(root) {
+  return join(root, "experiments/wiki-agent-orchestration/evidence/annotations");
+}
+
+function resolveAnnotationRoot(path) {
+  const input = String(path || "").trim();
+  if (!input) throw new Error("Annotation directory is required");
+  const directory = isAbsolute(input) ? normalize(input) : resolve(ROOT, input);
+  const relativePath = relative(ROOT, directory);
+  if (relativePath && !relativePath.startsWith("..") && !isAbsolute(relativePath)) {
+    if (relativePath === ".git" || relativePath.startsWith(".git/")) throw new Error("Git internals are not a valid annotation directory");
+    if (relativePath === "node_modules" || relativePath.startsWith("node_modules/")) throw new Error("node_modules is not a valid annotation directory");
+  }
+  return directory;
 }
 
 function safeAnnotationId(value) {
@@ -335,14 +380,18 @@ function print(value, asJson = false) {
 
 function usage() {
   console.log(`Usage:
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs search <query> [--regex] [--json]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs history --path <repo-path> [--json]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs annotate --path <repo-path> --note <text> [--text <selected>] [--line-start <n>] [--line-end <n>]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs list [--status <status>] [--json]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs show <annotation-id>
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs take <annotation-id> [--by <agent>]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next [--by <agent>]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs resolve <annotation-id> [--note <text>] [--by <agent>]
+  Run from the project root, or pass --root <project-root>.
+  If POM is installed under pom/, prefix the script path with pom/.
+  Annotation files default to experiments/wiki-agent-orchestration/evidence/annotations under the project root.
+
+  node experiments/wiki-agent-orchestration/wiki-tools.mjs search <query> [--regex] [--json] [--root <project-root>]
+  node experiments/wiki-agent-orchestration/wiki-tools.mjs history --path <repo-path> [--json] [--root <project-root>]
+  node experiments/wiki-agent-orchestration/wiki-tools.mjs annotate --path <repo-path> --note <text> [--text <selected>] [--line-start <n>] [--line-end <n>] [--root <project-root>] [--annotations-dir <dir>]
+  node experiments/wiki-agent-orchestration/wiki-tools.mjs list [--status <status>] [--json] [--root <project-root>] [--annotations-dir <dir>]
+  node experiments/wiki-agent-orchestration/wiki-tools.mjs show <annotation-id> [--root <project-root>] [--annotations-dir <dir>]
+  node experiments/wiki-agent-orchestration/wiki-tools.mjs take <annotation-id> [--by <agent>] [--root <project-root>] [--annotations-dir <dir>]
+  node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next [--by <agent>] [--root <project-root>] [--annotations-dir <dir>]
+  node experiments/wiki-agent-orchestration/wiki-tools.mjs resolve <annotation-id> [--note <text>] [--by <agent>] [--root <project-root>] [--annotations-dir <dir>]
 `);
 }
 
@@ -355,6 +404,8 @@ async function main() {
     usage();
     return;
   }
+  if (args.root || args.dir) setProjectRoot(args.root || args.dir);
+  if (args["annotations-dir"]) setAnnotationsRoot(args["annotations-dir"]);
   if (command === "search") {
     print(searchProject({ query: args._.join(" "), regex: Boolean(args.regex) }), asJson);
     return;

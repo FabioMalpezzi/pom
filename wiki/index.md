@@ -2,7 +2,7 @@
 
 > Persistent Wiki for the POM source repository.
 > Primary source: current POM repository files.
-> Last updated: 2026-05-19
+> Last updated: 2026-05-20
 
 ## Summary
 
@@ -23,6 +23,7 @@ The reader-oriented guides under `docs/` remain introductory public guides. They
 | [[overview]] | High-level map of what POM is, what it protects, and how this wiki should be read. |
 | [[operating-memory]] | Core domain model for restart-critical memory: Operating Memory, Memory Elements, Source Authority, Artifact Policy, and Divergence. |
 | [[wiki-method]] | How the Persistent Wiki turns project knowledge into a maintained synthesis rather than a temporary index. |
+| [[reader-capabilities]] | What the static wiki reader and local POM Project Reader server can display, search, and annotate. |
 
 ## Method Areas
 

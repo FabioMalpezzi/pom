@@ -27,11 +27,11 @@
 <a href="overview.html" data-title="POM Overview" data-nav-title="POM Overview" title="POM Overview">POM Overview</a>
 <a href="operating-memory.html" data-title="Operating Memory" data-nav-title="Operating Memory" title="Operating Memory">Operating Memory</a>
 <a href="wiki-method.html" data-title="Persistent Wiki Method" data-nav-title="Persistent Wiki Method" title="Persistent Wiki Method">Persistent Wiki Method</a>
+<a href="reader-capabilities.html" data-title="Reader Capabilities" data-nav-title="Reader Capabilities" title="Reader Capabilities" aria-current="page">Reader Capabilities</a>
 <a href="adoption-and-installation.html" data-title="Adoption And Installation" data-nav-title="Adoption And Installation" title="Adoption And Installation">Adoption And Installation</a>
 <a href="skills-and-prompts.html" data-title="Skills And Prompts" data-nav-title="Skills And Prompts" title="Skills And Prompts">Skills And Prompts</a>
 <a href="templates-and-governance.html" data-title="Templates And Governance" data-nav-title="Templates And Governance" title="Templates And Governance">Templates And Governance</a>
 <a href="experiments-and-extension.html" data-title="Experiments And Extension" data-nav-title="Experiments And Extension" title="Experiments And Extension">Experiments And Extension</a>
-<a href="reader-capabilities.html" data-title="Reader Capabilities" data-nav-title="Reader Capabilities" title="Reader Capabilities" aria-current="page">Reader Capabilities</a>
 <a href="current-specs.html" data-title="Current POM Specs" data-nav-title="Current POM Specs" title="Current POM Specs">Current POM Specs</a>
       </nav>
     </aside>
@@ -42,19 +42,76 @@
           <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span title="Reader Capabilities">Reader Capabilities</span></nav>
           <p class="eyebrow">Persistent Wiki</p>
           <h1>Reader Capabilities</h1>
-          <p class="dek">This page documents the Markdown features supported by the static reader. It shows how generated HTML improves browsing without becoming a second source of truth.</p>
+          <p class="dek">This page documents the two reader surfaces POM currently exposes: the static wiki reader and the experimental local POM Project Reader server. Both improve consultation without becoming a second source of truth.</p>
           <div class="meta">
             <span>Source: reader-capabilities.md</span>
-            <span>Generated: 2026-05-19</span>
+            <span>Generated: 2026-05-20</span>
           </div>
         </header>
         <aside class="generated-notice">
           <strong>Generated reader view.</strong> Edit the Markdown source, then regenerate this static site. The HTML is not canonical Operating Memory.
         </aside>
         <h2 id="summary">Summary <a class="heading-anchor" href="#summary" aria-label="Copy link to Summary">#</a></h2>
-<p>This page documents the Markdown features supported by the static reader. It shows how generated HTML improves browsing without becoming a second source of truth.</p>
+<p>This page documents the two reader surfaces POM currently exposes: the static wiki reader and the experimental local POM Project Reader server. Both improve consultation without becoming a second source of truth.</p>
 <h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
-<p>Markdown remains canonical. The reader generates HTML, CSS, search data, navigation, code presentation, and optional diagram enhancements from the source Markdown files.</p>
+<p>Markdown and source files remain canonical. Reader output, browser state, search results, and annotations are consultation and handoff aids. Durable changes still happen in repository files through normal edits.</p>
+<p>The static wiki reader generates HTML, CSS, search data, navigation, code presentation, and optional diagram enhancements from source Markdown files.</p>
+<p>The POM Project Reader is a local Node server that reads the configured project root, exposes wiki/docs/source navigation, runs <code>rg</code> search, and writes file-based annotations for an agent to process.</p>
+<h2 id="project-reader-server">Project Reader Server <a class="heading-anchor" href="#project-reader-server" aria-label="Copy link to Project Reader Server">#</a></h2>
+<p>Project-wide content search requires <code>rg</code> from ripgrep.</p>
+<p>Run the server from the repository root you want to inspect. By default, the current working directory is the project root and the local port is <code>4173</code>.</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">node experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173</code></pre>
+</figure>
+<p>When POM is installed under <code>pom/</code> in a target project, run the POM-hosted script from the target project root:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173</code></pre>
+</figure>
+<p>Use explicit parameters when needed:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations</code></pre>
+</figure>
+<p>The defaults are:</p>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Default</th></tr></thead><tbody><tr><td data-label="Parameter"><code>--port</code></td><td data-label="Default"><code>4173</code>, unless <code>PORT</code> is set</td></tr><tr><td data-label="Parameter"><code>--root</code> / <code>--dir</code></td><td data-label="Default"><code>.</code></td></tr><tr><td data-label="Parameter"><code>--annotations-dir</code></td><td data-label="Default"><code>experiments/wiki-agent-orchestration/evidence/annotations</code> under the project root</td></tr></tbody></table></div>
+<p>Then open:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">http://127.0.0.1:4173</code></pre>
+</figure>
+<p>The server starts from <code>wiki/index.md</code> when a project has a wiki. If no wiki index exists, it exposes a generated <code>POM Project Reader</code> entry document and still lets the user navigate project documentation and selected source files.</p>
+<p>When <code>pom.config.json</code> exists under the project root, it refines document classification. The reader uses configured roots for documentation, decisions, task plans, analysis, source, tests, mockups, and root-level Markdown. It also respects simple generated-output entries from <code>artifactPolicy.generated</code>, such as <code>wiki/_site/**</code>, in both navigation and project search. If the config is missing, the reader uses its built-in allowlist. If the config exists but is invalid JSON, the server reports the configuration error instead of guessing. The UI shows whether classification comes from <code>pom.config.json</code> or the built-in roots.</p>
+<p>The server can show:</p>
+<div class="table-wrap"><table><thead><tr><th>Area</th><th>What It Exposes</th></tr></thead><tbody><tr><td data-label="Area">Wiki</td><td data-label="What It Exposes"><code>wiki/*.md</code>, except generated output and the chronological <code>wiki/log.md</code> register.</td></tr><tr><td data-label="Area">Project documents</td><td data-label="What It Exposes"><code>README.md</code>, <code>CONTEXT.md</code>, <code>WIKI_METHOD.md</code>, <code>CHANGELOG.md</code>, configured documentation roots, examples, prompts, skills, templates, specs, decisions, and task plans when present.</td></tr><tr><td data-label="Area">Configured memory roots</td><td data-label="What It Exposes">Configured decisions, task plans, analysis, tests, mockup packages, and root-level Markdown files from <code>pom.config.json</code>.</td></tr><tr><td data-label="Area">Source and support files</td><td data-label="What It Exposes">Configured source roots, selected experiment files, scripts, tests, <code>bootstrap-pom.mjs</code>, and <code>package.json</code>.</td></tr></tbody></table></div>
+<p>Navigation has two modes:</p>
+<div class="table-wrap"><table><thead><tr><th>Mode</th><th>Use</th></tr></thead><tbody><tr><td data-label="Mode">Thematic</td><td data-label="Use">Group documents by kind, such as wiki, project docs, decisions, task plans, experiments, and source.</td></tr><tr><td data-label="Mode">Tree</td><td data-label="Use">Follow the repository path hierarchy when the user knows where a file should live.</td></tr></tbody></table></div>
+<p>Search has two levels:</p>
+<div class="table-wrap"><table><thead><tr><th>Search</th><th>Use</th></tr></thead><tbody><tr><td data-label="Search">Project search</td><td data-label="Use">Uses <code>rg</code> over the active document-kind filter, with optional regex mode.</td></tr><tr><td data-label="Search">In-file search</td><td data-label="Use">Searches the currently open document, with previous/next navigation and optional regex mode.</td></tr></tbody></table></div>
+<p>The browser UI is designed for consultation rather than source editing:</p>
+<div class="table-wrap"><table><thead><tr><th>Surface</th><th>Behavior</th></tr></thead><tbody><tr><td data-label="Surface">Document pane</td><td data-label="Behavior">Uses a responsive page width. Prose remains measure-limited, while code blocks and tables can use wider desktop space.</td></tr><tr><td data-label="Surface">Left navigation</td><td data-label="Behavior">Can collapse on hover or stay pinned.</td></tr><tr><td data-label="Surface">Right annotation panel</td><td data-label="Behavior">Can collapse on hover or stay pinned.</td></tr><tr><td data-label="Surface">Language labels</td><td data-label="Behavior">Can switch between English and Italian.</td></tr><tr><td data-label="Surface">File limits</td><td data-label="Behavior">Rendering rejects files above 1 MB and binary-looking files. Search skips files above 1 MB.</td></tr><tr><td data-label="Surface">Source editing</td><td data-label="Behavior">Not present in the browser workflow. Editing remains a normal repository operation outside the reader.</td></tr></tbody></table></div>
+<p>The server binds to <code>127.0.0.1</code> and sends a restrictive Content Security Policy, <code>nosniff</code>, frame-denial, same-origin resource policy, and no-referrer headers. The reader is still a local repository browser and should not be exposed on a shared network without a separate threat model.</p>
+<h2 id="file-based-annotations">File-Based Annotations <a class="heading-anchor" href="#file-based-annotations" aria-label="Copy link to File-Based Annotations">#</a></h2>
+<p>The right panel writes annotations as JSON files under the configured annotation directory. By default that is:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">experiments/wiki-agent-orchestration/evidence/annotations/</code></pre>
+</figure>
+<p>An annotation contains the target path, optional selected document text, the human note for the agent, status fields, and an <code>agentReport</code> field for what the agent did after processing the file.</p>
+<p>Treat the annotation folder as runtime evidence and keep it out of commits unless the project intentionally wants to archive an annotation. If a project chooses a custom annotation directory, add it to the project's ignore rules.</p>
+<p>The annotation panel separates new notes, in-progress work, and processed history. Opening an annotation shows the selected document text, the agent-facing note, the agent outcome when present, and the JSON work file on demand. The UI also tries to reopen the target document and highlight the selected text; processed annotations still remain readable even if the target document no longer exists.</p>
+<p>The UI does not send requests directly to an AI agent. The annotation file is the handoff artifact: an agent reads it, claims it, works from current sources, and records the outcome before durable document changes are promoted through normal edits.</p>
+<p>Useful commands:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">node experiments/wiki-agent-orchestration/wiki-tools.mjs search <span class="tok-string">&quot;Operating Memory&quot;</span>
+node experiments/wiki-agent-orchestration/wiki-tools.mjs list
+node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex
+node experiments/wiki-agent-orchestration/wiki-tools.mjs resolve &lt;annotation-id&gt; --note <span class="tok-string">&quot;Updated the documented launch path.&quot;</span> --by codex
+node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex --annotations-dir .pom-reader/annotations</code></pre>
+</figure>
+<p>When the CLI is being used from an installed <code>pom/</code> folder, prefix the script path with <code>pom/</code>.</p>
 <h2 id="static-workflow">Static Workflow <a class="heading-anchor" href="#static-workflow" aria-label="Copy link to Static Workflow">#</a></h2>
 <p>The reader is designed as generated output, not as a running application. Its job is to make the Operating Memory legible after generation, then disappear into a static file tree.</p>
 <figure class="code-figure code-highlight">
@@ -115,8 +172,8 @@
 <h2 id="related-links">Related Links <a class="heading-anchor" href="#related-links" aria-label="Copy link to Related Links">#</a></h2>
 <ul><li><a href="wiki-method.html">wiki-method</a></li><li><a href="experiments-and-extension.html">experiments-and-extension</a></li><li><a href="templates-and-governance.html">templates-and-governance</a></li></ul>
         <nav class="page-pager" aria-label="Previous and next pages">
-    <a class="pager-prev" href="experiments-and-extension.html" title="Experiments And Extension"><span>Previous</span>Experiments And Extension</a>
-    <a class="pager-next" href="current-specs.html" title="Current POM Specs"><span>Next</span>Current POM Specs</a>
+    <a class="pager-prev" href="wiki-method.html" title="Persistent Wiki Method"><span>Previous</span>Persistent Wiki Method</a>
+    <a class="pager-next" href="adoption-and-installation.html" title="Adoption And Installation"><span>Next</span>Adoption And Installation</a>
   </nav>
       </article>
     </main>
@@ -125,6 +182,8 @@
       <p class="outline-title">On This Page</p>
       <nav><a class="level-2" href="#summary">Summary</a>
 <a class="level-2" href="#current-state">Current State</a>
+<a class="level-2" href="#project-reader-server">Project Reader Server</a>
+<a class="level-2" href="#file-based-annotations">File-Based Annotations</a>
 <a class="level-2" href="#static-workflow">Static Workflow</a>
 <a class="level-2" href="#supported-markdown">Supported Markdown</a>
 <a class="level-2" href="#fixed-width-text">Fixed-Width Text</a>

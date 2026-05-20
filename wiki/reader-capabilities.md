@@ -2,11 +2,119 @@
 
 ## Summary
 
-This page documents the Markdown features supported by the static reader. It shows how generated HTML improves browsing without becoming a second source of truth.
+This page documents the two reader surfaces POM currently exposes: the static wiki reader and the experimental local POM Project Reader server. Both improve consultation without becoming a second source of truth.
 
 ## Current State
 
-Markdown remains canonical. The reader generates HTML, CSS, search data, navigation, code presentation, and optional diagram enhancements from the source Markdown files.
+Markdown and source files remain canonical. Reader output, browser state, search results, and annotations are consultation and handoff aids. Durable changes still happen in repository files through normal edits.
+
+The static wiki reader generates HTML, CSS, search data, navigation, code presentation, and optional diagram enhancements from source Markdown files.
+
+The POM Project Reader is a local Node server that reads the configured project root, exposes wiki/docs/source navigation, runs `rg` search, and writes file-based annotations for an agent to process.
+
+## Project Reader Server
+
+Project-wide content search requires `rg` from ripgrep.
+
+Run the server from the repository root you want to inspect. By default, the current working directory is the project root and the local port is `4173`.
+
+```bash
+node experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+```
+
+When POM is installed under `pom/` in a target project, run the POM-hosted script from the target project root:
+
+```bash
+node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+```
+
+Use explicit parameters when needed:
+
+```bash
+node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations
+```
+
+The defaults are:
+
+| Parameter | Default |
+|---|---|
+| `--port` | `4173`, unless `PORT` is set |
+| `--root` / `--dir` | `.` |
+| `--annotations-dir` | `experiments/wiki-agent-orchestration/evidence/annotations` under the project root |
+
+Then open:
+
+```text
+http://127.0.0.1:4173
+```
+
+The server starts from `wiki/index.md` when a project has a wiki. If no wiki index exists, it exposes a generated `POM Project Reader` entry document and still lets the user navigate project documentation and selected source files.
+
+When `pom.config.json` exists under the project root, it refines document classification. The reader uses configured roots for documentation, decisions, task plans, analysis, source, tests, mockups, and root-level Markdown. It also respects simple generated-output entries from `artifactPolicy.generated`, such as `wiki/_site/**`, in both navigation and project search. If the config is missing, the reader uses its built-in allowlist. If the config exists but is invalid JSON, the server reports the configuration error instead of guessing. The UI shows whether classification comes from `pom.config.json` or the built-in roots.
+
+The server can show:
+
+| Area | What It Exposes |
+|---|---|
+| Wiki | `wiki/*.md`, except generated output and the chronological `wiki/log.md` register. |
+| Project documents | `README.md`, `CONTEXT.md`, `WIKI_METHOD.md`, `CHANGELOG.md`, configured documentation roots, examples, prompts, skills, templates, specs, decisions, and task plans when present. |
+| Configured memory roots | Configured decisions, task plans, analysis, tests, mockup packages, and root-level Markdown files from `pom.config.json`. |
+| Source and support files | Configured source roots, selected experiment files, scripts, tests, `bootstrap-pom.mjs`, and `package.json`. |
+
+Navigation has two modes:
+
+| Mode | Use |
+|---|---|
+| Thematic | Group documents by kind, such as wiki, project docs, decisions, task plans, experiments, and source. |
+| Tree | Follow the repository path hierarchy when the user knows where a file should live. |
+
+Search has two levels:
+
+| Search | Use |
+|---|---|
+| Project search | Uses `rg` over the active document-kind filter, with optional regex mode. |
+| In-file search | Searches the currently open document, with previous/next navigation and optional regex mode. |
+
+The browser UI is designed for consultation rather than source editing:
+
+| Surface | Behavior |
+|---|---|
+| Document pane | Uses a responsive page width. Prose remains measure-limited, while code blocks and tables can use wider desktop space. |
+| Left navigation | Can collapse on hover or stay pinned. |
+| Right annotation panel | Can collapse on hover or stay pinned. |
+| Language labels | Can switch between English and Italian. |
+| File limits | Rendering rejects files above 1 MB and binary-looking files. Search skips files above 1 MB. |
+| Source editing | Not present in the browser workflow. Editing remains a normal repository operation outside the reader. |
+
+The server binds to `127.0.0.1` and sends a restrictive Content Security Policy, `nosniff`, frame-denial, same-origin resource policy, and no-referrer headers. The reader is still a local repository browser and should not be exposed on a shared network without a separate threat model.
+
+## File-Based Annotations
+
+The right panel writes annotations as JSON files under the configured annotation directory. By default that is:
+
+```text
+experiments/wiki-agent-orchestration/evidence/annotations/
+```
+
+An annotation contains the target path, optional selected document text, the human note for the agent, status fields, and an `agentReport` field for what the agent did after processing the file.
+
+Treat the annotation folder as runtime evidence and keep it out of commits unless the project intentionally wants to archive an annotation. If a project chooses a custom annotation directory, add it to the project's ignore rules.
+
+The annotation panel separates new notes, in-progress work, and processed history. Opening an annotation shows the selected document text, the agent-facing note, the agent outcome when present, and the JSON work file on demand. The UI also tries to reopen the target document and highlight the selected text; processed annotations still remain readable even if the target document no longer exists.
+
+The UI does not send requests directly to an AI agent. The annotation file is the handoff artifact: an agent reads it, claims it, works from current sources, and records the outcome before durable document changes are promoted through normal edits.
+
+Useful commands:
+
+```bash
+node experiments/wiki-agent-orchestration/wiki-tools.mjs search "Operating Memory"
+node experiments/wiki-agent-orchestration/wiki-tools.mjs list
+node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex
+node experiments/wiki-agent-orchestration/wiki-tools.mjs resolve <annotation-id> --note "Updated the documented launch path." --by codex
+node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex --annotations-dir .pom-reader/annotations
+```
+
+When the CLI is being used from an installed `pom/` folder, prefix the script path with `pom/`.
 
 ## Static Workflow
 

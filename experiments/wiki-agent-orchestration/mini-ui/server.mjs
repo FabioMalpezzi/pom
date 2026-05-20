@@ -1,51 +1,27 @@
 #!/usr/bin/env node
 
 import { createServer } from "node:http";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync, statSync } from "node:fs";
 import { basename, dirname, extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createAnnotation, deleteAnnotation, listAnnotations, readAnnotation, searchProject, takeAnnotation } from "../wiki-tools.mjs";
+import { ANNOTATIONS_ROOT, createAnnotation, deleteAnnotation, listAnnotations, readAnnotation, searchProject, setAnnotationsRoot, setProjectRoot, takeAnnotation } from "../wiki-tools.mjs";
+import { buildDocumentSourceContext, generatedIgnoreGlobs, isGeneratedPath, kindRank } from "./document-sources.mjs";
+import { extractSummary, extractTitle, renderDocument } from "./render-document.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(HERE, "../../..");
+const cliArgs = process.argv.slice(2);
+if (shouldShowHelp(cliArgs)) {
+  usage();
+  process.exit(0);
+}
+const options = parseOptions(cliArgs);
+const ROOT = setProjectRoot(options.root);
+if (options.annotationsDir) setAnnotationsRoot(options.annotationsDir);
 const PUBLIC = join(HERE, "public");
-const MARKDOWN_EXTS = [".md"];
-const DOC_EXTS = [".md", ".html", ".css", ".json", ".mjs"];
-const SOURCE_EXTS = [".ts", ".mjs", ".js", ".css", ".html", ".json"];
 const PROJECT_INDEX_PATH = "__project_index__.md";
-
-const DOC_SOURCES = [
-  { root: "wiki", kind: "wiki", exts: [".md"], skipDirs: ["_site"], skipFiles: ["log.md"] },
-  { root: "specs", kind: "spec", exts: [".md"] },
-  { root: "decisions", kind: "decision", exts: [".md"] },
-  { root: "tasks", kind: "task_plan", exts: [".md"] },
-  { root: "docs", kind: "project_doc", exts: DOC_EXTS },
-  { root: "examples", kind: "project_doc", exts: DOC_EXTS },
-  { root: "prompts", kind: "project_doc", exts: MARKDOWN_EXTS },
-  { root: "skills", kind: "project_doc", exts: MARKDOWN_EXTS },
-  { root: "templates", kind: "project_doc", exts: DOC_EXTS },
-  { root: "agents", kind: "project_doc", exts: MARKDOWN_EXTS },
-  { root: "experiments/wiki-agent-orchestration", kind: "experiment", exts: DOC_EXTS, skipDirs: ["evidence", "fixtures"] },
-  { root: "scripts", kind: "source", exts: SOURCE_EXTS },
-  { root: "tests", kind: "source", exts: SOURCE_EXTS },
-  { root: "bootstrap-pom.mjs", kind: "source", exts: [".mjs"] },
-  { root: "package.json", kind: "source", exts: [".json"] },
-  { root: "README.md", kind: "project_doc", exts: [".md"] },
-  { root: "CHANGELOG.md", kind: "project_doc", exts: [".md"] },
-  { root: "CONTEXT.md", kind: "project_doc", exts: [".md"] },
-  { root: "WIKI_METHOD.md", kind: "project_doc", exts: [".md"] },
-];
-
-const KIND_ORDER = new Map([
-  ["wiki", 0],
-  ["project_doc", 1],
-  ["spec", 2],
-  ["decision", 3],
-  ["task_plan", 4],
-  ["experiment", 5],
-  ["source", 6],
-  ["other", 9],
-]);
+const MAX_DOCUMENT_BYTES = 1_000_000;
+const MAX_SUMMARY_BYTES = 64_000;
+const { docSources: DOC_SOURCES, pomConfig: POM_CONFIG } = buildDocumentSourceContext(ROOT);
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -55,16 +31,19 @@ const MIME = {
   ".svg": "image/svg+xml",
 };
 
-const port = parsePort(process.argv.slice(2));
 const server = createServer(async (req, res) => {
   try {
+    assertLocalHostHeader(req);
+    assertSameOriginForStateChangingRequest(req);
     const url = new URL(req.url || "/", `http://${req.headers.host || "127.0.0.1"}`);
+    if (url.pathname === "/api/status") return sendJson(res, readerStatus());
     if (url.pathname === "/api/documents") return sendJson(res, listDocuments());
     if (url.pathname === "/api/document") return sendJson(res, readDocument(url.searchParams.get("path")));
     if (url.pathname === "/api/search") return sendJson(res, searchProject({
       query: url.searchParams.get("q"),
       regex: url.searchParams.get("regex") === "1",
       roots: searchRootsForKind(url.searchParams.get("kind") || "all"),
+      ignoreGlobs: generatedIgnoreGlobs(POM_CONFIG),
     }));
     if (url.pathname === "/api/annotations" && req.method === "GET") return sendJson(res, listAnnotations({
       status: url.searchParams.get("status") || undefined,
@@ -85,30 +64,98 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(port, "127.0.0.1", () => {
+server.on("error", (error) => {
+  console.error(`POM Project Reader failed to start: ${error.message}`);
+  process.exitCode = 1;
+});
+
+server.listen(options.port, "127.0.0.1", () => {
   const address = server.address();
   console.log(`POM Project Reader: http://127.0.0.1:${address.port}`);
+  console.log(`Project root: ${ROOT}`);
+  console.log(`POM config: ${POM_CONFIG ? "pom.config.json" : "not found; using built-in document allowlist"}`);
+  console.log(`Annotations: ${ANNOTATIONS_ROOT}`);
 });
+
+function parseOptions(args) {
+  return {
+    port: parsePort(args),
+    root: parseRoot(args),
+    annotationsDir: parseAnnotationsDir(args),
+  };
+}
 
 function parsePort(args) {
   const index = args.indexOf("--port");
-  if (index === -1) return Number(process.env.PORT || 4173);
-  const value = Number(args[index + 1]);
+  const value = Number(index === -1 ? process.env.PORT || 4173 : args[index + 1]);
   if (!Number.isInteger(value) || value < 1 || value > 65535) throw new Error("Invalid --port value");
   return value;
+}
+
+function parseRoot(args) {
+  const rootIndex = args.indexOf("--root");
+  const dirIndex = args.indexOf("--dir");
+  const index = rootIndex === -1 ? dirIndex : rootIndex;
+  if (index === -1) return ".";
+  const value = args[index + 1];
+  if (!value || value.startsWith("--")) throw new Error("Missing project root value");
+  return value;
+}
+
+function parseAnnotationsDir(args) {
+  const index = args.indexOf("--annotations-dir");
+  if (index === -1) return "";
+  const value = args[index + 1];
+  if (!value || value.startsWith("--")) throw new Error("Missing annotation directory value");
+  return value;
+}
+
+function shouldShowHelp(args) {
+  return args.includes("help") || args.includes("--help") || args.includes("-h");
+}
+
+function usage() {
+  console.log(`Usage:
+  node experiments/wiki-agent-orchestration/mini-ui/server.mjs [--port <port>] [--root <project-root>] [--annotations-dir <path>]
+
+Options:
+  --port <port>             Local port. Defaults to PORT or 4173.
+  --root, --dir <path>      Project root to inspect. Defaults to ".".
+  --annotations-dir <path>  Annotation directory. Defaults to experiments/wiki-agent-orchestration/evidence/annotations under the project root.
+
+When pom.config.json exists under the project root, the reader uses its configured roots to classify documents.
+`);
 }
 
 function serveStatic(res, pathname) {
   const clean = pathname === "/" ? "/index.html" : pathname;
   const file = resolve(PUBLIC, `.${clean}`);
-  if (!file.startsWith(PUBLIC)) throw new Error("Blocked path");
+  if (!pathInside(PUBLIC, file)) throw new Error("Blocked path");
   if (!existsSync(file) || !statSync(file).isFile()) return notFound(res);
   const ext = extname(file);
   res.writeHead(200, {
+    ...securityHeaders(),
     "content-type": MIME[ext] || "application/octet-stream",
     "cache-control": "no-store",
   });
   res.end(readFileSync(file));
+}
+
+function readerStatus() {
+  return {
+    projectRoot: ROOT,
+    documentSources: {
+      mode: POM_CONFIG ? "pom.config.json" : "built-in",
+      configFound: Boolean(POM_CONFIG),
+      configuredCount: DOC_SOURCES.filter((source) => source.fromConfig).length,
+      totalCount: DOC_SOURCES.length,
+    },
+    limits: {
+      maxDocumentBytes: MAX_DOCUMENT_BYTES,
+      maxSummaryBytes: MAX_SUMMARY_BYTES,
+    },
+    annotationsRoot: ANNOTATIONS_ROOT,
+  };
 }
 
 function listDocuments() {
@@ -121,8 +168,9 @@ function physicalDocuments() {
   return DOC_SOURCES.flatMap((source) => {
     const absolute = join(ROOT, source.root);
     if (!existsSync(absolute)) return [];
-    if (statSync(absolute).isFile()) return [documentSummary(source.root, source.kind)];
+    if (statSync(absolute).isFile()) return pathIsSkipped(source.root, source) ? [] : [documentSummary(source.root, source.kind)];
     return walk(source.root, source)
+      .filter((path) => !pathIsSkipped(path, source))
       .filter((path) => source.exts.includes(extname(path)))
       .map((path) => documentSummary(path, source.kind));
   });
@@ -147,19 +195,26 @@ function walk(root, source) {
 }
 
 function documentSummary(path, kind) {
-  const content = readFileSync(join(ROOT, path), "utf8");
+  let content = "";
+  let summary = "";
+  try {
+    content = readProjectText(path, { maxBytes: MAX_SUMMARY_BYTES, truncate: true });
+    summary = extractSummary(content);
+  } catch (error) {
+    summary = error.expose ? error.message : "Document cannot be previewed by the reader.";
+  }
   return {
     path,
     kind,
     title: extractTitle(content, path),
-    summary: extractSummary(content),
+    summary,
   };
 }
 
 function readDocument(path) {
   if (path === PROJECT_INDEX_PATH) return projectIndexDocument(physicalDocuments());
   const safePath = requireAllowedPath(path);
-  const content = readFileSync(join(ROOT, safePath), "utf8");
+  const content = readProjectText(safePath, { maxBytes: MAX_DOCUMENT_BYTES });
   return {
     path: safePath,
     kind: kindForPath(safePath),
@@ -184,16 +239,40 @@ function requireAllowedPath(input) {
   return relativePath;
 }
 
+function readProjectText(path, { maxBytes, truncate = false } = {}) {
+  const absolute = join(ROOT, path);
+  const stat = statSync(absolute);
+  if (stat.size > maxBytes && !truncate) {
+    throw httpError(413, `Document exceeds the reader limit of ${maxBytes} bytes.`);
+  }
+  const buffer = truncate && stat.size > maxBytes ? readFileStart(absolute, maxBytes) : readFileSync(absolute);
+  if (looksBinary(buffer)) throw httpError(415, "Document appears to be binary and cannot be rendered.");
+  const slice = truncate && buffer.length > maxBytes ? buffer.subarray(0, maxBytes) : buffer;
+  return slice.toString("utf8");
+}
+
+function readFileStart(file, bytes) {
+  const fd = openSync(file, "r");
+  try {
+    const buffer = Buffer.alloc(bytes);
+    const readBytes = readSync(fd, buffer, 0, bytes, 0);
+    return buffer.subarray(0, readBytes);
+  } finally {
+    closeSync(fd);
+  }
+}
+
+function looksBinary(buffer) {
+  const sample = buffer.subarray(0, Math.min(buffer.length, 4096));
+  return sample.includes(0);
+}
+
 function kindForPath(path) {
   const match = DOC_SOURCES.find((source) => {
     const absolute = resolve(ROOT, path);
     return pathBelongsToSource(absolute, source) && !pathIsSkipped(path, source) && pathExtAllowed(path, source);
   });
   return match?.kind || "other";
-}
-
-function kindRank(kind) {
-  return KIND_ORDER.has(kind) ? KIND_ORDER.get(kind) : KIND_ORDER.get("other");
 }
 
 function compareDocuments(a, b) {
@@ -289,10 +368,48 @@ function searchRootsForKind(kind) {
 
 function pathBelongsToSource(absolute, source) {
   const sourceAbsolute = resolve(ROOT, source.root);
-  return absolute === sourceAbsolute || absolute.startsWith(`${sourceAbsolute}/`);
+  return pathInside(sourceAbsolute, absolute);
+}
+
+function pathInside(parent, child) {
+  const relativePath = relative(parent, child);
+  return !relativePath || (!relativePath.startsWith("..") && !isAbsolute(relativePath));
+}
+
+function assertLocalHostHeader(req) {
+  const host = String(req.headers.host || "");
+  if (isLocalHttpOrigin(`http://${host}`)) return;
+  throw httpError(403, "Project Reader only accepts local host headers.");
+}
+
+function assertSameOriginForStateChangingRequest(req) {
+  if (!["POST", "PUT", "PATCH", "DELETE"].includes(String(req.method || "").toUpperCase())) return;
+  const origin = req.headers.origin;
+  if (!origin) return;
+  const host = String(req.headers.host || "");
+  if (sameOrigin(origin, `http://${host}`) && isLocalHttpOrigin(origin)) return;
+  throw httpError(403, "Cross-origin state-changing requests are not allowed.");
+}
+
+function sameOrigin(left, right) {
+  try {
+    return new URL(left).origin === new URL(right).origin;
+  } catch {
+    return false;
+  }
+}
+
+function isLocalHttpOrigin(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" && ["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname);
+  } catch {
+    return false;
+  }
 }
 
 function pathIsSkipped(path, source) {
+  if (isGeneratedPath(POM_CONFIG, path)) return true;
   const parts = relative(source.root, path).split(/[\\/]+/).filter(Boolean);
   return parts.some((part) => source.skipDirs?.includes(part)) || source.skipFiles?.includes(basename(path));
 }
@@ -304,357 +421,48 @@ function pathExtAllowed(path, source) {
 function readBody(req) {
   return new Promise((resolveBody, reject) => {
     let body = "";
+    let rejected = false;
     req.on("data", (chunk) => {
+      if (rejected) return;
       body += chunk;
-      if (body.length > 1_000_000) reject(new Error("Request too large"));
+      if (body.length > 1_000_000) {
+        rejected = true;
+        req.destroy();
+        reject(httpError(413, "Request too large"));
+      }
     });
-    req.on("end", () => resolveBody(body));
-    req.on("error", reject);
+    req.on("end", () => {
+      if (!rejected) resolveBody(body);
+    });
+    req.on("error", (error) => {
+      if (!rejected) reject(error);
+    });
   });
 }
 
 function sendJson(res, value, status = 200) {
-  res.writeHead(status, { "content-type": "application/json; charset=utf-8" });
+  res.writeHead(status, { ...securityHeaders(), "content-type": "application/json; charset=utf-8" });
   res.end(`${JSON.stringify(value, null, 2)}\n`);
 }
 
 function notFound(res) {
-  res.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+  res.writeHead(404, { ...securityHeaders(), "content-type": "text/plain; charset=utf-8" });
   res.end("Not found");
 }
 
-function extractTitle(content, path) {
-  if (extname(path) !== ".md") return basename(path);
-  const match = content.match(/^#\s+(.+)$/m);
-  return match ? stripInline(match[1]) : basename(path);
-}
-
-function extractSummary(content) {
-  if (!content.includes("\n\n") && content.length > 160) return shorten(content, 160);
-  const summary = content.match(/## Summary\s+([\s\S]*?)(?=\n## |\n# |\n?$)/);
-  const source = summary ? summary[1] : content.replace(/^---[\s\S]*?---\s*/, "");
-  const paragraph = source.split(/\n\s*\n/).find((block) => block.trim() && !block.trim().startsWith("#"));
-  return shorten(stripInline(paragraph || "Document"), 160);
-}
-
-function stripInline(value) {
-  return String(value)
-    .replace(/\[\[([^\]|]+)\|?([^\]]*)\]\]/g, (_, page, label) => label || page)
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/[`*_>#|-]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function shorten(value, max) {
-  return value.length <= max ? value : `${value.slice(0, max - 3).replace(/\s+\S*$/, "")}...`;
-}
-
-function renderJson(content) {
-  return renderCodeBlock(JSON.stringify(JSON.parse(content), null, 2), "json");
-}
-
-function renderDocument(content, path) {
-  const ext = extname(path);
-  if (ext === ".md") return renderMarkdown(content, path);
-  if (ext === ".json") return renderJson(content);
-  return renderCode(content, ext.slice(1) || "text");
-}
-
-function renderCode(content, lang) {
-  return renderCodeBlock(content, lang, "code-file");
-}
-
-function renderCodeBlock(content, lang, className = "") {
-  const normalized = String(content).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
-  const lines = normalized.endsWith("\n") ? normalized.slice(0, -1).split("\n") : normalized.split("\n");
-  const numbered = shouldNumberCodeBlock(lang);
-  const rows = lines.map((line, index) => {
-    const text = highlightCodeLine(line, lang) || " ";
-    if (!numbered) return `<span class="code-line"><span class="code-line-text">${text}</span></span>`;
-    return `<span class="code-line"><span class="code-line-number">${index + 1}</span><span class="code-line-text">${text}</span></span>`;
-  }).join("");
-  const classes = [
-    "code-block",
-    className,
-    numbered ? "line-numbered" : "no-line-numbers",
-    isPlainTextBlock(lang) ? "plain-text-block" : "",
-  ].filter(Boolean).join(" ");
-  return `<pre class="${classes}" data-lang="${escapeHtml(lang || "text")}" data-numbered="${numbered ? "true" : "false"}"><code>${rows}</code></pre>`;
-}
-
-function isPlainTextBlock(lang) {
-  return new Set(["", "ascii", "text", "txt"]).has(normalizeLang(lang));
-}
-
-function shouldNumberCodeBlock(lang) {
-  return new Set([
-    "c",
-    "cjs",
-    "cpp",
-    "cs",
-    "css",
-    "go",
-    "html",
-    "java",
-    "js",
-    "json",
-    "jsx",
-    "kt",
-    "kotlin",
-    "mjs",
-    "php",
-    "py",
-    "python",
-    "rb",
-    "rs",
-    "ruby",
-    "scala",
-    "sql",
-    "swift",
-    "ts",
-    "tsx",
-    "xml",
-  ]).has(normalizeLang(lang));
-}
-
-function highlightCodeLine(line, lang) {
-  const normalizedLang = normalizeLang(lang);
-  const escaped = escapeCodeText(line);
-  if (!escaped.trim()) return "";
-  if (["js", "mjs", "ts"].includes(normalizedLang)) return highlightJs(escaped);
-  if (normalizedLang === "json") return highlightJson(escaped);
-  if (normalizedLang === "css") return highlightCss(escaped);
-  if (["html", "xml"].includes(normalizedLang)) return highlightHtml(escaped);
-  if (["bash", "sh", "shell", "zsh"].includes(normalizedLang)) return highlightShell(escaped);
-  return escaped;
-}
-
-function normalizeLang(lang) {
-  const value = String(lang || "text").trim().toLowerCase();
-  if (value === "javascript") return "js";
-  if (value === "typescript") return "ts";
-  if (value === "text") return "text";
-  return value;
-}
-
-function highlightJs(text) {
-  const store = [];
-  let out = protectTokens(text, /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)/g, "tok-string", store);
-  out = protectTokens(out, /\/\/.*$/g, "tok-comment", store);
-  out = protectTokens(out, /\/\*.*?\*\//g, "tok-comment", store);
-  out = out.replace(/\b(import|from|export|const|let|var|function|return|if|else|for|while|switch|case|break|continue|class|new|try|catch|finally|throw|async|await|true|false|null|undefined|type|interface|extends|default)\b/g, '<span class="tok-keyword">$1</span>');
-  out = out.replace(/\b([0-9]+(?:\.[0-9]+)?)\b/g, '<span class="tok-number">$1</span>');
-  return restoreTokens(out, store);
-}
-
-function highlightJson(text) {
-  const store = [];
-  let out = protectTokens(text, /"(?:\\.|[^"\\])*"/g, "tok-string", store);
-  out = out.replace(/\b(true|false|null)\b/g, '<span class="tok-keyword">$1</span>');
-  out = out.replace(/\b-?[0-9]+(?:\.[0-9]+)?\b/g, '<span class="tok-number">$&</span>');
-  return restoreTokens(out, store);
-}
-
-function highlightCss(text) {
-  const store = [];
-  let out = protectTokens(text, /\/\*.*?\*\//g, "tok-comment", store);
-  out = protectTokens(out, /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g, "tok-string", store);
-  out = out.replace(/#[0-9a-fA-F]{3,8}\b/g, '<span class="tok-number">$&</span>');
-  out = out.replace(/([a-zA-Z-]+)(\s*:)/g, '<span class="tok-property">$1</span>$2');
-  out = out.replace(/(@[a-zA-Z-]+)/g, '<span class="tok-keyword">$1</span>');
-  return restoreTokens(out, store);
-}
-
-function highlightHtml(text) {
-  const store = [];
-  let out = protectTokens(text, /&lt;!--.*?--&gt;/g, "tok-comment", store);
-  out = protectTokens(out, /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g, "tok-string", store);
-  out = out.replace(/(&lt;\/?)([A-Za-z][A-Za-z0-9:-]*)/g, '$1<span class="tok-tag">$2</span>');
-  out = out.replace(/\s([A-Za-z_:][A-Za-z0-9_:.:-]*)(=)/g, ' <span class="tok-property">$1</span>$2');
-  out = out.replace(/(\/?&gt;)/g, '<span class="tok-muted">$1</span>');
-  return restoreTokens(out, store);
-}
-
-function highlightShell(text) {
-  const store = [];
-  let out = protectTokens(text, /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g, "tok-string", store);
-  out = protectTokens(out, /#.*/g, "tok-comment", store);
-  out = out.replace(/(^|\s)(-{1,2}[A-Za-z0-9-]+)/g, '$1<span class="tok-keyword">$2</span>');
-  out = out.replace(/\b(curl|node|npm|git|cd|mkdir|cp|mv|rm|cat|rg|grep|sed|awk|export)\b/g, '<span class="tok-function">$1</span>');
-  return restoreTokens(out, store);
-}
-
-function protectTokens(text, pattern, className, store) {
-  return text.replace(pattern, (match) => {
-    const placeholder = `@@POMTOK${store.length}@@`;
-    store.push(`<span class="${className}">${match}</span>`);
-    return placeholder;
-  });
-}
-
-function restoreTokens(text, store) {
-  return text.replace(/@@POMTOK(\d+)@@/g, (_, index) => store[Number(index)]);
-}
-
-function renderMarkdown(markdown, currentPath) {
-  const body = markdown.replace(/^---\n[\s\S]*?\n---\s*/, "");
-  const lines = body.split(/\r?\n/);
-  const out = [];
-  let paragraph = [];
-  let list = null;
-  let inCode = false;
-  let code = [];
-  let codeLang = "";
-
-  const flushParagraph = () => {
-    if (!paragraph.length) return;
-    out.push(`<p>${inlineMarkdown(paragraph.join(" "), currentPath)}</p>`);
-    paragraph = [];
+function securityHeaders() {
+  return {
+    "content-security-policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+    "cross-origin-resource-policy": "same-origin",
+    "referrer-policy": "no-referrer",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
   };
-  const flushList = () => {
-    if (!list) return;
-    out.push(`<${list.type}>${list.items.map((item) => `<li>${inlineMarkdown(item, currentPath)}</li>`).join("")}</${list.type}>`);
-    list = null;
-  };
-
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
-    const fence = line.match(/^```([A-Za-z0-9_-]*)\s*$/);
-    if (fence && !inCode) {
-      flushParagraph();
-      flushList();
-      inCode = true;
-      codeLang = fence[1] || "";
-      code = [];
-      continue;
-    }
-    if (fence && inCode) {
-      out.push(renderCodeBlock(code.join("\n"), codeLang || "text"));
-      inCode = false;
-      continue;
-    }
-    if (inCode) {
-      code.push(line);
-      continue;
-    }
-    if (!line.trim()) {
-      flushParagraph();
-      flushList();
-      continue;
-    }
-    if (isTableStart(line, lines[index + 1])) {
-      flushParagraph();
-      flushList();
-      const tableLines = [line, lines[index + 1]];
-      index += 2;
-      while (index < lines.length && isTableRow(lines[index])) {
-        tableLines.push(lines[index]);
-        index += 1;
-      }
-      index -= 1;
-      out.push(renderTable(tableLines, currentPath));
-      continue;
-    }
-    const heading = line.match(/^(#{1,4})\s+(.+)$/);
-    if (heading) {
-      flushParagraph();
-      flushList();
-      const level = heading[1].length;
-      out.push(`<h${level}>${inlineMarkdown(heading[2], currentPath)}</h${level}>`);
-      continue;
-    }
-    const bullet = line.match(/^\s*[-*]\s+(.+)$/);
-    if (bullet) {
-      flushParagraph();
-      if (!list || list.type !== "ul") list = { type: "ul", items: [] };
-      list.items.push(bullet[1]);
-      continue;
-    }
-    const ordered = line.match(/^\s*\d+\.\s+(.+)$/);
-    if (ordered) {
-      flushParagraph();
-      if (!list || list.type !== "ol") list = { type: "ol", items: [] };
-      list.items.push(ordered[1]);
-      continue;
-    }
-    paragraph.push(line.trim());
-  }
-  flushParagraph();
-  flushList();
-  return out.join("\n");
 }
 
-function isTableStart(line, nextLine) {
-  return isTableRow(line) && Boolean(nextLine) && isTableSeparator(nextLine);
-}
-
-function isTableRow(line) {
-  return line.includes("|") && !line.trim().startsWith("```");
-}
-
-function isTableSeparator(line) {
-  const cells = splitTableRow(line);
-  return cells.length > 1 && cells.every((cell) => /^:?-{3,}:?$/.test(cell.trim()));
-}
-
-function splitTableRow(line) {
-  let value = line.trim();
-  if (value.startsWith("|")) value = value.slice(1);
-  if (value.endsWith("|")) value = value.slice(0, -1);
-  return value.split("|").map((cell) => cell.trim());
-}
-
-function renderTable(tableLines, currentPath) {
-  const header = splitTableRow(tableLines[0]);
-  const aligns = splitTableRow(tableLines[1]).map((cell) => {
-    if (cell.startsWith(":") && cell.endsWith(":")) return "center";
-    if (cell.endsWith(":")) return "right";
-    return "left";
-  });
-  const body = tableLines.slice(2).map(splitTableRow);
-  const head = header.map((cell, index) => {
-    return `<th style="text-align:${aligns[index] || "left"}">${inlineMarkdown(cell, currentPath)}</th>`;
-  }).join("");
-  const rows = body.map((row) => {
-    const cells = header.map((_, index) => {
-      return `<td style="text-align:${aligns[index] || "left"}">${inlineMarkdown(row[index] || "", currentPath)}</td>`;
-    }).join("");
-    return `<tr>${cells}</tr>`;
-  }).join("");
-  return `<div class="table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
-}
-
-function inlineMarkdown(value, currentPath) {
-  return escapeHtml(value)
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|([^\]]+))?\]\]/g, (_, page, label) => {
-      const target = `wiki/${page.replace(/\.md$/, "")}.md`;
-      return `<a href="#" data-doc-path="${escapeHtml(target)}">${escapeHtml(label || page)}</a>`;
-    })
-    .replace(/\[([^\]]+)\]\(([^)]+\.md)(?:#[^)]+)?\)/g, (_, label, target) => {
-      const resolved = resolveLinkTarget(currentPath, target);
-      return `<a href="#" data-doc-path="${escapeHtml(resolved)}">${escapeHtml(label)}</a>`;
-    });
-}
-
-function resolveLinkTarget(currentPath, target) {
-  if (target.startsWith("/")) return target.slice(1);
-  return normalize(join(dirname(currentPath), target));
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function escapeCodeText(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+function httpError(statusCode, message) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  error.expose = true;
+  return error;
 }

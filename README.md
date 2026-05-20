@@ -41,6 +41,7 @@ Use the smallest workflow that matches your situation:
 | Resume after a pause | `skills/pulse.md` |
 | Ask or maintain the wiki | `skills/wiki.md` |
 | Render the wiki reader | `npm run pom:wiki:render` |
+| Browse, search, and annotate the project locally | POM Project Reader server |
 | Extend POM | `skills/extend.md` |
 | Reduce method bloat | `skills/prune.md` |
 | Diagnose a POM problem | `skills/diagnose.md` |
@@ -67,6 +68,9 @@ npm run pom:wiki:render
 # Open the static wiki reader
 wiki.html
 
+# Open the local Project Reader server
+node experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+
 # Resume after a pause
 Read pom/skills/pulse.md and update PROJECT_STATE.md.
 
@@ -87,6 +91,71 @@ Read pom/skills/handoff.md and update the project state.
 ```
 
 See `examples/agent-conversations.md` for more detailed interaction examples.
+
+## POM Project Reader
+
+The POM Project Reader is an experimental local web server for browsing a repository without turning generated HTML into a new source of authority. By default, it uses the current working directory as the project root and port `4173`; pass `--root` or `--dir` and `--port` when you want to choose them explicitly.
+
+Project-wide content search requires `rg` from ripgrep. Annotation files default to `experiments/wiki-agent-orchestration/evidence/annotations/` under the project root; pass `--annotations-dir` to use a different working directory for annotation handoff files.
+
+From this POM Source repository:
+
+```bash
+node experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+```
+
+From a target project where POM is installed under `pom/`:
+
+```bash
+node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+```
+
+Explicit form:
+
+```bash
+node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations
+```
+
+Then open:
+
+```text
+http://127.0.0.1:4173
+```
+
+The reader starts from `wiki/index.md` when the project has a wiki. If the project has no wiki index, it shows a generated `POM Project Reader` entry page and still exposes project documentation and source files through an explicit allowlist.
+
+When `pom.config.json` exists, the reader uses it to classify configured project roots. For example, `documentation.officialRoot` and `documentation.existingRoots` become project documents, `decisions.root` becomes decisions, `taskPlans.root` becomes task plans, `analysis.root` becomes analysis, `source.roots` become source, and `tests.root` becomes tests. It also respects generated-output exclusions from `artifactPolicy.generated` in navigation and search. If the config is missing, the reader keeps the built-in allowlist. If the config exists but is invalid JSON, the server fails loudly instead of guessing. The UI shows whether it is using `pom.config.json` or the built-in roots.
+
+It can show and search:
+
+- wiki pages, README, context, docs, specs, decisions, task plans, prompts, skills, templates, examples, selected experiment files, scripts, tests, `bootstrap-pom.mjs`, and `package.json`;
+- thematic navigation and project-tree navigation;
+- collapsible or pinned navigation and annotation side panels;
+- project-wide `rg` search with optional regex mode;
+- search inside the open file, with optional regex mode;
+- a responsive document surface that keeps prose readable while giving code blocks and tables more room on large screens;
+- Markdown tables, fixed-width text blocks, syntax-highlighted code, source line numbers where they are useful, and English/Italian interface labels.
+- local safety guards: rendering rejects files above 1 MB and binary-looking files, while project search skips files above 1 MB.
+
+Annotations are file-based. The UI saves JSON work files under the configured annotation directory. Treat this as runtime evidence and keep it out of commits unless the project intentionally wants to archive an annotation. If you choose a custom annotation directory, add it to the target project's ignore rules.
+
+The annotation panel has "New note", "In progress", and "Processed" tabs. It can send selected document text into a note, show the JSON work file on demand, and reopen the target document when an annotation is selected. Browser-based source editing is not part of the current workflow.
+
+The server binds to `127.0.0.1` and sends restrictive browser security headers. It is still a local repository browser; do not expose it on a shared network without a separate threat model.
+
+A coding agent can read the next open annotation from the same project root:
+
+```bash
+node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex
+```
+
+When the server uses a custom annotation directory, pass the same directory to the CLI:
+
+```bash
+node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex --annotations-dir .pom-reader/annotations
+```
+
+When the CLI is being used from an installed `pom/` folder, prefix the script path with `pom/`. The UI does not talk directly to an AI agent; the annotation file is the handoff artifact, and durable document changes still need a separate reviewed edit.
 
 ## Installation
 

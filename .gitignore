@@ -1,4 +1,5 @@
 .DS_Store
+.pom-reader/
 .playwright-cli/
 experiments/wiki-agent-orchestration/evidence/agent-drafts/
 experiments/wiki-agent-orchestration/evidence/agent-turns/

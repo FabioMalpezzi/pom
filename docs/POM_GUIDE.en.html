@@ -62,6 +62,7 @@
         <a href="#why">Why it exists</a>
         <a href="#principles">Principles</a>
         <a href="#tools">Tools</a>
+        <a href="#reader">Reader</a>
         <a href="#workflow">Practice</a>
         <a href="#install">Install</a>
         <a href="#overlay">Overlay</a>
@@ -218,6 +219,39 @@
           </tr>
         </tbody>
       </table>
+    </section>
+
+    <section id="reader">
+      <h2>POM Project Reader</h2>
+      <p>The POM Project Reader is an experimental local web server for reading a project in the browser. It is a live consultation surface over repository files, not a new source of authority.</p>
+      <div class="grid two">
+        <div class="item">
+          <h3>Launch it from the project root</h3>
+          <p>By default the server uses the current working directory as the project root and port <code>4173</code>. In the POM Source repository, run:</p>
+          <div class="command-list">
+            <code>node experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173</code>
+          </div>
+          <p>In a target project where POM is installed under <code>pom/</code>, run:</p>
+          <div class="command-list">
+            <code>node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173</code>
+          </div>
+          <p>Use <code>--root</code> or <code>--dir</code>, <code>--port</code>, and <code>--annotations-dir</code> when those paths must be explicit.</p>
+          <div class="command-list">
+            <code>node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations</code>
+          </div>
+          <p>Then open <code>http://127.0.0.1:4173</code>.</p>
+        </div>
+        <div class="item">
+          <h3>Read, search, annotate</h3>
+          <p>The reader starts from <code>wiki/index.md</code> when a wiki exists. Without a wiki, it shows a generated project entry page and still exposes project documentation and source files.</p>
+          <p>When <code>pom.config.json</code> exists, configured roots refine the document set and classification: documentation roots, decision records, task plans, analysis, source roots, tests, mockup packages, root-level Markdown, and generated-output exclusions. Without the config, the reader keeps its built-in allowlist. The UI shows which mode is active.</p>
+          <p>It supports thematic and tree navigation, pinned or collapsible side panels, project-wide <code>rg</code> search when ripgrep is installed, search inside the open file, optional regex mode, Markdown tables, fixed-width text, syntax-highlighted code, and useful source line numbers. Rendering rejects files above 1 MB and binary-looking files; search skips files above 1 MB. The document pane keeps prose readable while giving code blocks and tables more room on large screens.</p>
+          <p>Annotations are JSON work files under the configured annotation directory. The default is <code>experiments/wiki-agent-orchestration/evidence/annotations/</code>. Treat them as runtime evidence unless the project chooses to archive one. The right panel separates new notes, in-progress work, and processed history; the UI can reopen the target document when it still exists. It does not talk directly to an AI agent, and browser-based source editing is not part of the current workflow. The server binds to <code>127.0.0.1</code> and sends restrictive browser security headers.</p>
+        </div>
+      </div>
+      <div class="command-list">
+        <code>node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex</code>
+      </div>
     </section>
 
     <section id="workflow">

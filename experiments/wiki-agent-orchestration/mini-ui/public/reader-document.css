@@ -19,7 +19,7 @@
   --doc-shadow: rgba(58, 44, 18, 0.18);
   position: relative;
   overflow: hidden;
-  max-width: 1120px;
+  max-width: var(--reader-page-max, min(1500px, 100%));
   border-color: var(--doc-paper-line);
   border-radius: 4px;
   background:
@@ -52,9 +52,9 @@
 }
 
 .document-content h1 {
-  max-width: 760px;
+  max-width: min(1100px, 100%);
   margin: 0 0 34px;
-  font-size: clamp(2.4rem, 5vw, 4.1rem);
+  font-size: clamp(2.4rem, 4.2vw, 4.2rem);
   font-weight: 700;
 }
 
@@ -197,4 +197,24 @@
 .document-content .file-search-mark.active {
   background: var(--doc-accent);
   color: var(--doc-parchment);
+}
+
+@media (max-width: 1040px) {
+  .document-content h1 {
+    font-size: clamp(2.2rem, 7vw, 3.4rem);
+  }
+
+  .document-content h2 {
+    font-size: clamp(1.75rem, 4.5vw, 2rem);
+  }
+}
+
+@media (max-width: 760px) {
+  .document-content h1 {
+    font-size: clamp(2rem, 9vw, 2.8rem);
+  }
+
+  .document-content h2 {
+    margin-top: 42px;
+  }
 }

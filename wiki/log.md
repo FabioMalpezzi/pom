@@ -69,3 +69,21 @@ Sources used: `specs/SPEC-0005-web-wiki-agent-extension.md`, `tasks/TASK-0003-co
 Updated the current specs synthesis after accepting the decision that the primary web wiki workflow must use a persistent connection to an active AI coding agent session. Codex is the first implementation target; file/event artifacts remain audit, fallback, fixture, and test support.
 
 Sources used: `decisions/ADR-0001-persistent-coding-agent-session-for-web-wiki.md`, `specs/SPEC-0005-web-wiki-agent-extension.md`, and `experiments/wiki-agent-orchestration/EXPERIMENT.md`.
+
+## [2026-05-20] update | document POM Project Reader server
+
+Updated the reader synthesis for the local POM Project Reader server: launch path, configurable project root, configurable annotation directory, navigation, `rg` search, in-file search, and file-based annotation handoff.
+
+Sources used: `README.md`, `docs/POM_GUIDE.en.html`, `docs/POM_GUIDE.it.html`, `experiments/wiki-agent-orchestration/mini-ui/README.md`, and `experiments/wiki-agent-orchestration/wiki-tools.mjs`.
+
+## [2026-05-20] update | refine POM Project Reader UI contract
+
+Updated the reader synthesis for the finalized lightweight UI shape: responsive document layout, pinned or collapsible side panels, language labels, annotation tabs, annotation detail behavior, and the current decision to keep browser-based source editing outside the workflow.
+
+Sources used: `experiments/wiki-agent-orchestration/mini-ui/public/index.html`, `experiments/wiki-agent-orchestration/mini-ui/public/app.js`, `experiments/wiki-agent-orchestration/mini-ui/public/styles.css`, `experiments/wiki-agent-orchestration/mini-ui/public/reader-document.css`, `experiments/wiki-agent-orchestration/mini-ui/server.mjs`, and `wiki/reader-capabilities.md`.
+
+## [2026-05-20] update | use POM config in Project Reader classification
+
+Updated the reader synthesis after adding optional `pom.config.json` support to the local Project Reader. The reader now uses configured documentation, decision, task plan, analysis, source, test, mockup, root Markdown, and generated-output settings when the config exists, while preserving the built-in allowlist when it does not.
+
+Sources used: `templates/POM_CONFIG_TEMPLATE.json`, `experiments/wiki-agent-orchestration/mini-ui/document-sources.mjs`, `experiments/wiki-agent-orchestration/mini-ui/server.mjs`, `README.md`, and `wiki/reader-capabilities.md`.
