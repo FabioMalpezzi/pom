@@ -87,3 +87,9 @@ Sources used: `experiments/wiki-agent-orchestration/mini-ui/public/index.html`, 
 Updated the reader synthesis after adding optional `pom.config.json` support to the local Project Reader. The reader now uses configured documentation, decision, task plan, analysis, source, test, mockup, root Markdown, and generated-output settings when the config exists, while preserving the built-in allowlist when it does not.
 
 Sources used: `templates/POM_CONFIG_TEMPLATE.json`, `experiments/wiki-agent-orchestration/mini-ui/document-sources.mjs`, `experiments/wiki-agent-orchestration/mini-ui/server.mjs`, `README.md`, and `wiki/reader-capabilities.md`.
+
+## [2026-05-21] update | record deferred Project Reader improvements
+
+Added two deferred Project Reader improvement candidates: a local event bridge for tools such as Cmux to focus a changed or created file in the browser, and a read-only Git diff view for the active file.
+
+Sources used: `wiki/reader-capabilities.md`.

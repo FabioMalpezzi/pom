@@ -204,6 +204,15 @@ The renderer writes:
 
 `wiki/log.md` is intentionally excluded from the reader. It remains the chronological register for maintainers, while the reader focuses on current wiki content.
 
+## Deferred Improvements
+
+These Project Reader improvements are useful but not part of the current lightweight workflow:
+
+| Improvement | Intended Shape |
+|---|---|
+| Local event bridge | Add a local-only signal path so a coding agent, Cmux integration, or script can tell the running server that a file was created or changed. The browser should then navigate to that file, and optionally a line, when the path is readable by the Project Reader. This should stay a navigation signal, not direct browser control of the agent and not source editing from the UI. |
+| Git diff for the active file | Add a read-only diff view for the currently open file against Git, likely backed by `git diff -- <path>` and guarded by the same repository path rules as document reading. The view should make local changes easier to inspect without turning the reader into an editor. |
+
 ## Open Questions
 
 | Question | Status |
