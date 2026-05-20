@@ -4,13 +4,7 @@ This project uses **POM - Project Operating Memory** to keep current knowledge, 
 
 ## Origin
 
-POM's wiki model is inspired by Andrej Karpathy's **LLM Wiki** pattern:
-
-```text
-https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
-```
-
-The pattern is used as a conceptual reference. Operating rules, templates, and local adaptations are part of the project's POM method.
+POM's wiki model is inspired by Andrej Karpathy's **LLM Wiki** pattern: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f. The pattern is used as a conceptual reference. Operating rules, templates, and local adaptations are part of the project's POM method.
 
 If available, read `pom/WIKI_METHOD.md` as the LLM Wiki reference copy and keep only project-specific rules in the target project's agent instruction files.
 
@@ -43,6 +37,12 @@ There is no single source of truth for everything. Each domain has its own autho
 If sources diverge, do not hide the divergence: surface it, analyze it, and propose a decision or reconciliation.
 
 Before editing governed artifacts, check whether they are editable, approval-required, generated, or historical. If the right document is unclear, treat notes/desiderata as input and write the smallest approved Open Discussion or analysis note before creating specs, ADRs, folders, or code.
+
+## Agent Work Principles
+
+- Before non-trivial edits, state the goal, assumptions, success criteria, and shortest verification loop when they are not already explicit.
+- Keep execution surgical and deterministic: simple code, no speculative abstractions, goal-critical files only, tools or code for repeatable transforms, and the model for judgment calls.
+- Read before adding helpers; surface conflicts instead of blending patterns; fail loudly on skipped records, hidden errors, or uncertainty; compact long work into durable memory.
 
 ## Git And History
 

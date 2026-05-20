@@ -4,13 +4,7 @@ This project uses **POM - Project Operating Memory** to keep current knowledge, 
 
 ## Origin
 
-POM's wiki model is inspired by Andrej Karpathy's **LLM Wiki** pattern:
-
-```text
-https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
-```
-
-The pattern is used as a conceptual reference. Operating rules, templates, and local adaptations are part of the project's POM method.
+POM's wiki model is inspired by Andrej Karpathy's **LLM Wiki** pattern: https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f. The pattern is used as a conceptual reference. Operating rules, templates, and local adaptations are part of the project's POM method.
 
 If available, read `pom/WIKI_METHOD.md` as the LLM Wiki reference copy and keep only project-specific rules in the target project's agent instruction files.
 
@@ -43,6 +37,12 @@ There is no single source of truth for everything. Each domain has its own autho
 If sources diverge, do not hide the divergence: surface it, analyze it, and propose a decision or reconciliation.
 
 Before editing governed artifacts, check whether they are editable, approval-required, generated, or historical. If the right document is unclear, treat notes/desiderata as input and write the smallest approved Open Discussion or analysis note before creating specs, ADRs, folders, or code.
+
+## Agent Work Principles
+
+- Before non-trivial edits, state the goal, assumptions, success criteria, and shortest verification loop when they are not already explicit.
+- Keep execution surgical and deterministic: simple code, no speculative abstractions, goal-critical files only, tools or code for repeatable transforms, and the model for judgment calls.
+- Read before adding helpers; surface conflicts instead of blending patterns; fail loudly on skipped records, hidden errors, or uncertainty; compact long work into durable memory.
 
 ## Git And History
 
@@ -330,6 +330,8 @@ Verification happens at every level, not only at the bottom. Place E2E and user-
 
 Every spec or decision that generates work must produce verifiable tasks. Every phase must close with concrete verification: user or technical tests for code, lint and critical analysis for documents.
 
+For significant steps, run the shortest relevant checkpoint before dependent work continues. A checkpoint can be a unit test, lint, typecheck, render, focused source inspection, or other concrete check that proves the current step is not broken.
+
 ## Completion Verification Rules
 
 A spec, task, or ADR cannot be marked Complete without passing the completion verification gate. This gate is **mandatory and automatic**: when the agent marks work as Complete, it MUST execute the verification before closing. The agent does not ask whether to verify — it verifies.
@@ -343,6 +345,7 @@ A spec, task, or ADR cannot be marked Complete without passing the completion ve
    **Technical work (specs/tasks with code):**
    - at least 2 positive scenario tests validating use cases the spec generates or is involved in;
    - at least 1 error/misuse scenario test (more is better) validating cases of incorrect or improper usage;
+   - scenario tests must verify intent: they should fail if the domain rule, business rule, or user promise is broken, not merely prove that some output exists;
    - tests must run and pass before closing as Complete.
 
    **Non-technical work (specs/ADRs without code):**
@@ -362,6 +365,8 @@ When a separate agent is not available, the working agent performs the verificat
 ### Exception handling
 
 If verification is not possible, document the reason explicitly and close as "Complete with exceptions". Lint reports this as a warning. Silent omission of verification is not allowed.
+
+If records, cases, files, or checks are skipped, state the count and reason. Silent partial success is a failed verification.
 
 Task-plan and analysis locations are configurable. When `pom.config.json.taskPlans.root` is `tasks`, the suggested task structure is `tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md`. For new synthesis, prefer `analysis/<analysis-or-workstream>/<analysis>.md`. Use the same analysis/workstream namespace for related analysis, tasks, tests, fixtures, and evidence where practical. If another project stores task plans or analysis elsewhere, map those paths in `pom.config.json` instead of moving files by default.
 

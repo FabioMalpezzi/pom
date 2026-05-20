@@ -28,6 +28,7 @@ For each task, include:
 - status;
 - origin: spec, ADR, wiki, analysis, mockup, stakeholder decision;
 - objective;
+- assumptions and success criteria, when they are not already explicit in the source artifact;
 - phase;
 - workstream;
 - concrete steps;
@@ -39,11 +40,14 @@ For each task, include:
 
 Rules:
 - do not create generic tasks that cannot be verified;
+- state assumptions and success criteria before implementation steps when the source artifact leaves them implicit;
 - do not create an active task for deliberately postponed work; mark it Deferred or use the defer workflow;
+- include checkpoints after significant steps, using the shortest relevant check before dependent work continues;
 - every phase must close with concrete verification;
 - a task or spec cannot be marked Complete without passing the completion verification gate:
   - first: goal-backward check — verify the declared objective is actually achieved, not just that steps were executed;
   - tasks with code: at least 2 positive scenario tests based on real user use cases + at least 1 error/misuse scenario test; tests must run and pass;
+  - scenario tests must verify intent: they should fail if the domain rule, business rule, or user promise is broken, not merely prove that some output exists;
   - tasks without code: at least 1 thesis proving validity based on use cases + at least 1 antithesis (incorrect/improper usage) demonstrated false or inferior; cannot close if an antithesis is not confuted;
   - if verification is not possible, document the reason and close as "Complete with exceptions";
   - verification is mandatory and automatic: the agent executes it when marking Complete, without asking;

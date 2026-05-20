@@ -1,10 +1,10 @@
-# Esperimento - Orchestrazione agente per wiki POM
+# Esperimento - Wiki locale, ricerca e annotazioni POM
 
 | Campo | Valore |
 |---|---|
 | Data | 2026-05-19 |
 | Tipo | research / architettura / agente |
-| Stato | under evaluation |
+| Stato | re-scoped lightweight |
 | Branch / Path | experiments/wiki-agent-orchestration |
 | Isolamento | local manifest |
 | Owner | POM maintainer |
@@ -13,7 +13,7 @@ Questo documento raccoglie ragionamenti preparatori. Non è una decisione, non �
 
 ## Obiettivo
 
-Valutare come rendere la wiki POM più utile dentro i progetti, passando da una memoria solo consultabile a una memoria interrogabile e assistita da agenti.
+Valutare come rendere la wiki POM più utile dentro i progetti, passando da una memoria solo consultabile a una memoria interrogabile, annotabile e facile da prendere in carico da un coding agent.
 
 La domanda pratica è: quando succede qualcosa nel progetto o nella UI della wiki, quale meccanismo deve portare l'informazione all'agente e riportare una proposta utile, verificabile e approvabile?
 
@@ -24,6 +24,48 @@ La domanda pratica è: quando succede qualcosa nel progetto o nella UI della wik
 - MCP supporta strumenti, risorse e notifiche, ma non implica automaticamente che un coding agent si attivi da solo quando arriva un evento.
 - File e riga di comando restano il modo più semplice e osservabile per passare lavoro a un agente.
 - La wiki POM deve restare Markdown nel repository. Eventuali HTML, indici o viste web sono derivati o generati.
+
+## Correzione Di Scope - 2026-05-20
+
+La direzione Project Cockpit e gli adapter verso sessioni agentiche persistenti sono stati giudicati troppo ampi per lo scopo di POM. Restano ricerca di sfondo, non target attivo.
+
+Il target leggero è:
+
+- un sito Node locale che parte dalla wiki e può estendere la navigazione a documentazione e sorgenti del progetto;
+- ricerca deterministica con `rg`, con modalità regex opzionale;
+- annotazioni salvate come file JSON nel repository;
+- un comando semplice per i coding agent che legge la prossima annotazione aperta e la prende in carico;
+- uso iniziale di Git solo per storico read-only, per esempio `git log -- <path>`.
+
+Questo mantiene POM sul suo ruolo: Operating Memory in file verificabili. Il sito non diventa IDE, orchestratore multi-agente o fonte di verità alternativa.
+
+Formato minimo di annotazione:
+
+| Campo | Scopo |
+|---|---|
+| `annotationId` | Identificatore stabile del file di annotazione |
+| `status` | Stato: `new`, `triaged`, `in_progress`, `resolved`, `parked`, `discarded` |
+| `target.path` | File annotato |
+| `target.kind` | Tipo del target, per esempio wiki, spec, task, code o other |
+| `target.lineStart` / `target.lineEnd` | Righe annotate quando note |
+| `selectedText` | Testo selezionato nella UI |
+| `annotation` | Nota, dubbio o richiesta scritta dall'utente |
+| `takenBy` / `takenAt` | Agente o persona che ha preso in carico l'annotazione |
+| `resolution` | Esito quando l'annotazione viene chiusa |
+
+Comando agente minimo:
+
+```bash
+node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex
+```
+
+Ricerca e storico restano separati dall'agente:
+
+```bash
+node experiments/wiki-agent-orchestration/wiki-tools.mjs search "Operating Memory"
+node experiments/wiki-agent-orchestration/wiki-tools.mjs search "Memory Element|Source Authority" --regex
+node experiments/wiki-agent-orchestration/wiki-tools.mjs history --path wiki/overview.md
+```
 
 ## Scenari D'Uso Della Wiki
 
@@ -141,6 +183,10 @@ flowchart TD
 
 ## Scenario Ideale: Web Wiki Come Estensione Dell'Agente
 
+Questa sezione resta come memoria dell'ipotesi ampia. Dopo la correzione di scope del 2026-05-20 non è il percorso attivo dell'esperimento.
+
+Nota successiva: la direzione di prodotto più ampia emersa dall'esperimento è raccolta in `experiments/wiki-agent-orchestration/PROJECT_COCKPIT.md`. Quel documento tratta la possibile evoluzione da web wiki a cockpit leggero del progetto, con tree documenti/codice, agente, bozze, proposte e Git diff integrati.
+
 Il valore maggiore non è solo invocare un agente quando arriva un evento. Il valore maggiore è permettere all'utente di lavorare con un agente già aperto e operativo, per esempio Codex, e usare la web wiki come estensione dell'agente AI.
 
 La web wiki non deve essere una cosa a parte rispetto all'agente. Deve comportarsi come una vista specializzata della stessa sessione di lavoro: l'utente continua a dialogare con l'agente, ma lo fa dentro un ambiente più adatto a leggere, collegare, annotare e modificare memoria di progetto.
@@ -217,6 +263,8 @@ Qualità attesa dell'esperienza:
 
 ## Vincoli Di Compatibilità Degli Agenti
 
+Questa sezione resta utile come background, ma non guida più la prossima implementazione. La prossima implementazione deve evitare adapter specifici e passare da file, `rg` e comandi locali.
+
 Trattare la web wiki come estensione dell'agente introduce vincoli più forti rispetto a un semplice flusso file + CLI. Ogni coding agent può avere interfacce, modelli di sessione, formati evento, strumenti, autorizzazioni e limiti diversi.
 
 Aspetti da verificare per ogni agente:
@@ -239,6 +287,8 @@ Il rischio è costruire un'integrazione troppo specifica per un agente e poi sco
 - test di compatibilità: suite minima che verifica se un adapter rispetta il contratto POM.
 
 ## Strategia Incrementale Di Supporto Agenti
+
+Questa strategia è parcheggiata finché il flusso leggero non dimostra valore con annotazioni file-based.
 
 Non conviene provare a supportare subito tutti gli agenti. La strada più sana è partire con uno o due coding agent, imparare dai vincoli reali, poi estendere.
 
@@ -333,6 +383,20 @@ Campi minimi:
 
 ## Architetture Candidate
 
+### Target Attivo: Wiki Locale, Ricerca E Annotazioni
+
+```text
+web/wiki UI
+  -> legge wiki e documenti del progetto
+  -> cerca con rg o regex su root consentite
+  -> salva annotazioni JSON in evidence/annotations/
+  -> coding agent esegue claim-next
+  -> agente legge fonti correnti, produce proposta o modifica richiesta
+  -> stato annotazione aggiornato
+```
+
+Questo è il percorso attivo perché resta piccolo, osservabile e aderente allo scopo di POM. La continuità dell'agente non è affidata a un adapter: è l'annotazione nel repository a trasferire il lavoro.
+
 ### Baseline: File E CLI
 
 ```text
@@ -384,6 +448,39 @@ Questo target è più vicino all'esperienza desiderata: l'agente non perde il co
 
 Resta un vincolo: la sessione viva aiuta il lavoro corrente, ma non sostituisce la memoria durevole. A fine passaggio, ciò che deve restare deve essere scritto nel repository.
 
+## Controllo Di Approvazione E Promozione
+
+La promozione deve restare separata dalla risposta dell'agente. Il flusso minimo è:
+
+```text
+evento UI
+  -> bozza agente in evidence/ o agent-drafts/
+  -> proposta strutturata con destinazione e fonti
+  -> revisione umana
+  -> patch o modifica applicata solo dopo approvazione
+  -> verifica con Git diff, lint o test appropriato
+```
+
+Stati minimi della proposta:
+
+| Stato | Significato |
+|---|---|
+| draft | Output prodotto dall'agente, non ancora pronto per revisione |
+| in_review | Proposta leggibile con fonti, destinazione e requisito di approvazione |
+| approved | L'utente approva la promozione, ma la modifica non è ancora applicata |
+| applied | La modifica è stata applicata e verificata |
+| parked | La proposta resta utile ma non viene promossa ora |
+| discarded | La proposta viene chiusa senza promozione |
+
+Regole:
+
+- una risposta dell'agente non può modificare direttamente wiki, spec, ADR, task plan o documenti governati;
+- la proposta deve dichiarare destinazione autorevole, file letti, assunzioni, lacune o contraddizioni;
+- una proposta `approved` deve produrre un diff leggibile prima di diventare `applied`;
+- la promozione deve rispettare Source Authority e Artifact Policy;
+- se la destinazione è incerta, lo stato corretto è `parked` o una Open Discussion, non un aggiornamento wiki;
+- ogni promozione deve lasciare traccia in Git e passare il controllo più corto disponibile.
+
 ## Ruolo Possibile Di MCP
 
 MCP non dovrebbe essere il primo bus eventi. Può diventare utile quando servono strumenti standard per agenti diversi:
@@ -412,7 +509,10 @@ L'esperimento ha valore se dimostra almeno una di queste cose:
 La prima fase non deve dimostrare MCP, streaming persistente o supporto multi-agente. Deve dimostrare un ciclo locale piccolo e verificabile:
 
 - la web wiki legge documenti reali del repository;
+- la web wiki cerca nel progetto con `rg`, senza inventare risultati;
 - l'utente crea un evento da una domanda o annotazione;
+- l'utente salva un'annotazione file-based con target, testo selezionato, nota e stato;
+- un coding agent può prendere in carico la prossima annotazione aperta con un solo comando;
 - l'evento resta distinto da decisioni, specifiche e wiki autorevole;
 - l'agente legge l'evento e le fonti correnti, non la propria memoria;
 - l'agente produce una proposta con fonti, fatti, ipotesi, lacune, destinazione e approvazione;
@@ -457,4 +557,7 @@ Decisione futura da prendere dopo il prototipo:
 - [x] Definire il formato minimo di una proposta generata dall'agente.
 - [x] Decidere il primo spike: baseline Codex con file + CLI, prima della sessione streaming persistente.
 - [x] Stabilire dove salvare fixture ed evidenze dell'esperimento.
-- [ ] Definire il controllo di approvazione prima della promozione in `wiki/`.
+- [x] Documentare la direzione Project Cockpit come Open Discussion separata.
+- [x] Definire il controllo di approvazione prima della promozione in `wiki/`.
+- [x] Ridurre lo scope attivo a wiki locale, ricerca `rg`, annotazioni file-based e storico Git read-only.
+- [x] Aggiungere un comando locale per ricerca, annotazioni e presa in carico.

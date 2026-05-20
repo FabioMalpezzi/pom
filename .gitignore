@@ -1,1 +1,6 @@
 .DS_Store
+.playwright-cli/
+experiments/wiki-agent-orchestration/evidence/agent-drafts/
+experiments/wiki-agent-orchestration/evidence/agent-turns/
+experiments/wiki-agent-orchestration/evidence/annotations/
+experiments/wiki-agent-orchestration/evidence/ui-events/

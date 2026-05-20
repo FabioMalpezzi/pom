@@ -1,77 +1,143 @@
 <!doctype html>
-<html lang="it">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>POM Web Wiki Agent Extension</title>
+    <title>POM Project Reader</title>
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/reader-document.css">
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar" aria-label="Document navigation">
+    <div id="appShell" class="app-shell">
+      <aside class="sidebar" aria-label="Document navigation" data-i18n-aria-label="nav.documents">
         <div class="brand">
           <div class="mark">POM</div>
-          <div>
-            <h1>Web Wiki</h1>
-            <p>Estensione agente</p>
+          <div class="brand-copy">
+            <h1>POM Project Reader</h1>
+            <p data-i18n="brand.subtitle">Project navigation and annotations</p>
+          </div>
+          <div class="brand-actions">
+            <button id="sidebarPin" class="sidebar-pin" type="button" aria-pressed="false" title="Pin menu"><span class="pin-lock" aria-hidden="true"></span><span class="pin-label">Pin</span></button>
           </div>
         </div>
-        <label class="search-label" for="search">Cerca documenti</label>
-        <input id="search" class="search" type="search" placeholder="wiki, spec, task...">
-        <div id="kindFilters" class="kind-filters" aria-label="Document filters"></div>
-        <div id="documentList" class="document-list"></div>
+        <div class="sidebar-body">
+          <label class="search-label" for="search" data-i18n="search.label">Search documents, files, and content</label>
+          <input id="search" class="search" type="search" placeholder="file name, path, or project text..." data-i18n-placeholder="search.placeholder">
+          <div class="search-actions">
+            <label class="check-row" for="regexSearch">
+              <input id="regexSearch" type="checkbox">
+              Regex
+            </label>
+            <button id="runSearch" class="secondary" type="button" data-i18n="search.content">Search content</button>
+          </div>
+          <div id="searchResults" class="search-results"></div>
+          <div class="nav-mode" aria-label="Navigation mode" data-i18n-aria-label="nav.aria">
+            <button class="nav-mode-button active" type="button" data-nav-mode="thematic" data-i18n="nav.thematic">Topics</button>
+            <button class="nav-mode-button" type="button" data-nav-mode="tree" data-i18n="nav.tree">Tree</button>
+          </div>
+          <section id="thematicNav">
+            <div id="kindFilters" class="kind-filters" aria-label="Document filters"></div>
+            <div id="documentList" class="document-list"></div>
+          </section>
+          <section id="treeNav" hidden>
+            <div id="documentTree" class="document-tree"></div>
+          </section>
+
+        </div>
       </aside>
 
       <main class="reader">
         <div class="reader-toolbar">
           <div>
-            <p id="activeKind" class="eyebrow">Documento</p>
-            <h2 id="activeTitle">Seleziona un documento</h2>
+            <p id="activeKind" class="eyebrow">Document</p>
+            <h2 id="activeTitle">Select a document</h2>
             <p id="activePath" class="path"></p>
           </div>
-          <button id="useSelection" class="secondary" type="button">Usa selezione</button>
+          <div class="toolbar-actions">
+            <div class="file-search" role="search" aria-label="Search in the open file" data-i18n-aria-label="fileSearch.aria">
+              <input id="documentSearch" class="file-search-input" type="search" placeholder="Search in file" data-i18n-placeholder="fileSearch.placeholder">
+              <label class="check-row file-search-regex" for="documentRegexSearch"><input id="documentRegexSearch" type="checkbox">Regex</label>
+              <button id="documentSearchPrev" class="secondary file-search-button" type="button" title="Previous result" data-i18n="fileSearch.prev" data-i18n-title="fileSearch.prevTitle">Prev</button>
+              <button id="documentSearchNext" class="secondary file-search-button" type="button" title="Next result" data-i18n="fileSearch.next" data-i18n-title="fileSearch.nextTitle">Next</button>
+              <span id="documentSearchCount" class="file-search-count" aria-live="polite"></span>
+            </div>
+            <div class="selection-tools">
+              <button id="useSelection" class="secondary selection-action" type="button" title="Send selected text to the note" data-i18n-title="selection.title"><span class="selection-action-icon" aria-hidden="true"></span><span data-i18n="selection.use">Send to note</span></button>
+              <button id="languageToggle" class="language-switch" type="button" title="Switch to Italian" aria-label="Switch to Italian" data-locale="en">
+                <span class="language-option" data-locale-option="en">EN</span>
+                <span class="language-option" data-locale-option="it">IT</span>
+              </button>
+            </div>
+          </div>
         </div>
         <article id="documentContent" class="document-content">
-          <p class="empty">Scegli un documento dalla navigazione. La mini UI legge la wiki reale del progetto e i documenti POM collegati.</p>
+          <p class="empty" data-i18n="document.empty">Choose a document from navigation. The reader can start from the wiki when present, or from the generated project index.</p>
         </article>
       </main>
 
-      <aside class="agent-panel" aria-label="Agent interaction">
-        <section>
-          <p class="eyebrow">Sessione agente</p>
-          <h2>Evento wiki</h2>
-          <p class="panel-note">Questo prototipo salva eventi per la sessione Codex attiva. Non modifica Markdown durevole.</p>
-        </section>
-
-        <label for="eventType">Tipo evento</label>
-        <select id="eventType">
-          <option value="question">Domanda</option>
-          <option value="annotation">Annotazione</option>
-          <option value="correction_request">Correzione</option>
-          <option value="addition_request">Aggiunta</option>
-          <option value="new_document_request">Nuovo documento</option>
-        </select>
-
-        <label for="intent">Richiesta per l'agente <span class="required">(obbligatoria)</span></label>
-        <textarea id="intent" rows="7" placeholder="Scrivi qui cosa vuoi chiedere all'agente: ragionare, correggere, proporre o classificare un nuovo documento."></textarea>
-
-        <label for="selectedText">Testo selezionato dal documento <span class="optional">(facoltativo)</span></label>
-        <textarea id="selectedText" rows="4" placeholder="Qui finisce il testo selezionato con il pulsante “Usa selezione”. Non è la domanda per l'agente."></textarea>
-
-        <button id="saveEvent" class="primary" type="button">Crea evento</button>
-        <div id="eventResult" class="result" aria-live="polite"></div>
-
-        <section class="proposal-section">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Evidenze</p>
-              <h2>Proposte salvate</h2>
-            </div>
-            <button id="refreshProposals" class="secondary" type="button">Aggiorna</button>
+      <aside class="agent-panel" aria-label="Annotation workspace" data-i18n-aria-label="agent.aria">
+        <div class="agent-brand">
+          <div class="mark">ANN</div>
+          <div class="brand-copy">
+            <p class="eyebrow" data-i18n="agent.tablist">Annotations</p>
+            <h2 data-i18n="agent.title">Notes</h2>
           </div>
-          <div id="proposalList" class="proposal-list"></div>
-          <pre id="proposalDetail" class="proposal-detail"></pre>
+          <button id="agentPin" class="sidebar-pin" type="button" aria-pressed="false" title="Pin annotations"><span class="pin-lock" aria-hidden="true"></span><span class="pin-label">Pin</span></button>
+        </div>
+        <div class="agent-panel-body">
+        <section>
+          <p class="eyebrow" data-i18n="agent.tablist">Annotations</p>
+          <h2 data-i18n="agent.noteTitle">Annotation</h2>
+          <p class="panel-note" data-i18n="agent.note">Work files for agent pickup and closure.</p>
         </section>
+
+        <div class="agent-tabs" role="tablist" aria-label="Annotations" data-i18n-aria-label="agent.tablist">
+          <button class="agent-tab active" type="button" role="tab" data-agent-tab="write" data-i18n="agent.write">New note</button>
+          <button class="agent-tab" type="button" role="tab" data-agent-tab="working" data-i18n="agent.working">In progress</button>
+          <button class="agent-tab" type="button" role="tab" data-agent-tab="processed" data-i18n="agent.processed">Processed</button>
+        </div>
+
+        <div class="agent-tab-panel" data-agent-panel="write">
+          <label for="selectedText"><span data-i18n="agent.selectedText">Selected document text</span> <span class="optional" data-i18n="agent.optional">(optional)</span></label>
+          <textarea id="selectedText" rows="4" placeholder="Selected text from the document will land here when you use &quot;Send to note&quot;. This is not the main note." data-i18n-placeholder="agent.selectedTextPlaceholder"></textarea>
+
+          <label for="intent"><span data-i18n="agent.intent">Agent annotation</span> <span class="required" data-i18n="agent.required">(required)</span></label>
+          <textarea id="intent" rows="7" placeholder="Write a complete note: what you saw, what should be verified, or what should change." data-i18n-placeholder="agent.intentPlaceholder"></textarea>
+
+          <div class="button-row">
+            <button id="saveAnnotation" class="primary" type="button" data-i18n="agent.save">Save</button>
+          </div>
+          <div id="eventResult" class="result" aria-live="polite"></div>
+        </div>
+
+        <div class="agent-tab-panel" data-agent-panel="working" hidden>
+          <section class="proposal-section compact">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow" data-i18n="agent.fileBased">File-based</p>
+                <h2 data-i18n="agent.working">In progress</h2>
+              </div>
+              <button id="refreshAnnotations" class="secondary" type="button" data-i18n="agent.refresh">Refresh</button>
+            </div>
+            <div id="annotationDetail" class="proposal-detail"></div>
+            <div id="annotationList" class="proposal-list"></div>
+          </section>
+        </div>
+
+        <div class="agent-tab-panel" data-agent-panel="processed" hidden>
+          <section class="proposal-section compact">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow" data-i18n="agent.history">History</p>
+                <h2 data-i18n="agent.processed">Processed</h2>
+              </div>
+              <button id="refreshProcessedAnnotations" class="secondary" type="button" data-i18n="agent.refresh">Refresh</button>
+            </div>
+            <div id="processedAnnotationDetail" class="proposal-detail"></div>
+            <div id="processedAnnotationList" class="proposal-list"></div>
+          </section>
+        </div>
+        </div>
       </aside>
     </div>
 

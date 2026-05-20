@@ -30,6 +30,16 @@ Suggested statuses:
 
 Describe what must be implemented or clarified.
 
+## Assumptions And Success Criteria
+
+Assumptions:
+
+- _none yet_
+
+Success criteria:
+
+- _none yet_
+
 ## Placement
 
 | Level | Value |
@@ -47,6 +57,11 @@ Describe what must be implemented or clarified.
 
 A task cannot be marked Complete without passing the completion verification gate. This verification is mandatory and automatic — the agent executes it when marking Complete.
 
+### Checkpoints
+
+- [ ] Significant steps have a local check before dependent work continues
+- [ ] Failures, skipped cases, or uncertainty are recorded instead of hidden
+
 ### Step 0 — Goal-backward check (mandatory, always first)
 
 Before checking tests or theses, verify that the declared objective has been achieved:
@@ -59,6 +74,7 @@ Before checking tests or theses, verify that the declared objective has been ach
 
 - [ ] At least 2 positive scenario tests based on real user use cases the task generates or is involved in
 - [ ] At least 1 error/misuse scenario test validating incorrect or improper usage (more is better)
+- [ ] Scenario tests verify intent and would fail if the domain rule, business rule, or user promise were broken
 - [ ] Tests run and pass
 - [ ] Test location consistent with the project structure or `tests/<analysis-or-workstream-or-module>/...`
 

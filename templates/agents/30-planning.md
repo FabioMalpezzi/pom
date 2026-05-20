@@ -14,6 +14,8 @@ Verification happens at every level, not only at the bottom. Place E2E and user-
 
 Every spec or decision that generates work must produce verifiable tasks. Every phase must close with concrete verification: user or technical tests for code, lint and critical analysis for documents.
 
+For significant steps, run the shortest relevant checkpoint before dependent work continues. A checkpoint can be a unit test, lint, typecheck, render, focused source inspection, or other concrete check that proves the current step is not broken.
+
 ## Completion Verification Rules
 
 A spec, task, or ADR cannot be marked Complete without passing the completion verification gate. This gate is **mandatory and automatic**: when the agent marks work as Complete, it MUST execute the verification before closing. The agent does not ask whether to verify — it verifies.
@@ -27,6 +29,7 @@ A spec, task, or ADR cannot be marked Complete without passing the completion ve
    **Technical work (specs/tasks with code):**
    - at least 2 positive scenario tests validating use cases the spec generates or is involved in;
    - at least 1 error/misuse scenario test (more is better) validating cases of incorrect or improper usage;
+   - scenario tests must verify intent: they should fail if the domain rule, business rule, or user promise is broken, not merely prove that some output exists;
    - tests must run and pass before closing as Complete.
 
    **Non-technical work (specs/ADRs without code):**
@@ -46,6 +49,8 @@ When a separate agent is not available, the working agent performs the verificat
 ### Exception handling
 
 If verification is not possible, document the reason explicitly and close as "Complete with exceptions". Lint reports this as a warning. Silent omission of verification is not allowed.
+
+If records, cases, files, or checks are skipped, state the count and reason. Silent partial success is a failed verification.
 
 ## Test Convention
 

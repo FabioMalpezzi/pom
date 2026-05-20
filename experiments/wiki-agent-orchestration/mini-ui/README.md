@@ -1,6 +1,6 @@
-# Mini UI - Web Wiki Agent Extension
+# Mini UI - POM Project Reader
 
-Experimental local UI for the POM web wiki agent-extension idea.
+Experimental local UI for project navigation, `rg` search, and file-based annotations.
 
 Run from the repository root:
 
@@ -14,6 +14,26 @@ Open:
 http://127.0.0.1:4173
 ```
 
-This UI reads real repository Markdown from reader-visible `wiki/` pages, `specs/`, `tasks/`, selected root POM documents, and this experiment folder. It excludes `wiki/log.md`, which is a source-side change register rather than a wiki page for navigation. It can save wiki events under `experiments/wiki-agent-orchestration/evidence/ui-events/`.
+The Project Reader starts from `wiki/index.md` when the project has a wiki. If no wiki index exists, it exposes a generated `POM Project Reader` entry document instead, then extends navigation to project documentation and source files through an explicit allowlist. It includes POM documents, `docs/`, examples, prompts, skills, templates, selected experiment files, scripts, tests, `bootstrap-pom.mjs`, and `package.json`. It excludes generated reader output and evidence folders such as `wiki/_site/` and `experiments/wiki-agent-orchestration/evidence/`.
 
-It does not invoke an agent and does not edit durable POM documents. Use the active Codex session to process saved events during this experiment.
+The active lightweight flow is:
+
+- search project files through `rg`, with optional regex mode;
+- save annotation files under `experiments/wiki-agent-orchestration/evidence/annotations/`;
+- review open annotations in the "In elaborazione" tab and processed annotations in the "Elaborate" tab;
+- let a coding agent claim the next open annotation with:
+
+```bash
+node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex
+```
+
+Other useful commands:
+
+```bash
+node experiments/wiki-agent-orchestration/wiki-tools.mjs search "Operating Memory"
+node experiments/wiki-agent-orchestration/wiki-tools.mjs list
+node experiments/wiki-agent-orchestration/wiki-tools.mjs take <annotation-id> --by codex
+node experiments/wiki-agent-orchestration/wiki-tools.mjs history --path wiki/overview.md
+```
+
+The UI does not send requests directly to an AI agent. The annotation file is the handoff artifact: an agent reads it, claims it with the CLI, resolves it with the CLI, and applies durable document changes only through a separate reviewed promotion step.

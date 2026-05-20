@@ -43,6 +43,12 @@ Choose the smallest fitting level:
 - recurring workflow -> `skills/`;
 - automatic enforcement -> lint/script guidance.
 
+## Agent Work Principles
+
+- Before non-trivial edits, state the goal, assumptions, success criteria, and shortest verification loop when they are not already explicit.
+- Keep execution surgical and deterministic: simple code, no speculative abstractions, goal-critical files only, tools or code for repeatable transforms, and the model for judgment calls.
+- Read before adding helpers; surface conflicts instead of blending patterns; fail loudly on skipped records, hidden errors, or uncertainty; compact long work into durable memory.
+
 ## Communication Style With The User
 
 Rules for chat messages to the user.

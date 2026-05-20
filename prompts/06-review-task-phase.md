@@ -9,8 +9,10 @@ Do not limit the review to checking that files changed.
 
 You must verify:
 - goal-backward check first: is the declared goal/objective actually achieved, not just the steps executed?
+- assumptions and success criteria were explicit or correctly derived from the source artifact;
 - completed tasks against the plan;
 - missing steps;
+- checkpoints were run before later work depended on significant earlier steps;
 - tests or lint run;
 - consistency with spec/ADR/wiki;
 - introduced contradictions;
@@ -24,6 +26,7 @@ For implementation tasks:
 - run available tests;
 - verify that scenario tests exist and cover real user use cases the spec/task generates or is involved in;
 - verify at least 2 positive scenario tests and at least 1 error/misuse scenario test exist and pass;
+- verify that scenario tests prove intent and would fail if the domain rule, business rule, or user promise were broken;
 - verify that tests are in the project's approved structure; if you find a structure different from the POM proposal, report the divergence and ask whether to adapt or migrate;
 - report regressions or gaps;
 - if scenario tests are missing, the task cannot be marked Complete — report as failed.
@@ -39,6 +42,7 @@ For documentation/non-code tasks:
 
 For both types:
 - if verification is documented as not possible, accept "Complete with exceptions" only if the reason is explicit and credible; report as passed with warnings.
+- if records, cases, files, or checks were skipped, verify that the count and reason are stated; silent partial success fails verification.
 
 Verification agent:
 - when the environment supports it, the completion verification should be performed by a separate agent or fresh context, not by the agent that did the work;
