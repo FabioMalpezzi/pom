@@ -5,7 +5,7 @@ import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync, s
 import { basename, dirname, extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ANNOTATIONS_ROOT, createAnnotation, deleteAnnotation, listAnnotations, readAnnotation, searchProject, setAnnotationsRoot, setProjectRoot, takeAnnotation } from "../wiki-tools.mjs";
-import { buildDocumentSourceContext, generatedIgnoreGlobs, isGeneratedPath, kindRank } from "./document-sources.mjs";
+import { buildDocumentSourceContext, generatedIgnoreGlobs, isGeneratedPath, kindRank, skippedDocumentGlobs } from "./document-sources.mjs";
 import { extractSummary, extractTitle, renderDocument } from "./render-document.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -43,7 +43,10 @@ const server = createServer(async (req, res) => {
       query: url.searchParams.get("q"),
       regex: url.searchParams.get("regex") === "1",
       roots: searchRootsForKind(url.searchParams.get("kind") || "all"),
-      ignoreGlobs: generatedIgnoreGlobs(POM_CONFIG),
+      ignoreGlobs: [
+        ...generatedIgnoreGlobs(POM_CONFIG),
+        ...skippedDocumentGlobs(DOC_SOURCES),
+      ],
     }));
     if (url.pathname === "/api/annotations" && req.method === "GET") return sendJson(res, listAnnotations({
       status: url.searchParams.get("status") || undefined,

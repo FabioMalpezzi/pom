@@ -72,6 +72,21 @@ export function generatedIgnoreGlobs(pomConfig) {
     .map((pattern) => `!${pattern}`);
 }
 
+export function skippedDocumentGlobs(docSources) {
+  const globs = [];
+  for (const source of docSources) {
+    const root = normalizeRepoPath(source.root);
+    if (!root || source.fromConfig) continue;
+    if (source.skipDirs) {
+      for (const dir of source.skipDirs) globs.push(`!${root}/${dir}/**`);
+    }
+    if (source.skipFiles) {
+      for (const file of source.skipFiles) globs.push(`!${root}/${file}`);
+    }
+  }
+  return [...new Set(globs)];
+}
+
 function loadPomConfig(root) {
   const file = join(root, "pom.config.json");
   if (!existsSync(file)) return null;

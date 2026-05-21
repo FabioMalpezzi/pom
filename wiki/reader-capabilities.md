@@ -56,7 +56,7 @@ The server can show:
 
 | Area | What It Exposes |
 |---|---|
-| Wiki | `wiki/*.md`, except generated output and the chronological `wiki/log.md` register. |
+| Wiki | `wiki/*.md`, except generated output and the chronological `wiki/log.md` register. The register is also excluded from Project Reader search. |
 | Project documents | `README.md`, `CONTEXT.md`, `WIKI_METHOD.md`, `CHANGELOG.md`, configured documentation roots, examples, prompts, skills, templates, specs, decisions, and task plans when present. |
 | Configured memory roots | Configured decisions, task plans, analysis, tests, mockup packages, and root-level Markdown files from `pom.config.json`. |
 | Source and support files | Configured source roots, selected experiment files, scripts, tests, `bootstrap-pom.mjs`, and `package.json`. |

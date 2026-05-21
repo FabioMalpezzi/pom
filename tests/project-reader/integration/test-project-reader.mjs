@@ -23,7 +23,7 @@ function assert(name, condition, detail = "") {
 
 function createTempProject() {
   const dir = mkdtempSync(join(tmpdir(), "pom-project-reader-test-"));
-  for (const path of ["doc/generated", "adr", "tasks", "src"]) {
+  for (const path of ["doc/generated", "adr", "tasks", "src", "wiki"]) {
     mkdirSync(join(dir, path), { recursive: true });
   }
   writeFileSync(join(dir, "pom.config.json"), `${JSON.stringify({
@@ -53,6 +53,7 @@ export const value = 7;
   writeFileSync(join(dir, "src", "app.ts"), "export function answer() { return 42; }\n");
   writeFileSync(join(dir, "src", "huge.ts"), `${"x".repeat(1_000_001)}\n`);
   writeFileSync(join(dir, "src", "binary.ts"), Buffer.from([0, 1, 2, 3, 4]));
+  writeFileSync(join(dir, "wiki", "log.md"), "# Log\n\nWIKI_LOG_ONLY\n");
   return dir;
 }
 
@@ -132,6 +133,7 @@ async function scenarioDocumentsAndSecurity() {
     const huge = await request(port, "/api/document?path=src%2Fhuge.ts");
     const binary = await request(port, "/api/document?path=src%2Fbinary.ts");
     const generatedSearch = await request(port, "/api/search?q=GENERATED_ONLY&kind=project_doc");
+    const wikiLogSearch = await request(port, "/api/search?q=WIKI_LOG_ONLY&kind=wiki");
 
     const paths = documents.json.map((doc) => doc.path);
     const byPath = new Map(documents.json.map((doc) => [doc.path, doc.kind]));
@@ -144,10 +146,12 @@ async function scenarioDocumentsAndSecurity() {
     assert("configured task plan is classified", byPath.get("tasks/P0-test.md") === "task_plan", JSON.stringify(documents.json));
     assert("configured source is classified", byPath.get("src/app.ts") === "source", JSON.stringify(documents.json));
     assert("generated document is excluded", !paths.includes("doc/generated/out.md"), JSON.stringify(paths));
+    assert("wiki log is excluded", !paths.includes("wiki/log.md"), JSON.stringify(paths));
     assert("Markdown tables render without inline style attributes", manual.json.html.includes('class="align-right"') && !manual.json.html.includes("style="), manual.json.html);
     assert("oversized source file is rejected", huge.response.status === 413, huge.text);
     assert("binary-looking source file is rejected", binary.response.status === 415, binary.text);
     assert("project search respects generated ignores", generatedSearch.json.resultCount === 0, JSON.stringify(generatedSearch.json));
+    assert("project search respects reader-only wiki log exclusion", wikiLogSearch.json.resultCount === 0, JSON.stringify(wikiLogSearch.json));
   } finally {
     cleanup(dir, child);
   }

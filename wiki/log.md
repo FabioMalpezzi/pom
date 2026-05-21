@@ -93,3 +93,9 @@ Sources used: `templates/POM_CONFIG_TEMPLATE.json`, `experiments/wiki-agent-orch
 Added two deferred Project Reader improvement candidates: a local event bridge for tools such as Cmux to focus a changed or created file in the browser, and a read-only Git diff view for the active file.
 
 Sources used: `wiki/reader-capabilities.md`.
+
+## [2026-05-21] update | exclude wiki log from Project Reader search
+
+Updated the Project Reader synthesis after aligning project search with reader-only document exclusions. The chronological `wiki/log.md` register is excluded from navigation and from Project Reader search results.
+
+Sources used: `experiments/wiki-agent-orchestration/mini-ui/document-sources.mjs`, `experiments/wiki-agent-orchestration/mini-ui/server.mjs`, `tests/project-reader/integration/test-project-reader.mjs`, and `wiki/reader-capabilities.md`.
