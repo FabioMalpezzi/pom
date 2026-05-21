@@ -329,6 +329,8 @@ POM does not create tool-specific folders just because the tool exists. It only 
 
 For Claude Code, `.claude/agents/pom-post-action-validator.md` is optional. The installer creates or updates it only when `.claude/` already exists. If `.claude/` is missing, the installer prints the exact `mkdir -p .claude` and `npm run pom:init ...` commands to enable the helper with the same install mode.
 
+For OpenAI Codex, `AGENTS.md` is the project instruction target. The equivalent post-action audit is the generic `pom/skills/validate.md` skill and its canonical prompt `pom/prompts/18-post-action-validator.md`; no Claude-specific wrapper is required.
+
 ### External project overlay
 
 Use overlay mode when the repository is cloned from an upstream you do not own and POM is needed to understand, audit, or prepare a limited contribution.
@@ -452,13 +454,15 @@ Use the skill that matches your situation (see Quickstart table above). The agen
 
 If the target project is a subdirectory inside a larger Git worktree, `pom:init` does not create a nested repository and does not install a hook automatically. Install POM from the Git root, or adapt the hook manually so it runs the target project's `npm run pom:lint` from the correct directory.
 
+The hook is agent-neutral. It works for Claude Code, Codex, and any other workflow because it only runs local project commands.
+
 The hook:
 
 - runs `npm run pom:lint`;
 - blocks the commit if lint fails;
 - if `PROJECT_STATE.md` exists and governed project-memory files are staged, prints a non-blocking reminder to update it when the restart context changed.
 
-The hook does not synthesize or rewrite `PROJECT_STATE.md`: that remains the agent's responsibility, because it requires project understanding.
+The hook does not synthesize or rewrite `PROJECT_STATE.md`: that remains the agent's responsibility, because it requires project understanding. Claude Code can use the optional `pom-post-action-validator` agent when installed; Codex can use `pom/skills/validate.md` for the same read-only audit.
 
 Update `PROJECT_STATE.md` when the project restart context changes:
 

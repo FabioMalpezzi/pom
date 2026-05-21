@@ -202,7 +202,7 @@ If the command is missing, state that automatic POM checks are not configured an
 
 ## Pre-commit Hook
 
-If `pom:init` installed the POM pre-commit hook, commits run `npm run pom:lint`.
+If `pom:init` installed the POM pre-commit hook, commits run `npm run pom:lint`. The hook is agent-neutral: it runs local POM checks, not a Claude Code or Codex command. For a read-only post-action audit, Claude Code can use the optional `pom-post-action-validator` agent when installed; Codex can use `pom/skills/validate.md`.
 
 If `PROJECT_STATE.md` exists and governed project-memory files are staged, the hook prints a non-blocking reminder. The reminder is informational: most commits do not need a `PROJECT_STATE.md` update, and the hook never updates `PROJECT_STATE.md` automatically.
 
