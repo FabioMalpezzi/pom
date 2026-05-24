@@ -4,7 +4,7 @@
 |---|---|
 | Data | 2026-05-19 |
 | Tipo | research / architettura / agente |
-| Stato | re-scoped lightweight |
+| Stato | lightweight reader promoted; agent-session work deferred |
 | Branch / Path | experiments/wiki-agent-orchestration |
 | Isolamento | local manifest |
 | Owner | POM maintainer |
@@ -29,7 +29,7 @@ La domanda pratica è: quando succede qualcosa nel progetto o nella UI della wik
 
 La direzione Project Cockpit e gli adapter verso sessioni agentiche persistenti sono stati giudicati troppo ampi per lo scopo di POM. Restano ricerca di sfondo, non target attivo.
 
-Il target leggero è:
+Il target leggero era:
 
 - un sito Node locale che parte dalla wiki e può estendere la navigazione a documentazione e sorgenti del progetto;
 - ricerca deterministica con `rg`, con modalità regex opzionale;
@@ -38,6 +38,17 @@ Il target leggero è:
 - uso iniziale di Git solo per storico read-only, per esempio `git log -- <path>`.
 
 Questo mantiene POM sul suo ruolo: Operating Memory in file verificabili. Il sito non diventa IDE, orchestratore multi-agente o fonte di verità alternativa.
+
+## Promozione Del Project Reader - 2026-05-24
+
+Il target leggero è stato promosso fuori da `experiments/` come tooling POM supportato:
+
+- server, UI pubblica, rendering documenti, classificazione fonti e CLI annotazioni vivono in `scripts/project-reader/`;
+- il comando installato consigliato è `npm run pom:reader -- --port 4173`;
+- le annotazioni runtime usano `.pom-reader/annotations/` di default invece della cartella di evidenza dell'esperimento;
+- i contratti, le fixture e le evidenze sotto `experiments/wiki-agent-orchestration/` restano memoria preparatoria e materiale di verifica, non codice stabile.
+
+Restano fuori dalla promozione l'integrazione streaming con una sessione agente persistente, le query LLM dirette e il Project Cockpit.
 
 Formato minimo di annotazione:
 
@@ -56,15 +67,15 @@ Formato minimo di annotazione:
 Comando agente minimo:
 
 ```bash
-node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex
+node scripts/project-reader/wiki-tools.mjs claim-next --by codex
 ```
 
 Ricerca e storico restano separati dall'agente:
 
 ```bash
-node experiments/wiki-agent-orchestration/wiki-tools.mjs search "Operating Memory"
-node experiments/wiki-agent-orchestration/wiki-tools.mjs search "Memory Element|Source Authority" --regex
-node experiments/wiki-agent-orchestration/wiki-tools.mjs history --path wiki/overview.md
+node scripts/project-reader/wiki-tools.mjs search "Operating Memory"
+node scripts/project-reader/wiki-tools.mjs search "Memory Element|Source Authority" --regex
+node scripts/project-reader/wiki-tools.mjs history --path wiki/overview.md
 ```
 
 ## Scenari D'Uso Della Wiki
@@ -418,7 +429,7 @@ Questa baseline serve a verificare formato eventi, formato proposte e controllo 
 
 ### Baseline Osservata: Mini UI Locale E Codex Attivo
 
-Il primo ciclo locale validato usa una mini UI sperimentale invece di un runner automatico:
+Il primo ciclo locale validato usava una mini UI sperimentale invece di un runner automatico. Dopo la promozione del 2026-05-24, quel lettore vive come Project Reader stabile sotto `scripts/project-reader/`:
 
 ```text
 web/wiki mini UI

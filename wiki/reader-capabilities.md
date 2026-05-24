@@ -2,7 +2,7 @@
 
 ## Summary
 
-This page documents the two reader surfaces POM currently exposes: the static wiki reader and the experimental local POM Project Reader server. Both improve consultation without becoming a second source of truth.
+This page documents the two reader surfaces POM currently exposes: the static wiki reader and the local POM Project Reader server. Both improve consultation without becoming a second source of truth.
 
 ## Current State
 
@@ -19,19 +19,19 @@ Project-wide content search requires `rg` from ripgrep.
 Run the server from the repository root you want to inspect. By default, the current working directory is the project root and the local port is `4173`.
 
 ```bash
-node experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+npm run pom:reader -- --port 4173
 ```
 
 When POM is installed under `pom/` in a target project, run the POM-hosted script from the target project root:
 
 ```bash
-node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+node pom/scripts/project-reader/server.mjs --port 4173
 ```
 
 Use explicit parameters when needed:
 
 ```bash
-node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations
+node pom/scripts/project-reader/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations
 ```
 
 The defaults are:
@@ -40,7 +40,7 @@ The defaults are:
 |---|---|
 | `--port` | `4173`, unless `PORT` is set |
 | `--root` / `--dir` | `.` |
-| `--annotations-dir` | `experiments/wiki-agent-orchestration/evidence/annotations` under the project root |
+| `--annotations-dir` | `.pom-reader/annotations` under the project root |
 
 Then open:
 
@@ -93,7 +93,7 @@ The server binds to `127.0.0.1` and sends a restrictive Content Security Policy,
 The right panel writes annotations as JSON files under the configured annotation directory. By default that is:
 
 ```text
-experiments/wiki-agent-orchestration/evidence/annotations/
+.pom-reader/annotations/
 ```
 
 An annotation contains the target path, optional selected document text, the human note for the agent, status fields, and an `agentReport` field for what the agent did after processing the file.
@@ -107,11 +107,11 @@ The UI does not send requests directly to an AI agent. The annotation file is th
 Useful commands:
 
 ```bash
-node experiments/wiki-agent-orchestration/wiki-tools.mjs search "Operating Memory"
-node experiments/wiki-agent-orchestration/wiki-tools.mjs list
-node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex
-node experiments/wiki-agent-orchestration/wiki-tools.mjs resolve <annotation-id> --note "Updated the documented launch path." --by codex
-node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex --annotations-dir .pom-reader/annotations
+node scripts/project-reader/wiki-tools.mjs search "Operating Memory"
+node scripts/project-reader/wiki-tools.mjs list
+node scripts/project-reader/wiki-tools.mjs claim-next --by codex
+node scripts/project-reader/wiki-tools.mjs resolve <annotation-id> --note "Updated the documented launch path." --by codex
+node scripts/project-reader/wiki-tools.mjs claim-next --by codex --annotations-dir .pom-reader/annotations
 ```
 
 When the CLI is being used from an installed `pom/` folder, prefix the script path with `pom/`.

@@ -70,6 +70,7 @@ Existing project structures should be mapped first, not moved by default.
 | `spike` | manage temporary experiments and consolidation | `prompts/09-run-temporary-experiment.md` |
 | `wiki` | build, query, check, or maintain the wiki | `prompts/10-build-wiki.md`, `prompts/11-review-stale-wiki.md`, `prompts/13-query-wiki.md`, `prompts/14-lint-wiki.md` |
 | `extend` | extend POM with config, templates, prompts, skills, or lint | `prompts/12-extend-pom.md` |
+| `improve` | run a controlled self-improvement loop for method/governance changes | `prompts/25-self-improvement-loop.md` |
 | `prune` | simplify, merge, demote, delete, or config-gate POM method bloat | `prompts/21-prune-pom-method.md` |
 | `status` | classify document type and choose the least misleading status | `prompts/15-classify-document-status.md` |
 | `defer` | park important work without implementing it | `prompts/16-defer-work.md` |

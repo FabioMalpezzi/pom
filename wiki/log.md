@@ -99,3 +99,15 @@ Sources used: `wiki/reader-capabilities.md`.
 Updated the Project Reader synthesis after aligning project search with reader-only document exclusions. The chronological `wiki/log.md` register is excluded from navigation and from Project Reader search results.
 
 Sources used: `experiments/wiki-agent-orchestration/mini-ui/document-sources.mjs`, `experiments/wiki-agent-orchestration/mini-ui/server.mjs`, `tests/project-reader/integration/test-project-reader.mjs`, and `wiki/reader-capabilities.md`.
+
+## [2026-05-24] update | record Project Reader promotion and self-improvement experiment
+
+Updated the experiments synthesis after promoting the lightweight Project Reader into stable `scripts/project-reader/` tooling and opening a separate self-improvement loop experiment. The loop remains non-authoritative until one case in POM Source and one case in another POM-managed project validate the same method.
+
+Sources used: `scripts/project-reader/README.md`, `experiments/wiki-agent-orchestration/EXPERIMENT.md`, `experiments/self-improvement-loop/EXPERIMENT.md`, and `wiki/experiments-and-extension.md`.
+
+## [2026-05-24] update | promote self-improvement loop prompt and skill alias
+
+Promoted the self-improvement loop into a canonical prompt (`prompts/25-self-improvement-loop.md`) with a short alias skill (`skills/improve.md`) so agents can discover and apply it via the normal prompt/skill entry points. The loop remains under evaluation until it is proven on another POM-managed project (or a representative fixture), and it does not authorize automatic changes without approval.
+
+Sources used: `prompts/25-self-improvement-loop.md`, `skills/improve.md`, `prompts/README.md`, `skills/README.md`, `experiments/self-improvement-loop/EXPERIMENT.md`, and `wiki/experiments-and-extension.md`.

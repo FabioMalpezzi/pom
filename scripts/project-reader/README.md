@@ -1,25 +1,25 @@
-# Mini UI - POM Project Reader
+# POM Project Reader
 
-Experimental local UI for project navigation, `rg` search, and file-based annotations.
+Supported local UI for project navigation, `rg` search, and file-based annotations.
 
 Project-wide content search requires `rg` from ripgrep.
 
 Run from the repository root you want to inspect. By default the server uses the current working directory as the project root and port `4173`.
 
 ```bash
-node experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+npm run pom:reader -- --port 4173
 ```
 
 If POM is installed in a target project under `pom/`, run the POM-hosted script from the target project root:
 
 ```bash
-node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+npm run pom:reader -- --port 4173
 ```
 
 Use explicit parameters when the launch directory, project root, port, or annotation handoff directory should differ:
 
 ```bash
-node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations
+node pom/scripts/project-reader/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations
 ```
 
 Open:
@@ -40,13 +40,13 @@ The active lightweight flow is:
 - read Markdown tables, fixed-width text, syntax-highlighted code, and source line numbers in a responsive document surface;
 - reject oversized document rendering above 1 MB and binary-looking files;
 - collapse or pin the document navigation and annotation panels;
-- save annotation files under `experiments/wiki-agent-orchestration/evidence/annotations/` by default, or under `--annotations-dir`;
+- save annotation files under `.pom-reader/annotations/` by default, or under `--annotations-dir`;
 - review open annotations in the "In progress" tab and processed annotations in the "Processed" tab;
 - open an annotation detail, close it again, and jump to the target document when that document still exists;
 - let a coding agent claim the next open annotation with:
 
 ```bash
-node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex
+node scripts/project-reader/wiki-tools.mjs claim-next --by codex
 ```
 
 When the script is being used from an installed `pom/` folder, prefix the command with `pom/`. If the server was launched with `--annotations-dir`, pass the same value to the CLI.
@@ -60,10 +60,10 @@ The server binds to `127.0.0.1` and sends a restrictive Content Security Policy,
 Other useful commands:
 
 ```bash
-node experiments/wiki-agent-orchestration/wiki-tools.mjs search "Operating Memory"
-node experiments/wiki-agent-orchestration/wiki-tools.mjs list
-node experiments/wiki-agent-orchestration/wiki-tools.mjs take <annotation-id> --by codex
-node experiments/wiki-agent-orchestration/wiki-tools.mjs history --path wiki/overview.md
+node scripts/project-reader/wiki-tools.mjs search "Operating Memory"
+node scripts/project-reader/wiki-tools.mjs list
+node scripts/project-reader/wiki-tools.mjs take <annotation-id> --by codex
+node scripts/project-reader/wiki-tools.mjs history --path wiki/overview.md
 ```
 
 The UI does not send requests directly to an AI agent. The annotation file is the handoff artifact: an agent reads it, claims it with the CLI, resolves it with the CLI, and applies durable document changes only through a separate reviewed promotion step.

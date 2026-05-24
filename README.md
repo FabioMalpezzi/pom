@@ -41,6 +41,7 @@ Use the smallest workflow that matches your situation:
 | Resume after a pause | `skills/pulse.md` |
 | Ask or maintain the wiki | `skills/wiki.md` |
 | Render the wiki reader | `npm run pom:wiki:render` |
+| Browse the project locally | `npm run pom:reader -- --port 4173` |
 | Browse, search, and annotate the project locally | POM Project Reader server |
 | Extend POM | `skills/extend.md` |
 | Reduce method bloat | `skills/prune.md` |
@@ -69,7 +70,7 @@ npm run pom:wiki:render
 wiki.html
 
 # Open the local Project Reader server
-node experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+npm run pom:reader -- --port 4173
 
 # Resume after a pause
 Read pom/skills/pulse.md and update PROJECT_STATE.md.
@@ -94,26 +95,26 @@ See `examples/agent-conversations.md` for more detailed interaction examples.
 
 ## POM Project Reader
 
-The POM Project Reader is an experimental local web server for browsing a repository without turning generated HTML into a new source of authority. By default, it uses the current working directory as the project root and port `4173`; pass `--root` or `--dir` and `--port` when you want to choose them explicitly.
+The POM Project Reader is a supported local web server for browsing a repository without turning generated HTML into a new source of authority. By default, it uses the current working directory as the project root and port `4173`; pass `--root` or `--dir` and `--port` when you want to choose them explicitly.
 
-Project-wide content search requires `rg` from ripgrep. Annotation files default to `experiments/wiki-agent-orchestration/evidence/annotations/` under the project root; pass `--annotations-dir` to use a different working directory for annotation handoff files.
+Project-wide content search requires `rg` from ripgrep. Annotation files default to `.pom-reader/annotations/` under the project root; pass `--annotations-dir` to use a different working directory for annotation handoff files.
 
 From this POM Source repository:
 
 ```bash
-node experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+npm run pom:reader -- --port 4173
 ```
 
 From a target project where POM is installed under `pom/`:
 
 ```bash
-node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173
+npm run pom:reader -- --port 4173
 ```
 
 Explicit form:
 
 ```bash
-node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations
+node pom/scripts/project-reader/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations
 ```
 
 Then open:
@@ -146,13 +147,13 @@ The server binds to `127.0.0.1` and sends restrictive browser security headers. 
 A coding agent can read the next open annotation from the same project root:
 
 ```bash
-node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex
+node scripts/project-reader/wiki-tools.mjs claim-next --by codex
 ```
 
 When the server uses a custom annotation directory, pass the same directory to the CLI:
 
 ```bash
-node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex --annotations-dir .pom-reader/annotations
+node scripts/project-reader/wiki-tools.mjs claim-next --by codex --annotations-dir .pom-reader/annotations
 ```
 
 When the CLI is being used from an installed `pom/` folder, prefix the script path with `pom/`. The UI does not talk directly to an AI agent; the annotation file is the handoff artifact, and durable document changes still need a separate reviewed edit.
@@ -540,59 +541,17 @@ POM separates source authority from edit permission. Before changing a governed 
 
 ## Operating Discipline
 
-Five operating rules apply to every project that uses POM, independently of the adoption profile. They are also reproduced in `AGENTS.md` so the agent reads them at start of session.
+Five operating rules apply to every project that uses POM, independently of the adoption profile:
 
-### Communication Style With The User
+- Communication style with the user
+- Documentation discipline
+- Work from sources, not memory
+- File size and static analysis guardrails
+- Complexity standards
 
-Rules for chat messages to the user.
+They are reproduced in `AGENTS.MD` so the agent reads them at start of session. Keep the full normative text in `AGENTS.MD` and treat this section as the overview.
 
-- **Use the user's language naturally.** No hybrid forms when an idiomatic phrase exists.
-- **Project labels are codes, not words.** Administrative labels (spec numbers, ADR identifiers, decision IDs, phase numbers) are archive codes. On first occurrence in the turn, state in plain words what the label refers to. Do not chain more than two such labels in a single sentence. Do not let the label replace the noun ("decide what to do with the finalizers", not "close D10.4").
-- **No abstract placeholders.** Forbidden in chat: "I created file X that does Y", "apply rule Z to field W". Real names go in full. Placeholders only in code or formal templates.
-- **Summaries in full sentences.** End-of-task recaps describe what was done and what is still open in normal sentences, not in stacks of acronyms.
-
-### Documentation Discipline
-
-Project documentation must stay lean and load-bearing. Its history lives in Git, not in the document text.
-
-- **Update before creating.** If an existing document covers the topic, rewrite it instead of adding a new parallel one. Version history is in Git.
-- **No project log inside the docs.** Specs, ADRs, task plans and wikis describe current state and live decisions, not the chronicle of edits. The chronicle lives in Git.
-- **If a project log is needed, create it explicitly.** Dedicated file, short entries "date + document + one-line change". Adopting it is an explicit choice taken with the user.
-- **Fewer documents, more consistency.** Before creating a new document, check whether the content fits in an existing one.
-- **Optimize for the next safe step.** When the right document is unclear, write the smallest useful note where the next reader or agent will need it before acting.
-
-### Work From Sources, Not From Memory
-
-Design and analysis must rely on the current state of code and documents, never on a recollection of them.
-
-- **Read before designing.** Open the actual file before proposing changes, summarizing behavior, or referencing decisions.
-- **Use the domain glossary.** Read `CONTEXT.md` before design, refactoring, or governance changes, and use its terms in new prompts, templates, specs, and code comments.
-- **Verify before citing.** A note or memory saying "X exists" or "spec Y says Z" is a claim to verify against the repository, not a fact.
-- **Declare gaps.** If the artifact you expected cannot be found, say so. Do not fill the gap with assumptions.
-- **No reconstruction from memory.** Describing the current content or behavior of a file requires reading it now.
-
-### File Size And Static Analysis
-
-Source files should remain readable and verifiable by automated tooling. POM enforces a structural limit on file size; surrounding tooling is recommended, not imposed.
-
-- **Hard cap at 1000 lines.** No code file should exceed 1000 lines. Above that, split it along a natural seam. This is a POM rule.
-- **Aim for under 800.** Treat 800 lines as the working target.
-- **Cap applies to hand-written source.** Generated code, large fixtures, and data dumps are exempt.
-- **Recommended: configure a linter.** POM does not bundle one. Target projects are encouraged to add a language-appropriate linter and run it as part of the routine cycle.
-- **Recommended: configure a type checker.** When the language and environment support it, target projects are encouraged to add a type checker alongside the linter.
-
-### Complexity Standards
-
-Code complexity should stay within the conventions of the language and the architecture chosen for the project. POM proposes the guardrails below; the target project owns their installation and threshold tuning.
-
-- **Recommended: configure a complexity checker.** Suggested tools include ESLint `complexity`/`sonarjs`, `gocyclo`, `radon`, `pmd`, `checkstyle`. When adopted, prefer binding thresholds over advisory ones so they actually shape merges.
-- **Architectural boundaries are limits too.** When the project adopts a style (layered, hexagonal, clean, MVC), respect its layer boundaries, allowed dependencies, and module sizes.
-- **Refactor before exception.** When a unit crosses the threshold, split it before merging. Bypassing the limit requires an explicit decision recorded in an ADR.
-- **Tests are not exempt.** Excessive complexity in tests indicates a design problem in the code; address the cause.
-
-### Continuous Integration
-
-CI is optional. POM runs entirely on local commands and the pre-commit hook; nothing breaks if a project never sets up a remote pipeline. When the target project does want CI, see `pom/templates/CI_GUIDE_TEMPLATE.md` for provider-agnostic snippets (GitHub Actions, GitLab CI, CircleCI, generic shell). POM does not install or generate workflow files; the template is a starting point the project copies and adapts.
+Continuous integration is optional. POM runs entirely on local commands and the pre-commit hook; nothing breaks if a project never sets up a remote pipeline. When the target project does want CI, see `pom/templates/CI_GUIDE_TEMPLATE.md` for provider-agnostic snippets (GitHub Actions, GitLab CI, CircleCI, generic shell). POM does not install or generate workflow files; the template is a starting point the project copies and adapts.
 
 ## Git And History
 
@@ -783,7 +742,7 @@ Lint reads the `documentation` and `source` sections of `pom.config.json`. Exist
 | `prompts/` | reusable prompts for applying the method |
 | `skills/` | short skill cards derived from the main POM prompts |
 | `templates/` | reusable templates for project state, tasks, specs, ADRs, wiki, docs, experiments, reconciliation, and the target-project updater |
-| `scripts/` | installer, command help, and documentation lint |
+| `scripts/` | installer, command help, documentation lint, wiki rendering, and Project Reader tooling |
 | `examples/` | concrete examples of filled POM documents (ADR, PROJECT_STATE, wiki page) |
 
 ## POM Skills
@@ -874,134 +833,13 @@ pom.config.json
 
 Rules:
 
-- the POM template must remain generic and portable;
-- `pom.config.json` contains project-specific rules;
-- `pom/templates/POM_CONFIG_TEMPLATE.json` assumes POM is installed in the target project as `pom/`;
-- if POM is installed in a different path, adapt template paths before running lint;
-- do not customize files directly under `pom/` for a target project, because POM updates may overwrite them or create Git conflicts;
-- if a project needs localized or customized templates, place them outside `pom/`, for example in `project-templates/` or `templates/`, and point `pom.config.json.templates` to those files;
-- lint should use conservative defaults when the config is missing;
-- if the config exists but is invalid, lint should produce clear `config-invalid` errors;
-- project-specific categories must live in config, not be hardcoded in the script.
+- Keep `pom/templates/POM_CONFIG_TEMPLATE.json` generic and portable; keep project-specific rules in `pom.config.json`.
+- The template assumes POM is installed under `pom/`; if installed elsewhere, adapt paths before running lint.
+- Do not customize files directly under `pom/` for a target project; place localized/custom templates outside `pom/` and map them via `pom.config.json`.
+- Lint should use conservative defaults when `pom.config.json` is missing and produce clear `config-invalid` errors when it exists but is invalid.
+- Lint should read required sections (`##` headings) from the configured templates, not from hardcoded rules. This also makes translated templates work automatically.
 
-Example project-specific template override:
-
-```json
-"templates": {
-  "adr": "project-templates/ADR_TEMPLATE.md",
-  "wikiPage": "project-templates/WIKI_PAGE_TEMPLATE.md",
-  "projectState": "project-templates/PROJECT_STATE_TEMPLATE.md"
-}
-```
-
-With this model, `pom/` remains updatable while the project's real templates stay stable and owned by the project.
-
-Lint reads required sections (`##` headings) from the configured templates, not from hardcoded rules. If a project uses translated templates (e.g., `## Contesto` instead of `## Context`), lint automatically adapts because it reads the project's template, not the English default in `pom/`.
-
-### Translating Templates
-
-When the project uses a language other than English, translate the POM templates and place them outside `pom/`:
-
-1. Copy the templates you need from `pom/templates/` to a project-owned folder (e.g., `project-templates/`).
-2. Translate the `##` section headings and placeholder text.
-3. Keep the same section structure — lint checks that documents contain the `##` headings from the configured template.
-4. Map the translated templates in `pom.config.json`:
-
-```json
-"templates": {
-  "adr": "project-templates/ADR_TEMPLATE_IT.md",
-  "spec": "project-templates/SPEC_TEMPLATE_IT.md",
-  "taskPlan": "project-templates/TASK_PLAN_TEMPLATE_IT.md"
-}
-```
-
-Lint will then check documents against the translated headings. The `pom/skills/config.md` workflow handles this during project configuration.
-
-### Ownership Mode
-
-`pom.config.json` may include an `ownership` section. It tells the agent whether POM is allowed to become project governance or should stay local to the operator's work.
-
-Allowed values:
-
-| Mode | Meaning | Default posture |
-|---|---|---|
-| `owned` | The user can govern structure and conventions | POM may propose stronger governance when useful |
-| `team` | The user can modify the repository, but existing conventions matter | Preserve current structure unless explicitly changed |
-| `external_overlay` | The repository belongs to an external upstream | POM is local understanding memory only |
-| `unknown` | Relationship not clarified yet | Ask before structural assumptions |
-
-For existing repositories, the agent should clarify ownership before mapping POM modules. Heuristics such as a remote pointing to another organization can suggest the question, but they must not decide it silently.
-
-For `external_overlay`, POM should disable governance over upstream `docs/`, `tests`, ADRs, source layout, release process, and PR contents. Use local wiki or notes to understand the project, and keep overlay artifacts out of upstream contributions unless explicitly wanted.
-
-Installer support:
-
-```bash
-node bootstrap-pom.mjs --preset overlay
-npm run pom:init -- --preset overlay
-```
-
-The explicit advanced form remains available:
-
-```bash
-node bootstrap-pom.mjs --profile adopt --ownership external_overlay
-npm run pom:init -- --profile adopt --ownership external_overlay
-```
-
-### Adoption Profile
-
-`pom.config.json` may include an `adoption` section. It tells the agent which POM modules are active for the project.
-
-Allowed values:
-
-| Key | Values |
-|---|---|
-| `profile` | `minimal`, `wiki`, `decisions`, `full`, `adopt`, `refresh`, `custom` |
-| `wiki` | `enabled`, `disabled` |
-| `decisions` | `enabled`, `disabled` |
-| `analysis` | `enabled`, `optional`, `disabled` |
-| `docs` | `enabled`, `optional`, `disabled` |
-| `mockups` | `enabled`, `disabled` |
-| `planning` | `light`, `structured` |
-| `tasks` | `light`, `structured` |
-| `tests` | `disabled`, `existing`, `pom` |
-
-Task-plan location is configured separately under `taskPlans`. This keeps `adoption.tasks` as the planning style while allowing each project to place operational task files where they fit best.
-
-Profile meanings:
-
-- `minimal`: POM operating hook, scripts, and config only;
-- `wiki`: minimal + persistent wiki memory;
-- `decisions`: minimal + ADR governance and generated ADR index;
-- `full`: wiki + decisions + handoff memory + current planning;
-- `adopt`: preserve existing structures and map POM to them;
-- `refresh`: refresh installation hooks only;
-- `custom`: explicit user choices.
-
-The adoption profile is guidance for the agent and lint configuration. It must not force creation of folders that the project does not need.
-
-Semantics:
-
-- `disabled` means POM must not create or require that module;
-- if a disabled module's folder already exists, lint may still check it to prevent silent decay;
-- `optional` means ask before creating the module unless the current work clearly needs it;
-- `enabled` means the module is part of the active project method and should be maintained.
-
-POM lint may also generate derived artifacts when the rule is explicit and the generated file is not an autonomous source. Example: `decisions/DECISIONS_INDEX.md` is generated from ADRs and is only used for navigation/search when `decisions.root` keeps the default path. Generated files must declare that they should not be edited manually.
-
-For existing projects, existing structures do not have to be moved into canonical POM folders immediately. Configure the relevant roots and patterns to map the active convention:
-
-- decisions: `decisions.root`, `decisions.adrPathPattern`, `decisions.indexPath`, and `decisions.requireTemplateSections`; when only `decisions.root` changes, POM derives the default ADR pattern and generated index path from that root;
-- documentation: `documentation.officialRoot`, `documentation.existingRoots`, and migration policy flags;
-- source: `source.roots`, `source.knownRootCandidates`, and migration policy flags;
-- tests: `tests.root`, `tests.areas`, optional `tests.recommendedPath`, optional `tests.namespaceConvention`, `tests.recommendedLayout`, and migration policy flags;
-- task plans: `taskPlans.root`, `taskPlans.taskPathPattern`, optional `taskPlans.recommendedPath`, optional `taskPlans.namespaceConvention`, `taskPlans.indexPath`, and template strictness;
-- analysis: `analysis.root`, optional `analysis.recommendedPath`, optional `analysis.namespaceConvention`, allowed dirs, and enabled/optional/disabled adoption state;
-- mockups and wiki: their configured roots, patterns, and enabled/optional/disabled adoption state.
-
-Example: a project can enable decisions while keeping ADRs under `doc/architecture/ADR-###-*.md`. If existing documents use a legacy format, relax only the necessary checks, such as `decisions.requireTemplateSections: false`, while preserving or gradually improving the documents.
-
-If generators increase or become expensive, keep them in dedicated commands rather than hiding them inside lint. The lightweight wiki reader is the exception: `pom:lint` refreshes it only when Markdown pages under `wiki/` changed. In version `0.1.0`, the commands installed in target projects are `pom:init`, `pom:update`, `pom:help`, `pom:lint`, and `pom:wiki:render`. The POM source repository also exposes `pom:test`, which runs the integration suite under `tests/<area>/integration/*.mjs`; this command is intentionally not propagated to target projects.
+For the full workflow (ownership mode, adoption profile, template overrides, mapping existing roots), use `skills/config.md` and `prompts/08-create-pom-config.md`.
 
 ## Porting Lint To Another Project
 

@@ -1,11 +1,23 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
-import { createInterface } from "node:readline/promises";
-import { stdin as input, stdout as output } from "node:process";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import { chooseProfile, customizeAdoption, readOwnershipArg, readPresetArg, readProfileArg } from "./lib/install-cli.ts";
 import { pullPomIfGitRepo } from "./lib/install-git.ts";
+import {
+  isOwnershipMode,
+  presets,
+  profiles,
+  type AdoptionConfig,
+  type GitContext,
+  type OwnershipConfig,
+  type OwnershipMode,
+  type PackageJson,
+  type PresetName,
+  type ProfileName,
+  type ProjectConfig,
+} from "./lib/install-model.ts";
 
 const ROOT = process.cwd();
 const START_MARKER = "<!-- POM:START -->";
@@ -80,173 +92,6 @@ const CLAUDE_AGENT_TEMPLATES = [
     target: ".claude/agents/pom-post-action-validator.md",
   },
 ];
-
-type ProfileName = "minimal" | "wiki" | "decisions" | "full" | "adopt" | "refresh" | "custom";
-type OwnershipMode = "owned" | "team" | "external_overlay" | "unknown";
-type PresetName = "owned" | "team" | "overlay" | "minimal";
-
-type AdoptionConfig = {
-  profile: ProfileName;
-  wiki: "enabled" | "disabled";
-  decisions: "enabled" | "disabled";
-  analysis: "enabled" | "optional" | "disabled";
-  docs: "enabled" | "optional" | "disabled";
-  mockups: "enabled" | "disabled";
-  planning: "light" | "structured";
-  tasks: "light" | "structured";
-  tests: "disabled" | "existing" | "pom";
-};
-
-type OwnershipConfig = {
-  mode: OwnershipMode;
-  localOnly?: boolean;
-  preserveExistingConventions?: boolean;
-  note?: string;
-};
-
-type ProjectConfig = Record<string, unknown>;
-
-type PackageJson = {
-  scripts?: Record<string, string>;
-  [key: string]: unknown;
-};
-
-type GitContext = {
-  insideWorkTree: boolean;
-  topLevel?: string;
-  isProjectRoot: boolean;
-};
-
-const profiles: Record<ProfileName, { label: string; description: string; adoption: AdoptionConfig }> = {
-  minimal: {
-    label: "Minimal",
-    description: "Installs only agent instruction file sections, package scripts, and pom.config.json. No wiki, docs, analysis, mockups, or tests.",
-    adoption: {
-      profile: "minimal",
-      wiki: "disabled",
-      decisions: "disabled",
-      analysis: "optional",
-      docs: "optional",
-      mockups: "disabled",
-      planning: "light",
-      tasks: "light",
-      tests: "disabled",
-    },
-  },
-  wiki: {
-    label: "Wiki",
-    description: "Minimal + persistent wiki memory. Creates wiki/index.md and wiki/log.md.",
-    adoption: {
-      profile: "wiki",
-      wiki: "enabled",
-      decisions: "disabled",
-      analysis: "optional",
-      docs: "optional",
-      mockups: "disabled",
-      planning: "light",
-      tasks: "light",
-      tests: "disabled",
-    },
-  },
-  decisions: {
-    label: "Decisions",
-    description: "Minimal + ADR governance. Enables the configured decisions root and generated ADR index.",
-    adoption: {
-      profile: "decisions",
-      wiki: "disabled",
-      decisions: "enabled",
-      analysis: "optional",
-      docs: "optional",
-      mockups: "disabled",
-      planning: "light",
-      tasks: "light",
-      tests: "disabled",
-    },
-  },
-  full: {
-    label: "Full",
-    description: "Wiki + decisions + PROJECT_STATE.md + CURRENT_PLAN.md. Use for long-running projects.",
-    adoption: {
-      profile: "full",
-      wiki: "enabled",
-      decisions: "enabled",
-      analysis: "optional",
-      docs: "optional",
-      mockups: "disabled",
-      planning: "structured",
-      tasks: "structured",
-      tests: "existing",
-    },
-  },
-  adopt: {
-    label: "Adopt Existing Project",
-    description: "Preserves existing structure and maps POM to it. Does not impose folders.",
-    adoption: {
-      profile: "adopt",
-      wiki: "disabled",
-      decisions: "disabled",
-      analysis: "optional",
-      docs: "optional",
-      mockups: "disabled",
-      planning: "light",
-      tasks: "light",
-      tests: "existing",
-    },
-  },
-  refresh: {
-    label: "Refresh Existing POM",
-    description: "Updates only agent instruction file sections and package scripts. Does not change pom.config.json or create governance folders.",
-    adoption: {
-      profile: "refresh",
-      wiki: "disabled",
-      decisions: "disabled",
-      analysis: "optional",
-      docs: "optional",
-      mockups: "disabled",
-      planning: "light",
-      tasks: "light",
-      tests: "disabled",
-    },
-  },
-  custom: {
-    label: "Custom",
-    description: "Starts from Minimal and asks which POM modules to enable.",
-    adoption: {
-      profile: "custom",
-      wiki: "disabled",
-      decisions: "disabled",
-      analysis: "optional",
-      docs: "optional",
-      mockups: "disabled",
-      planning: "light",
-      tasks: "light",
-      tests: "disabled",
-    },
-  },
-};
-
-const presets: Record<PresetName, { profile: ProfileName; ownership: OwnershipMode; description: string }> = {
-  owned: {
-    profile: "adopt",
-    ownership: "owned",
-    description: "Project is yours; POM may become project governance when useful.",
-  },
-  team: {
-    profile: "adopt",
-    ownership: "team",
-    description: "Shared/team project; preserve existing conventions unless explicitly changed.",
-  },
-  overlay: {
-    profile: "adopt",
-    ownership: "external_overlay",
-    description: "Third-party cloned repository; POM is local understanding memory only.",
-  },
-  minimal: {
-    profile: "minimal",
-    ownership: "unknown",
-    description: "Minimal local POM setup with no ownership assumption.",
-  },
-};
 
 function pathExists(path: string): boolean {
   return existsSync(join(ROOT, path));
@@ -353,6 +198,12 @@ function resolveWikiRenderScript(): string {
   if (pathExists("pom/scripts/render-wiki.mjs")) return "pom/scripts/render-wiki.mjs";
   if (pathExists("scripts/render-wiki.mjs")) return "scripts/render-wiki.mjs";
   return "pom/scripts/render-wiki.mjs";
+}
+
+function resolveProjectReaderScript(): string {
+  if (pathExists("pom/scripts/project-reader/server.mjs")) return "pom/scripts/project-reader/server.mjs";
+  if (pathExists("scripts/project-reader/server.mjs")) return "scripts/project-reader/server.mjs";
+  return "pom/scripts/project-reader/server.mjs";
 }
 
 function resolveUpdateScriptTemplate(): string {
@@ -516,6 +367,7 @@ function upsertPackageScripts(): void {
     const lintScript = resolveLintScript();
     const helpScript = resolveHelpScript();
     const wikiRenderScript = resolveWikiRenderScript();
+    const projectReaderScript = resolveProjectReaderScript();
     const content: PackageJson = {
       private: true,
       type: "module",
@@ -524,11 +376,12 @@ function upsertPackageScripts(): void {
         "pom:update": "node pom-update.mjs",
         "pom:help": `node --experimental-strip-types ${helpScript}`,
         "pom:lint": `node --experimental-strip-types ${lintScript}`,
+        "pom:reader": `node ${projectReaderScript}`,
         "pom:wiki:render": `node ${wikiRenderScript}`,
       },
     };
     writeText(packagePath, `${JSON.stringify(content, null, 2)}\n`);
-    console.log("Created package.json with pom:init, pom:update, pom:help, pom:lint, and pom:wiki:render scripts.");
+    console.log("Created package.json with pom:init, pom:update, pom:help, pom:lint, pom:reader, and pom:wiki:render scripts.");
     return;
   }
 
@@ -543,40 +396,44 @@ function upsertPackageScripts(): void {
   const lintScript = resolveLintScript();
   const helpScript = resolveHelpScript();
   const wikiRenderScript = resolveWikiRenderScript();
+  const projectReaderScript = resolveProjectReaderScript();
   const initCommand = pathExists("pom/scripts/install-pom.ts")
     ? "node --experimental-strip-types pom/scripts/install-pom.ts"
     : "node --experimental-strip-types scripts/install-pom.ts";
 
+  const expectedScripts: Record<string, string> = {
+    "pom:init": initCommand,
+    "pom:update": "node pom-update.mjs",
+    "pom:help": `node --experimental-strip-types ${helpScript}`,
+    "pom:lint": `node --experimental-strip-types ${lintScript}`,
+    "pom:reader": `node ${projectReaderScript}`,
+    "pom:wiki:render": `node ${wikiRenderScript}`,
+  };
+
   let changed = false;
-  if (!scripts["pom:init"]) {
-    scripts["pom:init"] = initCommand;
-    changed = true;
-  }
-  if (!scripts["pom:update"]) {
-    scripts["pom:update"] = "node pom-update.mjs";
-    changed = true;
-  }
-  if (!scripts["pom:help"]) {
-    scripts["pom:help"] = `node --experimental-strip-types ${helpScript}`;
-    changed = true;
-  }
-  if (!scripts["pom:lint"]) {
-    scripts["pom:lint"] = `node --experimental-strip-types ${lintScript}`;
-    changed = true;
-  }
-  if (!scripts["pom:wiki:render"]) {
-    scripts["pom:wiki:render"] = `node ${wikiRenderScript}`;
-    changed = true;
+  for (const [name, expected] of Object.entries(expectedScripts)) {
+    if (!scripts[name]) {
+      scripts[name] = expected;
+      changed = true;
+      continue;
+    }
+    if (scripts[name] !== expected) {
+      // Avoid clobbering project-specific script overrides. Warn so the user/agent
+      // can decide whether the deviation is intentional or a stale install.
+      console.log(`Warning: package.json script "${name}" differs from the POM default.`);
+      console.log(`  current:  ${scripts[name]}`);
+      console.log(`  expected: ${expected}`);
+    }
   }
 
   if (!changed) {
-    console.log("package.json already contains pom:init, pom:update, pom:help, pom:lint, and pom:wiki:render.");
+    console.log("package.json already contains pom:init, pom:update, pom:help, pom:lint, pom:reader, and pom:wiki:render.");
     return;
   }
 
   parsed.scripts = scripts;
   writeText(packagePath, `${JSON.stringify(parsed, null, 2)}\n`);
-  console.log("Updated package.json with pom:init, pom:update, pom:help, pom:lint, and pom:wiki:render scripts.");
+  console.log("Updated package.json with pom:init, pom:update, pom:help, pom:lint, pom:reader, and pom:wiki:render scripts.");
 }
 
 function installPreCommitHook(config: ProjectConfig): void {
@@ -837,127 +694,6 @@ The project wiki has been initialized, but the project overview still needs to b
   console.log("Created wiki/overview.md.");
 }
 
-async function chooseProfile(argProfile: ProfileName | undefined): Promise<{ profile: ProfileName; ownership?: OwnershipMode }> {
-  if (argProfile) return { profile: argProfile };
-
-  if (!process.stdin.isTTY) {
-    if (pathExists("pom.config.json")) return { profile: "refresh" };
-    printPresetGuide();
-    process.exit(1);
-  }
-
-  printLogo();
-  console.log("Common presets:");
-  for (const [name, preset] of Object.entries(presets)) {
-    console.log(`- ${name}: ${preset.description}`);
-  }
-  console.log("");
-  printProfiles();
-
-  const rl = createInterface({ input, output });
-  try {
-    const answer = (await rl.question("Choose preset/profile [owned/team/overlay/minimal/wiki/decisions/full/adopt/refresh/custom]: ")).trim().toLowerCase();
-    if (isPresetName(answer)) return { profile: presets[answer].profile, ownership: presets[answer].ownership };
-    if (isProfileName(answer)) return { profile: answer };
-    if (answer === "1") return { profile: "minimal" };
-    if (answer === "2") return { profile: "wiki" };
-    if (answer === "3") return { profile: "decisions" };
-    if (answer === "4") return { profile: "full" };
-    if (answer === "5") return { profile: "adopt" };
-    if (answer === "6") return { profile: "refresh" };
-    if (answer === "7") return { profile: "custom" };
-    console.log("Unknown profile. Using refresh.");
-    return { profile: "refresh" };
-  } finally {
-    rl.close();
-  }
-}
-
-async function customizeAdoption(base: AdoptionConfig): Promise<AdoptionConfig> {
-  if (base.profile !== "custom" || !process.stdin.isTTY) return base;
-
-  const rl = createInterface({ input, output });
-  try {
-    const wiki = await askYesNo(rl, "Enable persistent wiki memory?", false);
-    const decisions = await askYesNo(rl, "Enable ADR decisions governance?", true);
-    const handoff = await askYesNo(rl, "Enable handoff memory and current planning files?", false);
-    const mockups = await askYesNo(rl, "Enable mockup governance?", false);
-    const tests = await askChoice(rl, "Tests governance [disabled/existing/pom]", ["disabled", "existing", "pom"], "disabled");
-    const planning = handoff ? "structured" : "light";
-
-    return {
-      profile: "custom",
-      wiki: wiki ? "enabled" : "disabled",
-      decisions: decisions ? "enabled" : "disabled",
-      analysis: "optional",
-      docs: "optional",
-      mockups: mockups ? "enabled" : "disabled",
-      planning,
-      tasks: planning,
-      tests,
-    };
-  } finally {
-    rl.close();
-  }
-}
-
-async function askYesNo(rl: ReturnType<typeof createInterface>, question: string, defaultValue: boolean): Promise<boolean> {
-  const suffix = defaultValue ? " [Y/n]: " : " [y/N]: ";
-  const answer = (await rl.question(`${question}${suffix}`)).trim().toLowerCase();
-  if (!answer) return defaultValue;
-  return ["y", "yes"].includes(answer);
-}
-
-async function askChoice<T extends string>(
-  rl: ReturnType<typeof createInterface>,
-  question: string,
-  allowed: T[],
-  defaultValue: T,
-): Promise<T> {
-  const answer = (await rl.question(`${question} (${defaultValue}): `)).trim().toLowerCase();
-  if (!answer) return defaultValue;
-  return allowed.includes(answer as T) ? (answer as T) : defaultValue;
-}
-
-function readNamedArg(name: string, allowedValues: string[]): string | undefined {
-  const exactIndex = process.argv.findIndex((arg) => arg === `--${name}`);
-  if (exactIndex >= 0) {
-    const value = process.argv[exactIndex + 1];
-    if (!value || value.startsWith("--")) {
-      throw new Error(`Missing --${name} value. Use one of: ${allowedValues.join(", ")}.`);
-    }
-    if (!allowedValues.includes(value)) {
-      throw new Error(`Unknown --${name} value: ${value}. Use one of: ${allowedValues.join(", ")}.`);
-    }
-    return value;
-  }
-
-  const inlinePrefix = `--${name}=`;
-  const inline = process.argv.find((arg) => arg.startsWith(inlinePrefix));
-  if (!inline) return undefined;
-
-  const value = inline.slice(inlinePrefix.length);
-  if (!value) {
-    throw new Error(`Missing --${name} value. Use one of: ${allowedValues.join(", ")}.`);
-  }
-  if (!allowedValues.includes(value)) {
-    throw new Error(`Unknown --${name} value: ${value}. Use one of: ${allowedValues.join(", ")}.`);
-  }
-  return value;
-}
-
-function readProfileArg(): ProfileName | undefined {
-  return readNamedArg("profile", Object.keys(profiles)) as ProfileName | undefined;
-}
-
-function readOwnershipArg(): OwnershipMode | undefined {
-  return readNamedArg("ownership", ["owned", "team", "external_overlay", "unknown"]) as OwnershipMode | undefined;
-}
-
-function readPresetArg(): PresetName | undefined {
-  return readNamedArg("preset", Object.keys(presets)) as PresetName | undefined;
-}
-
 function resolveOwnershipMode(arg: OwnershipMode | undefined): OwnershipMode | undefined {
   if (arg) return arg;
   return readExistingOwnershipMode();
@@ -974,98 +710,6 @@ function readExistingOwnershipMode(): OwnershipMode | undefined {
   } catch {
     return undefined;
   }
-}
-
-function isProfileName(value: string): value is ProfileName {
-  return Object.prototype.hasOwnProperty.call(profiles, value);
-}
-
-function isPresetName(value: string): value is PresetName {
-  return Object.prototype.hasOwnProperty.call(presets, value);
-}
-
-function isOwnershipMode(value: string): value is OwnershipMode {
-  return ["owned", "team", "external_overlay", "unknown"].includes(value);
-}
-
-function printLogo(): void {
-  console.log("");
-  console.log("POM - Project Operating Memory");
-  console.log("================================");
-  console.log("");
-}
-
-function printProfiles(): void {
-  const ordered: ProfileName[] = ["minimal", "wiki", "decisions", "full", "adopt", "refresh", "custom"];
-  ordered.forEach((name, index) => {
-    const profile = profiles[name];
-    console.log(`${index + 1}. ${profile.label}`);
-    console.log(`   ${profile.description}`);
-  });
-  console.log("");
-}
-
-function readRawArg(name: string): string | undefined {
-  const exactIndex = process.argv.findIndex((arg) => arg === `--${name}`);
-  if (exactIndex >= 0) {
-    const value = process.argv[exactIndex + 1];
-    return value && !value.startsWith("--") ? value : "";
-  }
-  const inlinePrefix = `--${name}=`;
-  const inline = process.argv.find((arg) => arg.startsWith(inlinePrefix));
-  return inline ? inline.slice(inlinePrefix.length) : undefined;
-}
-
-function normalizeLanguage(value: string): "en" | "it" | undefined {
-  const normalized = value.toLowerCase();
-  if (normalized.startsWith("it")) return "it";
-  if (normalized.startsWith("en")) return "en";
-  return undefined;
-}
-
-function detectLanguage(): "en" | "it" {
-  const arg = readRawArg("lang");
-  if (arg !== undefined) {
-    const normalized = arg ? normalizeLanguage(arg) : undefined;
-    if (!normalized) {
-      throw new Error("Missing or unsupported --lang value. Use en or it.");
-    }
-    return normalized;
-  }
-
-  const envLanguage = process.env.POM_LANG || process.env.LC_ALL || process.env.LC_MESSAGES || process.env.LANG || "";
-  return normalizeLanguage(envLanguage) || "en";
-}
-
-function printPresetGuide(): void {
-  if (detectLanguage() === "it") {
-    console.log("");
-    console.log("POM richiede una modalita di adozione esplicita quando il setup non e interattivo.");
-    console.log("");
-    console.log("Usa uno di questi preset:");
-    console.log("  npm run pom:init -- --preset owned     # progetto tuo");
-    console.log("  npm run pom:init -- --preset team      # progetto condiviso/team");
-    console.log("  npm run pom:init -- --preset overlay   # repository clonato di terzi");
-    console.log("  npm run pom:init -- --preset minimal   # setup POM locale minimale");
-    console.log("");
-    console.log("Forma esplicita avanzata:");
-    console.log("  npm run pom:init -- --profile adopt --ownership external_overlay");
-    console.log("");
-    return;
-  }
-
-  console.log("");
-  console.log("POM needs an explicit adoption mode in non-interactive setup.");
-  console.log("");
-  console.log("Use one of these presets:");
-  console.log("  npm run pom:init -- --preset owned     # project is yours");
-  console.log("  npm run pom:init -- --preset team      # shared/team project");
-  console.log("  npm run pom:init -- --preset overlay   # third-party cloned repo");
-  console.log("  npm run pom:init -- --preset minimal   # minimal local POM setup");
-  console.log("");
-  console.log("Advanced explicit form:");
-  console.log("  npm run pom:init -- --profile adopt --ownership external_overlay");
-  console.log("");
 }
 
 function escapeRegex(value: string): string {

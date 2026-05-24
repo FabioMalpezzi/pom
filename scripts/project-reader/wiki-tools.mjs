@@ -29,7 +29,7 @@ const RG_GLOBS = [
   "!node_modules/**",
   "!wiki/_site/**",
   "!experiments/wiki-agent-orchestration/evidence/**",
-  "!experiments/wiki-agent-orchestration/mini-ui/public/*.map",
+  "!scripts/project-reader/public/*.map",
 ];
 
 const STATUSES = new Set(["new", "triaged", "in_progress", "resolved", "parked", "discarded"]);
@@ -310,7 +310,7 @@ function annotationDisplayPath(annotationId) {
 }
 
 function annotationsRootFor(root) {
-  return join(root, "experiments/wiki-agent-orchestration/evidence/annotations");
+  return join(root, ".pom-reader/annotations");
 }
 
 function resolveAnnotationRoot(path) {
@@ -382,16 +382,16 @@ function usage() {
   console.log(`Usage:
   Run from the project root, or pass --root <project-root>.
   If POM is installed under pom/, prefix the script path with pom/.
-  Annotation files default to experiments/wiki-agent-orchestration/evidence/annotations under the project root.
+  Annotation files default to .pom-reader/annotations under the project root.
 
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs search <query> [--regex] [--json] [--root <project-root>]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs history --path <repo-path> [--json] [--root <project-root>]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs annotate --path <repo-path> --note <text> [--text <selected>] [--line-start <n>] [--line-end <n>] [--root <project-root>] [--annotations-dir <dir>]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs list [--status <status>] [--json] [--root <project-root>] [--annotations-dir <dir>]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs show <annotation-id> [--root <project-root>] [--annotations-dir <dir>]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs take <annotation-id> [--by <agent>] [--root <project-root>] [--annotations-dir <dir>]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next [--by <agent>] [--root <project-root>] [--annotations-dir <dir>]
-  node experiments/wiki-agent-orchestration/wiki-tools.mjs resolve <annotation-id> [--note <text>] [--by <agent>] [--root <project-root>] [--annotations-dir <dir>]
+  node scripts/project-reader/wiki-tools.mjs search <query> [--regex] [--json] [--root <project-root>]
+  node scripts/project-reader/wiki-tools.mjs history --path <repo-path> [--json] [--root <project-root>]
+  node scripts/project-reader/wiki-tools.mjs annotate --path <repo-path> --note <text> [--text <selected>] [--line-start <n>] [--line-end <n>] [--root <project-root>] [--annotations-dir <dir>]
+  node scripts/project-reader/wiki-tools.mjs list [--status <status>] [--json] [--root <project-root>] [--annotations-dir <dir>]
+  node scripts/project-reader/wiki-tools.mjs show <annotation-id> [--root <project-root>] [--annotations-dir <dir>]
+  node scripts/project-reader/wiki-tools.mjs take <annotation-id> [--by <agent>] [--root <project-root>] [--annotations-dir <dir>]
+  node scripts/project-reader/wiki-tools.mjs claim-next [--by <agent>] [--root <project-root>] [--annotations-dir <dir>]
+  node scripts/project-reader/wiki-tools.mjs resolve <annotation-id> [--note <text>] [--by <agent>] [--root <project-root>] [--annotations-dir <dir>]
 `);
 }
 

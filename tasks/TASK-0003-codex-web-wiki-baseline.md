@@ -75,7 +75,7 @@ The task does not implement the final web UI. It creates the minimum contract, f
 | E2E test path | not created yet |
 | Fixture path | `experiments/wiki-agent-orchestration/fixtures/events/` |
 | Evidence path | `experiments/wiki-agent-orchestration/evidence/` |
-| Mini UI path | `experiments/wiki-agent-orchestration/mini-ui/` |
+| Project Reader path after promotion | `scripts/project-reader/` |
 
 ## Fixture Mapping
 
@@ -100,7 +100,7 @@ The task does not implement the final web UI. It creates the minimum contract, f
 | The fixture output encourages automatic writes | Require proposals and approval metadata; forbid direct edits in the baseline prompt |
 | The experiment creates a second source of truth | Keep fixtures and evidence under `experiments/`; promote only after review |
 | Sensitive project context is copied into fixtures | Checked at checkpoint close: fixtures and live events contain only repository-local POM discussion, no secrets or private external data |
-| Prototype becomes mistaken for final integration | Keep it under `experiments/`; defer runner and persistent-session choices to a later checkpoint |
+| Prototype becomes mistaken for final integration | The lightweight reader has been promoted to `scripts/project-reader/`; persistent-session integration remains deferred |
 
 ## Outcome
 
@@ -110,7 +110,7 @@ The first live mini UI cycle was also validated: the UI saved an event about `wi
 
 The second live mini UI cycle validated a method-content question: the UI saved an event about when web wiki notes should remain Open Discussion or become spec, ADR, or task plan. Codex read the event, `SPEC-0005`, the experiment, and `CONTEXT.md`, then recorded a draft spec-update proposal without modifying the spec automatically. After explicit user approval, the destination triage rule was promoted into `SPEC-0005`.
 
-Checkpoint closed here. Runner automation and persistent-session integration remain future work; this task proved the baseline contract and the human-reviewed promotion loop.
+Checkpoint closed here. Runner automation and persistent-session integration remain future work; this task proved the baseline contract and the human-reviewed promotion loop. The lightweight Project Reader was later promoted from the experiment into `scripts/project-reader/`; the event/proposal contracts and evidence remain under the experiment as validation material.
 
 ## Done Criteria
 

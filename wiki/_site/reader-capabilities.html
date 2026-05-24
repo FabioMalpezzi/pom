@@ -42,17 +42,17 @@
           <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span title="Reader Capabilities">Reader Capabilities</span></nav>
           <p class="eyebrow">Persistent Wiki</p>
           <h1>Reader Capabilities</h1>
-          <p class="dek">This page documents the two reader surfaces POM currently exposes: the static wiki reader and the experimental local POM Project Reader server. Both improve consultation without becoming a second source of truth.</p>
+          <p class="dek">This page documents the two reader surfaces POM currently exposes: the static wiki reader and the local POM Project Reader server. Both improve consultation without becoming a second source of truth.</p>
           <div class="meta">
             <span>Source: reader-capabilities.md</span>
-            <span>Generated: 2026-05-21</span>
+            <span>Generated: 2026-05-24</span>
           </div>
         </header>
         <aside class="generated-notice">
           <strong>Generated reader view.</strong> Edit the Markdown source, then regenerate this static site. The HTML is not canonical Operating Memory.
         </aside>
         <h2 id="summary">Summary <a class="heading-anchor" href="#summary" aria-label="Copy link to Summary">#</a></h2>
-<p>This page documents the two reader surfaces POM currently exposes: the static wiki reader and the experimental local POM Project Reader server. Both improve consultation without becoming a second source of truth.</p>
+<p>This page documents the two reader surfaces POM currently exposes: the static wiki reader and the local POM Project Reader server. Both improve consultation without becoming a second source of truth.</p>
 <h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
 <p>Markdown and source files remain canonical. Reader output, browser state, search results, and annotations are consultation and handoff aids. Durable changes still happen in repository files through normal edits.</p>
 <p>The static wiki reader generates HTML, CSS, search data, navigation, code presentation, and optional diagram enhancements from source Markdown files.</p>
@@ -62,20 +62,20 @@
 <p>Run the server from the repository root you want to inspect. By default, the current working directory is the project root and the local port is <code>4173</code>.</p>
 <figure class="code-figure code-highlight">
   <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
-  <pre><code class="language-bash">node experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173</code></pre>
+  <pre><code class="language-bash">npm run pom:reader -- --port 4173</code></pre>
 </figure>
 <p>When POM is installed under <code>pom/</code> in a target project, run the POM-hosted script from the target project root:</p>
 <figure class="code-figure code-highlight">
   <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
-  <pre><code class="language-bash">node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173</code></pre>
+  <pre><code class="language-bash">node pom/scripts/project-reader/server.mjs --port 4173</code></pre>
 </figure>
 <p>Use explicit parameters when needed:</p>
 <figure class="code-figure code-highlight">
   <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
-  <pre><code class="language-bash">node pom/experiments/wiki-agent-orchestration/mini-ui/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations</code></pre>
+  <pre><code class="language-bash">node pom/scripts/project-reader/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations</code></pre>
 </figure>
 <p>The defaults are:</p>
-<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Default</th></tr></thead><tbody><tr><td data-label="Parameter"><code>--port</code></td><td data-label="Default"><code>4173</code>, unless <code>PORT</code> is set</td></tr><tr><td data-label="Parameter"><code>--root</code> / <code>--dir</code></td><td data-label="Default"><code>.</code></td></tr><tr><td data-label="Parameter"><code>--annotations-dir</code></td><td data-label="Default"><code>experiments/wiki-agent-orchestration/evidence/annotations</code> under the project root</td></tr></tbody></table></div>
+<div class="table-wrap"><table><thead><tr><th>Parameter</th><th>Default</th></tr></thead><tbody><tr><td data-label="Parameter"><code>--port</code></td><td data-label="Default"><code>4173</code>, unless <code>PORT</code> is set</td></tr><tr><td data-label="Parameter"><code>--root</code> / <code>--dir</code></td><td data-label="Default"><code>.</code></td></tr><tr><td data-label="Parameter"><code>--annotations-dir</code></td><td data-label="Default"><code>.pom-reader/annotations</code> under the project root</td></tr></tbody></table></div>
 <p>Then open:</p>
 <figure class="code-figure code-plain">
   <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
@@ -96,7 +96,7 @@
 <p>The right panel writes annotations as JSON files under the configured annotation directory. By default that is:</p>
 <figure class="code-figure code-plain">
   <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
-  <pre><code class="language-text">experiments/wiki-agent-orchestration/evidence/annotations/</code></pre>
+  <pre><code class="language-text">.pom-reader/annotations/</code></pre>
 </figure>
 <p>An annotation contains the target path, optional selected document text, the human note for the agent, status fields, and an <code>agentReport</code> field for what the agent did after processing the file.</p>
 <p>Treat the annotation folder as runtime evidence and keep it out of commits unless the project intentionally wants to archive an annotation. If a project chooses a custom annotation directory, add it to the project's ignore rules.</p>
@@ -105,11 +105,11 @@
 <p>Useful commands:</p>
 <figure class="code-figure code-highlight">
   <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
-  <pre><code class="language-bash">node experiments/wiki-agent-orchestration/wiki-tools.mjs search <span class="tok-string">&quot;Operating Memory&quot;</span>
-node experiments/wiki-agent-orchestration/wiki-tools.mjs list
-node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex
-node experiments/wiki-agent-orchestration/wiki-tools.mjs resolve &lt;annotation-id&gt; --note <span class="tok-string">&quot;Updated the documented launch path.&quot;</span> --by codex
-node experiments/wiki-agent-orchestration/wiki-tools.mjs claim-next --by codex --annotations-dir .pom-reader/annotations</code></pre>
+  <pre><code class="language-bash">node scripts/project-reader/wiki-tools.mjs search <span class="tok-string">&quot;Operating Memory&quot;</span>
+node scripts/project-reader/wiki-tools.mjs list
+node scripts/project-reader/wiki-tools.mjs claim-next --by codex
+node scripts/project-reader/wiki-tools.mjs resolve &lt;annotation-id&gt; --note <span class="tok-string">&quot;Updated the documented launch path.&quot;</span> --by codex
+node scripts/project-reader/wiki-tools.mjs claim-next --by codex --annotations-dir .pom-reader/annotations</code></pre>
 </figure>
 <p>When the CLI is being used from an installed <code>pom/</code> folder, prefix the script path with <code>pom/</code>.</p>
 <h2 id="static-workflow">Static Workflow <a class="heading-anchor" href="#static-workflow" aria-label="Copy link to Static Workflow">#</a></h2>

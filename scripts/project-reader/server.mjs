@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync, statSync } from "node:fs";
 import { basename, dirname, extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ANNOTATIONS_ROOT, createAnnotation, deleteAnnotation, listAnnotations, readAnnotation, searchProject, setAnnotationsRoot, setProjectRoot, takeAnnotation } from "../wiki-tools.mjs";
+import { ANNOTATIONS_ROOT, createAnnotation, deleteAnnotation, listAnnotations, readAnnotation, searchProject, setAnnotationsRoot, setProjectRoot, takeAnnotation } from "./wiki-tools.mjs";
 import { buildDocumentSourceContext, generatedIgnoreGlobs, isGeneratedPath, kindRank, skippedDocumentGlobs } from "./document-sources.mjs";
 import { extractSummary, extractTitle, renderDocument } from "./render-document.mjs";
 
@@ -53,7 +53,7 @@ const server = createServer(async (req, res) => {
     }));
     if (url.pathname === "/api/annotations" && req.method === "POST") return sendJson(res, createAnnotation({
       ...JSON.parse(await readBody(req)),
-      source: "mini-ui",
+      source: "project-reader",
     }));
     if (url.pathname === "/api/annotation" && req.method === "GET") return sendJson(res, readAnnotation(url.searchParams.get("id")));
     if (url.pathname === "/api/annotation" && req.method === "DELETE") return sendJson(res, deleteAnnotation(url.searchParams.get("id")));
@@ -119,12 +119,12 @@ function shouldShowHelp(args) {
 
 function usage() {
   console.log(`Usage:
-  node experiments/wiki-agent-orchestration/mini-ui/server.mjs [--port <port>] [--root <project-root>] [--annotations-dir <path>]
+  node scripts/project-reader/server.mjs [--port <port>] [--root <project-root>] [--annotations-dir <path>]
 
 Options:
   --port <port>             Local port. Defaults to PORT or 4173.
   --root, --dir <path>      Project root to inspect. Defaults to ".".
-  --annotations-dir <path>  Annotation directory. Defaults to experiments/wiki-agent-orchestration/evidence/annotations under the project root.
+  --annotations-dir <path>  Annotation directory. Defaults to .pom-reader/annotations under the project root.
 
 When pom.config.json exists under the project root, the reader uses its configured roots to classify documents.
 `);
@@ -237,7 +237,7 @@ function requireAllowedPath(input) {
   const allowed = DOC_SOURCES.some((source) => {
     return pathBelongsToSource(absolute, source) && !pathIsSkipped(relativePath, source) && pathExtAllowed(relativePath, source);
   }) || relativePath.startsWith("experiments/wiki-agent-orchestration/evidence/");
-  if (!allowed) throw new Error("Path is not part of the mini UI document set");
+  if (!allowed) throw new Error("Path is not part of the Project Reader document set");
   if (!existsSync(absolute) || !statSync(absolute).isFile()) throw new Error("Document not found");
   return relativePath;
 }

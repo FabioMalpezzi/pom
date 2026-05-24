@@ -164,8 +164,8 @@ function ensurePomIsCleanVendoredCopy() {
   }
 
   if (!projectIsGitWorkTree()) {
-    console.log("Warning: project is not a Git worktree; cannot verify local vendored pom/ changes.");
-    return;
+    printSyncSuggestion("project is not a Git worktree; cannot verify local vendored pom/ changes.", "vendored");
+    process.exit(1);
   }
 
   const status = output("git", ["status", "--porcelain", "--", POM_DIR]);

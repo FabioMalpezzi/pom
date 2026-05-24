@@ -32,6 +32,7 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `22-diagnose-pom-problem.md` | diagnose failing or confusing POM workflows with a focused feedback loop |
 | `23-zero-tech-debt.md` | reshape a scoped change around the intended end state before closure |
 | `24-challenge-antithesis.md` | run adversarial thesis/antithesis review before accepting or completing non-code work |
+| `25-self-improvement-loop.md` | improve a POM-managed project's method/governance with observation -> diagnosis -> proposal -> verification -> promotion/discard |
 
 ## Work Planning Hierarchy
 

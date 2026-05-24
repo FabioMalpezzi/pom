@@ -19,7 +19,7 @@ The specs are living documents, but they are not a diary. Minor changes are trac
 | `SPEC-0004-external-project-overlay.md` | Draft | Defines overlay mode for repositories the operator does not own. |
 | `SPEC-0005-web-wiki-agent-extension.md` | Draft | Defines the first boundary for a web wiki that extends an active coding agent session, produces reviewed proposals, and classifies whether notes belong in Open Discussion, specs, ADRs, task plans, or wiki synthesis. |
 
-The wiki reader relates mainly to `SPEC-0000`, `SPEC-0004`, and `SPEC-0005`: it touches Operating Memory consultation, cognitive cost, reversibility, possible local-only wiki use, and agent-assisted proposal workflows. `SPEC-0005` keeps proposal promotion explicit: Open Discussion holds unresolved material, specs hold expected behavior, ADRs hold explicit decisions, task plans hold executable work, and wiki pages summarize consolidated knowledge. `ADR-0001` records the earlier direction toward a persistent connection to an active AI coding agent session; the current POM Project Reader experiment is deliberately lighter and uses file-based annotations for agent handoff. If the reader or web wiki becomes more central, the specs must reconcile that choice explicitly and describe the authority of generated output clearly enough that HTML or UI state never competes with Markdown.
+The wiki reader relates mainly to `SPEC-0000`, `SPEC-0004`, and `SPEC-0005`: it touches Operating Memory consultation, cognitive cost, reversibility, possible local-only wiki use, and agent-assisted proposal workflows. `SPEC-0005` keeps proposal promotion explicit: Open Discussion holds unresolved material, specs hold expected behavior, ADRs hold explicit decisions, task plans hold executable work, and wiki pages summarize consolidated knowledge. `ADR-0001` records the earlier direction toward a persistent connection to an active AI coding agent session; the promoted POM Project Reader is deliberately lighter and uses file-based annotations for agent handoff. If the reader or web wiki becomes more central, the specs must reconcile that choice explicitly and describe the authority of generated output clearly enough that HTML or UI state never competes with Markdown.
 
 ## Sources
 
@@ -49,7 +49,7 @@ The wiki reader relates mainly to `SPEC-0000`, `SPEC-0004`, and `SPEC-0005`: it 
 | Should a future spec define wiki reader output as a supported generated artifact? | Open. |
 | Should the founding spec mention generated consultation views explicitly? | Open; probably only if reader generation becomes more than optional tooling. |
 | Should the first web wiki agent-extension prototype validate file + CLI before streaming session integration? | Resolved for this checkpoint: the lightweight POM Project Reader uses file-based annotations and CLI handoff. |
-| Which interface should the first persistent adapter use? | Deferred. The current experiment avoids a direct AI-agent session and keeps annotations as files until a stronger integration is justified. |
+| Which interface should the first persistent adapter use? | Deferred. The promoted Project Reader avoids a direct AI-agent session and keeps annotations as files until a stronger integration is justified. |
 
 ## Related Links
 

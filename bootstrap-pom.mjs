@@ -4,7 +4,9 @@
  * POM Bootstrap
  *
  * Downloads POM into pom/ and runs the installer.
- * Works on Node >=20 (plain JavaScript, no TypeScript flag needed).
+ * This bootstrap is plain JavaScript, but the installer runs from a TypeScript file.
+ * The Node runtime used to run this script must support running TypeScript with
+ * `--experimental-strip-types` (or equivalent built-in type stripping support).
  *
  * Usage:
  *   node bootstrap-pom.mjs --preset owned
@@ -77,6 +79,21 @@ function detectLanguage() {
 function run(cmd, args, options = {}) {
   console.log(`> ${cmd} ${args.join(" ")}`);
   execFileSync(cmd, args, { stdio: "inherit", ...options });
+}
+
+function ensureNodeSupportsInstaller(lang) {
+  try {
+    execFileSync(process.execPath, ["--experimental-strip-types", "-e", "process.exit(0)"], { stdio: "ignore" });
+  } catch {
+    if (lang === "it") {
+      console.error("Il Node.js in uso non supporta l'esecuzione di file .ts con --experimental-strip-types.");
+      console.error("Aggiorna Node.js e riprova.");
+      process.exit(1);
+    }
+    console.error("Your Node.js runtime does not support running .ts files with --experimental-strip-types.");
+    console.error("Upgrade Node.js and retry.");
+    process.exit(1);
+  }
 }
 
 function validateValue(name, value, allowed) {
@@ -162,6 +179,7 @@ function main() {
   const hasAdoptionArg = hasArg("profile") || hasArg("ownership") || hasArg("preset");
 
   stopIfRunningFromPomSourceRoot(lang);
+  ensureNodeSupportsInstaller(lang);
 
   validateValue("profile", profile, PROFILE_NAMES);
   validateValue("ownership", ownership, OWNERSHIP_MODES);
@@ -212,6 +230,8 @@ function main() {
   if (preset) installArgs.push("--preset", preset);
   if (profile) installArgs.push("--profile", profile);
   if (ownership) installArgs.push("--ownership", ownership);
+  // Keep installer output consistent with bootstrap language selection.
+  if (lang) installArgs.push("--lang", lang);
 
   run("node", installArgs);
 }
