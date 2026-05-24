@@ -73,6 +73,21 @@ function freePort() {
   });
 }
 
+function listenOnLoopback(server, port = 0) {
+  return new Promise((resolvePort, reject) => {
+    server.once("error", reject);
+    server.listen(port, "127.0.0.1", () => {
+      resolvePort(server.address().port);
+    });
+  });
+}
+
+function closeServer(server) {
+  return new Promise((resolveClose) => {
+    server.close(() => resolveClose());
+  });
+}
+
 function isListenPermissionError(error) {
   if (!error || typeof error !== "object") return false;
   return (
@@ -113,6 +128,30 @@ async function startReader(projectDir, port) {
   }
   child.kill("SIGTERM");
   throw new Error(`Project Reader did not start:\n${output}`);
+}
+
+function waitForExit(child, timeoutMs = 5000) {
+  let output = "";
+  child.stdout.on("data", (chunk) => {
+    output += chunk.toString();
+  });
+  child.stderr.on("data", (chunk) => {
+    output += chunk.toString();
+  });
+  return new Promise((resolveExit, reject) => {
+    const timer = setTimeout(() => {
+      child.kill("SIGTERM");
+      reject(new Error(`Process did not exit:\n${output}`));
+    }, timeoutMs);
+    child.on("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on("exit", (code, signal) => {
+      clearTimeout(timer);
+      resolveExit({ code, signal, output });
+    });
+  });
 }
 
 async function request(port, path, options = {}) {
@@ -230,12 +269,41 @@ async function scenarioAnnotations() {
   }
 }
 
+async function scenarioStartupErrors() {
+  console.log("\nScenario 3: startup errors give actionable local-server guidance");
+  const blocker = createServer((_, response) => {
+    response.end("occupied");
+  });
+  const port = await listenOnLoopback(blocker);
+
+  try {
+    const child = spawn(process.execPath, [
+      "scripts/project-reader/server.mjs",
+      "--port",
+      String(port),
+    ], {
+      cwd: POM_ROOT,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    const result = await waitForExit(child);
+    const suggestedPort = port >= 65535 ? 4173 : port + 1;
+
+    assert("occupied port exits with failure", result.code !== 0, result.output);
+    assert("occupied port message names the blocked address", result.output.includes(`127.0.0.1:${port}`), result.output);
+    assert("occupied port message suggests a replacement port", result.output.includes(`npm run pom:reader -- --port ${suggestedPort}`), result.output);
+    assert("occupied port message keeps the original error", result.output.includes("Original error:"), result.output);
+  } finally {
+    await closeServer(blocker);
+  }
+}
+
 console.log("POM Project Reader Tests");
 console.log("========================");
 
 try {
   await scenarioDocumentsAndSecurity();
   await scenarioAnnotations();
+  await scenarioStartupErrors();
 } catch (error) {
   if (isListenPermissionError(error)) {
     console.log("\nSkipped: environment does not permit binding HTTP servers on loopback for integration tests.");

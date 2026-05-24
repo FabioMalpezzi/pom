@@ -68,7 +68,7 @@ const server = createServer(async (req, res) => {
 });
 
 server.on("error", (error) => {
-  console.error(`POM Project Reader failed to start: ${error.message}`);
+  for (const line of startupErrorLines(error, options)) console.error(line);
   process.exitCode = 1;
 });
 
@@ -128,6 +128,40 @@ Options:
 
 When pom.config.json exists under the project root, the reader uses its configured roots to classify documents.
 `);
+}
+
+function startupErrorLines(error, launchOptions) {
+  const detail = error instanceof Error ? error.message : String(error);
+  const code = error && typeof error === "object" ? error.code : "";
+  const syscall = error && typeof error === "object" ? error.syscall : "";
+  const port = launchOptions.port;
+  const bindTarget = `127.0.0.1:${port}`;
+
+  if (code === "EADDRINUSE") {
+    return [
+      `POM Project Reader could not start because ${bindTarget} is already in use.`,
+      `Stop the process using that port or choose another local port: npm run pom:reader -- --port ${nextReaderPort(port)}`,
+      `Original error: ${detail}`,
+    ];
+  }
+
+  if ((code === "EPERM" || code === "EACCES") && (!syscall || syscall === "listen")) {
+    return [
+      `POM Project Reader could not start because this environment blocked binding ${bindTarget}.`,
+      "This is usually a local OS, container, or coding-agent sandbox permission issue, not a failed POM update.",
+      `Run the command in a normal local terminal or approve the agent's local-server startup request, then open http://${bindTarget}.`,
+      `Original error: ${detail}`,
+    ];
+  }
+
+  return [
+    `POM Project Reader could not start on ${bindTarget}.`,
+    `Original error: ${detail}`,
+  ];
+}
+
+function nextReaderPort(port) {
+  return port >= 65535 ? 4173 : port + 1;
 }
 
 function serveStatic(res, pathname) {

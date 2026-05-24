@@ -96,6 +96,7 @@ function printHelp(): void {
   console.log("   Add --root <project-root> and --annotations-dir <path> when the inspected project or annotation handoff folder must be explicit.");
   console.log("   If pom.config.json exists under the project root, the reader uses it to classify configured docs, decisions, tasks, analysis, source, and tests.");
   console.log("   Rendering rejects files above 1 MB and binary-looking files. The server is local-only on 127.0.0.1.");
+  console.log("   If a sandbox reports EPERM/EACCES on listen, approve local-server startup or run the command in a normal terminal.");
   console.log("");
   console.log("7. Show POM skills index");
   console.log("   cat pom/skills/README.md");
@@ -179,6 +180,7 @@ function printHelpIt(): void {
   console.log("   Aggiungi --root <project-root> e --annotations-dir <path> quando il progetto letto o la cartella di handoff annotazioni devono essere espliciti.");
   console.log("   Se pom.config.json esiste nella root del progetto, il reader lo usa per classificare docs, decisioni, task, analisi, sorgenti e test configurati.");
   console.log("   Il rendering rifiuta file oltre 1 MB e file che sembrano binari. Il server e locale su 127.0.0.1.");
+  console.log("   Se una sandbox segnala EPERM/EACCES su listen, autorizza l'avvio del server locale o usa un terminale normale.");
   console.log("");
   console.log("7. Indice delle skill POM");
   console.log("   cat pom/skills/README.md");

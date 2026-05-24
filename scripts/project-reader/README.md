@@ -28,6 +28,8 @@ Open:
 http://127.0.0.1:4173
 ```
 
+If a coding-agent sandbox reports `EPERM` or `EACCES` while binding `127.0.0.1`, the local environment blocked the server start. Approve the local-server startup request or run the command in a normal terminal; once the URL responds, no POM update or project repair is implied by that first failure.
+
 The Project Reader starts from `wiki/index.md` when the project has a wiki. If no wiki index exists, it exposes a generated `POM Project Reader` entry document instead, then extends navigation to project documentation and source files through an explicit allowlist. It includes POM documents, `docs/`, examples, prompts, skills, templates, selected experiment files, scripts, tests, `bootstrap-pom.mjs`, and `package.json`. It excludes generated reader output and evidence folders such as `wiki/_site/` and `experiments/wiki-agent-orchestration/evidence/`.
 
 When `pom.config.json` exists under the inspected project root, configured roots refine the document set and classification. The reader uses `root.allowedMarkdown`, `documentation.officialRoot`, `documentation.existingRoots`, `decisions.root`, `taskPlans.root`, `analysis.root`, `source.roots`, `tests.root`, `mockups.packagesDir`, and `artifactPolicy.generated`. If the config is missing, the built-in allowlist above is used. If the config exists but is invalid JSON, startup fails with an explicit error. The UI shows whether it is using the config or the built-in roots.

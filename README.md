@@ -123,6 +123,8 @@ Then open:
 http://127.0.0.1:4173
 ```
 
+If a coding-agent sandbox reports `EPERM` or `EACCES` while binding `127.0.0.1`, the local environment blocked the server start. Approve the local-server startup request or run the command in a normal terminal; once the URL responds, no POM update or project repair is implied by that first failure.
+
 The reader starts from `wiki/index.md` when the project has a wiki. If the project has no wiki index, it shows a generated `POM Project Reader` entry page and still exposes project documentation and source files through an explicit allowlist.
 
 When `pom.config.json` exists, the reader uses it to classify configured project roots. For example, `documentation.officialRoot` and `documentation.existingRoots` become project documents, `decisions.root` becomes decisions, `taskPlans.root` becomes task plans, `analysis.root` becomes analysis, `source.roots` become source, and `tests.root` becomes tests. It also respects generated-output exclusions from `artifactPolicy.generated` in navigation and search. If the config is missing, the reader keeps the built-in allowlist. If the config exists but is invalid JSON, the server fails loudly instead of guessing. The UI shows whether it is using `pom.config.json` or the built-in roots.
