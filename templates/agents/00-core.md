@@ -12,6 +12,12 @@ If available, read `pom/WIKI_METHOD.md` as the LLM Wiki reference copy and keep 
 
 POM is documented in English for portability. When applying POM to this project, use the project/user language for conversation and generated artifacts unless the user asks otherwise.
 
+## Global Rules And Skills
+
+Keep this global instruction block for identity, communication, source authority, safety, and always-on operating posture.
+
+If a rule applies only to one kind of work, treat it as a skill procedure instead of a global rule. Use `pom/skills/` to decide what POM can do and when to apply it. A skill then points to the canonical prompt, templates, and verification for that workflow.
+
 ## Installed Layout
 
 In a target project, `pom/` is the POM Source. It may contain `.git`, `README.md`, `AGENTS.MD`, `bootstrap-pom.mjs`, and `package.json`; that is normal for a Git-managed install.

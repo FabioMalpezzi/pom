@@ -7,6 +7,7 @@ import { chooseProfile, customizeAdoption, readOwnershipArg, readPresetArg, read
 import { pullPomIfGitRepo } from "./lib/install-git.ts";
 import {
   isOwnershipMode,
+  isProfileName,
   presets,
   profiles,
   type AdoptionConfig,
@@ -248,16 +249,26 @@ function assembleAgentsTemplate(adoption: AdoptionConfig): string {
     return readText(resolvePomSectionTemplate()).trim();
   }
 
+  const hasRestartMemory =
+    adoption.profile === "full" || (adoption.profile === "custom" && adoption.planning === "structured");
+  const hasGovernedDocuments =
+    adoption.wiki === "enabled" ||
+    adoption.decisions === "enabled" ||
+    adoption.planning === "structured" ||
+    adoption.tasks === "structured" ||
+    adoption.docs === "enabled" ||
+    adoption.mockups === "enabled";
+
   const modules: Array<{ file: string; condition: boolean }> = [
     { file: "00-core.md", condition: true },
     { file: "10-wiki.md", condition: adoption.wiki === "enabled" },
     { file: "20-decisions.md", condition: adoption.decisions === "enabled" },
     { file: "30-planning.md", condition: adoption.planning === "structured" || adoption.tasks === "structured" },
-    { file: "40-handoff.md", condition: true },
-    { file: "50-templates.md", condition: true },
+    { file: "40-handoff.md", condition: hasRestartMemory },
+    { file: "50-templates.md", condition: hasGovernedDocuments },
     { file: "60-skills.md", condition: true },
-    { file: "70-experiments.md", condition: adoption.analysis !== "disabled" },
-    { file: "80-docs-source.md", condition: adoption.docs !== "disabled" },
+    { file: "70-experiments.md", condition: adoption.analysis === "enabled" },
+    { file: "80-docs-source.md", condition: adoption.docs === "enabled" },
     { file: "90-mockups.md", condition: adoption.mockups === "enabled" },
   ];
 
@@ -521,10 +532,37 @@ function readProjectConfigIfPresent(): ProjectConfig {
   if (!pathExists("pom.config.json")) return {};
   try {
     const parsed = JSON.parse(readText("pom.config.json"));
-    return isRecord(parsed) ? parsed : {};
-  } catch {
-    return {};
+    if (!isRecord(parsed)) throw new Error("pom.config.json must contain a JSON object.");
+    return parsed;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Cannot read pom.config.json: ${message}`);
   }
+}
+
+function readAdoptionFromConfig(config: ProjectConfig): AdoptionConfig | undefined {
+  if (!isRecord(config.adoption)) return undefined;
+
+  const raw = config.adoption;
+  const defaultProfile = profiles.minimal.adoption.profile;
+  const profile = typeof raw.profile === "string" && isProfileName(raw.profile) ? raw.profile : defaultProfile;
+  const base = profiles[profile].adoption;
+
+  return {
+    profile,
+    wiki: enumValue(raw.wiki, ["enabled", "disabled"], base.wiki),
+    decisions: enumValue(raw.decisions, ["enabled", "disabled"], base.decisions),
+    analysis: enumValue(raw.analysis, ["enabled", "optional", "disabled"], base.analysis),
+    docs: enumValue(raw.docs, ["enabled", "optional", "disabled"], base.docs),
+    mockups: enumValue(raw.mockups, ["enabled", "disabled"], base.mockups),
+    planning: enumValue(raw.planning, ["light", "structured"], base.planning),
+    tasks: enumValue(raw.tasks, ["light", "structured"], base.tasks),
+    tests: enumValue(raw.tests, ["disabled", "existing", "pom"], base.tests),
+  };
+}
+
+function enumValue<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+  return typeof value === "string" && allowed.includes(value as T) ? (value as T) : fallback;
 }
 
 function readRequiredProjectConfig(path: string): ProjectConfig {
@@ -749,6 +787,8 @@ async function main(): Promise<void> {
   const ownership = resolveOwnershipMode(preset?.ownership ?? ownershipArg ?? selected.ownership);
   const adoption = applyOwnershipDefaults(await customizeAdoption(profiles[profileName].adoption), ownership);
   let projectConfig = readProjectConfigIfPresent();
+  const instructionAdoption =
+    adoption.profile === "refresh" ? readAdoptionFromConfig(projectConfig) ?? adoption : adoption;
 
   ensureGitRepository();
 
@@ -756,7 +796,7 @@ async function main(): Promise<void> {
     pullPomIfGitRepo(ROOT);
   }
 
-  upsertAgentInstructionSections(adoption);
+  upsertAgentInstructionSections(instructionAdoption);
   installCodingAgentFiles(buildPomInitCommand(presetName, profileName, ownership));
   installPomUpdateScript();
   upsertPackageScripts();

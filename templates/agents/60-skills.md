@@ -1,17 +1,26 @@
 ## POM Skills
 
-If `pom/skills/` exists, use it as the operating index for POM workflows. Each skill points to a canonical prompt in `pom/prompts/` and relevant templates.
+If `pom/skills/` exists, use it as the operating index for POM workflows. Global instructions say who POM is and how to behave; skills say what POM can do and when to apply it.
 
 Rules:
 
-- read the skill card first when the request matches a skill;
-- explicitly state which POM skill is being used and why, so the workflow is visible in the conversation;
-- read `pom.config.json` before applying conventions for docs, source, tests, wiki, analysis, or handoff;
-- then read the linked canonical prompt;
+- read the skill card first when the request matches a skill, then read the linked canonical prompt;
+- state which POM skill is being used and why;
+- read `pom.config.json` before creating, moving, or judging governed artifacts;
 - do not treat a skill as a replacement for prompts or templates;
 - if no suitable skill exists, use POM prompts directly and propose a new skill only if the workflow becomes recurring.
 
-Always-useful entries include `clarify`, `status`, `defer`, `diagnose`, `zero-tech-debt`, `challenge`, `prune`, `sync`, and `validate`.
-Use profile-specific entries such as `wiki`, `guard`, `plan`, or `spike` only when the corresponding module is enabled.
+Common routing:
 
-Use `sync` before manually updating this project's installed `pom/` folder or aligning it to a source POM commit.
+| Situation | Skill |
+|---|---|
+| Ambiguous POM request or artifact | `clarify` |
+| Wiki work | `wiki` |
+| Project restart or handoff memory | `pulse` or `handoff` |
+| Spec, task, or ADR verification | `check` |
+| Document type or status ambiguity | `status` |
+| Park work without implementing | `defer` |
+| Temporary experiment or spike | `spike` |
+| Installed POM refresh or alignment | `sync` |
+| Post-action governance audit | `validate` |
+| Method bloat or overlapping rules | `prune` |

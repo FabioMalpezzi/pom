@@ -48,7 +48,7 @@ tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}
 
 Map existing project conventions first. Do not migrate existing analysis, task, or test folders just to match the defaults.
 
-The config includes `skillUsage` and `promptUsage` sections that are updated automatically by the agent when skills or prompts are read. Do not reset these counters unless explicitly requested.
+The config may include `skillUsage` and `promptUsage` sections when the project intentionally tracks workflow usage. Do not reset these counters unless explicitly requested.
 
 ## Template Localization
 

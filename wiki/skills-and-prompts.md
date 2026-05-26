@@ -10,6 +10,8 @@ The skills index describes skill cards as recognizable aliases derived from prom
 
 Prompts remain intentionally generic and reusable. They define what to read, what to propose, when to ask for approval, what to verify, and what output is expected.
 
+Agent instruction files should stay global: identity, communication posture, source authority, safety, and always-on operating rules. Workflow-specific rules belong in skills and their canonical prompts. If a rule applies only to wiki work, handoff, experiments, template creation, status classification, planning, or verification, the agent should route to the matching skill instead of carrying the full procedure in the global instruction block.
+
 ## Details
 
 Important skill families:
@@ -27,6 +29,8 @@ Important skill families:
 
 The prompt set covers bootstrap, adoption, state, governance, planning, review, handoff, config, experiments, wiki operations, extension, classification, deferral, sync, validation, reconciliation, clarification, pruning, diagnosis, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.
 
+The installed agent section now keeps the minimal profile to global posture plus a skill router. Profile modules add active workflow entry points, while detailed procedures stay in skills and prompts.
+
 Reader generation is currently a script command, not a separate skill. Use `npm run pom:wiki:render` to regenerate the static HTML view from the root wiki.
 
 ## Sources
@@ -42,6 +46,7 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 | `skills/challenge.md` | Skill card for adversarial thesis/antithesis review. |
 | `prompts/24-challenge-antithesis.md` | Read-only challenge procedure that looks for material antitheses before acceptance or completion. |
 | `specs/SPEC-0002-skill-yaml-frontmatter.md` | YAML frontmatter requirements for skill discovery. |
+| `specs/SPEC-0001-modular-agents-template.md` | Global-vs-skill boundary and profile-aware agent instruction assembly. |
 
 ## Linked Decisions
 
@@ -49,6 +54,7 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 |---|---|
 | SPEC-0002 | Skills have YAML frontmatter while keeping human-readable `When To Use` sections. |
 | SPEC-0000 D2 | Extensions choose the smallest fitting level. |
+| SPEC-0001 | Agent instructions stay small by keeping workflow-specific rules in skills or active profile modules. |
 
 ## Open Questions
 

@@ -111,3 +111,9 @@ Sources used: `scripts/project-reader/README.md`, `experiments/wiki-agent-orches
 Promoted the self-improvement loop into a canonical prompt (`prompts/25-self-improvement-loop.md`) with a short alias skill (`skills/improve.md`) so agents can discover and apply it via the normal prompt/skill entry points. The loop remains under evaluation until it is proven on another POM-managed project (or a representative fixture), and it does not authorize automatic changes without approval.
 
 Sources used: `prompts/25-self-improvement-loop.md`, `skills/improve.md`, `prompts/README.md`, `skills/README.md`, `experiments/self-improvement-loop/EXPERIMENT.md`, and `wiki/experiments-and-extension.md`.
+
+## [2026-05-26] update | clarify global instructions versus skills
+
+Recorded the agent-instruction simplification rule: global target-project instructions describe identity, communication posture, Source Authority, Artifact Policy, safety, commands, adoption profile semantics, and skill routing; workflow-specific rules live in skills, prompts, templates, or active profile modules.
+
+Sources used: `specs/SPEC-0001-modular-agents-template.md`, `templates/agents/`, `templates/AGENTS_POM_SECTION_TEMPLATE.md`, `scripts/install-pom.ts`, `wiki/skills-and-prompts.md`, and `wiki/templates-and-governance.md`.

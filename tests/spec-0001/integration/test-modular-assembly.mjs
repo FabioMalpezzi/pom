@@ -3,9 +3,9 @@
 /**
  * SPEC-0001 Completion Verification Tests
  *
- * Scenario 1: minimal profile → ≤200 lines
- * Scenario 2: full profile → ≤320 lines
- * Scenario 3: full → refresh to minimal → section shrinks to ≤200 lines
+ * Scenario 1: minimal profile → global core + skill router only, ≤140 lines
+ * Scenario 2: full profile → active workflow modules, ≤260 lines
+ * Scenario 3: refresh follows current config, then full → minimal shrinks to ≤140 lines
  * Scenario 4: pom:update stops on local pom/ changes
  * Scenario 5: pom:update supports clean vendored pom/ with unrelated parent changes
  * Scenario 6: docs lint skips specialized governance roots under docs/
@@ -20,6 +20,8 @@
  * Scenario 15: installer initializes Git and installs the hook in a new target root
  * Scenario 16: installer does not create nested Git or parent hook from a subdirectory target
  * Scenario 17: installer respects configured ADR root instead of forcing decisions/
+ * Scenario 18: refresh fails before writing agent files when pom.config.json is invalid
+ * Scenario 19: refresh expands partial full adoption config from full defaults
  */
 
 import { execFileSync } from "node:child_process";
@@ -87,7 +89,7 @@ function assert(name, condition, detail) {
 }
 
 function scenario1() {
-  console.log("\nScenario 1: minimal profile → ≤200 lines");
+  console.log("\nScenario 1: minimal profile → global core + skill router only, ≤140 lines");
   const dir = createTempProject();
   try {
     runInstaller(dir, "minimal");
@@ -95,11 +97,17 @@ function scenario1() {
     const lines = countLines(section);
     console.log(`  Assembled lines: ${lines}`);
     assert("POM section exists", section !== null, "No POM section found in AGENTS.md");
-    assert("Lines ≤200", lines <= 200, `Got ${lines} lines, expected ≤200`);
+    assert("Lines ≤140", lines <= 140, `Got ${lines} lines, expected ≤140`);
     assert("Contains core principle", section.includes("authoritative source") || section.includes("Operating Memory"), "Core section missing");
     assert("Explains installed POM layout", section.includes("day-zero project") && section.includes("Git-managed install"), "Installed layout guidance missing");
+    assert("Explains global rules vs skills", section.includes("Global Rules And Skills") && section.includes("If a rule applies only to one kind of work"), "Global/skills boundary missing");
+    assert("Contains skill routing", section.includes("Common routing") && section.includes("Temporary experiment or spike"), "Skill router missing");
     assert("Does NOT contain wiki rules", !section.includes("## Persistent Wiki"), "Wiki section should not be included in minimal");
     assert("Does NOT contain ADR rules", !section.includes("## ADR And Specs"), "Decisions section should not be included in minimal");
+    assert("Does NOT contain handoff workflow details", !section.includes("## Restart Context"), "Handoff workflow should not be included in minimal");
+    assert("Does NOT contain template status table", !section.includes("## Suggested Document Statuses"), "Template/status workflow should not be included in minimal");
+    assert("Does NOT contain experiment rules", !section.includes("## Temporary Experiments"), "Experiment workflow should not be included in minimal");
+    assert("Does NOT contain docs/source workflow", !section.includes("## Docs And Source Conventions"), "Docs/source workflow should not be included in minimal");
     assert("Does NOT contain mockup rules", !section.includes("## Mockup"), "Mockups section should not be included in minimal");
 
     const packageJson = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
@@ -113,7 +121,7 @@ function scenario1() {
 }
 
 function scenario2() {
-  console.log("\nScenario 2: full profile → ≤320 lines");
+  console.log("\nScenario 2: full profile → active workflow modules, ≤260 lines");
   const dir = createTempProject();
   try {
     runInstaller(dir, "full");
@@ -121,7 +129,7 @@ function scenario2() {
     const lines = countLines(section);
     console.log(`  Assembled lines: ${lines}`);
     assert("POM section exists", section !== null, "No POM section found in AGENTS.md");
-    assert("Lines ≤320", lines <= 320, `Got ${lines} lines, expected ≤320`);
+    assert("Lines ≤260", lines <= 260, `Got ${lines} lines, expected ≤260`);
     assert("Contains wiki rules", section.includes("Persistent Wiki") || section.includes("persistent wiki"), "Wiki section missing in full profile");
     assert("Contains ADR rules", section.includes("ADR") && section.includes("Specs"), "Decisions section missing in full profile");
     assert("Contains planning rules", section.includes("Completion Verification") || section.includes("Planning"), "Planning section missing in full profile");
@@ -132,7 +140,7 @@ function scenario2() {
 }
 
 function scenario3() {
-  console.log("\nScenario 3: full → refresh to minimal → section shrinks");
+  console.log("\nScenario 3: refresh follows current config, then full → minimal shrinks");
   const dir = createTempProject();
   try {
     // Install with full
@@ -140,6 +148,11 @@ function scenario3() {
     const fullSection = extractPomSection(dir);
     const fullLines = countLines(fullSection);
     console.log(`  Full profile lines: ${fullLines}`);
+
+    // Refresh should honor the current full config, not the refresh profile defaults.
+    runInstaller(dir, "refresh");
+    const refreshedFullSection = extractPomSection(dir);
+    assert("Refresh preserves full config modules", refreshedFullSection.includes("## Persistent Wiki") && refreshedFullSection.includes("## Completion Verification Rules"), "Refresh should assemble from current pom.config.json");
 
     // Change config to minimal adoption
     const configPath = join(dir, "pom.config.json");
@@ -164,8 +177,9 @@ function scenario3() {
     console.log(`  After refresh to minimal: ${minimalLines} lines`);
 
     assert("Section shrank", minimalLines < fullLines, `Minimal (${minimalLines}) should be less than full (${fullLines})`);
-    assert("Minimal ≤200 after refresh", minimalLines <= 200, `Got ${minimalLines} lines, expected ≤200`);
+    assert("Minimal ≤140 after refresh", minimalLines <= 140, `Got ${minimalLines} lines, expected ≤140`);
     assert("Wiki rules removed", !minimalSection.includes("## Persistent Wiki"), "Wiki section should be gone after refresh to minimal");
+    assert("Handoff workflow removed", !minimalSection.includes("## Restart Context"), "Handoff workflow should be gone after refresh to minimal");
   } finally {
     cleanup(dir);
   }
@@ -666,6 +680,54 @@ function scenario17() {
   }
 }
 
+function scenario18() {
+  console.log("\nScenario 18: refresh fails before writing agent files when pom.config.json is invalid");
+  const dir = createTempProject();
+  try {
+    writeFileSync(join(dir, "pom.config.json"), "{ invalid json\n");
+
+    let result;
+    try {
+      runInstaller(dir, "refresh");
+      result = { status: 0, stderr: "", stdout: "" };
+    } catch (error) {
+      result = {
+        status: error.status ?? 1,
+        stderr: error.stderr?.toString() ?? "",
+        stdout: error.stdout?.toString() ?? "",
+      };
+    }
+
+    const output = `${result.stdout}\n${result.stderr}`;
+    assert("refresh exits non-zero", result.status !== 0, "Expected invalid config to stop refresh");
+    assert("refresh reports pom.config.json", output.includes("pom.config.json"), output);
+    assert("AGENTS.md not created", !existsSync(join(dir, "AGENTS.md")), "AGENTS.md should not be written after invalid config");
+  } finally {
+    cleanup(dir);
+  }
+}
+
+function scenario19() {
+  console.log("\nScenario 19: refresh expands partial full adoption config from full defaults");
+  const dir = createTempProject();
+  try {
+    writeFileSync(
+      join(dir, "pom.config.json"),
+      JSON.stringify({ adoption: { profile: "full" } }, null, 2) + "\n",
+    );
+
+    runInstaller(dir, "refresh");
+    const section = extractPomSection(dir);
+
+    assert("POM section exists", section !== null, "No POM section found in AGENTS.md");
+    assert("Partial full config includes wiki", section.includes("## Persistent Wiki"), "Wiki module missing");
+    assert("Partial full config includes planning", section.includes("## Completion Verification Rules"), "Planning module missing");
+    assert("Partial full config includes handoff", section.includes("## Restart Context"), "Handoff module missing");
+  } finally {
+    cleanup(dir);
+  }
+}
+
 console.log("SPEC-0001 Completion Verification Tests");
 console.log("========================================");
 
@@ -679,6 +741,8 @@ scenario14();
 scenario15();
 scenario16();
 scenario17();
+scenario18();
+scenario19();
 scenario1();
 scenario2();
 scenario3();

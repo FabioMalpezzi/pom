@@ -778,7 +778,7 @@ POM skills are short operational aliases for the main prompts. They do not repla
 
 ### Skill Usage Tracking
 
-When the agent reads a skill card, it updates `pom.config.json` under `skillUsage` with a counter and timestamp. This provides lightweight observability on which skills are actually used and how often.
+`pom.config.json` may include `skillUsage` and `promptUsage` for projects that want lightweight observability on which POM workflows are actually used.
 
 ```json
 {
@@ -791,7 +791,7 @@ When the agent reads a skill card, it updates `pom.config.json` under `skillUsag
 
 The schema is extensible: additional fields can be added without breaking existing entries.
 
-The same tracking applies to canonical prompts (`pom/prompts/*.md`) under `promptUsage`. This lets you see both which skills are invoked (entry points) and which prompts are actually executed (procedures).
+Treat this as optional telemetry, not a global operating rule. If a project wants it, the agent can update the matching counter and `lastUsed` timestamp when it reads a skill card or canonical prompt. If the project does not use tracking, do not add noise to `pom.config.json` just because a skill was consulted.
 
 ## Extending POM
 

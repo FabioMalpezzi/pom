@@ -10,6 +10,8 @@ The README states the rule: template equals rule, lint equals enforcement. The l
 
 The current repository provides templates for Decision Records, Open Discussion, agent instruction sections, Current Plan, docs, experiments, mock manifests, Project State, reconciliation, specs, task plans, wiki index, wiki log, and wiki pages.
 
+The target-project agent instruction template is intentionally compact. Its global block covers identity, language, Source Authority, Artifact Policy, Git posture, commands, adoption profile semantics, and skill routing. Task-specific procedures such as handoff, experiments, planning verification, docs/source layout, and status classification live in skills, prompts, templates, or profile modules instead of the always-on global section.
+
 ## Details
 
 Completion verification is mandatory for closing specs, tasks, or decisions. It prevents a document from becoming a promise that the project did not actually keep:
@@ -36,6 +38,7 @@ Artifact Policy adds the edit-permission layer that Source Authority does not an
 |---|---|
 | `README.md` | Template/lint model, completion verification, documentation discipline, and POM folders. |
 | `templates/` | Current reusable document shapes. |
+| `templates/agents/` | Profile modules for target-project agent instruction sections. |
 | `templates/POM_CONFIG_TEMPLATE.json` | Portable lint and adoption configuration. |
 | `scripts/lib/lint-config.ts` | Default lint configuration used when project config is missing. |
 | `templates/OPEN_DISCUSSION_TEMPLATE.md` | Discussion template for non-authoritative desiderata and alternatives before promotion. |
@@ -49,6 +52,7 @@ Artifact Policy adds the edit-permission layer that Source Authority does not an
 | SPEC-0000 D1 | Templates are normative document shapes and lint enforces stable rules. |
 | SPEC-0000 R5 | Completion verification gate is mandatory before closure. |
 | SPEC-0000 R10 | Cognitive cost must stay low. |
+| SPEC-0001 | Agent instruction sections are assembled from a compact core, a skill router, and active profile modules. |
 
 ## Open Questions
 

@@ -1,24 +1,12 @@
 ## Restart Context (PROJECT_STATE.md)
 
-`PROJECT_STATE.md` is the minimum restart memory: it answers "from
-where do I pick up?" for the next person — or for the same person
-tomorrow. Update it when the restart context has actually changed,
-not just because a session is ending.
+`PROJECT_STATE.md` is the minimum restart memory: it answers "from where do I pick up?" for the next person or session.
 
-`PROJECT_STATE.md` has two sections with different update frequencies:
+Use `pom/skills/pulse.md` to create or refresh it. Use `pom/skills/handoff.md` when the user asks to close a session or when the restart context materially changed.
 
-**Static Context** — update only when the project's direction, stack, or permanent constraints change:
-- project purpose, key constraints, structural decisions, files to always read, what not to do without a new decision.
+Do not update it just because a session is ending. Update it when the next person resuming would otherwise see a wrong starting picture: a substantial ADR/spec/roadmap change, a closed important task, a new risk or open decision, or an explicit handoff request.
 
-**Dynamic Context** — update at every significant session:
-- current state, current objective, priorities, next actions, open decisions, risks.
-
-Do not update Static Context for operational changes. Do not update Dynamic Context for permanent structural changes — create or update an ADR instead.
-
-Compaction rules:
-- if the file exceeds the maxLines limit, compact Dynamic Context: remove completed actions, archive closed decisions to the configured decisions root or `wiki/log.md`, delete resolved risks;
-- if a section of Dynamic Context is becoming a log, move it to `wiki/log.md` or the configured decisions root and remove it from `PROJECT_STATE.md`;
-- never compact Static Context.
+Keep details such as Static Context, Dynamic Context, max line count, and compaction rules in the `pulse` skill and the configured project-state template.
 
 ## POM Lint Workflow
 
@@ -40,13 +28,4 @@ If the command is missing, state that automatic POM checks are not configured an
 
 If `pom:init` installed the POM pre-commit hook, commits run `npm run pom:lint`. The hook is agent-neutral: it runs local POM checks, not a Claude Code or Codex command. For a read-only post-action audit, Claude Code can use the optional `pom-post-action-validator` agent when installed; Codex can use `pom/skills/validate.md`.
 
-If `PROJECT_STATE.md` exists and governed project-memory files are staged, the hook prints a non-blocking reminder. The reminder is informational, not an obligation: most commits do not need a `PROJECT_STATE.md` update.
-
-Update `PROJECT_STATE.md` only when one of these applies:
-
-- an ADR, spec, roadmap, priority, or current plan changes substantially;
-- an important task or phase is closed;
-- a relevant risk, blocker, or open decision is introduced;
-- the user explicitly asks for a handoff or restart-status update.
-
-Typos, regenerated indexes, link-only fixes, or changes with no restart impact do not need it.
+If `PROJECT_STATE.md` exists and governed project-memory files are staged, the hook prints a non-blocking reminder. The reminder is informational, not an obligation.

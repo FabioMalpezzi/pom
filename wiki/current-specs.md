@@ -12,8 +12,8 @@ The specs are living documents, but they are not a diary. Minor changes are trac
 
 | Spec | Status | Current Meaning |
 |---|---|---|
-| `SPEC-0000-pom-founding-spec.md` | Draft | Defines POM's purpose, pillars, requirements, structural decisions, and out-of-scope boundaries. |
-| `SPEC-0001-modular-agents-template.md` | Complete | Splits the agent instruction template into profile-aware modules to reduce cognitive load. |
+| `SPEC-0000-pom-founding-spec.md` | Accepted | Defines POM's purpose, pillars, requirements, structural decisions, and out-of-scope boundaries. |
+| `SPEC-0001-modular-agents-template.md` | Complete | Keeps target-project agent instructions small by separating global posture from workflow-specific skills and active profile modules. |
 | `SPEC-0002-skill-yaml-frontmatter.md` | Complete | Adds YAML frontmatter to skills for automatic discovery while preserving readable skill sections. |
 | `SPEC-0003-structured-reconciliation.md` | Complete | Adds divergence classification and resolution flow for source-memory mismatches. |
 | `SPEC-0004-external-project-overlay.md` | Draft | Defines overlay mode for repositories the operator does not own. |
