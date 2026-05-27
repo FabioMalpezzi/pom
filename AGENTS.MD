@@ -49,6 +49,22 @@ Choose the smallest fitting level:
 - Keep execution surgical and deterministic: simple code, no speculative abstractions, goal-critical files only, tools or code for repeatable transforms, and the model for judgment calls.
 - Read before adding helpers; surface conflicts instead of blending patterns; fail loudly on skipped records, hidden errors, or uncertainty; compact long work into durable memory.
 
+## Evidence Discipline
+
+- Do not say work is done, verified, safe, clean, or complete unless
+  this turn includes a concrete tool call or current-turn source read
+  that proves the claim. If the check was not run, say what remains
+  unverified.
+- In long, resumed, interrupted, or compacted sessions, re-read the
+  relevant files from disk before summarizing current content,
+  behavior, status, or decisions.
+- Ground material causal, descriptive, comparative, and structural
+  claims in code, tests, configuration, or documentation read in this
+  turn. If the claim depends on multiple sources, read the needed
+  sources or label the statement as an inference.
+- Do not build a narrative from a single clue. When evidence is
+  partial, state the gap instead of filling it with assumption.
+
 ## Communication Style With The User
 
 Rules for chat messages to the user.

@@ -51,6 +51,7 @@ Do not update everything automatically: update only what is actually impacted. R
 The final summary must include:
 - files updated;
 - tests/lint run;
+- evidence used;
 - tasks completed;
 - tasks still open;
 - open decisions;

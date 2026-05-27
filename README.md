@@ -543,11 +543,12 @@ POM separates source authority from edit permission. Before changing a governed 
 
 ## Operating Discipline
 
-Five operating rules apply to every project that uses POM, independently of the adoption profile:
+Six operating rules apply to every project that uses POM, independently of the adoption profile:
 
 - Communication style with the user
 - Documentation discipline
 - Work from sources, not memory
+- Evidence discipline
 - File size and static analysis guardrails
 - Complexity standards
 
