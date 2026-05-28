@@ -32,7 +32,7 @@ There is no single source of truth for everything. Each domain has its own autho
 | Question | Authoritative Source |
 |---|---|
 | What does the system currently do? | code and tests, when present |
-| What do we currently know about the project? | `wiki/` |
+| What do we currently know about the project? | wiki Markdown under `wiki/`, when enabled |
 | Why did we decide this? | configured decisions root (`decisions.root`, default `decisions/`) |
 | What analysis supports or challenges a choice? | `analysis/` |
 | What is still desiderata, hypotheses, or unresolved discussion? | Open Discussion or `analysis/`, not implementation authority |

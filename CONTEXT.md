@@ -18,6 +18,7 @@ _Avoid_: asset, file, note
 
 **Persistent Wiki**:
 A maintained synthesis of reusable project knowledge that compounds across sources and sessions.
+Its durable source is Markdown in the project repository, not generated HTML, indexes, or reader UI state.
 _Avoid_: RAG index, scratch notes, document dump
 
 **Decision Record**:

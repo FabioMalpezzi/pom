@@ -27,7 +27,7 @@ There is no single source of truth for everything. Each question has the source 
 | Question | Authoritative Source |
 |---|---|
 | What does the system currently do? | code and tests, when present |
-| What do we currently know about the project? | `wiki/`, when enabled |
+| What do we currently know about the project? | wiki Markdown under `wiki/`, when enabled |
 | Why did we decide this? | configured decisions root |
 | What analysis supports or challenges a choice? | `analysis/`, when used |
 | What is unresolved discussion? | Open Discussion or `analysis/`, not implementation authority |
