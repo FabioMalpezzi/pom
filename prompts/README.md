@@ -33,6 +33,7 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `23-zero-tech-debt.md` | reshape a scoped change around the intended end state before closure |
 | `24-challenge-antithesis.md` | run adversarial thesis/antithesis review before accepting or completing non-code work |
 | `25-self-improvement-loop.md` | improve a POM-managed project's method/governance with observation -> diagnosis -> proposal -> verification -> promotion/discard |
+| `26-process-reader-notes.md` | process human Project Reader annotations through source-backed edits, outcome recording, and verification |
 
 ## Work Planning Hierarchy
 

@@ -35,6 +35,8 @@ function printSuggestedWorkflows(findings: Finding[]): void {
       suggestions.add("ADR findings: update ADR metadata using pom/templates/ADR_TEMPLATE.md, then rerun pom:lint.");
     } else if (finding.rule.startsWith("mock-")) {
       suggestions.add("Mockup findings: use pom/templates/MOCK_MANIFEST_TEMPLATE.md and reconcile changes through analysis/.");
+    } else if (finding.rule.startsWith("reader-note")) {
+      suggestions.add("Project Reader note findings: read skills/reader-notes.md, or pom/skills/reader-notes.md in a target project, and process one human note at a time.");
     } else if (finding.rule.startsWith("tests-")) {
       suggestions.add("Test findings: update pom.config.json test settings or align tests with the approved project convention.");
     } else if (finding.rule.startsWith("project-state-")) {

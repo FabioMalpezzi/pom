@@ -490,6 +490,40 @@ Documento di prova.
   }
 }
 
+function scenarioReaderNotesWarnAndSuggestSkill() {
+  console.log("\nScenario 6: open Project Reader notes warn and suggest the reader-notes skill");
+  const dir = createTempProject();
+
+  try {
+    mkdirSync(join(dir, ".pom-reader", "annotations"), { recursive: true });
+    writeFileSync(
+      join(dir, ".pom-reader", "annotations", "annotation-20260528-open-note.json"),
+      JSON.stringify(
+        {
+          schemaVersion: "0.1",
+          annotationId: "annotation-20260528-open-note",
+          status: "new",
+          target: {
+            path: "README.md",
+          },
+          annotation: "Clarify this paragraph.",
+          agentReport: null,
+        },
+        null,
+        2,
+      ) + "\n",
+    );
+
+    const result = runLint(dir);
+
+    assert("lint exits with warnings only", result.status === 0, `expected exit 0, got ${result.status}\n${result.stdout}\n${result.stderr}`);
+    assert("open reader note warning emitted", result.stdout.includes("reader-notes-open"), result.stdout);
+    assert("reader-notes skill is suggested", result.stdout.includes("pom/skills/reader-notes.md"), result.stdout);
+  } finally {
+    cleanup(dir);
+  }
+}
+
 console.log("Completion Verification Lint Tests");
 console.log("==================================");
 
@@ -498,6 +532,7 @@ scenarioValidVerificationDoesNotWarn();
 scenarioExceptionReasonWarns();
 scenarioMetadataIgnoresLaterTables();
 scenarioLocalizedTemplatesAndIndexesWork();
+scenarioReaderNotesWarnAndSuggestSkill();
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 

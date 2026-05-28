@@ -5,6 +5,7 @@ import { checkDecisions } from "./lib/lint-decisions.ts";
 import { checkDocs, checkDocumentationRoots, checkSourceRoots } from "./lib/lint-docs-source.ts";
 import { checkGitWorkflow, checkProjectStateShape } from "./lib/lint-handoff.ts";
 import { checkMockReconciliation } from "./lib/lint-mockups.ts";
+import { checkReaderNotes } from "./lib/lint-reader-notes.ts";
 import { printResults } from "./lib/lint-reporter.ts";
 import {
   checkAnalysisLayout,
@@ -30,6 +31,7 @@ checkTaskPlans(context);
 checkIndexNamingConvention(context);
 checkDocs(context);
 checkMockReconciliation(context);
+checkReaderNotes(context);
 checkWikiDocuments(context);
 checkWikiIndexCoverage(context);
 checkTestsLayout(context);

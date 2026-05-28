@@ -64,6 +64,12 @@ Updated the current specs synthesis after the first web wiki baseline checkpoint
 
 Sources used: `specs/SPEC-0005-web-wiki-agent-extension.md`, `tasks/TASK-0003-codex-web-wiki-baseline.md`, and `experiments/wiki-agent-orchestration/EXPERIMENT.md`.
 
+## [2026-05-28] update | add Project Reader note workflow
+
+Updated the skills, prompts, and reader synthesis after adding the `reader-notes` skill, its canonical prompt, and a lint warning that routes open Project Reader annotations to the skill.
+
+Sources used: `skills/reader-notes.md`, `prompts/26-process-reader-notes.md`, `scripts/project-reader/wiki-tools.mjs`, `scripts/project-reader/public/annotations.js`, `scripts/lib/lint-reader-notes.ts`, and `scripts/lib/lint-reporter.ts`.
+
 ## [2026-05-19] update | record persistent coding agent session decision
 
 Updated the current specs synthesis after accepting the decision that the primary web wiki workflow must use a persistent connection to an active AI coding agent session. Codex is the first implementation target; file/event artifacts remain audit, fallback, fixture, and test support.

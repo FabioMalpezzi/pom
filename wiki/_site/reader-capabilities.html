@@ -102,6 +102,7 @@
 <p>Treat the annotation folder as runtime evidence and keep it out of commits unless the project intentionally wants to archive an annotation. If a project chooses a custom annotation directory, add it to the project's ignore rules.</p>
 <p>The annotation panel separates new notes, in-progress work, and processed history. Opening an annotation shows the selected document text, the agent-facing note, the agent outcome when present, and the JSON work file on demand. The UI also tries to reopen the target document and highlight the selected text; processed annotations still remain readable even if the target document no longer exists.</p>
 <p>The UI does not send requests directly to an AI agent. The annotation file is the handoff artifact: an agent reads it, claims it, works from current sources, and records the outcome before durable document changes are promoted through normal edits.</p>
+<p><code>pom:lint</code> warns when the default <code>.pom-reader/annotations/</code> directory contains working annotations. The warning points to <code>skills/reader-notes.md</code>; lint does not process notes itself because the workflow requires source reading and judgment.</p>
 <p>Useful commands:</p>
 <figure class="code-figure code-highlight">
   <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>

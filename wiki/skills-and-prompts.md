@@ -19,6 +19,7 @@ Important skill families:
 | Skill | Use |
 |---|---|
 | `wiki` | Build, query, check, or maintain the Persistent Wiki. |
+| `reader-notes` | Process human Project Reader notes through source-backed edits, outcome recording, and verification. |
 | `extend` | Extend POM at the smallest fitting level. |
 | `spike` | Run isolated temporary experiments. |
 | `reconcile` | Classify and resolve a divergence between source and memory. |
@@ -27,7 +28,7 @@ Important skill families:
 | `config` | Create or update project-specific POM configuration. |
 | `sync` | Refresh an existing POM installation or align source and target POM. |
 
-The prompt set covers bootstrap, adoption, state, governance, planning, review, handoff, config, experiments, wiki operations, extension, classification, deferral, sync, validation, reconciliation, clarification, pruning, diagnosis, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.
+The prompt set covers bootstrap, adoption, state, governance, planning, review, handoff, Project Reader note processing, config, experiments, wiki operations, extension, classification, deferral, sync, validation, reconciliation, clarification, pruning, diagnosis, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.
 
 The installed agent section now keeps the minimal profile to global posture plus a skill router. Profile modules add active workflow entry points, while detailed procedures stay in skills and prompts.
 
@@ -43,6 +44,8 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 | `prompts/09-run-temporary-experiment.md` | Full temporary experiment procedure. |
 | `skills/extend.md` | Extension-level selection rules. |
 | `prompts/12-extend-pom.md` | Controlled POM extension procedure. |
+| `skills/reader-notes.md` | Skill card for processing human Project Reader notes. |
+| `prompts/26-process-reader-notes.md` | Canonical procedure for claiming, evaluating, applying, recording, and verifying Project Reader notes. |
 | `skills/challenge.md` | Skill card for adversarial thesis/antithesis review. |
 | `prompts/24-challenge-antithesis.md` | Read-only challenge procedure that looks for material antitheses before acceptance or completion. |
 | `specs/SPEC-0002-skill-yaml-frontmatter.md` | YAML frontmatter requirements for skill discovery. |

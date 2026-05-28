@@ -104,6 +104,8 @@ The annotation panel separates new notes, in-progress work, and processed histor
 
 The UI does not send requests directly to an AI agent. The annotation file is the handoff artifact: an agent reads it, claims it, works from current sources, and records the outcome before durable document changes are promoted through normal edits.
 
+`pom:lint` warns when the default `.pom-reader/annotations/` directory contains working annotations. The warning points to `skills/reader-notes.md`; lint does not process notes itself because the workflow requires source reading and judgment.
+
 Useful commands:
 
 ```bash

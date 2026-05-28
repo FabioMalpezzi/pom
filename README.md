@@ -144,6 +144,8 @@ Annotations are file-based. The UI saves JSON work files under the configured an
 
 The annotation panel has "New note", "In progress", and "Processed" tabs. It can send selected document text into a note, show the JSON work file on demand, and reopen the target document when an annotation is selected. Browser-based source editing is not part of the current workflow.
 
+`pom:lint` warns when the default `.pom-reader/annotations/` directory contains working annotations. The warning routes agents to `skills/reader-notes.md`; lint does not process the notes itself.
+
 The server binds to `127.0.0.1` and sends restrictive browser security headers. It is still a local repository browser; do not expose it on a shared network without a separate threat model.
 
 A coding agent can read the next open annotation from the same project root:
@@ -763,6 +765,7 @@ POM skills are short operational aliases for the main prompts. They do not repla
 | `plan` | task plan |
 | `check` | review/verification |
 | `handoff` | session closeout |
+| `reader-notes` | process Project Reader notes |
 | `diagnose` | focused POM troubleshooting |
 | `zero-tech-debt` | scoped end-state refactor |
 | `challenge` | adversarial thesis/antithesis review |
