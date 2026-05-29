@@ -761,6 +761,58 @@ Riferimenti incrociati a tutte le sezioni stabilite: `WORKFLOW_IMPLEMENTATION_GU
 
 La riga "Integration & extension guide for adopters" è stata aggiunta alla tabella "Implementation Status" della `SPEC-DRAFT-workflow-modeling.md` come `Implemented (draft)` con puntatore al file.
 
+## Generatore Mermaid integrato (2026-05-29)
+
+L'utente ha notato che il generatore Mermaid era ancora "Target for promotion" — solo intenzione. Lo chiude in questo commit, **integrato direttamente nel flusso del validator** invece che come tool separato: ogni `pom:workflow:lint` rigenera anche il diagramma.
+
+**Implementazione**
+
+- `scripts-candidate/mermaid.mjs` — renderer condiviso: workflow file → `stateDiagram-v2`, pipeline file → catena di membri.
+- `scripts-candidate/to-mermaid.mjs` — CLI thin che riusa il renderer.
+- `scripts-candidate/lint-workflows.mjs` — esteso con `--mermaid-dir <dir>`. Quando passata, ogni YAML processato produce sia il validation report sia il `.mmd`.
+
+**Scelte di rendering** (l'utente ha posto come requisito esplicito: "più sono belli, meglio si comprendono")
+
+- `direction LR` come default — i workflow si leggono naturalmente da sinistra a destra;
+- ogni stato dichiarato con `state "Title Case" as id` per leggibilità immediata;
+- guards in label di transizione su seconda riga (`event\n[guard]`);
+- terminali con simbolo Unicode (`●` puro, `⤴` per `re_entry_allowed`);
+- state-invoke reso come nota strutturata su due righe (`invokes child` + mappatura `terminal → next_event`);
+- event-invoke reso come arrows multiple, una per terminale del child, con label `event\n↪ child: terminal`;
+- pipeline membri usano nome del workflow file (Title Case), non `member_N_<id>`;
+- header limitato a 100 caratteri con `…` per evitare description-verbose;
+- whitespace strutturato (linee vuote tra sezioni dichiarative, transitions, note).
+
+**38 file `.mmd` generati in una passata sweep**
+
+| Cartella | File |
+|---|---|
+| `evidence/mermaid/` | 3 (round-1 storici) |
+| `evidence/mermaid/pipeline-toy/` | 4 |
+| `evidence/mermaid/invoke-state-toy/` | 2 |
+| `evidence/mermaid/invoke-event-toy/` | 2 |
+| `evidence/mermaid/context-injection-toy/` | 2 |
+| `evidence/mermaid/order-processing/` | 5 |
+| `evidence/mermaid/loan-application/` | 3 |
+| `evidence/mermaid/syntonia-ai-agent/` | 4 |
+| `evidence/mermaid/semantic-family-pushed/` | 8 |
+| **Totale** | **38** |
+
+I 38 diagrammi sono GitHub-renderable senza modifiche, importabili in stately.ai, embeddabili in wiki/Notion/docs. Spot-check fatti su tre casi non banali:
+
+- `spec-evolution.mmd`: 4 stati attivi + terminali via `[*]`, `Complete ⤴` segnala il re-entry.
+- `analyzer-fsm.mmd`: 13 stati attivi, retry loop `parse_retry/coherence_retry → llm_call` visibile, nota su `Family Enforcement` che dichiara l'invoke su `clean_family_repair_fsm` con mapping dei 5 terminali.
+- `order-processing.pipeline.mmd`: catena `Cart Flow → Checkout Flow → Payment Flow → Shipping Flow` con label dei terminali sui rami.
+
+**Aggiornamenti coordinati**
+
+- `SPEC-DRAFT-workflow-modeling.md`: riga "Mermaid diagram generator" cambia da `Target for promotion` a `Implemented` con puntatore al renderer + opzione `--mermaid-dir`.
+- `WORKFLOW_INTEGRATION_GUIDE.md`: tabella "Lifecycle of a workflow" aggiornata sulla riga "Visualize", e nuova subsection "CI integration" che mostra l'invocazione raccomandata con `--mermaid-dir` come misura anti-drift più efficace.
+
+**Significato**
+
+Con questo commit, ogni FSM modellata in YAML ottiene automaticamente la sua documentazione visiva, generata dallo stesso YAML che il validator processa. Drift YAML↔diagramma diventa impossibile per costruzione (non per disciplina). È un completamento concreto del giro 2 più di quanto un follow-up dichiarato sarebbe.
+
 **Prossimi passi del giro**
 
 - Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator" e l'input/output mapping).

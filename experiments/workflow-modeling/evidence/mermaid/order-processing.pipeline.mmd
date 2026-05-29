@@ -1,0 +1,11 @@
+stateDiagram-v2
+  %% pipeline order_processing: Cart -> Checkout -> Payment -> Shipping. Each member is a standalone
+  [*] --> member_0_cart_flow
+  member_0_cart_flow --> member_1_checkout_flow : cart_completed
+  member_0_cart_flow --> [*] : cart_abandoned
+  member_1_checkout_flow --> member_2_payment_flow : checkout_confirmed
+  member_1_checkout_flow --> [*] : checkout_canceled
+  member_2_payment_flow --> member_3_shipping_flow : payment_captured
+  member_2_payment_flow --> [*] : payment_refused
+  member_3_shipping_flow --> [*] : shipped
+  member_3_shipping_flow --> [*] : lost

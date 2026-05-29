@@ -1,0 +1,14 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: family_ratio_threshold_ranking
+  %% Ratio threshold ranking analytical family.
+
+  state "Evaluating" as evaluating
+
+  [*] --> evaluating
+
+  evaluating --> [*] : entry_failed\n[ratio_threshold_entry_guards]
+  evaluating --> [*] : scope_missing_signal\n[scope_missing]
+  evaluating --> [*] : semantic_ambiguity\n[threshold_or_direction_ambiguous]
+  evaluating --> [*] : ready\n[ratio_threshold_ready_guards]

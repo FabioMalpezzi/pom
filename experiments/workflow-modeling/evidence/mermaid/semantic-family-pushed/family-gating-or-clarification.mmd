@@ -1,0 +1,13 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: family_gating_or_clarification
+  %% Terminator family from FAMILY_STATE_RULES (controlMode: terminator).
+
+  state "Evaluating" as evaluating
+
+  [*] --> evaluating
+
+  evaluating --> [*] : block_matched\n[any_hard_block_guard]
+  evaluating --> [*] : gating_matched\n[any_terminator_guard]
+  evaluating --> [*] : not_a_match

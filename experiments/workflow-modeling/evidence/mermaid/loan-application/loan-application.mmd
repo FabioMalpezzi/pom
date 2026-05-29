@@ -1,0 +1,24 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: loan_application
+  %% End-to-end loan application as a single parent workflow that uses BOTH composition primitives: -…
+
+  state "Submitted" as submitted
+  state "Validating Credit" as validating_credit
+  state "Ready For Underwriting" as ready_for_underwriting
+  state "Approved" as approved
+
+  [*] --> submitted
+
+  submitted --> validating_credit : submit
+  validating_credit --> ready_for_underwriting : credit_approved
+  validating_credit --> [*] : credit_rejected
+  ready_for_underwriting --> approved : submit_for_underwriting\n↪ underwriting: approved
+  ready_for_underwriting --> [*] : submit_for_underwriting\n↪ underwriting: rejected
+  approved --> [*] : disburse
+
+  note right of validating_credit
+    invokes credit_check
+    approved → credit_approved, rejected → credit_rejected
+  end note

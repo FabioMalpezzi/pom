@@ -16,9 +16,10 @@
 // This script lives in experiments/workflow-modeling/scripts-candidate/ and
 // uses a local node_modules (js-yaml) isolated from the POM main repo.
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { resolve, dirname, join, isAbsolute } from 'node:path';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { resolve, dirname, join, isAbsolute, basename } from 'node:path';
 import yaml from 'js-yaml';
+import { renderModelMermaid } from './mermaid.mjs';
 
 const ERROR_RULES = {
   E000: 'YAML parse error or root is not a mapping.',
@@ -742,11 +743,13 @@ function formatReport({ source, model, errors, warnings, kind }) {
 }
 
 function parseArgs(argv) {
-  const args = { files: [], out: null };
+  const args = { files: [], out: null, mermaidDir: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--out') {
       args.out = argv[++i];
+    } else if (a === '--mermaid-dir') {
+      args.mermaidDir = argv[++i];
     } else if (a.startsWith('--')) {
       console.error(`Unknown option: ${a}`);
       process.exit(2);
@@ -760,11 +763,12 @@ function parseArgs(argv) {
 function main() {
   const argv = process.argv.slice(2);
   if (argv.length === 0) {
-    console.error('Usage: node lint-workflows.mjs <file.yaml> [<file2.yaml> ...] [--out <report.md>]');
+    console.error('Usage: node lint-workflows.mjs <file.yaml> [<file2.yaml> ...] [--out <report.md>] [--mermaid-dir <dir>]');
     console.error('When multiple files are provided, --out is ignored and each report goes to stdout.');
+    console.error('When --mermaid-dir is provided, a Mermaid stateDiagram-v2 is written for each YAML file.');
     process.exit(2);
   }
-  const { files, out } = parseArgs(argv);
+  const { files, out, mermaidDir } = parseArgs(argv);
 
   let totalErrors = 0;
   const reports = [];
@@ -800,6 +804,19 @@ function main() {
 
     const report = formatReport({ source: file, model: model ?? {}, errors, warnings, kind });
     reports.push({ file, report });
+
+    // Optional Mermaid generation alongside the validation report.
+    if (mermaidDir && model && typeof model === 'object') {
+      try {
+        mkdirSync(resolve(mermaidDir), { recursive: true });
+        const mmdName = basename(file).replace(/\.ya?ml$/, '') + '.mmd';
+        const mmdPath = resolve(mermaidDir, mmdName);
+        writeFileSync(mmdPath, renderModelMermaid(model), 'utf8');
+        console.log(`Mermaid: ${mmdPath}`);
+      } catch (e) {
+        console.error(`Mermaid generation failed for ${file}: ${e.message}`);
+      }
+    }
   }
 
   if (out && files.length === 1) {

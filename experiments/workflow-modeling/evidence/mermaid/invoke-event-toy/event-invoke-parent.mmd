@@ -1,0 +1,12 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: event_invoke_parent
+  %% Minimal parent workflow used to demonstrate synchronous invoke-from-event.
+
+  state "Drafting" as drafting
+
+  [*] --> drafting
+
+  drafting --> [*] : submit_for_review\n↪ event_invoke_child: validated
+  drafting --> [*] : submit_for_review\n↪ event_invoke_child: refused

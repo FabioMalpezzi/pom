@@ -1,0 +1,25 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: spec_evolution
+  %% POM SPEC document lifecycle.
+
+  state "Draft" as draft
+  state "Under Review" as under_review
+  state "Accepted" as accepted
+  state "Complete ⤴" as complete
+
+  [*] --> draft
+
+  draft --> under_review : submit_for_review
+  under_review --> draft : request_changes
+  under_review --> accepted : accept
+  under_review --> [*] : reject
+  draft --> [*] : withdraw
+  accepted --> complete : implement_and_verify\n[has_completion_verification_gate]
+  accepted --> [*] : supersede\n[superseding_spec_accepted]
+  complete --> [*] : supersede\n[superseding_spec_accepted]
+
+  note right of complete
+    terminal with documented re-entry
+  end note

@@ -25,7 +25,7 @@ This spec describes the target shape of the capability. Not every part is implem
 | Skill card with five modes | **Implemented** | `skills-candidate/workflow.md` |
 | Canonical prompt for the skill | **Implemented (draft)** | `experiments/workflow-modeling/prompts/workflow.md`. On promotion: `prompts/27-workflow-modeling.md` |
 | Validator Info rules (cycles, naming conventions) | **Target for promotion** | Not implemented; explicitly out of scope of the current validator pass |
-| Mermaid diagram generator (`<name>.mmd`) | **Target for promotion** | Not implemented |
+| Mermaid diagram generator (`<name>.mmd`) | **Implemented** | `scripts-candidate/mermaid.mjs` shared renderer + `scripts-candidate/to-mermaid.mjs` CLI + integrated into the validator via `--mermaid-dir` so every `pom:workflow:lint` run also refreshes the diagrams. |
 | Scenario generator (`<name>.scenarios.md`) | **Target for promotion** | Not implemented |
 | `pom:workflow:lint` npm wrapper | **Target for promotion** | Not implemented; experiment runs the script directly under `scripts-candidate/` |
 | Implementation guide for coding agents | **Implemented (draft)** | `templates-candidate/WORKFLOW_IMPLEMENTATION_GUIDE.md` |

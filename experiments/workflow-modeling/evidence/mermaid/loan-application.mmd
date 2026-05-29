@@ -1,0 +1,13 @@
+stateDiagram-v2
+  %% loan_application: End-to-end loan application as a single parent workflow that uses
+  [*] --> submitted
+  submitted --> validating_credit : submit
+  validating_credit --> ready_for_underwriting : credit_approved
+  validating_credit --> [*] : credit_rejected
+  ready_for_underwriting --> approved : submit_for_underwriting / underwriting=approved
+  ready_for_underwriting --> [*] : submit_for_underwriting / underwriting=rejected
+  approved --> [*] : disburse
+  note right of validating_credit
+    invoke: credit_check
+    on_completion: approved -> credit_approved, rejected -> credit_rejected
+  end note

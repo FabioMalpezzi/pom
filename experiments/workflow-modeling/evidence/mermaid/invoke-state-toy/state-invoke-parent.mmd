@@ -1,0 +1,19 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: state_invoke_parent
+  %% Minimal parent workflow used to demonstrate synchronous invoke-from-state.
+
+  state "Idle" as idle
+  state "Validating" as validating
+
+  [*] --> idle
+
+  idle --> validating : start
+  validating --> [*] : validation_passed
+  validating --> [*] : validation_failed
+
+  note right of validating
+    invokes state_invoke_child
+    validated → validation_passed, refused → validation_failed
+  end note

@@ -1,0 +1,21 @@
+stateDiagram-v2
+  direction LR
+
+  %% Pipeline: order_processing
+  %% Cart -> Checkout -> Payment -> Shipping.
+
+  state "Cart Flow" as cart_flow
+  state "Checkout Flow" as checkout_flow
+  state "Payment Flow" as payment_flow
+  state "Shipping Flow" as shipping_flow
+
+  [*] --> cart_flow
+
+  cart_flow --> checkout_flow : cart_completed
+  cart_flow --> [*] : cart_abandoned
+  checkout_flow --> payment_flow : checkout_confirmed
+  checkout_flow --> [*] : checkout_canceled
+  payment_flow --> shipping_flow : payment_captured
+  payment_flow --> [*] : payment_refused
+  shipping_flow --> [*] : shipped
+  shipping_flow --> [*] : lost

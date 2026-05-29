@@ -1,0 +1,14 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: credit_check
+  %% Synchronous child workflow that verifies the applicant's credit score against the requested amount.
+
+  state "Ready" as ready
+  state "Querying" as querying
+
+  [*] --> ready
+
+  ready --> querying : start
+  querying --> [*] : pass
+  querying --> [*] : deny

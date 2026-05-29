@@ -1,0 +1,18 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: clean_family_repair_fsm
+  %% Clean family repair sub-FSM, invoked synchronously by the analyzer FSM's family_enforcement state.
+
+  state "Draft Received" as draft_received
+  state "Evaluating Attempt" as evaluating_attempt
+
+  [*] --> draft_received
+
+  draft_received --> evaluating_attempt : start_attempt
+  evaluating_attempt --> [*] : attempt_final_family_ready
+  evaluating_attempt --> [*] : attempt_final_scope_clarification
+  evaluating_attempt --> [*] : attempt_final_semantic_clarification
+  evaluating_attempt --> [*] : attempt_final_blocked
+  evaluating_attempt --> evaluating_attempt : attempt_suggested_family
+  evaluating_attempt --> [*] : budget_exhausted

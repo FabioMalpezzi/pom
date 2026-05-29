@@ -1,0 +1,16 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: checkout_flow
+  %% Checkout phase.
+
+  state "Collecting Info" as collecting_info
+  state "Reviewing" as reviewing
+
+  [*] --> collecting_info
+
+  collecting_info --> reviewing : info_complete
+  collecting_info --> [*] : cancel
+  reviewing --> [*] : confirm
+  reviewing --> collecting_info : info_complete
+  reviewing --> [*] : cancel

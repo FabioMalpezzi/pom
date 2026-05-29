@@ -1,0 +1,35 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: ticket_lifecycle
+  %% Lifecycle of a support or bug ticket in an application that uses POM.
+
+  state "New" as new
+  state "Triaged" as triaged
+  state "In Progress" as in_progress
+  state "Waiting Customer" as waiting_customer
+  state "Resolved" as resolved
+  state "Verified" as verified
+  state "Closed ⤴" as closed
+
+  [*] --> new
+
+  new --> triaged : triage\n[has_reproduction_steps]
+  new --> [*] : mark_duplicate
+  new --> [*] : mark_wont_fix
+  triaged --> in_progress : assign
+  triaged --> [*] : mark_duplicate
+  triaged --> [*] : mark_wont_fix
+  in_progress --> waiting_customer : request_info
+  in_progress --> resolved : resolve
+  in_progress --> [*] : mark_duplicate
+  in_progress --> [*] : mark_wont_fix
+  waiting_customer --> in_progress : info_received
+  resolved --> verified : verify
+  resolved --> in_progress : reject_fix
+  verified --> closed : close
+  closed --> in_progress : reopen
+
+  note right of closed
+    terminal with documented re-entry
+  end note

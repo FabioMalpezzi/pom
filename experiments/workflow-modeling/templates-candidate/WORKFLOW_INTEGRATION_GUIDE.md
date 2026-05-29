@@ -99,13 +99,21 @@ draft an idea  →  design  →  validate  →  visualize  →  implement  →  
 |---|---|---|
 | Design | `workflow design` skill mode | new or revised `<name>.yaml` |
 | Validate | `npm run pom:workflow:lint` (or equivalent) | `<name>.validation.md`, exit code |
-| Visualize | `workflow diagram` mode or `to-xstate.mjs` + stately.ai | `<name>.mmd` and/or `<name>.xstate.json` |
+| Visualize | Validator with `--mermaid-dir <dir>` (preferred: same run as validation) or `to-mermaid.mjs` / `to-xstate.mjs` + stately.ai | `<name>.mmd` and/or `<name>.xstate.json` |
 | Implement | `workflow implement` mode + `WORKFLOW_IMPLEMENTATION_GUIDE.md` | target-language code + tests |
 | Test | language-native runner | passing tests |
 | Persist | section "Suspend and Restore" of the implementation guide | snapshot shape adopted in storage |
 | Maintain | PR-time validator + diff review | new validation report + updated diagram |
 
 CI integration: run the validator on every PR that touches `workflows/`. Fail the build on Error-level findings. Warnings are reviewer-judgment by default; promoting one to blocking is a team choice.
+
+Recommended CI invocation produces both reports and diagrams in one pass:
+
+```bash
+node scripts/lint-workflows.mjs --mermaid-dir workflows/generated/ workflows/*.yaml workflows/**/*.yaml
+```
+
+Pairing `--mermaid-dir` with the validator guarantees that `workflows/generated/*.mmd` is always in sync with the YAML: drift is impossible, because the diagram is rebuilt at the same time the validation report is. This is the single most effective drift-prevention measure POM offers; see "Maintenance: avoiding drift" below.
 
 ## Adoption on a greenfield project
 
