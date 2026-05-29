@@ -446,10 +446,45 @@ Durante la riflessione sui prossimi due casi reali è emerso il punto: una macch
 
 La spec recepisce la decisione in Closed Decisions; l'implementazione (`context_schema` su workflow, `input`/`assign` su invoke) è il commit immediatamente successivo (giro context-injection).
 
+**Context injection — schema e validator (completata in questo commit)**
+
+Implementazione della closed decision presa nel commit precedente (`CONTEXT-INJECTION.md`). Tre nuovi slot opzionali introdotti:
+
+- `context_schema:` sul workflow (input + output_by_terminal con name/type/description);
+- `invoke.input:` sul padre (map `child_field: parent_path`);
+- `on_completion[].assign:` sul padre (map `parent_field: child_path`).
+
+9 nuove regole Error E050–E058. Validatore in modalità *documentale*: verifica coerenza nominale (campi citati esistono nello schema dichiarato; chiavi `output_by_terminal` sono stati `is_final: true`; field di `input/assign` esistono nello schema del figlio; se padre dichiara `input/assign` ma figlio non ha `context_schema`, errore E058). NON fa type-checking; NON valuta path expressions.
+
+**Esempio toy: payment-validation + order-flow**
+
+`examples/context-injection-toy/payment-validation.yaml` modella un sub-workflow di validazione pagamento:
+
+- `context_schema.input`: `amount: number`, `method: string`;
+- `context_schema.output_by_terminal.validated`: `validation_token: string`, `timestamp: string`;
+- `context_schema.output_by_terminal.refused`: `refusal_reason: string`.
+
+`examples/context-injection-toy/order-flow.yaml` lo invoca da `drafting → accepted | rejected`, passando `order.total_cents` e `order.payment_method`, e raccogliendo `child.validation_token` / `child.refusal_reason` nel proprio contesto via `assign:`.
+
+| File | Errors | Verdict |
+|---|---|---|
+| `examples/context-injection-toy/payment-validation.yaml` | 0 | PASS |
+| `examples/context-injection-toy/order-flow.yaml` | 0 | PASS |
+
+**Fixture broken**
+
+| Fixture | Errore atteso | Errore effettivo |
+|---|---|---|
+| `ctx.broken-E052-unknown-terminal` | E052 | E052 |
+| `ctx.broken-E055-input-not-in-child` | E055 | E055 |
+| `ctx.broken-E056-assign-not-in-child-output` | E056 | E056 |
+| `ctx.broken-E058-child-no-schema` | E058 | E058 |
+
+**Regressione zero** su tutti gli esempi storici e i toy delle tre primitive precedenti. 13 file YAML sono stati validati nello stesso giro: PASS pulito per ognuno.
+
 **Prossimi passi del giro**
 
-- Implementazione context injection (estensione schema YAML + validator + esempio toy + spec).
-- Due casi reali combinati: `order-processing` (pipeline pura) + `loan-application` (combinazione di invoke da stato e da evento, con context injection), entrambi modellati col context dal commit successivo.
+- Due casi reali combinati: `order-processing` (pipeline pura con context injection) + `loan-application` (combinazione di invoke da stato e da evento, control flow tipo orchestratore con context strutturato).
 - Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator" e l'input/output mapping).
 - Codice TypeScript guidato per pipeline orchestrator (Pattern A) come evidence di H4 esteso.
 - Consolidazione finale del giro 2.

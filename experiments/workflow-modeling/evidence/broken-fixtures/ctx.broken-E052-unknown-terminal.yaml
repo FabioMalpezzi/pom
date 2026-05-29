@@ -1,0 +1,30 @@
+# Expected to trigger: E052 (output_by_terminal references a state that is not is_final: true).
+
+workflow: broken_e052
+version: 1
+description: Declares output for "approved" which is not a state of this workflow.
+
+context_schema:
+  input:
+    - { name: x, type: string }
+  output_by_terminal:
+    approved:                           # not present in states[]
+      - { name: token, type: string }
+
+initial_state: start
+states:
+  - name: start
+    description: starting
+    is_final: false
+  - name: validated
+    description: only real terminal
+    is_final: true
+
+events:
+  - name: go
+    description: only event
+
+transitions:
+  - from: start
+    to: validated
+    event: go

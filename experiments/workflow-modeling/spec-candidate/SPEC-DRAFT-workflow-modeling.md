@@ -332,6 +332,71 @@ The reachability analysis (W001) is updated to treat `invoke.on_completion[].tar
 
 Use case in mind: a precondition that requires its own sub-workflow before the parent can decide its next state. Example: a content publishing parent where `submit_for_review` invokes a content validation child workflow; the parent's next state (`accepted` vs `rejected`) is determined by the child's terminal.
 
+## Composition: Context Injection (Result<Terminal, Output>)
+
+A child workflow may declare a `context_schema:` block that documents its **input** (what the parent must provide at invocation) and **output_by_terminal** (what the parent reads back, one set of fields per terminal). The parent, on `invoke:`, may declare `input:` (map of `child_field: parent_path`) and on each `on_completion[]` entry an `assign:` (map of `parent_field: child_path`).
+
+The two channels — `input` in, `assign` out — are the **only** boundary between parent and child. There is no shared context, no mid-flight event passing, no callbacks. Full design rationale is in `CONTEXT-INJECTION.md` (closed decision).
+
+Child declares its interface:
+
+```yaml
+workflow: payment_validation
+context_schema:
+  input:
+    - { name: amount, type: number }
+    - { name: method, type: string }
+  output_by_terminal:
+    validated:
+      - { name: validation_token, type: string }
+      - { name: timestamp,        type: string }
+    refused:
+      - { name: refusal_reason,   type: string }
+```
+
+Parent maps its context across the boundary:
+
+```yaml
+transitions:
+  - from: drafting
+    event: submit_payment
+    invoke:
+      workflow: payment-validation.yaml
+      input:
+        amount: order.total_cents
+        method: order.payment_method
+      on_completion:
+        - terminal_state: validated
+          target: accepted
+          assign:
+            validation_token: child.validation_token
+            timestamp: child.timestamp
+        - terminal_state: refused
+          target: rejected
+          assign:
+            refusal_reason: child.refusal_reason
+```
+
+New Error rules:
+
+| Code | Check |
+|---|---|
+| E050 | `context_schema.input[]` entry has no `name` or non-string name. |
+| E051 | `context_schema.input[]` entry has no `type` or non-string type. |
+| E052 | `context_schema.output_by_terminal` key does not name an `is_final: true` state of this workflow. |
+| E053 | `context_schema.output_by_terminal[<terminal>][]` entry has no `name`. |
+| E054 | `context_schema.output_by_terminal[<terminal>][]` entry has no `type`. |
+| E055 | `invoke.input` field name is not declared in the child's `context_schema.input`. |
+| E056 | `on_completion[].assign` field name is not declared in the child's `context_schema.output_by_terminal[terminal_state]`. |
+| E057 | An `input` or `assign` value is not a non-empty string (must be a documental path). |
+| E058 | The parent declares `input` or `assign` but the child has no `context_schema` (cannot validate nominal coherence). |
+
+**Validator behavior is documental, not strict.** The `type:` declaration on a field is documentation; the validator does not type-check across the boundary. Path strings (`order.total_cents`, `child.validation_token`) are not evaluated at lint time. The target language's type system is the source of truth.
+
+**Mental model**: a child workflow is a `Result<Terminal, Output>` function — terminal is the discriminating tag, output is the payload that travels with the tag. The parent's `on_completion` is a typed pattern match on the result. The implementation guide will translate this into TypeScript discriminated unions or equivalent in the target language.
+
+The four invariants of the composition model remain enforced: no async (E029/E036/E046), no shared global state (no schema slot for it; only `input` / `assign` channels), no inheritance (no `extends:` slot), no runtime in POM (the validator runs, the workflow does not).
+
 ## Promotion Path
 
 If promoted, this draft becomes `SPEC-0006-workflow-modeling.md` and the artefacts move out of `experiments/workflow-modeling/`:

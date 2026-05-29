@@ -1,0 +1,31 @@
+# Expected to trigger: E055 (invoke.input field name not declared in child context_schema.input).
+
+workflow: broken_e055
+version: 1
+description: Parent passes "currency" but the child does not declare it as input.
+
+initial_state: drafting
+states:
+  - name: drafting
+    description: starting
+    is_final: false
+  - name: accepted
+    description: terminal
+    is_final: true
+
+events:
+  - name: submit_payment
+    description: submission
+
+transitions:
+  - from: drafting
+    event: submit_payment
+    invoke:
+      workflow: ../../examples/context-injection-toy/payment-validation.yaml
+      input:
+        amount: order.total
+        method: order.method
+        currency: order.currency          # NOT declared in child context_schema.input
+      on_completion:
+        - terminal_state: validated
+          target: accepted

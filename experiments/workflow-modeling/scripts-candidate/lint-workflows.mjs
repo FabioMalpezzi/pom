@@ -63,6 +63,15 @@ const ERROR_RULES = {
   E044: 'A transition invoke on_completion[].target does not exist as a state in the parent workflow.',
   E045: 'A transition declares both invoke and "to". A transition has exactly one of: a direct "to", or an invoke whose on_completion provides the targets.',
   E046: 'A transition invoke declares an asynchronous mode (mode: async / parallel). Asynchronous composition is out of scope; use Pattern C (XState invoke/spawn).',
+  E050: 'context_schema.input[] entry has no "name" or a non-string name.',
+  E051: 'context_schema.input[] entry has no "type" or a non-string type.',
+  E052: 'context_schema.output_by_terminal key does not name an is_final: true state of this workflow.',
+  E053: 'context_schema.output_by_terminal[<terminal>][] entry has no "name" or a non-string name.',
+  E054: 'context_schema.output_by_terminal[<terminal>][] entry has no "type" or a non-string type.',
+  E055: 'invoke.input field name is not declared in the child workflow context_schema.input.',
+  E056: 'on_completion[].assign field name is not declared in the child workflow context_schema.output_by_terminal[terminal_state].',
+  E057: 'invoke.input or on_completion[].assign value is not a non-empty string (must be a documental path).',
+  E058: 'invoke.input or on_completion[].assign is declared but child workflow has no context_schema (cannot validate nominal coherence).',
 };
 
 const WARNING_RULES = {
@@ -298,13 +307,14 @@ function validateStateInvokes(model, sourceDir) {
       : join(sourceDir, inv.workflow);
 
     let childTerminals = null;
+    let childModel = null;
     if (!existsSync(absPath)) {
       errors.push(err('E031', where, `path=${inv.workflow}`));
     } else {
-      const child = loadWorkflowSafe(absPath);
-      if (child && Array.isArray(child.states)) {
+      childModel = loadWorkflowSafe(absPath);
+      if (childModel && Array.isArray(childModel.states)) {
         childTerminals = new Set();
-        for (const cs of child.states) {
+        for (const cs of childModel.states) {
           if (isNonEmptyString(cs?.name) && cs?.is_final === true) {
             childTerminals.add(cs.name);
           }
@@ -332,6 +342,10 @@ function validateStateInvokes(model, sourceDir) {
       } else if (eventNames.size > 0 && !eventNames.has(c.next_event)) {
         errors.push(err('E034', cwhere, `next_event=${c.next_event}`));
       }
+    }
+
+    if (childModel) {
+      errors.push(...validateInvokeContext(inv, where, childModel));
     }
   }
 
@@ -367,13 +381,14 @@ function validateTransitionInvokes(model, sourceDir) {
       : join(sourceDir, inv.workflow);
 
     let childTerminals = null;
+    let childModel = null;
     if (!existsSync(absPath)) {
       errors.push(err('E041', where, `path=${inv.workflow}`));
     } else {
-      const child = loadWorkflowSafe(absPath);
-      if (child && Array.isArray(child.states)) {
+      childModel = loadWorkflowSafe(absPath);
+      if (childModel && Array.isArray(childModel.states)) {
         childTerminals = new Set();
-        for (const cs of child.states) {
+        for (const cs of childModel.states) {
           if (isNonEmptyString(cs?.name) && cs?.is_final === true) {
             childTerminals.add(cs.name);
           }
@@ -402,6 +417,10 @@ function validateTransitionInvokes(model, sourceDir) {
         errors.push(err('E044', cwhere, `target=${c.target}`));
       }
     }
+
+    if (childModel) {
+      errors.push(...validateInvokeContext(inv, where, childModel));
+    }
   }
 
   return errors;
@@ -409,9 +428,10 @@ function validateTransitionInvokes(model, sourceDir) {
 
 function validate(model, sourceDir = '.') {
   const { errors, stateNames } = validateErrors(model);
+  const ctxSchemaErrors = validateContextSchemaSelf(model);
   const stateInvokeErrors = validateStateInvokes(model, sourceDir);
   const transitionInvokeErrors = validateTransitionInvokes(model, sourceDir);
-  errors.push(...stateInvokeErrors, ...transitionInvokeErrors);
+  errors.push(...ctxSchemaErrors, ...stateInvokeErrors, ...transitionInvokeErrors);
   const warnings = errors.some((e) => ['E004', 'E005'].includes(e.code))
     ? []
     : validateWarnings(model, stateNames);
@@ -427,6 +447,111 @@ function loadWorkflowSafe(absPath) {
     return null;
   }
   return null;
+}
+
+function extractContextSchema(workflowModel) {
+  const cs = workflowModel?.context_schema;
+  if (!cs || typeof cs !== 'object') return null;
+  const inputNames = new Set(
+    (Array.isArray(cs.input) ? cs.input : [])
+      .filter((f) => isNonEmptyString(f?.name))
+      .map((f) => f.name),
+  );
+  const outputByTerminal = new Map();
+  if (cs.output_by_terminal && typeof cs.output_by_terminal === 'object') {
+    for (const [terminal, fields] of Object.entries(cs.output_by_terminal)) {
+      const names = new Set(
+        (Array.isArray(fields) ? fields : [])
+          .filter((f) => isNonEmptyString(f?.name))
+          .map((f) => f.name),
+      );
+      outputByTerminal.set(terminal, names);
+    }
+  }
+  return { inputNames, outputByTerminal };
+}
+
+function validateContextSchemaSelf(model) {
+  const errors = [];
+  const cs = model?.context_schema;
+  if (!cs || typeof cs !== 'object') return errors;
+
+  if (Array.isArray(cs.input)) {
+    for (let i = 0; i < cs.input.length; i++) {
+      const f = cs.input[i];
+      const where = `context_schema.input[${i}]`;
+      if (!isNonEmptyString(f?.name)) errors.push(err('E050', where));
+      if (!isNonEmptyString(f?.type)) errors.push(err('E051', where, f?.name ? `name=${f.name}` : ''));
+    }
+  }
+
+  const terminalNames = new Set(
+    (Array.isArray(model?.states) ? model.states : [])
+      .filter((s) => isNonEmptyString(s?.name) && s?.is_final === true)
+      .map((s) => s.name),
+  );
+
+  if (cs.output_by_terminal && typeof cs.output_by_terminal === 'object') {
+    for (const [terminal, fields] of Object.entries(cs.output_by_terminal)) {
+      if (!terminalNames.has(terminal)) {
+        errors.push(err('E052', `context_schema.output_by_terminal.${terminal}`, `terminal=${terminal}`));
+      }
+      if (Array.isArray(fields)) {
+        for (let i = 0; i < fields.length; i++) {
+          const f = fields[i];
+          const where = `context_schema.output_by_terminal.${terminal}[${i}]`;
+          if (!isNonEmptyString(f?.name)) errors.push(err('E053', where));
+          if (!isNonEmptyString(f?.type)) errors.push(err('E054', where, f?.name ? `name=${f.name}` : ''));
+        }
+      }
+    }
+  }
+  return errors;
+}
+
+function validateInvokeContext(invokeBlock, where, childModel) {
+  const errors = [];
+  const childSchema = extractContextSchema(childModel);
+
+  const hasInput = invokeBlock?.input != null && typeof invokeBlock.input === 'object';
+  const hasAssign = Array.isArray(invokeBlock?.on_completion)
+    && invokeBlock.on_completion.some((c) => c?.assign != null && typeof c.assign === 'object');
+
+  if ((hasInput || hasAssign) && !childSchema) {
+    errors.push(err('E058', where, 'child workflow has no context_schema'));
+    return errors;
+  }
+
+  if (hasInput) {
+    for (const [k, v] of Object.entries(invokeBlock.input)) {
+      const w = `${where}.input.${k}`;
+      if (!childSchema.inputNames.has(k)) {
+        errors.push(err('E055', w, `field=${k}`));
+      }
+      if (!isNonEmptyString(v)) {
+        errors.push(err('E057', w, `field=${k}`));
+      }
+    }
+  }
+
+  if (Array.isArray(invokeBlock?.on_completion)) {
+    for (let i = 0; i < invokeBlock.on_completion.length; i++) {
+      const c = invokeBlock.on_completion[i];
+      if (!c?.assign || typeof c.assign !== 'object') continue;
+      const terminal = c.terminal_state;
+      const declared = childSchema.outputByTerminal.get(terminal);
+      for (const [k, v] of Object.entries(c.assign)) {
+        const w = `${where}.on_completion[${i}].assign.${k}`;
+        if (declared && !declared.has(k)) {
+          errors.push(err('E056', w, `field=${k}, terminal=${terminal}`));
+        }
+        if (!isNonEmptyString(v)) {
+          errors.push(err('E057', w, `field=${k}`));
+        }
+      }
+    }
+  }
+  return errors;
 }
 
 function validatePipeline(model, sourceDir) {
