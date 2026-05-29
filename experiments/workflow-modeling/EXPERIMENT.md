@@ -530,11 +530,37 @@ Durante la compilazione del loan-application il validator ha prodotto un E056 sp
 | Regressione su esempi storici | 0 |
 | Bug del validator scoperti e corretti grazie ai casi reali | 1 (E056) |
 
+**Validazione su progetto reale: Syntonia ai-agent (completata in questo commit)**
+
+L'utente ha proposto di validare il modello su un progetto reale che mantiene: `/Users/fabio/WA/Syntonia/ai-agent/src/server`. Tre FSM esplicitamente dichiarate nel codice sorgente: operational FSM (pipeline orchestrator a 7 step), analyzer FSM (sub-pipeline a 13 step con retry loop), semantic family rules (rule engine per la classificazione semantica).
+
+Esito sintetico (dettagli in `real-project-validation/syntonia-ai-agent/FINDINGS.md`):
+
+| FSM | Sorgente | Verdetto | Validator | Schema growth necessario? |
+|---|---|---|---|---|
+| Operational FSM | `pipeline/family/operational-fsm.ts` | **Clean fit** | PASS | Nessuno (loop guard cosmetico) |
+| Analyzer FSM | `pipeline/analyzer/analyzer-fsm.ts` | **Adapted fit** | PASS | Sì: bounded-retry primitive |
+| Semantic Family rules | `pipeline-contract/family-state-rules.ts` | **Forced fit, lossy** | PASS | No: POM è strumento sbagliato (rule engine, parallel families, precedence) |
+
+**Cosa l'esercizio ha confermato (positivo)**
+
+POM round 2 (state-invoke + event-invoke + context-injection + pipeline) ha modellato senza adattamento l'orchestratore di produzione + il suo sub-FSM sincrono. Il pattern "state X invoca sub-FSM Y sincronicamente" è esattamente quello che serviva per la composizione operational → analyzer. Le 4 ipotesi (H1–H4) trovano riscontro su un caso non sintetico.
+
+**Cosa l'esercizio ha proposto di aggiungere (1 candidato concreto)**
+
+- **Bounded retry / loop guard primitive**. Motivato dall'analyzer FSM che usa `MAX_LLM_ATTEMPTS = 3` per i retry su parse/coherence error. POM oggi modella il ciclo strutturalmente ma non il budget. Schema sketch: blocco `loop_guard: { max_visits: N, on_exhaustion: { exit_target: ... } }` su uno stato. Closed decision rimandata a un giro futuro.
+
+**Cosa l'esercizio ha confermato di NON modellare (1 conferma concreta)**
+
+- **Rule engine per classificazione + routing** (la semantic family layer). POM workflow declina, e il declino è principled: rule engine multi-machine richiederebbe parallel regions, cross-machine precedence e parametric terminals — tutti fuori dai 4 pilastri della composizione. Il "forced fit" YAML documenta esattamente il costo del forzarlo: un artefatto che mente sul sorgente.
+
+**Tre file YAML prodotti, tutti PASS pulito** contro il validator post-round-2. Il "PASS clean" non è il criterio di successo: lo è la fedeltà al sorgente. La fedeltà è alta per i primi due, deliberatamente bassa e documentata per il terzo.
+
 **Prossimi passi del giro**
 
 - Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator" e l'input/output mapping).
 - Codice TypeScript guidato per pipeline orchestrator (Pattern A) come evidence di H4 esteso.
-- Consolidazione finale del giro 2.
+- Consolidazione finale del giro 2 con le conclusioni della validazione reale.
 
 ## Follow-up
 
