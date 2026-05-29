@@ -176,7 +176,7 @@ Il concetto di ciclo bounded deve diventare una primitiva esplicita del workflow
 - numero massimo di iterazioni (`max_visits`);
 - durata massima cumulativa del ciclo (`max_duration`).
 
-Esempi motivanti reali: l'analyzer-fsm Syntonia ha `MAX_LLM_ATTEMPTS = 3` (count) ma in produzione vorrebbe anche un secondo bound del tipo "non oltre 30 minuti totali di retry per non bloccare l'utente" (duration); un agente di planning può avere un budget combinato "5 step oppure 10 minuti, qualunque arrivi prima".
+Esempi motivanti reali: l'analyzer-fsm modellato in `experiments/workflow-modeling/real-project-validation/internal-agent/analyzer-fsm.yaml` ha `MAX_LLM_ATTEMPTS = 3` (count) ma in produzione vorrebbe anche un secondo bound del tipo "non oltre 30 minuti totali di retry per non bloccare l'utente" (duration); un agente di planning può avere un budget combinato "5 step oppure 10 minuti, qualunque arrivi prima".
 
 **Definizione**
 
@@ -357,7 +357,7 @@ states:
 - validazione tramite strumenti POM;
 - generazione Mermaid;
 - raccolta evidenze;
-- confronto con esperienza Syntonia;
+- confronto con i workflow di riferimento già modellati nell'esperimento `workflow-modeling`;
 - decisione finale.
 
 ### Escluso

@@ -68,4 +68,4 @@ Quando si aprirà quell'esperimento:
 2. Aprire ipotesi separate per M1–M5 e A1–A3 nel backlog di quell'esperimento.
 3. Estendere `lint-workflows.mjs` con le regole Error/Warning per `loop_guard` (riferimenti: prefisso convenzionale `_loop_guard_`, override su dimensione assente come Warning, almeno una bound presente come Error).
 4. Estendere `to-xstate.mjs` per mappare il `loop_guard` su XState v5 (`after:` + guard sul counter).
-5. Modellare almeno due esempi reali (analyzer-fsm Syntonia con bound combinato, agent planning loop) come evidenza della primitiva.
+5. Modellare almeno due esempi reali (analyzer-fsm modellato in `workflow-modeling/real-project-validation/internal-agent/` con bound combinato, agent planning loop) come evidenza della primitiva.

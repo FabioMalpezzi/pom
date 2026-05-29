@@ -4,7 +4,7 @@ Output prodotti durante l'esperimento `agent-loop-fsm` e usati come evidenza del
 
 - report di validazione (`pom:workflow:lint`) sui workflow candidati;
 - diagrammi Mermaid generati con `--mermaid-dir`;
-- eventuali file di confronto con i workflow Syntonia esistenti;
+- eventuali file di confronto con i workflow di riferimento già modellati in `experiments/workflow-modeling/real-project-validation/internal-agent/`;
 - eventuali snippet TypeScript per evidence runtime (Pattern A + suspend/restore);
 - screenshot di rendering stately.ai se rilevanti.
 
