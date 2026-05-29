@@ -720,6 +720,47 @@ I retry counter sopravvivono automaticamente al suspend/restore perché vivono i
 
 Il `PROJECT_STATE.md` di POM stesso è una forma di suspend/restore per il *progetto*. POM conosceva già il pattern a livello metodologico; con questi commit il pattern è esplicitato anche per le *macchine a stati*, coerentemente, senza introdurre runtime nel metodo.
 
+## Workflow Integration & Extension Guide (2026-05-29)
+
+L'utente ha chiesto di scrivere una guida breve su come integrare e/o estendere la FSM nei progetti che adotteranno POM workflow. Aggiunto `templates-candidate/WORKFLOW_INTEGRATION_GUIDE.md` (275 righe), che copre l'angolo "adoption + lifecycle" complementare alla `WORKFLOW_IMPLEMENTATION_GUIDE.md` (angolo "codice").
+
+**Cosa la guida copre**
+
+| Sezione | Domanda a cui risponde |
+|---|---|
+| When to adopt | È il mio caso? (sweet spot vs out-of-scope) |
+| File layout in a target project | Dove vivono i `.yaml`, dove va `generated/`, come raggruppare per dominio |
+| Configuration | Cosa scrivere in `pom.config.json` (campo `workflows:` opt-in) |
+| Lifecycle of a workflow | design → validate → visualize → implement → test → persist → maintain |
+| Adoption on a greenfield project | 9 step concreti dal niente alla CI |
+| Adoption on an existing project (migration patterns) | Tre pattern: model-first, generate side-by-side, XState dual-run |
+| Extending an existing workflow | Aggiungere stato/terminale/transizione, rimuovere, rinominare, bump version |
+| Versioning | Patch / minor / major; quando rompere i snapshot |
+| Adding a new workflow | Da zero o derivato (no `extends:` per disciplina) |
+| Composing workflows | Tabella delle 4 primitive + righe "non supportato" → Pattern C |
+| Maintenance: avoiding drift | Validator in CI + regenerate-on-PR + code-from-YAML check |
+| Best practices | 8 regole pratiche (guards as nouns, terminal names spell outcome, ecc.) |
+| When to retire a workflow | Procedura di archiviazione + nota su snapshot storici |
+
+**Coerenza con i 4 pilastri**
+
+La guida non introduce nuovi concetti di schema. Riusa: pillar 3 (no inheritance) → "no `extends:` field"; pillar 1 (no async) → tabella di composizione che dichiara esplicitamente cosa NON è supportato; pillar 2 (no shared state) → "ciascuna FSM ha context privato"; pillar 4 (no runtime) → "POM non enforce niente, la disciplina è del team".
+
+**Coerenza con i giri 1-2**
+
+Riferimenti incrociati a tutte le sezioni stabilite: `WORKFLOW_IMPLEMENTATION_GUIDE.md` per i Pattern A/B/C e Suspend & Restore; `prompts/workflow.md` per i 5 modi; `SPEC-DRAFT-workflow-modeling.md` per le 4 invarianti; `xstate-compat/COMPATIBILITY.md` per il mapping Stately. La guida cuce insieme i pezzi del giro 2 dal punto di vista dell'adottante.
+
+**Cosa la guida deliberatamente NON dice**
+
+- non prescrive una libreria FSM per linguaggio (la scelta resta del team);
+- non prescrive uno storage (DB, KV, file — tutti elencati come opzioni);
+- non prescrive un test runner (lascia al `pom.config.json.testRunner`);
+- non automatizza le migrazioni di stato per istanze in-flight (è disciplina operativa, non POM).
+
+**Implementation Status nella spec**
+
+La riga "Integration & extension guide for adopters" è stata aggiunta alla tabella "Implementation Status" della `SPEC-DRAFT-workflow-modeling.md` come `Implemented (draft)` con puntatore al file.
+
 **Prossimi passi del giro**
 
 - Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator" e l'input/output mapping).
