@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Source | `real-project-validation/syntonia-ai-agent/analyzer-fsm.yaml` |
-| Generated | 2026-05-29 18:17:27 (UTC) |
+| Generated | 2026-05-29 19:16:01 (UTC) |
 | Errors | 0 |
 | Warnings | 0 |
 | Verdict | **PASS** |

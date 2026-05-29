@@ -577,6 +577,24 @@ Lo state-invoke + context-injection + Result<Terminal, Output> introdotti nel ro
 
 **Tre file YAML prodotti, tutti PASS pulito** contro il validator post-round-2. Il "PASS clean" non è il criterio di successo: lo è la fedeltà al sorgente. La fedeltà è alta per i primi due, deliberatamente bassa e documentata per il terzo.
 
+**Compatibilità con la clean-family-repair (terzo livello di composizione)**
+
+L'utente ha fatto notare che la prima modellazione dell'analyzer FSM era *incompleta*: il sorgente invoca `runCleanFamilyRepair` (con loop bounded `MAX_FAMILY_REPAIR_ATTEMPTS = 3`) dentro lo step `family_enforcement`, e il primo YAML modellava `family_enforcement` come uno stato piatto senza la sub-FSM.
+
+Correzione applicata in commit successivo: nuovo file `clean-family-repair-fsm.yaml` (7 stati, 7 eventi, 7 transizioni — una è il ciclo bounded `attempt_suggested_family`), e l'analyzer-fsm.yaml aggiornato perché `family_enforcement` faccia state-invoke sulla repair con context injection completo (input: question + parsed_output + semantic_hints + question_signals + ctx; on_completion: 5 terminali mappati tutti a `family_enforced` del padre).
+
+Risultato: la **catena di composizione cresce a tre livelli** su sistema reale:
+
+```
+operational-fsm                            (livello 1: orchestratore di pipeline)
+  └── invoke: analyzer-fsm                 (livello 2: sub-pipeline analyzer)
+        └── invoke: clean-family-repair-fsm  (livello 3: sub-FSM con loop bounded)
+```
+
+Tutti e tre i file PASS pulito al validator. POM round 2 supporta la profondità 3 senza modifiche allo schema. Il validator risolve i path dei child relativamente alla cartella del parent a qualunque livello di annidamento.
+
+L'open point del bounded retry riappare identico al livello 3 (il ciclo `attempt_suggested_family` ha lo stesso problema del `parse_retry`/`coherence_retry` dell'analyzer). Una sola futura primitiva `loop_guard` con `max_visits` + exit per esaurimento risolverebbe tutti e tre i casi nel sistema reale.
+
 **Prossimi passi del giro**
 
 - Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator" e l'input/output mapping).

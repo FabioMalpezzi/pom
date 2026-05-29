@@ -1,8 +1,8 @@
-# Workflow validation report - operational_fsm
+# Workflow validation report - clean_family_repair_fsm
 
 | Field | Value |
 |---|---|
-| Source | `real-project-validation/syntonia-ai-agent/operational-fsm.yaml` |
+| Source | `real-project-validation/syntonia-ai-agent/clean-family-repair-fsm.yaml` |
 | Generated | 2026-05-29 19:16:01 (UTC) |
 | Errors | 0 |
 | Warnings | 0 |

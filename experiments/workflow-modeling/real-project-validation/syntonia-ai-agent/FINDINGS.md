@@ -65,6 +65,52 @@ The cycles are there, but **the bound on the cycles is not**. Source declares `M
 
 **Conclusion**: structural fit is excellent; the **bounded-retry gap is a real candidate for POM schema growth**, motivated by a real production FSM. This is the kind of evidence the experiment was looking for.
 
+### 2.bis Analyzer FSM — clean-family-repair as a third level
+
+The user asked: is the generated YAML compatible with the **repair FSM**? Honest answer: the first pass was **incomplete**. The analyzer's `family_enforcement` state in the source synchronously runs `runCleanFamilyRepair`, an inner loop bounded by `MAX_FAMILY_REPAIR_ATTEMPTS = 3` (`clean-family-repair.ts:122, 188`), and the analyzer-fsm.yaml initially modeled `family_enforcement` as a flat linear state. That collapsed a sub-FSM into a single state without reason.
+
+**Fix**: model the repair as an autonomous sub-FSM and have the analyzer's `family_enforcement` state declare a state-invoke on it. Result:
+
+- new file `clean-family-repair-fsm.yaml` with the repair as a 7-state, 7-event, 7-transition workflow (one of the transitions is the bounded retry cycle on `evaluating_attempt`);
+- `analyzer-fsm.yaml`'s `family_enforcement` state updated to `invoke:` the repair FSM with full context injection (input: question + parsed_output + semantic_hints + question_signals + ctx; on_completion: 5 child terminals all mapped to the parent's `family_enforced` event);
+- both files PASS clean against the validator after the change;
+- `operational-fsm.yaml` is unchanged and continues to PASS clean — the modification was local to the analyzer level.
+
+**What this demonstrates**
+
+The POM round 2 schema **carries a three-level invoke chain on a real production system**:
+
+```
+operational-fsm                 (level 1: pipeline orchestrator)
+  └── invoke: analyzer-fsm      (level 2: sub-pipeline)
+        └── invoke: clean-family-repair-fsm  (level 3: bounded-retry sub-FSM)
+```
+
+Three nested workflows, three context_schemas with input + per-terminal output, three sets of state-invoke + on_completion mappings — all validated clean by the post-round-2 validator without changes to the schema.
+
+**What it confirms**
+
+- **Composition depth scales**: the operational → analyzer state-invoke (single level) and the analyzer → repair state-invoke (second level) use the same primitive at different depths. The schema does not have an arbitrary depth limit; the validator resolves child files relative to the parent's directory at any nesting level.
+- **The bounded-retry open point applies at every level**: parse_retry / coherence_retry in the analyzer FSM and the attempt_suggested_family cycle in the repair FSM are all the same class of unbounded-in-schema, bounded-in-target-code cycles. One single `loop_guard` primitive in a future round would address all of them.
+
+**What it does not change**
+
+- The expressivity line is unchanged. The repair was already a flat-FSM by structure; adding it as a third level is faithfulness gained, not new POM territory.
+- The semantic family rule engine (section 3) still does not fit, for the same reasons documented there. The repair is a flat sub-FSM with a bounded loop, not a rule engine.
+
+**Statistical update**
+
+| Metric | Before (first pass) | After (with repair) | Δ |
+|---|---|---|---|
+| YAML files in the Syntonia validation | 3 (+ 8 push) | 4 (+ 8 push) = 12 | +1 |
+| Composition depth max | 2 (operational → analyzer) | 3 (operational → analyzer → repair) | +1 |
+| State-invokes on production code | 1 | 2 | +1 |
+| Bounded-loop cycles in modeled FSMs | 2 (parse_retry, coherence_retry) | 3 (+ attempt_suggested_family) | +1 |
+| FSMs faithfully covered from the analyzer module | 2 of 2 (with repair gap acknowledged) | 3 of 3 (gap filled) | +1 |
+| Validator clean | yes | yes | unchanged |
+
+**Conclusion**: the first-pass YAML was incompatible with the repair FSM (it omitted it). The corrected YAML is **fully compatible**: the repair becomes a first-class POM workflow invoked at the right point in the analyzer. POM round 2 supports the three-level depth without modification, and the bounded-retry gap reappears identically on the third level — same problem, same proposal, same level of priority for a future round.
+
 ---
 
 ## 3. Semantic Family rules — forced fit, lossy

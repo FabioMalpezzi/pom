@@ -64,7 +64,31 @@ states:
   - { name: scope_resolution,          description: "Applies profile, policy, output spec.", is_final: false }
   - { name: deterministic_repairs,     description: "Deterministic repairs on the resolved output.", is_final: false }
   - { name: entity_grounding,          description: "Grounds entities against the domain.", is_final: false }
-  - { name: family_enforcement,        description: "Applies family-state rules to the output.", is_final: false }
+  - name: family_enforcement
+    description: |
+      Synchronously invokes the clean-family-repair sub-FSM (clean-family-
+      repair-fsm.yaml). The sub-FSM iterates up to MAX_FAMILY_REPAIR_
+      ATTEMPTS = 3 times to resolve a coherent family and produce a
+      repaired AnalyzerOutput. The five sub-FSM terminals all map to the
+      single parent event family_enforced — the analyzer's own state
+      graph does not branch on the repair outcome here; the outcome is
+      consumed downstream (by coherence_validation and by the operational
+      orchestrator).
+    is_final: false
+    invoke:
+      workflow: clean-family-repair-fsm.yaml
+      input:
+        question: question
+        initial_output: parsed_output
+        semantic_hints: semantic_hints
+        question_signals: question_signals
+        ctx: ctx
+      on_completion:
+        - { terminal_state: family_ready,                 next_event: family_enforced }
+        - { terminal_state: needs_scope_clarification,    next_event: family_enforced }
+        - { terminal_state: needs_semantic_clarification, next_event: family_enforced }
+        - { terminal_state: blocked,                      next_event: family_enforced }
+        - { terminal_state: exhausted,                    next_event: family_enforced }
   - { name: coherence_validation,      description: "Final coherence check against the rules.", is_final: false }
 
   # Terminal stop-exits
