@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Source | `evidence/broken-fixtures/min.broken-W001-unreachable.yaml` |
-| Generated | 2026-05-29 14:33:19 (UTC) |
+| Generated | 2026-05-29 14:50:43 (UTC) |
 | Errors | 0 |
 | Warnings | 1 |
 | Verdict | **PASS WITH WARNINGS** |

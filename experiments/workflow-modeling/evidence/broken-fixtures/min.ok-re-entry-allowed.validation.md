@@ -1,9 +1,9 @@
-# Workflow validation report - spec_evolution
+# Workflow validation report - ok_re_entry_allowed
 
 | Field | Value |
 |---|---|
-| Source | `examples/spec-evolution.yaml` |
-| Generated | 2026-05-29 14:49:50 (UTC) |
+| Source | `evidence/broken-fixtures/min.ok-re-entry-allowed.yaml` |
+| Generated | 2026-05-29 14:50:27 (UTC) |
 | Errors | 0 |
 | Warnings | 0 |
 | Verdict | **PASS** |

@@ -1,0 +1,40 @@
+# Positive fixture: same structural shape as min.broken-W003 but with
+# re_entry_allowed: true declared on the terminal state. The validator must
+# NOT report W003. Verdict expected: PASS (zero warnings, zero errors).
+#
+# This fixture exists to prove the suppression rule is wired correctly and
+# does not silently swallow other problems.
+
+workflow: ok_re_entry_allowed
+version: 1
+description: |
+  Fixture: terminal state "done" admits a documented re-entry to "reopened"
+  via re_entry_allowed: true. The validator must pass with no warnings.
+initial_state: a
+states:
+  - name: a
+    description: start
+    is_final: false
+  - name: done
+    description: |
+      Terminal with documented exception: explicitly admits the reopen
+      out-transition.
+    is_final: true
+    re_entry_allowed: true
+  - name: reopened
+    description: |
+      Target of the documented re-entry. Declared as is_final to keep the
+      fixture focused (no W002 collateral).
+    is_final: true
+events:
+  - name: finish
+    description: a -> done
+  - name: reopen
+    description: done -> reopened (the documented exception)
+transitions:
+  - from: a
+    to: done
+    event: finish
+  - from: done
+    to: reopened
+    event: reopen

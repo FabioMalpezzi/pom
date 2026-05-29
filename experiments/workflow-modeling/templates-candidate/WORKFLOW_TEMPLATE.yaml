@@ -39,6 +39,11 @@ states:
     description: |
       ...
     is_final: true
+    # Optional: re_entry_allowed declares a terminal state that admits
+    # a documented exception out-transition (reopen, supersede, ...).
+    # When true, the validator suppresses W003 on this state.
+    # Default false. Has no effect on non-final states (open point).
+    re_entry_allowed: false
 
 events:
   - name: submit

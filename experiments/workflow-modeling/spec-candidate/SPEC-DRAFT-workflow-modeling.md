@@ -55,6 +55,7 @@ states:
   - name: complete
     description: Spec fully implemented and verified.
     is_final: true
+    re_entry_allowed: true        # admits supersede out-transition
 
 events:
   - name: accept
@@ -94,7 +95,7 @@ The validator must report, with severity, at least:
 | Error | More than one initial state. |
 | Warning | A state is declared but never reached by any transition (unreachable). |
 | Warning | A non-final state has no outgoing transitions (silent dead-end). |
-| Warning | A final state has outgoing transitions (re-entry from terminal). |
+| Warning | A final state has outgoing transitions (re-entry from terminal). Suppressed when the state declares `re_entry_allowed: true`. |
 | Warning | Two transitions share `(from, event)` without distinguishing guards (non-determinism). |
 | Info | Cycles exist in the model. (Not always a defect, but worth flagging.) |
 | Info | State or event names violate the naming convention (snake_case). |
@@ -179,7 +180,12 @@ These are deliberately left undecided until the experiment provides evidence:
 - guard naming convention and how guards are wired to target code;
 - relation between workflows and the existing POM spec / ADR / task-plan vocabulary (does `spec_evolution.yaml` replace or complement the current `## Status` field?);
 - minimum / maximum size of the model that the validator accepts;
-- whether one workflow file can declare composition with another (out of scope for v1 unless the three examples force it).
+- whether one workflow file can declare composition with another (out of scope for v1 unless the three examples force it);
+- effect of `re_entry_allowed: true` on a non-final state — currently ignored silently; may become an Info or Warning rule in a later pass.
+
+## Closed Decisions
+
+- **`re_entry_allowed: true` on a final state** suppresses W003. The attribute is opt-in, defaults to `false`, and was added after both compiled examples (`spec-evolution`, `ticket-lifecycle`) independently produced the same W003 on terminal states with a documented exception (`supersede`, `reopen`). See `EXPERIMENT.md` "Decisione: re_entry_allowed" for the evidence trail.
 
 ## Promotion Path
 

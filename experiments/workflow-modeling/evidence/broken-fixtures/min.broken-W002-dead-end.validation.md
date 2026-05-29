@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Source | `evidence/broken-fixtures/min.broken-W002-dead-end.yaml` |
-| Generated | 2026-05-29 14:32:33 (UTC) |
+| Generated | 2026-05-29 14:50:43 (UTC) |
 | Errors | 0 |
 | Warnings | 1 |
 | Verdict | **PASS WITH WARNINGS** |

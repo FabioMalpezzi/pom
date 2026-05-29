@@ -49,8 +49,9 @@ states:
     description: |
       The spec has been fully implemented and verified against its completion
       verification gate. Corresponds to "Status | Complete" in current POM
-      specs. Terminal.
+      specs. Terminal, but admits the supersede out-transition explicitly.
     is_final: true
+    re_entry_allowed: true
 
   - name: superseded
     description: |
@@ -193,3 +194,10 @@ metadata:
     - |
       Under-review changes return to draft. An alternative is a
       "revisions_requested" state that keeps the review thread open.
+
+  closed_points:
+    - |
+      "complete admits supersede out-transition" — resolved via the
+      schema attribute re_entry_allowed: true. The validator no longer
+      flags W003 on complete. Same decision applied to ticket-lifecycle's
+      "closed" state.

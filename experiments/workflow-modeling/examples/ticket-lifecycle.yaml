@@ -74,9 +74,10 @@ states:
     description: |
       The ticket is administratively closed. By policy, closed tickets
       can be reopened if the issue recurs. This state is terminal in
-      the lifecycle sense but admits a documented reverse transition;
-      see open_points for the schema implication.
+      the lifecycle sense but admits a documented reverse transition,
+      declared explicitly via re_entry_allowed.
     is_final: true
+    re_entry_allowed: true
 
   - name: duplicate
     description: |
@@ -247,15 +248,6 @@ metadata:
 
   open_points:
     - |
-      Terminal state with outgoing transition: closed is is_final: true
-      and has the reopen transition. The validator will warn. Proposed
-      schema extension to evaluate: add an optional re_entry_allowed
-      boolean (default false) on a state, which the validator treats as
-      a deliberate exception. Alternative: drop is_final: true on closed
-      and rely only on transition structure; this loses the visual
-      hint in Mermaid.
-
-    - |
       Pause state modeling: waiting_customer is modeled as a primary
       state here, while spec-evolution excluded Deferred/Blocked/Waiting.
       The two examples make the difference explicit. Open question:
@@ -281,3 +273,10 @@ metadata:
       before triage. But the schema does not currently express
       "guard does not apply" — it just omits the guard. If models grow
       complex, a "no_guard_required: true" marker may help readability.
+
+  closed_points:
+    - |
+      "closed admits reopen out-transition" — resolved via the schema
+      attribute re_entry_allowed: true. The validator no longer flags
+      W003 on closed. Same decision applied to spec-evolution's
+      "complete" state.

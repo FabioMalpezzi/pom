@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Source | `evidence/broken-fixtures/min.broken-E014-from-undeclared.yaml` |
-| Generated | 2026-05-29 14:41:01 (UTC) |
+| Generated | 2026-05-29 14:50:43 (UTC) |
 | Errors | 1 |
 | Warnings | 2 |
 | Verdict | **FAIL** |

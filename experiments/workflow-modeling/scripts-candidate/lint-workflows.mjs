@@ -44,7 +44,7 @@ const ERROR_RULES = {
 const WARNING_RULES = {
   W001: 'Unreachable state: declared but not reachable from initial_state by any transition path.',
   W002: 'Silent dead-end: non-final state with no outgoing transitions.',
-  W003: 'Final state has at least one outgoing transition (re-entry from terminal).',
+  W003: 'Final state has at least one outgoing transition (re-entry from terminal). Suppressed when the state declares re_entry_allowed: true.',
   W004: 'Non-deterministic transition: same (from, event) declared more than once with ambiguous guard coverage.',
 };
 
@@ -196,7 +196,9 @@ function validateWarnings(model, stateNames) {
     if (!isNonEmptyString(s?.name)) continue;
     const hasOutgoing = transitions.some((t) => t?.from === s.name);
     if (s.is_final === true && hasOutgoing) {
-      warnings.push(warn('W003', `states[${i}]`, `name=${s.name}`));
+      if (s.re_entry_allowed !== true) {
+        warnings.push(warn('W003', `states[${i}]`, `name=${s.name}`));
+      }
     } else if (s.is_final !== true && !hasOutgoing) {
       warnings.push(warn('W002', `states[${i}]`, `name=${s.name}`));
     }

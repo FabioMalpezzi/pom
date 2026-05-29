@@ -90,7 +90,7 @@ Escluso dall'esperimento:
 ## Open point dichiarati
 
 - **Stati ortogonali / di pausa**: come modellare `Deferred`, `Blocked`, `Waiting` rispetto al lifecycle principale? Stato separato, modifier ortogonale, o esclusi dal modello FSM? Esempi a confronto: `spec-evolution.yaml` li esclude, `ticket-lifecycle.yaml` modella `waiting_customer` come stato primario. Open question derivata: il formato deve permettere a uno stato di dichiararsi "variante di pausa" di un altro stato, per tenere leggibile il percorso principale?
-- **Stato terminale con riapertura ammessa**: `closed` in `ticket-lifecycle.yaml` è `is_final: true` ma ha una transizione `reopen` in uscita. Il validatore deve warnare. Proposta di estensione schema: attributo opzionale `re_entry_allowed: true` sullo stato, che il validatore tratta come eccezione dichiarata. Alternativa: rimuovere `is_final` e affidarsi solo alla struttura delle transizioni — al costo di perdere l'indicazione visiva in Mermaid.
+- ~~**Stato terminale con riapertura ammessa**~~ — **CHIUSO** 2026-05-29: aggiunto attributo `re_entry_allowed` allo schema, default `false`; quando `true` su stato `is_final: true` sopprime W003. Applicato a `complete` di spec-evolution e `closed` di ticket-lifecycle. Vedi "Decisione: re_entry_allowed" sotto.
 - **Guard "non applicabili"**: in `ticket-lifecycle.yaml`, `mark_duplicate` da `new` salta volutamente la guard `has_reproduction_steps`. Il modello lo esprime omettendo la guard, ma non dichiara esplicitamente che la guard non si applica. Se i modelli crescono, può servire un marcatore `no_guard_required: true`.
 - **Transizioni temporali**: ticket reali si chiudono automaticamente dopo N giorni in `waiting_customer`. Dichiarate fuori scope per v1; se l'uso le richiede, futura estensione `time_trigger` su transizione.
 - **Guard testuali vs codificate**: nel modello YAML le guard sono prosa, ma l'agente di coding deve poterle trasformare in codice. Va definita una convenzione (nome simbolico + descrizione testuale).
@@ -189,6 +189,31 @@ I due esempi compilati producono *entrambi* W003, su contesti diversi (`complete
 - **H1**: regge. Nessun aggiustamento di formato richiesto dalle Warning rules.
 - **H2**: confermata su Error + Warning per il set di regole implementate. Resta da decidere se servono Info rules (cicli, naming) per il primo giro di promozione.
 
+## Decisione: re_entry_allowed (2026-05-29)
+
+L'evidenza emersa dalla seconda passata Warning ha portato a chiudere l'open point sul "terminale con eccezione dichiarata". Entrambi gli esempi compilati producevano W003 su stati terminali (`spec-evolution.complete`, `ticket-lifecycle.closed`) per transizioni di superamento/riapertura semanticamente legittime; il pattern era ricorrente, non eccezionale.
+
+**Decisione**: lo schema include un attributo opzionale `re_entry_allowed` sullo stato, con default `false`. Quando impostato a `true` su uno stato `is_final: true`, il validatore sopprime W003 su quello stato. Su uno stato non terminale l'attributo è ignorato silenziosamente nel primo giro (potenziale Info rule futura).
+
+**Cosa cambia**
+
+- `templates-candidate/WORKFLOW_TEMPLATE.yaml`: nuovo attributo documentato con commento.
+- `spec-candidate/SPEC-DRAFT-workflow-modeling.md`: schema documentato, regola W003 aggiornata, nuova sezione "Closed Decisions".
+- `examples/spec-evolution.yaml`: `re_entry_allowed: true` su `complete`; open point migrato a `closed_points`.
+- `examples/ticket-lifecycle.yaml`: `re_entry_allowed: true` su `closed`; open point migrato a `closed_points`.
+- `scripts-candidate/lint-workflows.mjs`: W003 sopprime su `re_entry_allowed === true`.
+
+**Verifica della decisione**
+
+| File | Errors | Warnings | Verdict |
+|---|---|---|---|
+| `examples/spec-evolution.yaml` | 0 | 0 | **PASS** (era PASS WITH WARNINGS) |
+| `examples/ticket-lifecycle.yaml` | 0 | 0 | **PASS** (era PASS WITH WARNINGS) |
+| `evidence/broken-fixtures/min.ok-re-entry-allowed.yaml` (nuova) | 0 | 0 | **PASS** |
+| `evidence/broken-fixtures/min.broken-W003-terminal-with-outgoing.yaml` (senza l'attributo) | 0 | 1 | **PASS WITH WARNINGS** (W003 continua a scattare) |
+
+La soppressione è chirurgica: si attiva solo se l'attributo è esplicito; non maschera altri errori. La fixture positiva di conferma esiste accanto a quella che testa la regola, così la prossima persona che legge il validatore vede entrambe le facce della stessa decisione.
+
 ## Follow-up
 
 - [x] Compilare `examples/spec-evolution.yaml` con lifecycle reale delle SPEC POM.
@@ -197,7 +222,7 @@ I due esempi compilati producono *entrambi* W003, su contesti diversi (`complete
 - [ ] Stabilizzare `templates-candidate/WORKFLOW_TEMPLATE.yaml`.
 - [x] Implementare `scripts-candidate/lint-workflows.mjs` — regole Error. *(2026-05-29: prima passata completa.)*
 - [x] Estendere `lint-workflows.mjs` con regole Warning (irraggiungibilità, dead-end, terminale con uscita, non-determinismo). *(2026-05-29: seconda passata completa; ha confermato il pattern "terminale con eccezione dichiarata" su entrambi gli esempi.)*
-- [ ] Decidere su estensione schema `re_entry_allowed` (open point con evidenza forte).
+- [x] Decidere su estensione schema `re_entry_allowed`. *(2026-05-29: chiuso. Attributo opzionale sullo stato, default false; sopprime W003 quando true e is_final true. Esempi e validator aggiornati; entrambi gli esempi ora PASS pulito.)*
 - [ ] Aggiungere generatore Mermaid `stateDiagram-v2`.
 - [ ] Aggiungere generatore scenari lingua-agnostici.
 - [ ] Stabilizzare `skills-candidate/workflow.md`.
