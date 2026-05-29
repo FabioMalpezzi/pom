@@ -240,6 +240,57 @@ Compilato `examples/document-approval.yaml` e fatto girare il validator. Risulta
 
 I criteri di valore minimi richiedevano tre workflow modellati senza forzature evidenti del formato. Il terzo esempio è stato modellato senza modifiche allo schema, ha trovato proprietà nuove e le ha gestite con i meccanismi esistenti (guard nominata per ruoli, transizioni multiple sullo stesso evento per archive). H1 è confermata sul set di esempi previsto dall'esperimento.
 
+## Esito intermedio - test implementazione TypeScript guidata (2026-05-29)
+
+Eseguito il test di H4: la skill `workflow` in modo `implement`, applicata a `examples/spec-evolution.yaml`, deve guidare la produzione di codice nel linguaggio target senza imporre una libreria.
+
+**Setup**
+
+- Target language: TypeScript su Node.js 22.19 con `--experimental-strip-types`. Zero compilatore, zero `tsconfig`, zero dipendenze esterne.
+- Test runner: `node:test` built-in.
+- Procedura: pedissequa esecuzione dei passi del modo `implement` da `prompts/workflow.md`.
+
+**Pattern scelto**
+
+Pattern A (transition table) sulla base dei criteri del `WORKFLOW_IMPLEMENTATION_GUIDE.md`: modello sotto soglia (7 stati, 7 eventi, 2 guard), guard semplici, nessuna gerarchia, nessun bisogno di hook entry/exit, nessuna libreria FSM già in uso. Pattern B (switch su stato) era praticabile ma meno data-driven; Pattern C (libreria) sarebbe stato over-engineering.
+
+**Risultati**
+
+| Metrica | Valore |
+|---|---|
+| File prodotti | `spec-evolution.ts`, `guards.ts`, `spec-evolution.test.ts`, `README.md`, `test-output.txt` |
+| Dipendenze aggiunte | 0 |
+| Test scritti | 15 (positive transitions, guard true/false, refused per (from,event) non dichiarato, terminale, `re_entry_allowed` su `complete`) |
+| Esito test | pass 15, fail 0, exit 0 |
+| Posizione | `evidence/typescript/spec-evolution/` |
+
+**Cosa la guida ha guidato (riconosciuto esplicitamente nel `README.md` accanto al codice)**
+
+- Selezione del pattern via tabella di criteri;
+- Convenzione di naming guard: predicate `guard_<nome_yaml>`;
+- Docstring del predicate copiata verbatim dalla `description:` del YAML (il modello resta fonte autoritativa, il codice solo implementa);
+- Categorie di test dal modo `scenarios` (positive, refused, guard true/false, terminale);
+- Mapping di `re_entry_allowed: true` a livello di codice → terminale con un'eccezione di transizione dichiarata.
+
+**Cosa la guida NON ha guidato (correttamente delegato al target)**
+
+- Dove vivono i predicati guard nell'architettura del target;
+- Storage e persistenza della stato;
+- Quale test runner — qui scelto per zero-dipendenza, in un target reale verrebbe da `pom.config.json`;
+- Tipo dell'entità che trasporta lo stato;
+- Eventi di osservabilità sulle transizioni.
+
+**H4: confermata per Pattern A**
+
+La guida ha portato da YAML a codice eseguibile e testato senza imporre librerie, framework o architettura. Le cose non guidate sono correttamente di pertinenza del target, non lacune della guida. Pattern B e C restano non verificati da questa evidenza; per la promozione bastano (e gli altri pattern possono essere stressati in round successivi).
+
+## Stato finale delle quattro ipotesi
+
+- **H1** (espressività YAML): **confermata** su tre workflow eterogenei (spec-evolution, ticket-lifecycle, document-approval), nessuna modifica allo schema dopo il primo.
+- **H2** (validatore statico efficace): **confermata** per le 17 regole Error e le 4 regole Warning implementate; Info rules restano target di promozione.
+- **H3** (skill sufficiente entro vincoli dimensionali): **confermata** — skill 62 righe (sotto 100), prompt 112 righe (sotto 200), prompt operativo realmente esistente e usato in H4.
+- **H4** (guida implementativa efficace senza imposizioni): **confermata** per Pattern A; B e C non testati ma non bloccanti per la promozione.
+
 ## Follow-up
 
 - [x] Compilare `examples/spec-evolution.yaml` con lifecycle reale delle SPEC POM.
@@ -253,5 +304,5 @@ I criteri di valore minimi richiedevano tre workflow modellati senza forzature e
 - [ ] Aggiungere generatore scenari lingua-agnostici.
 - [x] Stabilizzare `skills-candidate/workflow.md`. *(2026-05-29: 62 righe, sotto il tetto di 100; punta al prompt canonico `prompts/workflow.md` ora esistente.)*
 - [x] Scrivere prompt canonico `prompts/workflow.md`. *(2026-05-29: 112 righe, sotto il tetto di 200; copre i cinque modi design/validate/diagram/scenarios/implement. Diagram e scenarios dichiarano "target-for-promotion, not implemented in this pass".)*
-- [ ] Eseguire test di implementazione TypeScript guidata su un esempio.
+- [x] Eseguire test di implementazione TypeScript guidata su un esempio. *(2026-05-29: spec-evolution → Pattern A, 15 test node:test, zero dipendenze, exit 0. Evidenza in `evidence/typescript/spec-evolution/`.)*
 - [ ] Compilare sezione Esito e Consolidazione.

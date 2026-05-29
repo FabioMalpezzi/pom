@@ -29,7 +29,7 @@ This spec describes the target shape of the capability. Not every part is implem
 | Scenario generator (`<name>.scenarios.md`) | **Target for promotion** | Not implemented |
 | `pom:workflow:lint` npm wrapper | **Target for promotion** | Not implemented; experiment runs the script directly under `scripts-candidate/` |
 | Implementation guide for coding agents | **Implemented (draft)** | `templates-candidate/WORKFLOW_IMPLEMENTATION_GUIDE.md` |
-| TypeScript guided-implementation evidence (Hypothesis H4) | **Target for promotion** | Not yet produced; planned under `evidence/typescript/` |
+| TypeScript guided-implementation evidence (Hypothesis H4) | **Implemented** | `evidence/typescript/spec-evolution/` — 15 tests, all passing, Pattern A (transition table), zero added dependencies |
 | Promotion decision and consolidation | **Target for promotion** | Section in `EXPERIMENT.md` to be filled at end of experiment |
 
 The rest of this document describes the *target* shape. Read each section together with the row above before assuming a feature exists.
