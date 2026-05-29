@@ -1,0 +1,37 @@
+# Expected to trigger: W004 (non-deterministic transition).
+# Two transitions from a on event "go": one unguarded, one guarded.
+# Ambiguous: which one fires when the guard is true?
+
+workflow: broken_w004
+version: 1
+description: |
+  Fixture: from "a" on event "go" there are two transitions: one without
+  a guard (always fires) and one with guard "is_fast". When is_fast is
+  true, both transitions are eligible. The validator must report W004.
+initial_state: a
+states:
+  - name: a
+    description: start
+    is_final: false
+  - name: slow
+    description: default destination
+    is_final: true
+  - name: fast
+    description: destination if is_fast
+    is_final: true
+events:
+  - name: go
+    description: both transitions react to go
+guards:
+  - name: is_fast
+    description: |
+      Decides the fast path; but no else-clause is declared, so the
+      unguarded transition is the implicit default and creates ambiguity.
+transitions:
+  - from: a
+    to: slow
+    event: go
+  - from: a
+    to: fast
+    event: go
+    guard: is_fast

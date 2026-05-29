@@ -146,10 +146,48 @@ E000 parse error, E001 nome workflow, E002 initial_state mancante, E003 initial_
 
 Ogni fixture broken produce *esattamente* la regola attesa, niente cascate. Gli esempi corretti passano senza falsi positivi. Il criterio di valore #2 dell'esperimento è soddisfatto per le sole regole Error; resta da estendere a Warning quando il giro sarà ampliato.
 
-**H1 e H2: stato**
+**H1 e H2: stato dopo la prima passata Error**
 
 - **H1** (espressività YAML): regge sui due workflow eterogenei già compilati. Conferma parziale, dipendente da `document-approval.yaml`.
 - **H2** (validatore statico efficace): confermata per le regole Error sui casi minimi. Da rivedere quando si introdurranno Warning (irraggiungibilità, dead-end, terminale con uscita, non-determinismo).
+
+## Esito intermedio - seconda passata validator: regole Warning (2026-05-29)
+
+Il validatore è stato esteso con quattro regole Warning. Le regole Error restano in vigore; il verdict ora è ternario: PASS (0 errori, 0 warning), PASS WITH WARNINGS (0 errori, ≥1 warning), FAIL (≥1 errore). Exit code: 0 anche con warning, 1 solo con errori.
+
+**Regole Warning implementate (4)**
+
+- W001 stato irraggiungibile dall'`initial_state`;
+- W002 stato non terminale senza transizioni in uscita (dead-end silenzioso);
+- W003 stato terminale (`is_final: true`) con almeno una transizione in uscita;
+- W004 non-determinismo: stessa coppia `(from, event)` con copertura guard ambigua (almeno una transizione senza guard quando ce ne sono due o più).
+
+**Risultati sui due esempi compilati**
+
+| File | Errors | Warnings | Verdict | Warning emersi |
+|---|---|---|---|---|
+| `examples/spec-evolution.yaml` | 0 | 1 | PASS WITH WARNINGS | W003 su `complete` (transizione `supersede`) |
+| `examples/ticket-lifecycle.yaml` | 0 | 1 | PASS WITH WARNINGS | W003 su `closed` (transizione `reopen`) |
+
+**Risultati sulle quattro fixture Warning**
+
+| Fixture | Warning attesi | Warning effettivi |
+|---|---|---|
+| `min.broken-W001-unreachable.yaml` | W001 | W001 |
+| `min.broken-W002-dead-end.yaml` | W002 | W002 |
+| `min.broken-W003-terminal-with-outgoing.yaml` | W003 | W003 |
+| `min.broken-W004-nondeterministic.yaml` | W004 | W004 |
+
+Le fixture W001 e W003 inizialmente producevano anche un W002 collaterale legittimo (sull'orphan e sulla destinazione del re-entry); sono state riallineate dichiarando `is_final: true` per ottenere "una regola per fixture". Le sei fixture Error pre-esistenti restano FAIL con il codice Error atteso; in due casi (E014, E015) producono Warning aggiuntivi *legittimi* perché la rottura introduce davvero irraggiungibilità/dead-end. Comportamento dichiarato come desiderato: il validatore segnala tutti i problemi indipendenti, non si ferma al primo.
+
+**Segnale forte emerso: pattern "terminale con eccezione dichiarata"**
+
+I due esempi compilati producono *entrambi* W003, su contesti diversi (`complete → superseded` via `supersede`; `closed → in_progress` via `reopen`). Non è una eccezione isolata: il pattern emerge naturalmente nei lifecycle reali (supersessione di una spec, riapertura di un ticket). Conseguenza: la proposta di estensione schema `re_entry_allowed: true` sullo stato non è più solo un'ipotesi su un caso, è supportata da due evidenze indipendenti raccolte sui modelli che vogliamo che POM supporti. Decisione su `re_entry_allowed` da prendere come passo successivo dell'esperimento.
+
+**H1 e H2: aggiornamento**
+
+- **H1**: regge. Nessun aggiustamento di formato richiesto dalle Warning rules.
+- **H2**: confermata su Error + Warning per il set di regole implementate. Resta da decidere se servono Info rules (cicli, naming) per il primo giro di promozione.
 
 ## Follow-up
 
@@ -157,8 +195,9 @@ Ogni fixture broken produce *esattamente* la regola attesa, niente cascate. Gli 
 - [x] Compilare `examples/ticket-lifecycle.yaml`. *(2026-05-29: compilato; ha generato 5 nuovi open point, inclusa la proposta di estensione schema `re_entry_allowed` su stato terminale con riapertura.)*
 - [ ] Compilare `examples/document-approval.yaml`.
 - [ ] Stabilizzare `templates-candidate/WORKFLOW_TEMPLATE.yaml`.
-- [x] Implementare `scripts-candidate/lint-workflows.mjs` — regole Error. *(2026-05-29: prima passata completa; Warning e Info, Mermaid e scenari restano da implementare.)*
-- [ ] Estendere `lint-workflows.mjs` con regole Warning (irraggiungibilità, dead-end, terminale con uscita, non-determinismo).
+- [x] Implementare `scripts-candidate/lint-workflows.mjs` — regole Error. *(2026-05-29: prima passata completa.)*
+- [x] Estendere `lint-workflows.mjs` con regole Warning (irraggiungibilità, dead-end, terminale con uscita, non-determinismo). *(2026-05-29: seconda passata completa; ha confermato il pattern "terminale con eccezione dichiarata" su entrambi gli esempi.)*
+- [ ] Decidere su estensione schema `re_entry_allowed` (open point con evidenza forte).
 - [ ] Aggiungere generatore Mermaid `stateDiagram-v2`.
 - [ ] Aggiungere generatore scenari lingua-agnostici.
 - [ ] Stabilizzare `skills-candidate/workflow.md`.

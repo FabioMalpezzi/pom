@@ -1,17 +1,17 @@
 #!/usr/bin/env node
 //
-// lint-workflows.mjs - first-pass validator for POM workflow YAML models.
+// lint-workflows.mjs - validator for POM workflow YAML models.
 //
-// Scope of this pass: Error-level rules only. Warning, Info, Mermaid
-// generation, and scenario generation are out of scope and will be added in
-// later iterations of the experiment.
+// Scope of this pass: Error-level rules + Warning-level rules.
+// Info-level rules, Mermaid generation, and scenario generation are out of
+// scope and will be added in later iterations of the experiment.
 //
 // Usage:
 //   node lint-workflows.mjs <file.yaml> [--out <report.md>]
 //   node lint-workflows.mjs <file1.yaml> <file2.yaml> ...
 //
-// Exit code: 0 if all files pass, 1 if any file has at least one Error,
-// 2 on argument/parse misuse.
+// Exit code: 0 if all files pass (warnings allowed), 1 if any file has at
+// least one Error, 2 on argument/parse misuse.
 //
 // This script lives in experiments/workflow-modeling/scripts-candidate/ and
 // uses a local node_modules (js-yaml) isolated from the POM main repo.
@@ -41,7 +41,18 @@ const ERROR_RULES = {
   E017: 'A transition "guard" references a guard not declared in guards.',
 };
 
+const WARNING_RULES = {
+  W001: 'Unreachable state: declared but not reachable from initial_state by any transition path.',
+  W002: 'Silent dead-end: non-final state with no outgoing transitions.',
+  W003: 'Final state has at least one outgoing transition (re-entry from terminal).',
+  W004: 'Non-deterministic transition: same (from, event) declared more than once with ambiguous guard coverage.',
+};
+
 function err(code, where, extra) {
+  return { code, where, extra: extra ?? '' };
+}
+
+function warn(code, where, extra) {
   return { code, where, extra: extra ?? '' };
 }
 
@@ -49,7 +60,23 @@ function isNonEmptyString(v) {
   return typeof v === 'string' && v.trim().length > 0;
 }
 
-function validate(model) {
+function findReachableStates(initialState, transitions, stateNames) {
+  if (!stateNames.has(initialState)) return new Set();
+  const reachable = new Set([initialState]);
+  const queue = [initialState];
+  while (queue.length > 0) {
+    const current = queue.shift();
+    for (const t of transitions) {
+      if (t?.from === current && isNonEmptyString(t?.to) && stateNames.has(t.to) && !reachable.has(t.to)) {
+        reachable.add(t.to);
+        queue.push(t.to);
+      }
+    }
+  }
+  return reachable;
+}
+
+function validateErrors(model) {
   const errors = [];
 
   if (!isNonEmptyString(model?.workflow)) {
@@ -145,12 +172,76 @@ function validate(model) {
     }
   }
 
-  return { errors };
+  return { errors, stateNames, eventNames, guardNames };
 }
 
-function formatReport({ source, model, errors }) {
+function validateWarnings(model, stateNames) {
+  const warnings = [];
+  const transitions = Array.isArray(model?.transitions) ? model.transitions : [];
+  const states = Array.isArray(model?.states) ? model.states : [];
+
+  if (isNonEmptyString(model?.initial_state) && stateNames.has(model.initial_state)) {
+    const reachable = findReachableStates(model.initial_state, transitions, stateNames);
+    for (let i = 0; i < states.length; i++) {
+      const s = states[i];
+      if (!isNonEmptyString(s?.name) || !stateNames.has(s.name)) continue;
+      if (!reachable.has(s.name)) {
+        warnings.push(warn('W001', `states[${i}]`, `name=${s.name}`));
+      }
+    }
+  }
+
+  for (let i = 0; i < states.length; i++) {
+    const s = states[i];
+    if (!isNonEmptyString(s?.name)) continue;
+    const hasOutgoing = transitions.some((t) => t?.from === s.name);
+    if (s.is_final === true && hasOutgoing) {
+      warnings.push(warn('W003', `states[${i}]`, `name=${s.name}`));
+    } else if (s.is_final !== true && !hasOutgoing) {
+      warnings.push(warn('W002', `states[${i}]`, `name=${s.name}`));
+    }
+  }
+
+  const groups = new Map();
+  for (let i = 0; i < transitions.length; i++) {
+    const t = transitions[i];
+    if (!isNonEmptyString(t?.from) || !isNonEmptyString(t?.event)) continue;
+    const key = `${t.from}|${t.event}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push({ idx: i, guard: t.guard ?? null });
+  }
+  for (const [key, group] of groups) {
+    if (group.length < 2) continue;
+    const unguardedCount = group.filter((g) => !isNonEmptyString(g.guard)).length;
+    const ambiguous = unguardedCount >= 1;
+    if (ambiguous) {
+      const indices = group.map((g) => `transitions[${g.idx}]`).join(', ');
+      const [fromState, eventName] = key.split('|');
+      warnings.push(warn('W004', indices, `from=${fromState}, event=${eventName}`));
+    }
+  }
+
+  return warnings;
+}
+
+function validate(model) {
+  const { errors, stateNames } = validateErrors(model);
+  const warnings = errors.some((e) => ['E004', 'E005'].includes(e.code))
+    ? []
+    : validateWarnings(model, stateNames);
+  return { errors, warnings };
+}
+
+function formatReport({ source, model, errors, warnings }) {
   const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  const verdict = errors.length === 0 ? 'PASS' : 'FAIL';
+  let verdict;
+  if (errors.length > 0) {
+    verdict = 'FAIL';
+  } else if (warnings.length > 0) {
+    verdict = 'PASS WITH WARNINGS';
+  } else {
+    verdict = 'PASS';
+  }
   const lines = [];
   lines.push(`# Workflow validation report - ${model?.workflow ?? '(unknown)'}`);
   lines.push('');
@@ -159,9 +250,10 @@ function formatReport({ source, model, errors }) {
   lines.push(`| Source | \`${source}\` |`);
   lines.push(`| Generated | ${now} (UTC) |`);
   lines.push(`| Errors | ${errors.length} |`);
-  lines.push('| Warnings | 0 (not implemented in this pass) |');
+  lines.push(`| Warnings | ${warnings.length} |`);
   lines.push(`| Verdict | **${verdict}** |`);
   lines.push('');
+
   lines.push('## Errors');
   lines.push('');
   if (errors.length === 0) {
@@ -174,8 +266,22 @@ function formatReport({ source, model, errors }) {
     }
   }
   lines.push('');
+
+  lines.push('## Warnings');
+  lines.push('');
+  if (warnings.length === 0) {
+    lines.push('_None._');
+  } else {
+    for (const w of warnings) {
+      const desc = WARNING_RULES[w.code] ?? '';
+      const extra = w.extra ? ` (${w.extra})` : '';
+      lines.push(`- **${w.code}** \`${w.where}\`${extra} — ${desc}`);
+    }
+  }
+  lines.push('');
+
   lines.push('---');
-  lines.push('_Generated by experiments/workflow-modeling/scripts-candidate/lint-workflows.mjs (Error rules only)._');
+  lines.push('_Generated by experiments/workflow-modeling/scripts-candidate/lint-workflows.mjs (Error + Warning rules)._');
   lines.push('');
   return lines.join('\n');
 }
@@ -220,6 +326,7 @@ function main() {
     }
 
     let errors = [];
+    let warnings = [];
     if (parseError) {
       errors.push(err('E000', 'parse', parseError.message));
     } else if (model == null || typeof model !== 'object') {
@@ -227,10 +334,11 @@ function main() {
     } else {
       const v = validate(model);
       errors = v.errors;
+      warnings = v.warnings;
     }
     totalErrors += errors.length;
 
-    const report = formatReport({ source: file, model: model ?? {}, errors });
+    const report = formatReport({ source: file, model: model ?? {}, errors, warnings });
     reports.push({ file, report });
   }
 

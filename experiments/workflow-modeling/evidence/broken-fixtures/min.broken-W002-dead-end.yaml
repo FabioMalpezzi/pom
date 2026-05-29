@@ -1,0 +1,31 @@
+# Expected to trigger: W002 (silent dead-end on stuck).
+# Model has a non-final state with no outgoing transitions.
+
+workflow: broken_w002
+version: 1
+description: |
+  Fixture: state "stuck" is non-final but has no outgoing transitions.
+  The validator must report W002 on "stuck".
+initial_state: a
+states:
+  - name: a
+    description: start
+    is_final: false
+  - name: stuck
+    description: non-final state with no outgoing transitions (dead-end)
+    is_final: false
+  - name: done
+    description: terminal
+    is_final: true
+events:
+  - name: stop
+    description: transitions a -> stuck
+  - name: finish
+    description: transitions a -> done
+transitions:
+  - from: a
+    to: stuck
+    event: stop
+  - from: a
+    to: done
+    event: finish
