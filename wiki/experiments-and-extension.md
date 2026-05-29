@@ -16,6 +16,8 @@ The self-improvement loop is under evaluation in `experiments/self-improvement-l
 
 See `prompts/25-self-improvement-loop.md` for the canonical procedure and `experiments/self-improvement-loop/EXPERIMENT.md` for evaluation evidence and case logs.
 
+The workflow modeling capability was developed in `experiments/workflow-modeling/` on branch `exp/workflow-modeling` and consolidated as POM v0.2.0 (SPEC-0006). The experiment is preserved at status `consolidated` and stays in repo as the historical record: scaffolding commit, three synchronous composition primitives (linear pipeline, state-invoke, event-invoke) with their fixtures, context injection design decision and implementation, the Syntonia ai-agent real-project validation (three-level invoke chain `operational → analyzer → clean-family-repair` plus the semantic-family pushed modeling), TypeScript and Python H4 evidences, suspend/restore evidences across processes, Mermaid generation integrated in the validator, XState mapping, and the final consolidation commit. The promotion path declared in SPEC-0006 was applied to move spec / ADR / skill / prompt / templates / scripts / docs to their canonical paths on `main` while the candidate folders remain untouched under `experiments/workflow-modeling/`.
+
 ## Details
 
 Promotion paths should stay intentionally modest:
@@ -27,6 +29,7 @@ Promotion paths should stay intentionally modest:
 | Promote wiki | Move selected pages into a stable root `wiki/` after approval. |
 | Promote reader | Reimplement a small static renderer under stable `scripts/` after approval. |
 | Promote Project Reader | Completed for the lightweight file-based reader: stable code now lives under `scripts/project-reader/`. |
+| Promote workflow modeling | Completed as POM v0.2.0 (SPEC-0006): spec, ADR-0002, skill `workflow`, prompt 27, templates, scripts (`lint-workflows.mjs`, `mermaid.mjs`, `to-mermaid.mjs`, `to-xstate.mjs`), and the XState compatibility doc moved to canonical paths. Experiment folder preserved at status `consolidated`. |
 | Evaluate self-improvement loop | Keep the loop under evaluation until one case in POM Source and one case in another POM-managed project (or fixture) prove that the same method adds value without duplicating existing skills. If it fails, simplify or remove the prompt/skill and keep only the lessons learned. |
 | Create spec or ADR | Use if reader generation changes POM structure or source authority. |
 

@@ -4,6 +4,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-05-30] update | record POM v0.2.0 workflow modeling capability
+
+Added SPEC-0006 (`workflow-modeling`) and ADR-0002 (`workflow-context-injection`) to the specs table on `current-specs.md`. Added the `workflow` skill row to `skills-and-prompts.md` together with the new prompt 27, four templates (`WORKFLOW_TEMPLATE.yaml`, `PIPELINE_TEMPLATE.yaml`, `WORKFLOW_IMPLEMENTATION_GUIDE.md`, `WORKFLOW_INTEGRATION_GUIDE.md`), and the XState compatibility doc. Updated `experiments-and-extension.md` with the consolidated workflow-modeling experiment and its promotion outcome row in the candidate-outcome table.
+
+Sources used: `specs/SPEC-0006-workflow-modeling.md`, `decisions/ADR-0002-workflow-context-injection.md`, `skills/workflow.md`, `prompts/27-workflow-modeling.md`, `templates/WORKFLOW_*`, `docs/workflow-xstate-compatibility.md`, `CHANGELOG.md` v0.2.0 entry, `experiments/workflow-modeling/EXPERIMENT.md` final verdict.
+
 ## [2026-05-17] init | promote root POM wiki and reader
 
 Promoted the reader-view experiment into a stable root `wiki/` and added generated HTML output under `wiki/_site/`.

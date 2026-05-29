@@ -27,6 +27,7 @@ Important skill families:
 | `challenge` | Run adversarial thesis/antithesis review before accepting or completing non-code work. |
 | `config` | Create or update project-specific POM configuration. |
 | `sync` | Refresh an existing POM installation or align source and target POM. |
+| `workflow` | Design, validate, diagram, derive scenarios for, and guide the implementation of a domain workflow declared as a YAML state model. Opt-in per target via `workflows.enabled` in `pom.config.json`; relies on `scripts/lint-workflows.mjs` for validation and Mermaid generation, and on `scripts/to-xstate.mjs` for stately.ai visualization. |
 
 The prompt set covers bootstrap, adoption, state, governance, planning, review, handoff, Project Reader note processing, config, experiments, wiki operations, extension, classification, deferral, sync, validation, reconciliation, clarification, pruning, diagnosis, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.
 
@@ -50,6 +51,12 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 | `prompts/24-challenge-antithesis.md` | Read-only challenge procedure that looks for material antitheses before acceptance or completion. |
 | `specs/SPEC-0002-skill-yaml-frontmatter.md` | YAML frontmatter requirements for skill discovery. |
 | `specs/SPEC-0001-modular-agents-template.md` | Global-vs-skill boundary and profile-aware agent instruction assembly. |
+| `skills/workflow.md` | Workflow modeling skill card (5 modes: design / validate / diagram / scenarios / implement). |
+| `prompts/27-workflow-modeling.md` | Canonical prompt behind the workflow skill. |
+| `specs/SPEC-0006-workflow-modeling.md` | Workflow modeling specification and validator rule set. |
+| `decisions/ADR-0002-workflow-context-injection.md` | Closed decision behind workflow composition data-exchange model. |
+| `templates/WORKFLOW_TEMPLATE.yaml`, `templates/PIPELINE_TEMPLATE.yaml`, `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md`, `templates/WORKFLOW_INTEGRATION_GUIDE.md` | Workflow-skill templates and adoption/extension manuals. |
+| `docs/workflow-xstate-compatibility.md` | XState v5 compatibility and the stately.ai visualization workflow. |
 
 ## Linked Decisions
 

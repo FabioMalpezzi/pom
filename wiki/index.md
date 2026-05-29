@@ -2,7 +2,7 @@
 
 > Persistent Wiki for the POM source repository.
 > Primary source: current POM repository files.
-> Last updated: 2026-05-20
+> Last updated: 2026-05-30 (POM v0.2.0)
 
 ## Summary
 
