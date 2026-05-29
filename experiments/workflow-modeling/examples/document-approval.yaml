@@ -1,0 +1,49 @@
+# Example workflow: document approval (skeleton)
+#
+# This file is a placeholder for the third stress example of the
+# workflow-modeling experiment. It will be compiled in a follow-up
+# iteration.
+#
+# Intended scope: a multi-step approval workflow for an internal document
+# (policy, contract draft, release plan). States expected (subject to
+# revision):
+#   - draft
+#   - reviewer_assigned
+#   - in_review
+#   - approved
+#   - rejected
+#   - published
+#   - archived
+#
+# Useful properties to stress the schema:
+#   - guards over role (only "approver" can transition to approved);
+#   - parallel approvals (out of scope for v1 of the schema — should the
+#     skeleton document the limit clearly?);
+#   - publication as a distinct transition from approval (approval !=
+#     publication);
+#   - archiving from published vs from rejected.
+
+workflow: document_approval
+version: 0           # 0 = not stabilized
+description: |
+  TODO: write description after compiling the model.
+
+initial_state: draft
+
+states: []
+events: []
+guards: []
+transitions: []
+invariants: []
+
+metadata:
+  status: skeleton
+  owner: POM maintainer
+  tags:
+    - example
+    - skeleton
+  todo:
+    - Compile states, events, guards, transitions.
+    - Decide whether role-based guards are first-class in the schema or
+      always belong to target code only.
+    - Document the parallel-approval limit clearly: v1 schema is sequential.

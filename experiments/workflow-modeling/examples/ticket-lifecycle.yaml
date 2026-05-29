@@ -1,0 +1,48 @@
+# Example workflow: ticket lifecycle (skeleton)
+#
+# This file is a placeholder for the second stress example of the
+# workflow-modeling experiment. It will be compiled in a follow-up
+# iteration, once the spec-evolution example has stabilized the YAML schema.
+#
+# Intended scope: a generic support / bug ticket lifecycle for an
+# application that uses POM. States expected (subject to revision):
+#   - new (a.k.a. open)
+#   - triaged
+#   - in_progress
+#   - waiting_customer
+#   - resolved
+#   - verified
+#   - closed
+#   - reopened
+#
+# Useful properties to stress the schema:
+#   - presence of a waiting state (external dependency);
+#   - reopen flow (terminal -> non-terminal);
+#   - guards on triage (e.g., "has reproduction steps");
+#   - distinction between resolved (by support) and verified (by reporter).
+
+workflow: ticket_lifecycle
+version: 0           # 0 = not stabilized
+description: |
+  TODO: write description after compiling the model.
+
+initial_state: new
+
+states: []
+events: []
+guards: []
+transitions: []
+invariants: []
+
+metadata:
+  status: skeleton
+  owner: POM maintainer
+  tags:
+    - example
+    - skeleton
+  todo:
+    - Compile states, events, guards, transitions.
+    - Stress reopen flow (terminal -> non-terminal): does the schema need a
+      reopen_allowed flag on the terminal state, or is a plain reverse
+      transition enough?
+    - Stress waiting state: orthogonal pause or first-class state?

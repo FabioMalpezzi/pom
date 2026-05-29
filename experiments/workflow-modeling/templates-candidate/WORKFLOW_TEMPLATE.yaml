@@ -1,0 +1,80 @@
+# Workflow Template
+#
+# This is the draft schema for a POM workflow model.
+# It lives inside experiments/workflow-modeling/ and is not part of POM main yet.
+#
+# A workflow file declares:
+#   - identifying metadata
+#   - states (named, with description, optional is_final)
+#   - events (named, with description)
+#   - guards (named, with description; predicates that condition a transition)
+#   - transitions (from, to, event, optional guard)
+#   - invariants (textual; checked by humans and by the validator when possible)
+#
+# Conventions:
+#   - state, event, and guard names are snake_case;
+#   - exactly one initial_state, listed also under states;
+#   - descriptions are domain-level (what the state means, not how it is implemented);
+#   - guards are referenced by name from transitions; their semantics live in the description and in target code;
+#   - the file is the source of authority; Mermaid, validation report, scenarios, and code are derived.
+
+workflow: example_workflow      # snake_case unique name
+version: 1                       # integer, bumped on incompatible model changes
+description: |
+  Short paragraph describing the business process this workflow models.
+  Plain language; the reader should understand the domain after reading it.
+
+initial_state: draft             # must appear in states[]
+
+states:
+  - name: draft
+    description: |
+      Domain-level description of what it means to be in this state.
+    is_final: false
+  - name: in_progress
+    description: |
+      ...
+    is_final: false
+  - name: done
+    description: |
+      ...
+    is_final: true
+
+events:
+  - name: submit
+    description: |
+      What real-world action triggers this transition.
+  - name: complete
+    description: |
+      ...
+
+guards:
+  - name: has_required_fields
+    description: |
+      Predicate condition for the transition to fire.
+      The validator only checks that the name resolves; the actual predicate lives in target code.
+
+transitions:
+  - from: draft
+    to: in_progress
+    event: submit
+    guard: has_required_fields   # optional
+    description: |
+      Optional prose explaining why this transition exists and any nuance not obvious from from/to/event.
+  - from: in_progress
+    to: done
+    event: complete
+
+invariants:
+  - description: |
+      Plain-text rule that must hold across the workflow.
+      Example: "A done item cannot return to draft."
+  - description: |
+      Example: "Every accepted item must eventually reach done or rejected."
+
+# Optional metadata block for documentation and indexing.
+metadata:
+  owner: team or role
+  tags:
+    - example
+    - draft
