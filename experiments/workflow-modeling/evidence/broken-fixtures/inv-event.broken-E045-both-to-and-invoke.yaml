@@ -1,0 +1,30 @@
+# Expected to trigger: E045 (transition declares both invoke and a direct "to").
+
+workflow: broken_e045
+version: 1
+description: |
+  Ambiguous: the transition has both a direct "to" and an invoke whose
+  on_completion provides the targets. Schema forbids the combination.
+
+initial_state: drafting
+states:
+  - name: drafting
+    description: starting point
+    is_final: false
+  - name: accepted
+    description: terminal
+    is_final: true
+
+events:
+  - name: submit_for_review
+    description: submission
+
+transitions:
+  - from: drafting
+    to: accepted                              # direct target
+    event: submit_for_review
+    invoke:                                   # plus invoke -> ambiguous
+      workflow: ../../examples/invoke-event-toy/event-invoke-child.yaml
+      on_completion:
+        - terminal_state: validated
+          target: accepted

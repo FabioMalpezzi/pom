@@ -1,0 +1,32 @@
+workflow: event_invoke_child
+version: 1
+description: |
+  Minimal child workflow used to demonstrate synchronous invoke-from-event.
+  Two terminal states (validated, refused). The parent decides which
+  target state to enter based on the terminal.
+
+initial_state: start
+states:
+  - name: start
+    description: starting point
+    is_final: false
+  - name: validated
+    description: child decided validated
+    is_final: true
+  - name: refused
+    description: child decided refused
+    is_final: true
+
+events:
+  - name: pass
+    description: signals validation success
+  - name: deny
+    description: signals validation refusal
+
+transitions:
+  - from: start
+    to: validated
+    event: pass
+  - from: start
+    to: refused
+    event: deny

@@ -1,0 +1,28 @@
+# Expected to trigger: E043 (on_completion terminal_state not is_final: true in child).
+
+workflow: broken_e043
+version: 1
+description: |
+  Maps to a child terminal "approved" that does not exist.
+
+initial_state: drafting
+states:
+  - name: drafting
+    description: starting point
+    is_final: false
+  - name: accepted
+    description: terminal accepted
+    is_final: true
+
+events:
+  - name: submit_for_review
+    description: submission
+
+transitions:
+  - from: drafting
+    event: submit_for_review
+    invoke:
+      workflow: ../../examples/invoke-event-toy/event-invoke-child.yaml
+      on_completion:
+        - terminal_state: approved        # not present in child
+          target: accepted

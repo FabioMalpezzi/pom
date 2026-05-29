@@ -1,0 +1,29 @@
+# Expected to trigger: E044 (on_completion target is not a state of the parent).
+
+workflow: broken_e044
+version: 1
+description: |
+  Maps the child's validated terminal to parent state "ghost_state" that
+  is not declared in the parent's states[].
+
+initial_state: drafting
+states:
+  - name: drafting
+    description: starting point
+    is_final: false
+  - name: accepted
+    description: terminal accepted
+    is_final: true
+
+events:
+  - name: submit_for_review
+    description: submission
+
+transitions:
+  - from: drafting
+    event: submit_for_review
+    invoke:
+      workflow: ../../examples/invoke-event-toy/event-invoke-child.yaml
+      on_completion:
+        - terminal_state: validated
+          target: ghost_state                 # not a state of the parent

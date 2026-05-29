@@ -293,6 +293,41 @@ Invariants of the invoke-from-state primitive:
 
 Use case in mind: an orchestrator parent whose lifecycle includes a state like `validating_payment`, `running_kyc_check`, `awaiting_sub_agent_decision`. The child runs a self-contained mini-workflow and reports its outcome only via terminal state name. This is the building block for an "orchestrator that calls one sub-agent synchronously per state" pattern; orchestrators that need to fan out to N sub-agents in parallel are Pattern C, not POM.
 
+## Composition: Invoke from Event (synchronous)
+
+A transition may declare an `invoke:` block in place of a direct `to:`. When the event fires from the source state, the child workflow starts; while the child runs, the parent is blocked in the source state. When the child terminates, the parent jumps to the `target` declared in `on_completion` for that terminal.
+
+```yaml
+transitions:
+  - from: drafting
+    event: submit_for_review
+    invoke:
+      workflow: workflows/validation-flow.yaml
+      on_completion:
+        - terminal_state: validated
+          target: accepted
+        - terminal_state: refused
+          target: rejected
+```
+
+A transition has **exactly one** of: a direct `to:`, or an `invoke:` block whose `on_completion` supplies the targets. Declaring both is E045.
+
+New Error rules:
+
+| Code | Check |
+|---|---|
+| E040 | Invoke block has no `workflow` path or non-string path. |
+| E041 | Invoke `workflow` references a file that does not exist. |
+| E042 | Invoke has no `on_completion` or it is empty. |
+| E043 | `on_completion[].terminal_state` is not declared as `is_final: true` in the child workflow. |
+| E044 | `on_completion[].target` is not declared as a state in the parent workflow. |
+| E045 | Transition declares both `invoke` and `to`. |
+| E046 | Invoke declares an asynchronous mode (`async` / `parallel`). Out of scope. |
+
+The reachability analysis (W001) is updated to treat `invoke.on_completion[].target` as a reachable target alongside the direct `to`, so parents that route exclusively through invokes do not raise false-positive unreachable warnings.
+
+Use case in mind: a precondition that requires its own sub-workflow before the parent can decide its next state. Example: a content publishing parent where `submit_for_review` invokes a content validation child workflow; the parent's next state (`accepted` vs `rejected`) is determined by the child's terminal.
+
 ## Promotion Path
 
 If promoted, this draft becomes `SPEC-0006-workflow-modeling.md` and the artefacts move out of `experiments/workflow-modeling/`:

@@ -56,6 +56,13 @@ const ERROR_RULES = {
   E034: 'A state invoke on_completion[].next_event does not exist in the parent workflow events.',
   E035: 'A state declares invoke but is is_final: true (terminal states cannot host an invoke).',
   E036: 'A state invoke declares an asynchronous mode (mode: async / parallel). Asynchronous composition is out of scope; use Pattern C (XState invoke/spawn).',
+  E040: 'A transition invoke block has no "workflow" path or a non-string path.',
+  E041: 'A transition invoke references a workflow file that does not exist on disk.',
+  E042: 'A transition invoke has no "on_completion" or it is empty.',
+  E043: 'A transition invoke on_completion[].terminal_state does not exist as is_final: true in the child workflow.',
+  E044: 'A transition invoke on_completion[].target does not exist as a state in the parent workflow.',
+  E045: 'A transition declares both invoke and "to". A transition has exactly one of: a direct "to", or an invoke whose on_completion provides the targets.',
+  E046: 'A transition invoke declares an asynchronous mode (mode: async / parallel). Asynchronous composition is out of scope; use Pattern C (XState invoke/spawn).',
 };
 
 const WARNING_RULES = {
@@ -84,9 +91,19 @@ function findReachableStates(initialState, transitions, stateNames) {
   while (queue.length > 0) {
     const current = queue.shift();
     for (const t of transitions) {
-      if (t?.from === current && isNonEmptyString(t?.to) && stateNames.has(t.to) && !reachable.has(t.to)) {
-        reachable.add(t.to);
-        queue.push(t.to);
+      if (t?.from !== current) continue;
+      const targets = [];
+      if (isNonEmptyString(t?.to)) targets.push(t.to);
+      if (t?.invoke?.on_completion && Array.isArray(t.invoke.on_completion)) {
+        for (const c of t.invoke.on_completion) {
+          if (isNonEmptyString(c?.target)) targets.push(c.target);
+        }
+      }
+      for (const tgt of targets) {
+        if (stateNames.has(tgt) && !reachable.has(tgt)) {
+          reachable.add(tgt);
+          queue.push(tgt);
+        }
       }
     }
   }
@@ -162,6 +179,7 @@ function validateErrors(model) {
     for (let i = 0; i < model.transitions.length; i++) {
       const t = model.transitions[i];
       const where = `transitions[${i}]`;
+      const hasInvoke = t?.invoke != null && typeof t.invoke === 'object';
 
       if (!isNonEmptyString(t?.from)) {
         errors.push(err('E011', where));
@@ -169,10 +187,14 @@ function validateErrors(model) {
         errors.push(err('E014', where, `from=${t.from}`));
       }
 
-      if (!isNonEmptyString(t?.to)) {
-        errors.push(err('E012', where));
-      } else if (stateNames.size > 0 && !stateNames.has(t.to)) {
-        errors.push(err('E015', where, `to=${t.to}`));
+      if (hasInvoke && isNonEmptyString(t?.to)) {
+        errors.push(err('E045', where));
+      } else if (!hasInvoke) {
+        if (!isNonEmptyString(t?.to)) {
+          errors.push(err('E012', where));
+        } else if (stateNames.size > 0 && !stateNames.has(t.to)) {
+          errors.push(err('E015', where, `to=${t.to}`));
+        }
       }
 
       if (!isNonEmptyString(t?.event)) {
@@ -316,10 +338,80 @@ function validateStateInvokes(model, sourceDir) {
   return errors;
 }
 
+function validateTransitionInvokes(model, sourceDir) {
+  const errors = [];
+  const transitions = Array.isArray(model?.transitions) ? model.transitions : [];
+  const stateNames = new Set(
+    (Array.isArray(model?.states) ? model.states : [])
+      .filter((s) => isNonEmptyString(s?.name))
+      .map((s) => s.name),
+  );
+
+  for (let i = 0; i < transitions.length; i++) {
+    const t = transitions[i];
+    if (!t || t.invoke == null) continue;
+    const where = `transitions[${i}].invoke`;
+    const inv = t.invoke;
+
+    if (inv.mode === 'async' || inv.mode === 'parallel') {
+      errors.push(err('E046', `${where}.mode`, `value=${inv.mode}`));
+    }
+
+    if (!isNonEmptyString(inv.workflow)) {
+      errors.push(err('E040', where));
+      continue;
+    }
+
+    const absPath = isAbsolute(inv.workflow)
+      ? inv.workflow
+      : join(sourceDir, inv.workflow);
+
+    let childTerminals = null;
+    if (!existsSync(absPath)) {
+      errors.push(err('E041', where, `path=${inv.workflow}`));
+    } else {
+      const child = loadWorkflowSafe(absPath);
+      if (child && Array.isArray(child.states)) {
+        childTerminals = new Set();
+        for (const cs of child.states) {
+          if (isNonEmptyString(cs?.name) && cs?.is_final === true) {
+            childTerminals.add(cs.name);
+          }
+        }
+      }
+    }
+
+    if (!Array.isArray(inv.on_completion) || inv.on_completion.length === 0) {
+      errors.push(err('E042', where));
+      continue;
+    }
+
+    for (let j = 0; j < inv.on_completion.length; j++) {
+      const c = inv.on_completion[j];
+      const cwhere = `${where}.on_completion[${j}]`;
+
+      if (!isNonEmptyString(c?.terminal_state)) {
+        errors.push(err('E043', cwhere, 'terminal_state missing'));
+      } else if (childTerminals && !childTerminals.has(c.terminal_state)) {
+        errors.push(err('E043', cwhere, `terminal_state=${c.terminal_state}`));
+      }
+
+      if (!isNonEmptyString(c?.target)) {
+        errors.push(err('E044', cwhere, 'target missing'));
+      } else if (stateNames.size > 0 && !stateNames.has(c.target)) {
+        errors.push(err('E044', cwhere, `target=${c.target}`));
+      }
+    }
+  }
+
+  return errors;
+}
+
 function validate(model, sourceDir = '.') {
   const { errors, stateNames } = validateErrors(model);
-  const invokeErrors = validateStateInvokes(model, sourceDir);
-  errors.push(...invokeErrors);
+  const stateInvokeErrors = validateStateInvokes(model, sourceDir);
+  const transitionInvokeErrors = validateTransitionInvokes(model, sourceDir);
+  errors.push(...stateInvokeErrors, ...transitionInvokeErrors);
   const warnings = errors.some((e) => ['E004', 'E005'].includes(e.code))
     ? []
     : validateWarnings(model, stateNames);

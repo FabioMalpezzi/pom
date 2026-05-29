@@ -404,12 +404,43 @@ Domanda dell'utente: "POM riesce a modellare un agent orchestrator che gestisce 
 
 La regola "no async" implica direttamente il limite sull'orchestrazione parallela, e la spec lo dichiarerà esplicitamente come caso d'uso di Pattern C nel commit di consolidazione del giro 2.
 
+**Primitiva 3 — invoke da evento sincrono (completata in questo commit)**
+
+Schema: blocco opzionale `invoke:` su una transizione. Quando l'evento si verifica nello stato `from`, parte un workflow figlio; il padre resta bloccato nello stato sorgente finché il figlio non termina, e il `target` finale del padre dipende da `on_completion: [{terminal_state, target}]`. La transizione ha esattamente uno tra `to:` diretto e `invoke:` (E045 vieta la combinazione).
+
+Implementato:
+
+- `templates-candidate/WORKFLOW_TEMPLATE.yaml` documenta il blocco `invoke:` su transizione.
+- `scripts-candidate/lint-workflows.mjs` aggiunge 7 regole Error (E040–E046) e modifica E012/E015 per saltarle sulle transizioni con `invoke` (perché lì `to:` non c'è); `findReachableStates` ora considera anche i `target` di `invoke.on_completion` per la raggiungibilità (evita falsi positivi W001).
+- Esempio toy: `examples/invoke-event-toy/{event-invoke-parent,event-invoke-child}.yaml` con padre `drafting → accepted/rejected` via transizione `submit_for_review` che invoca un figlio di validazione.
+- 5 fixture broken per E041 (child mancante), E043 (terminale non in child), E044 (target non in parent), E045 (sia `to` sia `invoke` dichiarati), E046 (mode async).
+
+**Verifica**
+
+| File | Errors | Verdict |
+|---|---|---|
+| `examples/invoke-event-toy/event-invoke-child.yaml` | 0 | PASS |
+| `examples/invoke-event-toy/event-invoke-parent.yaml` | 0 | PASS |
+| `inv-event.broken-E041-missing-child.yaml` | 1 (E041) | FAIL |
+| `inv-event.broken-E043-terminal-not-in-child.yaml` | 1 (E043) | FAIL |
+| `inv-event.broken-E044-target-not-in-parent.yaml` | 1 (E044) + W001 cascata legittima | FAIL |
+| `inv-event.broken-E045-both-to-and-invoke.yaml` | 1 (E045) | FAIL |
+| `inv-event.broken-E046-async-invoke.yaml` | 1 (E046) | FAIL |
+
+**Regressione zero su esempi pre-esistenti**
+
+`spec-evolution.yaml`, `ticket-lifecycle.yaml`, `document-approval.yaml`, i tre stage della pipeline toy, e i due workflow dell'invoke-state toy continuano a PASS pulito dopo le modifiche al validator.
+
+**Tre primitive sincrone complete**
+
+A questo punto il giro 2 ha tutte e tre le primitive a posto: pipeline lineare (composizione esterna), invoke da stato (composizione interna sincrona durante un periodo), invoke da evento (composizione sincrona innescata da un trigger event).
+
 **Prossimi passi del giro**
 
-- Primitiva 3 (invoke da evento sincrono): nuovo blocco `transitions[].invoke` con `workflow` + `on_completion: [{terminal_state, target}]`.
-- Due casi reali combinati: `order-processing` (pipeline pura) + `loan-application` (combinazione di invoke da stato e da evento, con orchestrator-like control flow).
+- Due casi reali combinati: `order-processing` (pipeline pura) + `loan-application` (combinazione di invoke da stato e da evento, control flow di tipo orchestratore).
 - Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator").
 - Codice TypeScript guidato per pipeline orchestrator (Pattern A) come evidence di H4 esteso.
+- Consolidazione finale del giro 2.
 
 ## Follow-up
 

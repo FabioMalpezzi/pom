@@ -1,0 +1,33 @@
+# Expected to trigger: E041 (transition invoke references a non-existing workflow file).
+
+workflow: broken_e041
+version: 1
+description: |
+  Transition invoke references a child file that does not exist on disk.
+
+initial_state: drafting
+states:
+  - name: drafting
+    description: starting point
+    is_final: false
+  - name: accepted
+    description: terminal accepted
+    is_final: true
+  - name: rejected
+    description: terminal rejected
+    is_final: true
+
+events:
+  - name: submit_for_review
+    description: submission
+
+transitions:
+  - from: drafting
+    event: submit_for_review
+    invoke:
+      workflow: ../../examples/invoke-event-toy/does-not-exist.yaml
+      on_completion:
+        - terminal_state: validated
+          target: accepted
+        - terminal_state: refused
+          target: rejected
