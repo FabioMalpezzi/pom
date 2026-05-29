@@ -229,6 +229,45 @@ Copy the file. Rename `workflow:` and `initial_state`. Adapt states, events, gua
 
 If the duplication becomes painful, the symptom is usually that the two workflows are not really separate — they are one workflow with different guards. Consider merging into one with broader guards rather than splitting.
 
+### As a temporary experiment before promotion
+
+A new workflow that is not yet trusted enough to live in `workflows/` can be developed as a POM experiment first. This is the same pattern POM uses for every load-bearing extension: the candidate is built and validated in isolation, then promoted to the canonical location only after an explicit decision.
+
+Suggested layout while the workflow is under evaluation:
+
+```
+experiments/<topic>/
+  EXPERIMENT.md                     ← from templates/EXPERIMENT_TEMPLATE.md
+  workflows-candidate/
+    <name>.yaml                     ← the model under evaluation
+    generated/
+      <name>.validation.md
+      <name>.mmd
+  notes/
+  evidence/                         ← lint reports, screenshots of stately.ai, test runs
+```
+
+The validator works the same way pointed at any file:
+
+```bash
+npm run pom:workflow:lint -- \
+  experiments/<topic>/workflows-candidate/<name>.yaml \
+  --mermaid-dir experiments/<topic>/workflows-candidate/generated/
+```
+
+When the candidate is approved for promotion, the file moves from `experiments/<topic>/workflows-candidate/<name>.yaml` to `workflows/<name>.yaml`. The candidate folder is retained as the experiment's historical record (status: `consolidated` in the `EXPERIMENT.md` header).
+
+The two POM skills compose naturally:
+
+- `skills/spike.md` defines the isolation discipline (branch, folder, no contamination of stable code or documentation, consolidation decision at the end).
+- `skills/workflow.md` defines the modeling discipline within the experiment (design / validate / diagram / scenarios / implement).
+
+This is the same path the workflow modeling capability itself took: it was developed inside `experiments/workflow-modeling/` on branch `exp/workflow-modeling`, validated against three real FSMs of a target project, and promoted to canonical POM paths (SPEC-0006). The experiment folder remains on `main` as the historical record. The capability's own promotion is documented in `CHANGELOG.md` v0.2.0 and is the worked case study for "how a new POM capability moves from spike to method".
+
+### When the experiment is also an applicative spike
+
+A spike that explores a new feature in the target project (not a POM extension) may also model the domain workflow in YAML to fix the states, transitions, and terminals explicitly before code is written. If the spike is promoted, the workflow follows the spike into stable code; if the spike is discarded, the workflow YAML is discarded with it. The two-step "model first, refactor second" migration pattern (see *Adoption on an existing project*) is exactly the same procedure, applied inside the experiment folder.
+
 ## Composing workflows
 
 | Composition need | POM primitive |
