@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Source | `evidence/broken-fixtures/ctx.broken-E052-unknown-terminal.yaml` |
-| Generated | 2026-05-29 17:42:58 (UTC) |
+| Generated | 2026-05-29 18:01:16 (UTC) |
 | Errors | 1 |
 | Warnings | 0 |
 | Verdict | **FAIL** |

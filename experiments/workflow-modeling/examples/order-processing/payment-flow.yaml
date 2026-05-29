@@ -1,0 +1,73 @@
+workflow: payment_flow
+version: 1
+description: |
+  Payment lifecycle. Authorizes, captures, or refunds. Terminal states are
+  payment_captured (advances to shipping) and payment_refused (ends the
+  order). Refund and chargeback paths exist but are out of pipeline scope
+  for v1: a captured payment that is later refunded becomes a separate
+  workflow instance.
+
+context_schema:
+  input:
+    - { name: order_id,       type: string }
+    - { name: total_cents,    type: number }
+    - { name: payment_method, type: string }
+  output_by_terminal:
+    payment_captured:
+      - { name: transaction_id, type: string }
+      - { name: captured_at,    type: string, description: "ISO-8601 instant." }
+    payment_refused:
+      - { name: refusal_code,   type: string, description: "Machine-readable gateway code." }
+      - { name: refusal_reason, type: string }
+
+initial_state: pending
+
+states:
+  - name: pending
+    description: gateway has not been contacted yet
+    is_final: false
+  - name: authorizing
+    description: gateway authorizing the payment
+    is_final: false
+  - name: authorized
+    description: gateway has authorized, awaiting capture
+    is_final: false
+  - name: payment_captured
+    description: funds captured successfully
+    is_final: true
+  - name: payment_refused
+    description: gateway refused the payment
+    is_final: true
+
+events:
+  - name: start_authorization
+    description: parent (or pipeline) triggers the gateway call
+  - name: authorization_succeeded
+    description: gateway returned authorized
+  - name: authorization_failed
+    description: gateway returned refusal at the authorization step
+  - name: capture
+    description: capture the authorized amount
+  - name: capture_failed
+    description: capture step failed (e.g., card frozen between auth and capture)
+
+transitions:
+  - from: pending
+    to: authorizing
+    event: start_authorization
+  - from: authorizing
+    to: authorized
+    event: authorization_succeeded
+  - from: authorizing
+    to: payment_refused
+    event: authorization_failed
+  - from: authorized
+    to: payment_captured
+    event: capture
+  - from: authorized
+    to: payment_refused
+    event: capture_failed
+
+metadata:
+  owner: payments team
+  tags: [example, real, pipeline-member]

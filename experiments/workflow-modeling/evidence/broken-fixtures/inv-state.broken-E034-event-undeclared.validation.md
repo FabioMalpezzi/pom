@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Source | `evidence/broken-fixtures/inv-state.broken-E034-event-undeclared.yaml` |
-| Generated | 2026-05-29 17:18:10 (UTC) |
+| Generated | 2026-05-29 18:01:17 (UTC) |
 | Errors | 1 |
 | Warnings | 2 |
 | Verdict | **FAIL** |

@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Source | `evidence/broken-fixtures/inv-event.broken-E044-target-not-in-parent.yaml` |
-| Generated | 2026-05-29 17:25:17 (UTC) |
+| Generated | 2026-05-29 18:01:17 (UTC) |
 | Errors | 1 |
 | Warnings | 1 |
 | Verdict | **FAIL** |

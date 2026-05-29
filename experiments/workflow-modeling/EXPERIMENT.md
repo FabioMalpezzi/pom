@@ -482,9 +482,56 @@ Implementazione della closed decision presa nel commit precedente (`CONTEXT-INJE
 
 **Regressione zero** su tutti gli esempi storici e i toy delle tre primitive precedenti. 13 file YAML sono stati validati nello stesso giro: PASS pulito per ognuno.
 
+**Due casi reali combinati (completati in questo commit)**
+
+Il commit chiude i criteri di valore quantitativi del giro 2: ogni primitiva ha un esempio toy minimo + uno o più esempi reali che la stressano in contesto vero.
+
+**Caso reale 1 — `order-processing`: pipeline lineare pura**
+
+Quattro workflow membri autonomi (cart, checkout, payment, shipping) con `context_schema` proprio (input atteso + output_by_terminal), composti dalla pipeline `order-processing.pipeline.yaml`. La pipeline incatena `cart_completed → checkout-flow`, `checkout_confirmed → payment-flow`, `payment_captured → shipping-flow`; ogni terminale di failure (cart_abandoned, checkout_canceled, payment_refused, lost) termina la pipeline.
+
+| File | Verdict |
+|---|---|
+| `examples/order-processing/cart-flow.yaml` | PASS |
+| `examples/order-processing/checkout-flow.yaml` | PASS |
+| `examples/order-processing/payment-flow.yaml` | PASS |
+| `examples/order-processing/shipping-flow.yaml` | PASS |
+| `examples/order-processing/order-processing.pipeline.yaml` | PASS |
+
+Open point reso esplicito nel commento del file: la pipeline POM v1 non passa context strutturato tra membri — il dataflow tra membri vive nell'orchestrator del target. Decisione consapevole, non lacuna.
+
+**Caso reale 2 — `loan-application`: multi-primitiva con context injection**
+
+Workflow padre `loan-application.yaml` che usa **entrambe** le primitive interne nello stesso modello:
+
+- **state invoke** su `validating_credit` → `credit-check.yaml` (child workflow con `context_schema` che riceve `applicant_id + requested_amount` e ritorna `{score, max_credit_limit}` su `approved` o `{refusal_reason}` su `rejected`);
+- **event invoke** su transizione `submit_for_underwriting` → `underwriting.yaml` (child workflow che riceve `{applicant_id, requested_amount, score, max_credit_limit, documentation_complete}` e ritorna `{offer_id, rate, terms}` su `approved` o `{refusal_reason}` su `rejected`);
+- **context injection** su tutto: il parent dichiara il proprio `context_schema` con `output_by_terminal` per `rejected_at_credit`, `rejected_at_underwriting`, `disbursed`; il mapping `assign:` raccoglie `child.offer_id`, `child.rate`, `child.terms` dall'event invoke.
+
+| File | Verdict |
+|---|---|
+| `examples/loan-application/credit-check.yaml` | PASS |
+| `examples/loan-application/underwriting.yaml` | PASS |
+| `examples/loan-application/loan-application.yaml` | PASS |
+
+**Bug catturato dai casi reali**
+
+Durante la compilazione del loan-application il validator ha prodotto un E056 spurio. Indagando, è emerso che il check era stato implementato sul **key** del mapping `assign:` invece che sul **value** (cioè sul `child.<field>` path che effettivamente referenzia un campo del child output). Bug corretto in questo commit: il parser ora estrae `<field>` dal value `child.<field>` e controlla che sia dichiarato nell'`output_by_terminal[terminal_state]` del child. La descrizione di E056 è stata aggiornata di conseguenza. La fixture broken esistente (`ctx.broken-E056-assign-not-in-child-output.yaml`) era già scritta correttamente sul value, quindi continua a scattare E056 come prima.
+
+**Stato complessivo dell'esperimento**
+
+| Metrica | Valore |
+|---|---|
+| Workflow YAML compilati e PASS | 21 |
+| Pipeline YAML compilate e PASS | 1 |
+| Fixture broken | 30 |
+| Regole Error totali | 50 |
+| Regole Warning totali | 4 |
+| Regressione su esempi storici | 0 |
+| Bug del validator scoperti e corretti grazie ai casi reali | 1 (E056) |
+
 **Prossimi passi del giro**
 
-- Due casi reali combinati: `order-processing` (pipeline pura con context injection) + `loan-application` (combinazione di invoke da stato e da evento, control flow tipo orchestratore con context strutturato).
 - Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator" e l'input/output mapping).
 - Codice TypeScript guidato per pipeline orchestrator (Pattern A) come evidence di H4 esteso.
 - Consolidazione finale del giro 2.

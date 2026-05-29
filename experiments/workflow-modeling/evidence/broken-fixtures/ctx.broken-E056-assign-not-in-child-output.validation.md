@@ -3,14 +3,14 @@
 | Field | Value |
 |---|---|
 | Source | `evidence/broken-fixtures/ctx.broken-E056-assign-not-in-child-output.yaml` |
-| Generated | 2026-05-29 17:42:58 (UTC) |
+| Generated | 2026-05-29 18:01:17 (UTC) |
 | Errors | 1 |
 | Warnings | 0 |
 | Verdict | **FAIL** |
 
 ## Errors
 
-- **E056** `transitions[0].invoke.on_completion[0].assign.gateway_id` (field=gateway_id, terminal=validated) — on_completion[].assign field name is not declared in the child workflow context_schema.output_by_terminal[terminal_state].
+- **E056** `transitions[0].invoke.on_completion[0].assign.gateway_id` (value=child.gateway_id (child output field "gateway_id" not declared for terminal=validated)) — on_completion[].assign value references a "child.<field>" path whose <field> is not declared in the child workflow context_schema.output_by_terminal[terminal_state].
 
 ## Warnings
 

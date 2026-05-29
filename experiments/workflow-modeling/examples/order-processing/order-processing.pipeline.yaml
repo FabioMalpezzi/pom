@@ -1,0 +1,53 @@
+# End-to-end e-commerce order processing pipeline.
+#
+# Pure linear synchronous composition of four self-contained workflows:
+# cart, checkout, payment, shipping. Each member has its own private
+# context_schema declaring its inputs and outputs; the pipeline's job is
+# to declare the structural sequencing, not the data flow between
+# members. Data flow between members lives in the target code (the
+# orchestrator), which reads each member's output and constructs the
+# input for the next.
+#
+# Pipeline-level structured context passing is an open point: declared
+# in CONTEXT-INJECTION.md as deferred until a real use case demands it.
+
+pipeline: order_processing
+version: 1
+description: |
+  Cart -> Checkout -> Payment -> Shipping. Each member is a standalone
+  POM workflow. Successful terminals advance to the next member; failure
+  terminals end the pipeline.
+
+sequence:
+  - workflow: cart-flow.yaml
+    completes_on:
+      - state: cart_completed
+        next: checkout-flow.yaml
+      - state: cart_abandoned
+        next: null
+
+  - workflow: checkout-flow.yaml
+    completes_on:
+      - state: checkout_confirmed
+        next: payment-flow.yaml
+      - state: checkout_canceled
+        next: null
+
+  - workflow: payment-flow.yaml
+    completes_on:
+      - state: payment_captured
+        next: shipping-flow.yaml
+      - state: payment_refused
+        next: null
+
+  - workflow: shipping-flow.yaml
+    completes_on:
+      - state: shipped
+        next: null
+      - state: lost
+        next: null
+
+metadata:
+  owner: order-processing team
+  tags: [example, real, end-to-end]
+  domain: e-commerce

@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Source | `evidence/broken-fixtures/min.broken-E008-duplicate-state.yaml` |
-| Generated | 2026-05-29 14:50:43 (UTC) |
+| Generated | 2026-05-29 18:01:17 (UTC) |
 | Errors | 1 |
 | Warnings | 0 |
 | Verdict | **FAIL** |

@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Source | `evidence/broken-fixtures/inv-state.broken-E033-terminal-not-in-child.yaml` |
-| Generated | 2026-05-29 17:18:10 (UTC) |
+| Generated | 2026-05-29 18:01:17 (UTC) |
 | Errors | 1 |
 | Warnings | 0 |
 | Verdict | **FAIL** |

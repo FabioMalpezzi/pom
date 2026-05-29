@@ -69,7 +69,7 @@ const ERROR_RULES = {
   E053: 'context_schema.output_by_terminal[<terminal>][] entry has no "name" or a non-string name.',
   E054: 'context_schema.output_by_terminal[<terminal>][] entry has no "type" or a non-string type.',
   E055: 'invoke.input field name is not declared in the child workflow context_schema.input.',
-  E056: 'on_completion[].assign field name is not declared in the child workflow context_schema.output_by_terminal[terminal_state].',
+  E056: 'on_completion[].assign value references a "child.<field>" path whose <field> is not declared in the child workflow context_schema.output_by_terminal[terminal_state].',
   E057: 'invoke.input or on_completion[].assign value is not a non-empty string (must be a documental path).',
   E058: 'invoke.input or on_completion[].assign is declared but child workflow has no context_schema (cannot validate nominal coherence).',
 };
@@ -542,11 +542,14 @@ function validateInvokeContext(invokeBlock, where, childModel) {
       const declared = childSchema.outputByTerminal.get(terminal);
       for (const [k, v] of Object.entries(c.assign)) {
         const w = `${where}.on_completion[${i}].assign.${k}`;
-        if (declared && !declared.has(k)) {
-          errors.push(err('E056', w, `field=${k}, terminal=${terminal}`));
-        }
         if (!isNonEmptyString(v)) {
           errors.push(err('E057', w, `field=${k}`));
+          continue;
+        }
+        // Extract the child output field name from a "child.<field>" path.
+        const m = v.match(/^child\.([A-Za-z_][A-Za-z0-9_]*)$/);
+        if (m && declared && !declared.has(m[1])) {
+          errors.push(err('E056', w, `value=${v} (child output field "${m[1]}" not declared for terminal=${terminal})`));
         }
       }
     }

@@ -1,9 +1,9 @@
-# Workflow validation report - ok_re_entry_allowed
+# Workflow validation report - loan_application
 
 | Field | Value |
 |---|---|
-| Source | `evidence/broken-fixtures/min.ok-re-entry-allowed.yaml` |
-| Generated | 2026-05-29 18:01:18 (UTC) |
+| Source | `examples/loan-application/loan-application.yaml` |
+| Generated | 2026-05-29 18:01:16 (UTC) |
 | Errors | 0 |
 | Warnings | 0 |
 | Verdict | **PASS** |

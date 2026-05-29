@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Source | `evidence/broken-fixtures/inv-event.broken-E046-async-invoke.yaml` |
-| Generated | 2026-05-29 17:25:18 (UTC) |
+| Generated | 2026-05-29 18:01:17 (UTC) |
 | Errors | 1 |
 | Warnings | 0 |
 | Verdict | **FAIL** |

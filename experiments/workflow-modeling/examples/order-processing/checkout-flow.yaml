@@ -1,0 +1,64 @@
+workflow: checkout_flow
+version: 1
+description: |
+  Checkout phase. Collects shipping address, billing info, applies
+  promotions, computes final total. May confirm (advances to payment)
+  or cancel (ends the order).
+
+context_schema:
+  input:
+    - { name: cart_id,        type: string }
+    - { name: subtotal_cents, type: number }
+  output_by_terminal:
+    checkout_confirmed:
+      - { name: order_id,            type: string }
+      - { name: total_cents,         type: number }
+      - { name: shipping_address_id, type: string }
+      - { name: payment_method,      type: string, description: "Tag: card, bank_transfer, wallet." }
+    checkout_canceled:
+      - { name: cancellation_reason, type: string }
+
+initial_state: collecting_info
+
+states:
+  - name: collecting_info
+    description: gathering shipping, billing, payment method
+    is_final: false
+  - name: reviewing
+    description: user reviewing the final order before confirming
+    is_final: false
+  - name: checkout_confirmed
+    description: order created, ready for payment
+    is_final: true
+  - name: checkout_canceled
+    description: user canceled the checkout
+    is_final: true
+
+events:
+  - name: info_complete
+    description: user has provided required fields
+  - name: confirm
+    description: user confirms the order
+  - name: cancel
+    description: user cancels the checkout
+
+transitions:
+  - from: collecting_info
+    to: reviewing
+    event: info_complete
+  - from: collecting_info
+    to: checkout_canceled
+    event: cancel
+  - from: reviewing
+    to: checkout_confirmed
+    event: confirm
+  - from: reviewing
+    to: collecting_info
+    event: info_complete
+  - from: reviewing
+    to: checkout_canceled
+    event: cancel
+
+metadata:
+  owner: e-commerce team
+  tags: [example, real, pipeline-member]

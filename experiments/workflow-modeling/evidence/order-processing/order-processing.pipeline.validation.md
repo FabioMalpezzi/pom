@@ -1,9 +1,9 @@
-# Workflow validation report - ok_re_entry_allowed
+# Pipeline validation report - order_processing
 
 | Field | Value |
 |---|---|
-| Source | `evidence/broken-fixtures/min.ok-re-entry-allowed.yaml` |
-| Generated | 2026-05-29 18:01:18 (UTC) |
+| Source | `examples/order-processing/order-processing.pipeline.yaml` |
+| Generated | 2026-05-29 17:50:41 (UTC) |
 | Errors | 0 |
 | Warnings | 0 |
 | Verdict | **PASS** |

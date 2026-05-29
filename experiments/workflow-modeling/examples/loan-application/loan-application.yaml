@@ -1,0 +1,156 @@
+workflow: loan_application
+version: 1
+description: |
+  End-to-end loan application as a single parent workflow that uses
+  BOTH composition primitives:
+  - state invoke on "validating_credit" (synchronous credit check while
+    the parent is blocked in that state);
+  - event invoke on "submit_for_underwriting" (the parent's transition
+    runs an underwriting child workflow that decides the next state).
+
+  This is the multi-primitive showcase: the same parent orchestrates a
+  state-driven sub-workflow and an event-driven sub-workflow, both
+  synchronously, both with structured input and output via context
+  injection (Result<Terminal, Output>).
+
+context_schema:
+  input:
+    - { name: applicant_id,           type: string }
+    - { name: requested_amount,       type: number }
+    - { name: documentation_complete, type: boolean }
+  output_by_terminal:
+    rejected_at_credit:
+      - { name: credit_refusal_reason, type: string }
+    rejected_at_underwriting:
+      - { name: underwriting_refusal_reason, type: string }
+    disbursed:
+      - { name: offer_id,        type: string }
+      - { name: disbursement_id, type: string }
+    # Note: "approved" is intentionally absent because it is NOT a
+    # terminal state in this parent — disbursement happens after.
+    # The data captured during the approved phase (offer_id, rate,
+    # terms) is collected via assign on the event-invoke and lives
+    # in the parent's private context until disbursement.
+
+initial_state: submitted
+
+states:
+  - name: submitted
+    description: application received, not yet processed
+    is_final: false
+
+  - name: validating_credit
+    description: |
+      Parent is blocked in this state while the credit_check child
+      runs synchronously. The child's terminal determines which
+      next_event fires.
+    is_final: false
+    invoke:
+      workflow: credit-check.yaml
+      input:
+        applicant_id: applicant_id
+        requested_amount: requested_amount
+      on_completion:
+        - terminal_state: approved
+          next_event: credit_approved
+        - terminal_state: rejected
+          next_event: credit_rejected
+
+  - name: ready_for_underwriting
+    description: credit check passed, waiting for underwriting submission
+    is_final: false
+
+  - name: rejected_at_credit
+    description: terminal failure at credit check
+    is_final: true
+
+  - name: rejected_at_underwriting
+    description: terminal failure at underwriting
+    is_final: true
+
+  - name: approved
+    description: underwriting approved, offer ready for disbursement
+    is_final: false
+
+  - name: disbursed
+    description: funds disbursed, application closed successfully
+    is_final: true
+
+events:
+  - name: submit
+    description: applicant submits the application
+  - name: credit_approved
+    description: dispatched by validating_credit invoke when credit passes
+  - name: credit_rejected
+    description: dispatched by validating_credit invoke when credit fails
+  - name: submit_for_underwriting
+    description: trigger that runs underwriting child synchronously
+  - name: disburse
+    description: funds released after offer acceptance
+
+transitions:
+  - from: submitted
+    to: validating_credit
+    event: submit
+
+  - from: validating_credit
+    to: ready_for_underwriting
+    event: credit_approved
+
+  - from: validating_credit
+    to: rejected_at_credit
+    event: credit_rejected
+
+  - from: ready_for_underwriting
+    event: submit_for_underwriting
+    invoke:
+      workflow: underwriting.yaml
+      input:
+        applicant_id: applicant_id
+        requested_amount: requested_amount
+        score: score
+        max_credit_limit: max_credit_limit
+        documentation_complete: documentation_complete
+      on_completion:
+        - terminal_state: approved
+          target: approved
+          assign:
+            offer_id: child.offer_id
+            rate: child.rate
+            terms: child.terms
+        - terminal_state: rejected
+          target: rejected_at_underwriting
+          assign:
+            underwriting_refusal_reason: child.refusal_reason
+
+  - from: approved
+    to: disbursed
+    event: disburse
+
+invariants:
+  - description: |
+      A rejected_at_credit application cannot return to validating_credit:
+      it must be resubmitted as a new application with a new id.
+
+  - description: |
+      submit_for_underwriting is only legal from ready_for_underwriting.
+      The model enforces this structurally: the transition with the
+      invoke has from: ready_for_underwriting and no other source.
+
+metadata:
+  owner: lending team
+  tags: [example, real, multi-primitive, orchestrator]
+  demonstrates:
+    - state invoke (validating_credit -> credit-check)
+    - event invoke (submit_for_underwriting -> underwriting)
+    - context injection (input + assign on both invokes)
+    - parent context schema documenting per-terminal outputs
+
+  open_points:
+    - |
+      State invoke on validating_credit currently does not declare
+      assign on the on_completion entries: the child output (score,
+      max_credit_limit) is captured by the target code into the
+      parent's private context outside the YAML. A future schema
+      revision may allow assign also on state-invoke on_completion;
+      for now it is documental in the implementation guide.
