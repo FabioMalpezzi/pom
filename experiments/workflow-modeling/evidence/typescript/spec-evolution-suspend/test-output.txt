@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: three-step suspend/restore: draft -> under_review -> accepted -> complete
+ok 1 - three-step suspend/restore: draft -> under_review -> accepted -> complete
+  ---
+  duration_ms: 0.977666
+  type: 'test'
+  ...
+# Subtest: snapshot round-trip: serialize -> deserialize is identity
+ok 2 - snapshot round-trip: serialize -> deserialize is identity
+  ---
+  duration_ms: 0.228917
+  type: 'test'
+  ...
+# Subtest: restore rejects a snapshot with wrong workflow name
+ok 3 - restore rejects a snapshot with wrong workflow name
+  ---
+  duration_ms: 0.158791
+  type: 'test'
+  ...
+# Subtest: restore rejects a snapshot with wrong version
+ok 4 - restore rejects a snapshot with wrong version
+  ---
+  duration_ms: 0.04725
+  type: 'test'
+  ...
+# Subtest: restore rejects a snapshot whose state is not in the model
+ok 5 - restore rejects a snapshot whose state is not in the model
+  ---
+  duration_ms: 0.044917
+  type: 'test'
+  ...
+# Subtest: restore rejects a malformed snapshot
+ok 6 - restore rejects a malformed snapshot
+  ---
+  duration_ms: 0.051
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 73.842792

@@ -688,6 +688,38 @@ Indipendentemente dal linguaggio, la guida vieta esplicitamente: encoding della 
 
 Il messaggio "POM è multi-linguaggio" smette di essere una promessa documentale (era così già nel round 1) e diventa **verificata da due implementazioni reali** dello stesso modello. La consolidazione del giro 2 può ora citare due evidence H4 affiancate, non una; e il path "aggiungere un terzo linguaggio" è esplicitato come sequenza ripetibile (template Language Profile + evidence con uguale copertura dei test).
 
+## Suspend & Restore: documentazione + evidence (2026-05-29)
+
+L'utente ha chiesto che supporto POM ha per suspend/restore di una macchina a stati — capacità decisiva per workflow di lunga durata (ordini multi-giorno, approvazioni in attesa di firma, agent orchestrator in attesa di input umano, ticket aperti per settimane). Risposta sintetica: POM non ha persistenza per design (no-runtime è uno dei 4 pilastri), ma il Pattern A è **naturalmente suspend-friendly** perché `applyTransition(state, event, context) → nextState` è una funzione pura senza thread, callback, scheduler attaccati. Tra due eventi la macchina è materializzata da due valori (`state`, `context`) che il chiamante scrive dove vuole.
+
+**Step A — Sezione "Suspend and Restore" nel `WORKFLOW_IMPLEMENTATION_GUIDE.md`**
+
+Documenta: il principio (Pattern A stateless = funzione pura, suspend = scrivi due valori); le tre forme di snapshot (single machine, composed stack di frame, pipeline); le opzioni di storage (DB columns, document DB, KV, JSON file, distributed log); il contratto suspend/restore con tre invarianti di validazione (workflow name, version, state in modello) e la regola "no best-effort restore"; la posizione dei retry counter (in `context`, sopravvivono al restart — risposta concreta al "bounded retry" emerso da Syntonia analyzer); cosa POM NON fa (persistenza, scheduling, instance identification, versioning automatico); confronto con XState v5 (`actor.getSnapshot()` / `createActor(machine, { snapshot })` sono primitive native — motivo concreto per scegliere Pattern C quando la persistenza è critica).
+
+**Step B — Tre evidence H4 estese**
+
+| Evidence | Linguaggio | Caso | Test | Esito |
+|---|---|---|---|---|
+| `evidence/typescript/spec-evolution-suspend/` | TypeScript | single machine | 6 | pass, exit 0 |
+| `evidence/python/spec-evolution-suspend/` | Python | single machine | 6 | pass, exit 0 |
+| `evidence/typescript/composed-suspend/` | TypeScript | composed (state-invoke a 2 frame) | 5 | pass, exit 0 |
+
+**Pattern verificato per single machine** (TS + Python identici nella forma)
+
+Snapshot `{ workflow, version, state, context }` scritto su `tmpdir()` come simulazione di processi distinti. Tre restart consecutivi: `draft → under_review` (suspend), restart, `under_review → accepted` (suspend), restart, `accepted → complete` con guard nel context. Round-trip identity. Quattro path di rejection: workflow sbagliato, version sbagliata, stato non in modello, snapshot malformato.
+
+**Pattern verificato per composed (state-invoke stack a 2 frame)**
+
+Lo `StackSnapshot` è una sequenza di `MachineFrame` (uno per livello di invoke attivo). Test: parent in `validating`, child pushato a `start`, suspend con due frame sullo stack, restart, child progresso a `validated`, pop del frame, dispatch del `validation_passed` al parent via `on_completion`, parent a `done`. Caso speculare con `refused → validation_failed → rejected`. Round-trip dello stack a due frame. Reject di stack vuoto. Reject di frame con workflow sconosciuto.
+
+**Conferma di una proprietà nascosta del round 2**
+
+I retry counter sopravvivono automaticamente al suspend/restore perché vivono in `context`, non in variabili globali. Questo chiude implicitamente metà della preoccupazione dell'open point "bounded retry": la primitiva `loop_guard` è ancora necessaria per *enforcement* del limite, ma il *contatore stesso* è già suspend-friendly senza modifiche allo schema. Il design del round 2 era più robusto di quanto immaginato.
+
+**Spirit POM rispettato**
+
+Il `PROJECT_STATE.md` di POM stesso è una forma di suspend/restore per il *progetto*. POM conosceva già il pattern a livello metodologico; con questi commit il pattern è esplicitato anche per le *macchine a stati*, coerentemente, senza introdurre runtime nel metodo.
+
 **Prossimi passi del giro**
 
 - Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator" e l'input/output mapping).

@@ -168,6 +168,114 @@ Independent of the target language, the guide discourages:
 - Hard-coding the transition table in code instead of deriving it from the YAML — the YAML is the source of authority. Whenever the YAML changes, the table is regenerated, not patched.
 - Mixing Pattern A with Pattern C in the same machine. Pick one consistently per workflow.
 
+## Suspend and Restore
+
+Long-running workflows (orders waiting for shipment, approvals waiting for signature, agent orchestrators waiting for user input) must survive process restarts, container redeploys, and across-time pauses. POM workflow does not own a persistence layer (that violates the "no runtime" pillar), but the Pattern A code POM produces is **naturally suspend-friendly**: the machine is a pure function and the caller owns the state.
+
+### The principle
+
+Pattern A's `applyTransition(state, event, context)` has no running thread, no callbacks pending, no scheduler attached. Between two events the machine is materialized only by two values: `state` and `context`. Suspend is "write those two values somewhere". Restore is "read them and keep calling the function".
+
+This is by design, not a happy accident. The same property holds in TypeScript, Python, and any language Pattern A targets.
+
+### Snapshot shapes
+
+**Single machine**:
+
+```json
+{
+  "workflow": "spec_evolution",
+  "version": 1,
+  "state": "accepted",
+  "context": { "has_completion_verification_gate": true }
+}
+```
+
+The `version` field comes from the YAML `version:` and matters when the model evolves: a snapshot from `version: 1` is not necessarily valid against `version: 2`.
+
+**Composed machine (state-invoke or event-invoke)**: a stack of frames, one per active invoke level. The bottom of the stack is the leaf currently executing; restoring walks the stack outward, re-applying transitions only on the frame that needs progress.
+
+```json
+{
+  "stack": [
+    { "workflow": "operational_fsm",        "state": "analyzer",           "context": {...} },
+    { "workflow": "analyzer_fsm",           "state": "family_enforcement", "context": {...} },
+    { "workflow": "clean_family_repair_fsm","state": "evaluating_attempt", "context": {...} }
+  ]
+}
+```
+
+**Pipeline**: pipeline name + current member index + the member's own snapshot (which is itself a single-machine or composed snapshot).
+
+```json
+{
+  "pipeline": "order_processing",
+  "current_member_index": 1,
+  "current_member_workflow": "checkout_flow",
+  "member_snapshot": { "workflow": "checkout_flow", "version": 1, "state": "reviewing", "context": {...} }
+}
+```
+
+### Storage options
+
+POM does not prescribe storage. Common targets:
+
+| Storage | Fit |
+|---|---|
+| Relational DB columns (`state TEXT`, `context JSONB`, `snapshot JSONB`) | Production default; transactional updates align with business writes. |
+| Document DB (Mongo, DynamoDB, Firestore) | Snapshots map naturally to documents. |
+| KV store (Redis, etcd) | Fast restore for in-flight workflows; pair with a durable store. |
+| JSON file on disk | Single-machine setups, tests, CLI tools. |
+| Distributed log (Kafka, EventStore) | Event-sourced workflows; the snapshot becomes a periodic projection. |
+
+In all cases the rule is the same: write `(workflow_id, snapshot)` atomically with the business write that the transition produced.
+
+### The suspend / restore contract
+
+**Suspend** is a single function:
+
+```ts
+function suspend<Snap>(snap: Snap, storage: Storage): void {
+  storage.write(serialize(snap));
+}
+```
+
+**Restore** is the inverse plus a validation step against the current YAML:
+
+```ts
+function restore<Snap>(storage: Storage): Snap {
+  const raw = storage.read();
+  const snap = JSON.parse(raw);
+  assertSnapshotMatchesModel(snap, currentModel);   // workflow name, version, state existence
+  return snap;
+}
+```
+
+`assertSnapshotMatchesModel` enforces three invariants:
+
+1. `snap.workflow` equals the model's `workflow:` field;
+2. `snap.version` equals the model's `version:` (or is explicitly upgraded);
+3. `snap.state` exists in the model's `states[]`.
+
+If any invariant fails, restore raises an explicit error. **The implementation guide forbids "best-effort restore"**: a snapshot that does not match the model is a bug to surface, not silently coerce.
+
+### Cycles, retries, and counters
+
+When the YAML has a bounded loop (`MAX_LLM_ATTEMPTS`, `MAX_FAMILY_REPAIR_ATTEMPTS`), the retry counter belongs in `context`, not in a global. Suspend writes the counter; restore reads it. The bound is still enforced in target code (no POM primitive for it), but the counter survives restarts.
+
+This is the practical answer to the "bounded retry" open point raised by the Syntonia analyzer FSM: the cycle is structural in the YAML, the bound is enforced by target code, and the counter survives suspend/restore because it lives in `context`.
+
+### What POM does NOT do
+
+- No persistence layer. POM never writes anything.
+- No scheduling, no timer, no dead-letter. A workflow that waits N days uses the target's scheduling stack (cron, BullMQ, Temporal, EventBridge).
+- No instance identification. POM does not know that there are N orders in flight. The target owns `workflow_id` and the persistence keyspace.
+- No automatic snapshot versioning beyond exposing the YAML `version:` field. Migrations between versions are target-code logic.
+
+### XState comparison
+
+XState v5 has `actor.getSnapshot()` and `createActor(machine, { snapshot })` as native primitives. When persistence requirements drive the choice, that becomes a concrete reason to pick Pattern C (XState) over Pattern A. POM-built Pattern A code can do the same thing but the developer writes the serialize/deserialize plumbing explicitly (see the evidences at `evidence/typescript/spec-evolution-suspend/` and `evidence/python/spec-evolution-suspend/`).
+
 ## What This Guide Does Not Do
 
 - It does not generate code automatically. Code generation belongs to the coding agent, supervised by the team.
