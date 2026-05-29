@@ -1,0 +1,91 @@
+{
+  "id": "order_processing",
+  "initial": "__member_0_cart_flow",
+  "states": {
+    "__member_0_cart_flow": {
+      "description": "Pipeline member 1: cart-flow.yaml",
+      "invoke": {
+        "id": "invoke___member_0_cart_flow",
+        "src": "cart_flow",
+        "onDone": [
+          {
+            "guard": "_terminal_eq_cart_completed",
+            "target": "__member_1_checkout_flow"
+          },
+          {
+            "guard": "_terminal_eq_cart_abandoned",
+            "target": "__pipeline_completed"
+          }
+        ]
+      }
+    },
+    "__member_1_checkout_flow": {
+      "description": "Pipeline member 2: checkout-flow.yaml",
+      "invoke": {
+        "id": "invoke___member_1_checkout_flow",
+        "src": "checkout_flow",
+        "onDone": [
+          {
+            "guard": "_terminal_eq_checkout_confirmed",
+            "target": "__member_2_payment_flow"
+          },
+          {
+            "guard": "_terminal_eq_checkout_canceled",
+            "target": "__pipeline_completed"
+          }
+        ]
+      }
+    },
+    "__member_2_payment_flow": {
+      "description": "Pipeline member 3: payment-flow.yaml",
+      "invoke": {
+        "id": "invoke___member_2_payment_flow",
+        "src": "payment_flow",
+        "onDone": [
+          {
+            "guard": "_terminal_eq_payment_captured",
+            "target": "__member_3_shipping_flow"
+          },
+          {
+            "guard": "_terminal_eq_payment_refused",
+            "target": "__pipeline_completed"
+          }
+        ]
+      }
+    },
+    "__member_3_shipping_flow": {
+      "description": "Pipeline member 4: shipping-flow.yaml",
+      "invoke": {
+        "id": "invoke___member_3_shipping_flow",
+        "src": "shipping_flow",
+        "onDone": [
+          {
+            "guard": "_terminal_eq_shipped",
+            "target": "__pipeline_completed"
+          },
+          {
+            "guard": "_terminal_eq_lost",
+            "target": "__pipeline_completed"
+          }
+        ]
+      }
+    },
+    "__pipeline_completed": {
+      "type": "final",
+      "description": "Pipeline terminated. Specific outcome lives in the last member output."
+    }
+  },
+  "meta": {
+    "pom": {
+      "kind": "pipeline",
+      "description": "Cart -> Checkout -> Payment -> Shipping. Each member is a standalone\nPOM workflow. Successful terminals advance to the next member; failure\nterminals end the pipeline.",
+      "version": 1,
+      "member_paths": [
+        "cart-flow.yaml",
+        "checkout-flow.yaml",
+        "payment-flow.yaml",
+        "shipping-flow.yaml"
+      ]
+    }
+  }
+}

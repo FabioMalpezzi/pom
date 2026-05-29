@@ -1,0 +1,83 @@
+{
+  "id": "order_flow_with_context",
+  "initial": "drafting",
+  "states": {
+    "drafting": {
+      "description": "order is being prepared",
+      "on": {
+        "submit_payment": {
+          "target": "__invoking_submit_payment_from_drafting"
+        }
+      }
+    },
+    "accepted": {
+      "description": "payment validated, order confirmed",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "rejected": {
+      "description": "payment refused, order canceled",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "__invoking_submit_payment_from_drafting": {
+      "description": "Synthetic intermediate state for event-invoke on payment-validation.yaml",
+      "invoke": {
+        "id": "invoke___invoking_submit_payment_from_drafting",
+        "src": "payment_validation",
+        "input": {
+          "amount": "order.total_cents",
+          "method": "order.payment_method"
+        },
+        "onDone": [
+          {
+            "guard": "_terminal_eq_validated",
+            "target": "accepted",
+            "actions": {
+              "type": "assign",
+              "params": {
+                "validation_token": "child.validation_token",
+                "timestamp": "child.timestamp"
+              }
+            }
+          },
+          {
+            "guard": "_terminal_eq_refused",
+            "target": "rejected",
+            "actions": {
+              "type": "assign",
+              "params": {
+                "refusal_reason": "child.refusal_reason"
+              }
+            }
+          }
+        ]
+      },
+      "meta": {
+        "pom": {
+          "synthetic_event_invoke": true
+        }
+      }
+    }
+  },
+  "meta": {
+    "pom": {
+      "version": 1,
+      "description": "Minimal parent workflow that demonstrates context injection: the\ndrafting state submits a payment validation via a transition invoke,\npassing amount and method to the child and integrating the child's\noutput into the parent's own context via assign.",
+      "events": [
+        {
+          "name": "submit_payment",
+          "description": "Parent submits the payment for validation; the child runs\nsynchronously and decides the parent's next state."
+        }
+      ]
+    }
+  }
+}

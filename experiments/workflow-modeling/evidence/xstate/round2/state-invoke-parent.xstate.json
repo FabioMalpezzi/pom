@@ -1,0 +1,89 @@
+{
+  "id": "state_invoke_parent",
+  "initial": "idle",
+  "states": {
+    "idle": {
+      "description": "parent is waiting for the start signal",
+      "on": {
+        "start": "validating"
+      }
+    },
+    "validating": {
+      "description": "parent has handed off to the child workflow and is blocked until\nthe child terminates. The child's terminal state determines which\nparent event fires next.",
+      "invoke": {
+        "id": "invoke_validating",
+        "src": "state_invoke_child",
+        "onDone": [
+          {
+            "guard": "_terminal_eq_validated",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "validation_passed"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_refused",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "validation_failed"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "on": {
+        "validation_passed": "done",
+        "validation_failed": "rejected"
+      }
+    },
+    "done": {
+      "description": "parent reached its successful terminal",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "rejected": {
+      "description": "parent reached its failure terminal",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    }
+  },
+  "meta": {
+    "pom": {
+      "version": 1,
+      "description": "Minimal parent workflow used to demonstrate synchronous invoke-from-state.\nWhen the parent enters the \"validating\" state, a child workflow is\ninvoked. The child runs synchronously; on terminal it dispatches the\ndeclared next_event back to the parent, which applies its own\ntransition.",
+      "events": [
+        {
+          "name": "start",
+          "description": "external trigger that moves the parent out of idle"
+        },
+        {
+          "name": "validation_passed",
+          "description": "child returned with success"
+        },
+        {
+          "name": "validation_failed",
+          "description": "child returned with refusal"
+        }
+      ]
+    }
+  }
+}

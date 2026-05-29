@@ -595,6 +595,53 @@ Tutti e tre i file PASS pulito al validator. POM round 2 supporta la profondità
 
 L'open point del bounded retry riappare identico al livello 3 (il ciclo `attempt_suggested_family` ha lo stesso problema del `parse_retry`/`coherence_retry` dell'analyzer). Una sola futura primitiva `loop_guard` con `max_visits` + exit per esaurimento risolverebbe tutti e tre i casi nel sistema reale.
 
+## Mapping XState esteso al round 2 (2026-05-29)
+
+Esteso `to-xstate.mjs` per coprire le primitive sincrone del round 2 + context injection. L'estensione è motivata da due usi pratici dichiarati dall'utente:
+
+1. **XState come implementazione runtime reale** del progetto target — Pattern C della guida implementativa diventa una scelta concreta, non solo un riferimento teorico.
+2. **stately.ai come servizio online di validazione + visualizzazione** della macchina — il JSON prodotto dal transformer è importabile direttamente nell'editor per ottenere layout grafico, simulazione interattiva, ispezione dei meta POM, ed export a PNG/SVG/Mermaid per documentazione.
+
+**Coperture aggiunte nel transformer**
+
+| Costrutto POM | Output XState |
+|---|---|
+| `states[].invoke` (state-invoke) | `node.invoke` con `src` + `input` + `onDone[]` discriminato da guard sintetiche `_terminal_eq_<terminal>` |
+| `transitions[].invoke` (event-invoke) | Stato intermedio sintetico `__invoking_<event>_from_<state>` che porta l'invoke; lo stato `from` ha solo una transizione `target: <intermediate>` |
+| Pipeline file | Macchina root con uno stato `__member_<i>_<name>` per ogni membro + un `__pipeline_completed` finale |
+| `context_schema` | Preservato in `meta.pom.context_schema` (per la visualizzazione) |
+| `invoke.input` / `on_completion[].assign` | Mappati su `invoke.input` e `branch.actions: assign(params)` |
+| `re_entry_allowed: true` | Lo stato resta atomic con `on:` invece di `type: "final"`, marcato in `meta.pom.re_entry_allowed` |
+
+**Cosa il transformer NON fa (coerente con i 4 pilastri)**
+
+- niente `spawn` né regioni parallele (POM non ha la primitiva);
+- niente generazione TypeScript con `setup({ types: ... })` — JSON-only per restare neutrale al linguaggio del target;
+- niente enforcement del retry budget — il ciclo è strutturale, il bound vive nel codice target.
+
+**Output JSON prodotti in questo commit**
+
+| Categoria | File | Dove |
+|---|---|---|
+| Round-1 historical (regressione) | 3 | `evidence/xstate/*.xstate.json` |
+| Round-2 toys | 4 | `evidence/xstate/round2/*.xstate.json` |
+| Casi reali combinati | 2 | `evidence/xstate/round2/*.xstate.json` |
+| Validazione Syntonia | 4 | `evidence/xstate/round2/syntonia-ai-agent/*.xstate.json` |
+
+Tre verifiche puntuali fatte sul JSON generato:
+- `loan-application.yaml` event-invoke su `submit_for_underwriting` produce uno stato intermedio sintetico con `invoke.input`, `onDone` discriminato, `assign` con i path `child.offer_id`/`child.rate`/`child.terms`;
+- `analyzer-fsm.yaml` state-invoke su `family_enforcement` produce `invoke` con `src: clean_family_repair_fsm`, `input` completo dal context_schema, `onDone` con 5 branch + `raise(family_enforced)`;
+- `order-processing.pipeline.yaml` produce una macchina root con 4 `__member_*` + 1 `__pipeline_completed` finale.
+
+**Workflow operativo con stately.ai** (documentato in `COMPATIBILITY.md`)
+
+```bash
+node xstate-compat/to-xstate.mjs <yaml> --out /tmp/<name>.xstate.json
+# poi: stately.ai → Import JSON → paste
+```
+
+Questo trasforma POM da "documenta + valida testualmente" a "documenta + valida testualmente + visualizza + simula interattivamente". È la mossa che giustifica il prezzo del round 2: il modello dichiarativo ha ora una catena completa source-of-authority → validatore → diagramma online → simulazione → codice target.
+
 **Prossimi passi del giro**
 
 - Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator" e l'input/output mapping).

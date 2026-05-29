@@ -1,0 +1,216 @@
+{
+  "id": "clean_family_repair_fsm",
+  "initial": "draft_received",
+  "states": {
+    "draft_received": {
+      "description": "Repair input received, initial candidate family resolved via\nresolveInitialFamilyCandidate (clean-family-repair.ts:186).",
+      "on": {
+        "start_attempt": "evaluating_attempt"
+      }
+    },
+    "evaluating_attempt": {
+      "description": "Executing runCleanFamilyRepairAttempt for the current candidate.\nThe attempt updates the output and returns one of:\nfamily_ready | needs_scope_clarification | needs_semantic_clarification\n| blocked | suggested_family.\nThe first four are terminal; suggested_family loops back here with\na new candidate.",
+      "on": {
+        "attempt_final_family_ready": "family_ready",
+        "attempt_final_scope_clarification": "needs_scope_clarification",
+        "attempt_final_semantic_clarification": "needs_semantic_clarification",
+        "attempt_final_blocked": "blocked",
+        "attempt_suggested_family": {
+          "target": "evaluating_attempt",
+          "description": "Cyclic transition: the attempt returned suggested_family. The\norchestrator (target code) updates candidate, increments\nattempts_count, then re-enters evaluating_attempt. POM models the\ncycle structurally; MAX_FAMILY_REPAIR_ATTEMPTS = 3 is enforced\nin target code only."
+        },
+        "budget_exhausted": "exhausted"
+      }
+    },
+    "family_ready": {
+      "description": "Repair terminated with a coherent family-resolved output. The\nanalyzer's family_enforcement step has succeeded.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "needs_scope_clarification": {
+      "description": "Repair terminated declaring that scope clarification is needed.\nThe analyzer will surface this to the operational FSM as a\nclarification stop-exit.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "needs_semantic_clarification": {
+      "description": "Repair terminated declaring that semantic disambiguation is needed.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "blocked": {
+      "description": "Repair terminated with a block (e.g., terminal_block_locked or a\nblock guard fired on every candidate).",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "exhausted": {
+      "description": "MAX_FAMILY_REPAIR_ATTEMPTS = 3 attempts consumed without a final\noutcome; buildCleanFamilyRepairExhaustedOutput produces the\nfallback output.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    }
+  },
+  "meta": {
+    "pom": {
+      "version": 1,
+      "description": "Clean family repair sub-FSM, invoked synchronously by the analyzer\nFSM's family_enforcement state. Source:\npipeline/analyzer/clean-family-repair.ts.\n\nThe repair iterates up to MAX_FAMILY_REPAIR_ATTEMPTS = 3 times. Each\nattempt evaluates a candidate family via runCleanFamilyRepairAttempt:\n- if the attempt returns a final outcome (family_ready,\n  needs_scope_clarification, needs_semantic_clarification, blocked),\n  the loop ends and the repair terminates with that outcome;\n- if the attempt returns a \"suggested_family\", the candidate is\n  updated and the loop continues.\nIf the budget of MAX_FAMILY_REPAIR_ATTEMPTS attempts is consumed\nwithout a final outcome, the repair terminates as \"exhausted\".\n\nPOM cannot enforce the retry budget structurally (open point: bounded-\nloop primitive). The cycle is modeled; the bound lives in target\ncode.",
+      "events": [
+        {
+          "name": "start_attempt",
+          "description": "Begin or resume the repair loop with the current candidate."
+        },
+        {
+          "name": "attempt_final_family_ready",
+          "description": "Attempt produced a coherent family_ready outcome."
+        },
+        {
+          "name": "attempt_final_scope_clarification",
+          "description": "Attempt produced needs_scope_clarification."
+        },
+        {
+          "name": "attempt_final_semantic_clarification",
+          "description": "Attempt produced needs_semantic_clarification."
+        },
+        {
+          "name": "attempt_final_blocked",
+          "description": "Attempt produced blocked."
+        },
+        {
+          "name": "attempt_suggested_family",
+          "description": "Attempt did not finalize; suggested a different candidate. Loop."
+        },
+        {
+          "name": "budget_exhausted",
+          "description": "MAX_FAMILY_REPAIR_ATTEMPTS reached without a final outcome."
+        }
+      ],
+      "invariants": [
+        "Each call to runCleanFamilyRepairAttempt produces exactly one\noutcome: one of five terminals or a suggested_family that re-\nenters the loop. The five-way fan-out + one cycle is faithful to\nthe source's resolveOutcome (clean-family-repair.ts:650+).",
+        "The cycle on evaluating_attempt is bounded by\nMAX_FAMILY_REPAIR_ATTEMPTS in target code. POM cannot enforce\nthis bound; it is declared in the description and metadata. Same\nopen-point class as the parse_retry / coherence_retry cycles in\nthe parent analyzer FSM.",
+        "tried_families is accumulated across attempts in target code and\nsurfaced only at the exhausted terminal. The intermediate\nbookkeeping is not part of the POM context_schema, consistent with\nthe \"no shared state during invocation\" pillar."
+      ],
+      "context_schema": {
+        "input": [
+          {
+            "name": "question",
+            "type": "string"
+          },
+          {
+            "name": "initial_output",
+            "type": "object",
+            "description": "AnalyzerOutput draft to repair."
+          },
+          {
+            "name": "semantic_hints",
+            "type": "object"
+          },
+          {
+            "name": "question_signals",
+            "type": "object"
+          },
+          {
+            "name": "ctx",
+            "type": "object",
+            "description": "AnalyzerContext for domain lookups."
+          }
+        ],
+        "output_by_terminal": {
+          "family_ready": [
+            {
+              "name": "resolved_output",
+              "type": "object"
+            },
+            {
+              "name": "resolved_family",
+              "type": "string"
+            },
+            {
+              "name": "attempts_count",
+              "type": "number"
+            }
+          ],
+          "needs_scope_clarification": [
+            {
+              "name": "resolved_output",
+              "type": "object"
+            },
+            {
+              "name": "attempts_count",
+              "type": "number"
+            },
+            {
+              "name": "clarification_text",
+              "type": "string"
+            }
+          ],
+          "needs_semantic_clarification": [
+            {
+              "name": "resolved_output",
+              "type": "object"
+            },
+            {
+              "name": "attempts_count",
+              "type": "number"
+            },
+            {
+              "name": "ambiguity_kind",
+              "type": "string"
+            }
+          ],
+          "blocked": [
+            {
+              "name": "resolved_output",
+              "type": "object"
+            },
+            {
+              "name": "attempts_count",
+              "type": "number"
+            },
+            {
+              "name": "block_reason",
+              "type": "string"
+            }
+          ],
+          "exhausted": [
+            {
+              "name": "fallback_output",
+              "type": "object",
+              "description": "buildCleanFamilyRepairExhaustedOutput result."
+            },
+            {
+              "name": "attempts_count",
+              "type": "number"
+            },
+            {
+              "name": "tried_families",
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "open_points": [
+        "Bounded retry counter (same class as analyzer-fsm parse_retry /\ncoherence_retry). Source: MAX_FAMILY_REPAIR_ATTEMPTS = 3\n(clean-family-repair.ts:122). POM models the cycle, not the bound.\nConcrete schema-growth candidate: loop_guard { max_visits: 3,\non_exhaustion: { exit_target: exhausted } } on the\nevaluating_attempt state.\n",
+        "The five output_by_terminal payloads share a common \"resolved_\noutput\" + \"attempts_count\" prefix; the differentiating fields\nare the per-terminal extras (clarification_text, ambiguity_kind,\nblock_reason, fallback_output, tried_families). POM v1 expresses\nthis by repetition; an opt-in `output_common:` shared section\ncould de-duplicate, but it is purely cosmetic.\n",
+        "Source's CleanFamilyRepairTrace (attempts, finalOutcome,\nfinalFamily, maxAttempts) is observable diagnostic data. POM\ncaptures finalOutcome (terminal_state) and attempts_count, not\nthe per-attempt trace. The trace lives in target code under the\n\"documentation, not runtime\" stance.\n"
+      ]
+    }
+  }
+}

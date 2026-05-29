@@ -1,0 +1,682 @@
+{
+  "id": "semantic_family_master",
+  "initial": "turn_received",
+  "states": {
+    "turn_received": {
+      "description": "Turn received, classification not started.",
+      "on": {
+        "start_classification": "evaluating_gating_or_clarification"
+      }
+    },
+    "evaluating_gating_or_clarification": {
+      "description": "Position 1 in the precedence sequence. Terminator family;\nforwards a hard block immediately to the master's blocked terminal.",
+      "invoke": {
+        "id": "invoke_evaluating_gating_or_clarification",
+        "src": "family_gating_or_clarification",
+        "input": {
+          "signals": "signals",
+          "scope_context": "scope_context",
+          "role_family": "role_family"
+        },
+        "onDone": [
+          {
+            "guard": "_terminal_eq_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "gating_matched"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_blocked",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "gating_blocked"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_not_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "try_cascade_bridge"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "on": {
+        "gating_matched": "family_resolved",
+        "gating_blocked": "blocked",
+        "try_cascade_bridge": "evaluating_cascade_bridge"
+      }
+    },
+    "evaluating_cascade_bridge": {
+      "description": "Position 2: cascade-bridge analytical family.",
+      "invoke": {
+        "id": "invoke_evaluating_cascade_bridge",
+        "src": "family_cascade_bridge",
+        "input": {
+          "signals": "signals",
+          "scope_context": "scope_context",
+          "role_family": "role_family"
+        },
+        "onDone": [
+          {
+            "guard": "_terminal_eq_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_matched"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_scope_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_scope"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_semantic_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_semantic"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_not_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "try_yoy_driver_diagnosis"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "on": {
+        "family_matched": "family_resolved",
+        "family_needs_scope": "needs_scope_clarification",
+        "family_needs_semantic": "needs_semantic_clarification",
+        "try_yoy_driver_diagnosis": "evaluating_yoy_driver_diagnosis"
+      }
+    },
+    "evaluating_yoy_driver_diagnosis": {
+      "description": "Position 3: yoy-driver-diagnosis family.",
+      "invoke": {
+        "id": "invoke_evaluating_yoy_driver_diagnosis",
+        "src": "family_yoy_driver_diagnosis",
+        "input": {
+          "signals": "signals",
+          "scope_context": "scope_context",
+          "role_family": "role_family"
+        },
+        "onDone": [
+          {
+            "guard": "_terminal_eq_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_matched"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_scope_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_scope"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_semantic_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_semantic"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_not_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "try_rolling_trend_tradeoff"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "on": {
+        "family_matched": "family_resolved",
+        "family_needs_scope": "needs_scope_clarification",
+        "family_needs_semantic": "needs_semantic_clarification",
+        "try_rolling_trend_tradeoff": "evaluating_rolling_trend_tradeoff"
+      }
+    },
+    "evaluating_rolling_trend_tradeoff": {
+      "description": "Position 4: rolling-trend-tradeoff family.",
+      "invoke": {
+        "id": "invoke_evaluating_rolling_trend_tradeoff",
+        "src": "family_rolling_trend_tradeoff",
+        "input": {
+          "signals": "signals",
+          "scope_context": "scope_context",
+          "role_family": "role_family"
+        },
+        "onDone": [
+          {
+            "guard": "_terminal_eq_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_matched"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_scope_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_scope"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_semantic_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_semantic"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_not_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "try_benchmark_vs_media"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "on": {
+        "family_matched": "family_resolved",
+        "family_needs_scope": "needs_scope_clarification",
+        "family_needs_semantic": "needs_semantic_clarification",
+        "try_benchmark_vs_media": "evaluating_benchmark_vs_media"
+      }
+    },
+    "evaluating_benchmark_vs_media": {
+      "description": "Position 5: benchmark-vs-media family.",
+      "invoke": {
+        "id": "invoke_evaluating_benchmark_vs_media",
+        "src": "family_benchmark_vs_media",
+        "input": {
+          "signals": "signals",
+          "scope_context": "scope_context",
+          "role_family": "role_family"
+        },
+        "onDone": [
+          {
+            "guard": "_terminal_eq_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_matched"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_scope_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_scope"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_semantic_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_semantic"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_not_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "try_ratio_threshold_ranking"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "on": {
+        "family_matched": "family_resolved",
+        "family_needs_scope": "needs_scope_clarification",
+        "family_needs_semantic": "needs_semantic_clarification",
+        "try_ratio_threshold_ranking": "evaluating_ratio_threshold_ranking"
+      }
+    },
+    "evaluating_ratio_threshold_ranking": {
+      "description": "Position 6: ratio-threshold-ranking family.",
+      "invoke": {
+        "id": "invoke_evaluating_ratio_threshold_ranking",
+        "src": "family_ratio_threshold_ranking",
+        "input": {
+          "signals": "signals",
+          "scope_context": "scope_context",
+          "role_family": "role_family"
+        },
+        "onDone": [
+          {
+            "guard": "_terminal_eq_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_matched"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_scope_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_scope"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_semantic_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_semantic"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_not_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "try_single_kpi_snapshot"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "on": {
+        "family_matched": "family_resolved",
+        "family_needs_scope": "needs_scope_clarification",
+        "family_needs_semantic": "needs_semantic_clarification",
+        "try_single_kpi_snapshot": "evaluating_single_kpi_snapshot"
+      }
+    },
+    "evaluating_single_kpi_snapshot": {
+      "description": "Position 7: single-kpi-snapshot fallback family.",
+      "invoke": {
+        "id": "invoke_evaluating_single_kpi_snapshot",
+        "src": "family_single_kpi_snapshot",
+        "input": {
+          "signals": "signals",
+          "scope_context": "scope_context",
+          "role_family": "role_family"
+        },
+        "onDone": [
+          {
+            "guard": "_terminal_eq_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_matched"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_scope_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_scope"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_semantic_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_needs_semantic"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_not_matched",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "cascade_exhausted"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "on": {
+        "family_matched": "family_resolved",
+        "family_needs_scope": "needs_scope_clarification",
+        "family_needs_semantic": "needs_semantic_clarification",
+        "cascade_exhausted": "all_families_exhausted"
+      }
+    },
+    "family_resolved": {
+      "description": "A family matched; output spec available.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "needs_scope_clarification": {
+      "description": "Some family asked for scope clarification.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "needs_semantic_clarification": {
+      "description": "Some family asked for semantic clarification.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "blocked": {
+      "description": "Hard block from the gating family.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "all_families_exhausted": {
+      "description": "Defensive: no family matched even as fallback.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    }
+  },
+  "meta": {
+    "pom": {
+      "version": 1,
+      "description": "Master FSM that orchestrates the seven family workflows in the\nprecedence order declared in the Syntonia source. Each evaluating_*\nstate synchronously invokes the corresponding family workflow; the\nchild's terminal_state determines the next state of the master.\nPrecedence position in evaluating_* state matches FAMILY_PRECEDENCE_\nRULE_SEQUENCE in family-state-rules.ts.\n\nSemantics:\n- \"matched\" terminal of any family => master jumps to family_resolved\n  (success terminal).\n- \"needs_scope_clarification\" / \"needs_semantic_clarification\" => master\n  jumps to the corresponding clarification terminal.\n- \"blocked\" of family_gating_or_clarification => master jumps to\n  blocked terminal (hard block).\n- \"not_matched\" => master cascades to the next family in precedence\n  order. If all seven exhaust without a match, the master ends in\n  all_families_exhausted (defensive fallback; in practice\n  family_single_kpi_snapshot always matches as the lowest fallback).\n\nThis is the \"pushed\" modeling exercise: forcing the rule engine into\na sequence of synchronous invocations to see how far POM round 2\nprimitives carry.",
+      "events": [
+        {
+          "name": "start_classification",
+          "description": "Begin family classification cascade."
+        },
+        {
+          "name": "gating_matched",
+          "description": "Gating terminator fired; treat as resolved."
+        },
+        {
+          "name": "gating_blocked",
+          "description": "Hard block from gating family."
+        },
+        {
+          "name": "family_matched",
+          "description": "An analytical family matched."
+        },
+        {
+          "name": "family_needs_scope",
+          "description": "A family signaled needs_scope_clarification."
+        },
+        {
+          "name": "family_needs_semantic",
+          "description": "A family signaled needs_semantic_clarification."
+        },
+        {
+          "name": "try_cascade_bridge",
+          "description": "Gating did not match; try cascade-bridge next."
+        },
+        {
+          "name": "try_yoy_driver_diagnosis",
+          "description": "Cascade-bridge did not match; try yoy next."
+        },
+        {
+          "name": "try_rolling_trend_tradeoff",
+          "description": "Yoy did not match; try rolling-trend next."
+        },
+        {
+          "name": "try_benchmark_vs_media",
+          "description": "Rolling-trend did not match; try benchmark next."
+        },
+        {
+          "name": "try_ratio_threshold_ranking",
+          "description": "Benchmark did not match; try ratio-threshold next."
+        },
+        {
+          "name": "try_single_kpi_snapshot",
+          "description": "Ratio-threshold did not match; try snapshot fallback next."
+        },
+        {
+          "name": "cascade_exhausted",
+          "description": "Even snapshot fallback did not match. Defensive."
+        }
+      ],
+      "invariants": [
+        "Each evaluating_* state has exactly four on_completion handlers\nmirroring the four canonical family terminals (matched,\nneeds_scope_*, needs_semantic_*, not_matched). The gating family\nadds a fifth (blocked); the snapshot fallback does not need\n\"needs_*\" different handling but follows the same shape for\nuniformity.",
+        "The cascade ordering encodes the FAMILY_PRECEDENCE_RULE_SEQUENCE\nfrom family-state-rules.ts as the order of evaluating_* states.\nReordering states reorders precedence; this is the master's only\nway to express precedence, and it is faithful only when precedence\ncan be linearized (a strong assumption — see FINDINGS.md).",
+        "A family_matched event from any analytical family ends the\ncascade. The master does not collect or merge multiple positive\nmatches — there is exactly one winner, the first that matches."
+      ],
+      "context_schema": {
+        "input": [
+          {
+            "name": "signals",
+            "type": "object",
+            "description": "QuestionSignals payload."
+          },
+          {
+            "name": "scope_context",
+            "type": "object",
+            "description": "Profile + policy scope context."
+          },
+          {
+            "name": "role_family",
+            "type": "string"
+          }
+        ],
+        "output_by_terminal": {
+          "family_resolved": [
+            {
+              "name": "family_id",
+              "type": "string"
+            },
+            {
+              "name": "analysis_type",
+              "type": "string"
+            },
+            {
+              "name": "comparison_mode",
+              "type": "string"
+            },
+            {
+              "name": "expected_answer_shape",
+              "type": "string"
+            }
+          ],
+          "needs_scope_clarification": [
+            {
+              "name": "family_id",
+              "type": "string"
+            }
+          ],
+          "needs_semantic_clarification": [
+            {
+              "name": "family_id",
+              "type": "string"
+            },
+            {
+              "name": "ambiguity_kind",
+              "type": "string"
+            }
+          ],
+          "blocked": [
+            {
+              "name": "family_id",
+              "type": "string"
+            },
+            {
+              "name": "block_reason",
+              "type": "string"
+            }
+          ],
+          "all_families_exhausted": [
+            {
+              "name": "diagnostic_note",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
