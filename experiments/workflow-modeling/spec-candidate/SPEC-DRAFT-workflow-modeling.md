@@ -10,6 +10,30 @@
 
 This spec lives inside `experiments/workflow-modeling/` and is not part of POM main until an explicit promotion decision is taken.
 
+## Implementation Status
+
+This spec describes the target shape of the capability. Not every part is implemented yet inside the experiment; some pieces are aspirational and will be built before promotion. The table below is authoritative on what currently exists vs. what is planned.
+
+| Area | Status | Where it lives today |
+|---|---|---|
+| YAML model schema (states, events, guards, transitions, invariants) | **Implemented** | `templates-candidate/WORKFLOW_TEMPLATE.yaml` and three example workflows under `examples/` |
+| `re_entry_allowed` attribute on terminal states | **Implemented** | Schema + validator + applied to `spec-evolution.complete` and `ticket-lifecycle.closed` |
+| Validator Error rules (E000–E017) | **Implemented** | `scripts-candidate/lint-workflows.mjs` |
+| Validator Warning rules (W001–W004) | **Implemented** | `scripts-candidate/lint-workflows.mjs` |
+| Validation report (`<name>.validation.md`) | **Implemented** | Markdown output of `lint-workflows.mjs` |
+| Broken-fixture coverage (one per E and W rule, plus positive `re_entry_allowed`) | **Implemented** | `evidence/broken-fixtures/` |
+| Skill card with five modes | **Implemented** | `skills-candidate/workflow.md` |
+| Canonical prompt for the skill | **Target for promotion** | Skill currently points to `experiments/workflow-modeling/prompts/workflow.md` (file to be created during the experiment) |
+| Validator Info rules (cycles, naming conventions) | **Target for promotion** | Not implemented; explicitly out of scope of the current validator pass |
+| Mermaid diagram generator (`<name>.mmd`) | **Target for promotion** | Not implemented |
+| Scenario generator (`<name>.scenarios.md`) | **Target for promotion** | Not implemented |
+| `pom:workflow:lint` npm wrapper | **Target for promotion** | Not implemented; experiment runs the script directly under `scripts-candidate/` |
+| Implementation guide for coding agents | **Implemented (draft)** | `templates-candidate/WORKFLOW_IMPLEMENTATION_GUIDE.md` |
+| TypeScript guided-implementation evidence (Hypothesis H4) | **Target for promotion** | Not yet produced; planned under `evidence/typescript/` |
+| Promotion decision and consolidation | **Target for promotion** | Section in `EXPERIMENT.md` to be filled at end of experiment |
+
+The rest of this document describes the *target* shape. Read each section together with the row above before assuming a feature exists.
+
 ## Purpose
 
 Target projects increasingly need explicit, well-defined workflows: ticket lifecycle, document approval, request authorization, content publishing, internal spec evolution, and so on. The current POM method supports such workflows only as prose inside specs or wiki pages. Prose is good for context but fragile for verification, hard to keep in sync with the implementing code, and hard to hand to a coding agent for accurate translation.
