@@ -251,6 +251,7 @@ I criteri di valore minimi richiedevano tre workflow modellati senza forzature e
 - [x] Decidere su estensione schema `re_entry_allowed`. *(2026-05-29: chiuso. Attributo opzionale sullo stato, default false; sopprime W003 quando true e is_final true. Esempi e validator aggiornati; entrambi gli esempi ora PASS pulito.)*
 - [ ] Aggiungere generatore Mermaid `stateDiagram-v2`.
 - [ ] Aggiungere generatore scenari lingua-agnostici.
-- [ ] Stabilizzare `skills-candidate/workflow.md`.
+- [x] Stabilizzare `skills-candidate/workflow.md`. *(2026-05-29: 62 righe, sotto il tetto di 100; punta al prompt canonico `prompts/workflow.md` ora esistente.)*
+- [x] Scrivere prompt canonico `prompts/workflow.md`. *(2026-05-29: 112 righe, sotto il tetto di 200; copre i cinque modi design/validate/diagram/scenarios/implement. Diagram e scenarios dichiarano "target-for-promotion, not implemented in this pass".)*
 - [ ] Eseguire test di implementazione TypeScript guidata su un esempio.
 - [ ] Compilare sezione Esito e Consolidazione.

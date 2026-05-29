@@ -23,7 +23,7 @@ This spec describes the target shape of the capability. Not every part is implem
 | Validation report (`<name>.validation.md`) | **Implemented** | Markdown output of `lint-workflows.mjs` |
 | Broken-fixture coverage (one per E and W rule, plus positive `re_entry_allowed`) | **Implemented** | `evidence/broken-fixtures/` |
 | Skill card with five modes | **Implemented** | `skills-candidate/workflow.md` |
-| Canonical prompt for the skill | **Target for promotion** | Skill currently points to `experiments/workflow-modeling/prompts/workflow.md` (file to be created during the experiment) |
+| Canonical prompt for the skill | **Implemented (draft)** | `experiments/workflow-modeling/prompts/workflow.md`. On promotion: `prompts/27-workflow-modeling.md` |
 | Validator Info rules (cycles, naming conventions) | **Target for promotion** | Not implemented; explicitly out of scope of the current validator pass |
 | Mermaid diagram generator (`<name>.mmd`) | **Target for promotion** | Not implemented |
 | Scenario generator (`<name>.scenarios.md`) | **Target for promotion** | Not implemented |
