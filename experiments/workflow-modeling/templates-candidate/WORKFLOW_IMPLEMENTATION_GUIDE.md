@@ -117,8 +117,60 @@ Recommended practice (not POM-installed):
 - add a CI check that runs the validator and refuses merges with Error-level findings;
 - when the team wants a model change, prefer an ADR if the change alters business meaning.
 
+## Language Profiles
+
+The patterns above (A, B, C) are language-agnostic in description. The mapping into idiomatic code of each target language is the job of the coding agent. This section lists the conventions, library options, and test-runner choices the guide expects per supported language. Each profile is additive: more languages can be appended without restructuring.
+
+### TypeScript
+
+| Concern | Idiomatic choice |
+|---|---|
+| Discriminated union for `Result<Terminal, Output>` | `type R = { terminal: 't1'; ... } \| { terminal: 't2'; ... };` |
+| Transition table | `readonly Transition[]` with `as const`. |
+| Guard predicates | Pure functions over an opaque `context` parameter. Names match `guards[].name`. JSDoc reproduces the YAML's `description:`. |
+| State type | `Literal` union of state names. |
+| Test runner | `node:test` (built-in, zero dependency) or the project's runner from `pom.config.json` (vitest, jest, mocha, etc.). |
+| Optional library (Pattern C) | **xstate** v5. State-invoke / event-invoke / context injection map to XState `invoke` + `onDone` + `assign`. See `xstate-compat/COMPATIBILITY.md` for the mapping table. |
+
+Evidence: `evidence/typescript/spec-evolution/` (Pattern A, 15 tests, exit 0).
+
+### Python
+
+| Concern | Idiomatic choice |
+|---|---|
+| Discriminated union for `Result<Terminal, Output>` | `Union[Allowed, Refused]` with frozen `@dataclass` + a `kind: Literal["allowed" \| "refused"]` field. Pydantic v2 is also an option when the project already uses it. |
+| Transition table | Tuple of `@dataclass(frozen=True)` records. |
+| Guard predicates | Module-level functions over a `TypedDict(total=False)` context. Docstrings reproduce the YAML's `description:`. |
+| State type | `Literal[...]` of state names. |
+| Pattern matching | `match`/`case` on the `event` or on `guard` name (Python 3.10+). |
+| Test runner | `unittest` (built-in, zero dependency) or `pytest` if the project already uses it. |
+| Naming caveat | The YAML field `from:` cannot be a Python identifier (keyword). Convention: rename to `from_state` in code. |
+| Optional library (Pattern C) | **transitions** ([pytransitions](https://github.com/pytransitions/transitions)) for simple FSMs; **python-statemachine** for declarative + serialization; **statemachine** for callbacks-heavy designs. POM YAML `states[].invoke` maps to the library's nested machine / actor concept where supported, otherwise to a callback that runs the child workflow synchronously. |
+
+Evidence: `evidence/python/spec-evolution/` (Pattern A, 15 tests, exit 0).
+
+### Adding a new language profile
+
+To add Go, Rust, Java/Kotlin, C#, etc., follow the same template:
+
+1. Pick idiomatic types for the discriminated `Result<Terminal, Output>` (e.g., Rust `enum` with variants, Go struct + tag, Java sealed class).
+2. Pick an idiomatic immutable container for the transition table.
+3. Decide where guard functions live (free functions, struct methods, etc.) and how they receive the opaque context.
+4. List the candidate FSM libraries for Pattern C (`looplab/fsm`, `qmuntal/stateless` for Go; `rust-fsm`, `state_machine` for Rust; Spring Statemachine, Squirrel-foundation for Java).
+5. Pick the default test runner from the standard library.
+6. Produce at least one evidence under `evidence/<language>/<example>/` with the same scenario coverage the existing evidence has. The guide's promise of multi-language portability is only verified once an evidence exists.
+
+### Anti-patterns across all languages
+
+Independent of the target language, the guide discourages:
+
+- Encoding the guard predicate logic inside the YAML — the YAML keeps names + descriptions only, the predicates live in code.
+- Hard-coding the transition table in code instead of deriving it from the YAML — the YAML is the source of authority. Whenever the YAML changes, the table is regenerated, not patched.
+- Mixing Pattern A with Pattern C in the same machine. Pick one consistently per workflow.
+
 ## What This Guide Does Not Do
 
 - It does not generate code automatically. Code generation belongs to the coding agent, supervised by the team.
 - It does not maintain runtime instances. Instance state lives in the target's storage layer.
 - It does not enforce a pattern. Selection is the team's responsibility.
+- It does not bless a single target language. Each language profile is opt-in and additive.

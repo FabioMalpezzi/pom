@@ -642,6 +642,52 @@ node xstate-compat/to-xstate.mjs <yaml> --out /tmp/<name>.xstate.json
 
 Questo trasforma POM da "documenta + valida testualmente" a "documenta + valida testualmente + visualizza + simula interattivamente". È la mossa che giustifica il prezzo del round 2: il modello dichiarativo ha ora una catena completa source-of-authority → validatore → diagramma online → simulazione → codice target.
 
+## Estensione multi-linguaggio: TypeScript + Python (2026-05-29)
+
+L'utente ha sollevato la domanda: la generazione del codice si può orientare anche verso altri linguaggi oltre TypeScript? Risposta: sì per design — il YAML POM è language-agnostic (tipi `string/number/boolean/object/array` universali, guard come nomi simbolici, transizioni come dati). Quello che è TypeScript-specifico oggi è la **guida implementativa** e l'**evidence H4**, non il modello.
+
+Per verificarlo concretamente: lo stesso `spec-evolution.yaml` viene portato in Python con Pattern A (transition table), Python 3.14, `unittest` built-in, zero dipendenze. Stessi 15 test scenari del round 1 in TypeScript, tradotti uno-a-uno.
+
+**Risultato**
+
+| Metrica | TypeScript evidence (round 1) | Python evidence (questo commit) |
+|---|---|---|
+| Source YAML | `spec-evolution.yaml` | stesso |
+| Pattern usato | A (transition table) | A (transition table) |
+| Test count | 15 | 15 |
+| Tests passati | 15 | 15 |
+| Exit code | 0 | 0 |
+| Dipendenze aggiunte | 0 | 0 |
+| Test runner | `node:test` built-in | `unittest` built-in |
+| Lines of code (3 file) | ~210 | ~180 |
+
+**Conferma decisiva di H4 multi-linguaggio**
+
+Lo stesso modello produce due implementazioni idiomatiche distinte (TypeScript discriminated union + node:test; Python `@dataclass(frozen=True)` + `Literal` + `match`/`case` + unittest) senza modifiche al YAML. Il `WORKFLOW_IMPLEMENTATION_GUIDE.md` è stato esteso con una sezione "Language Profiles" che documenta TypeScript e Python con scelte idiomatiche, librerie Pattern C (TS: xstate; Python: transitions / python-statemachine / statemachine), e il template per aggiungere nuovi profili (Go, Rust, Java/Kotlin, C#) col vincolo "ogni nuovo profilo richiede almeno un evidence sotto `evidence/<language>/`".
+
+**Cosa la guida ha guidato (stesso pattern in entrambi i linguaggi)**
+
+- Pattern selection criteria (A su modello piccolo);
+- Guard naming `guard_<yaml_name>` one-to-one;
+- Docstring discipline (la `description:` del YAML diventa docstring verbatim);
+- Categorie di test dal modo `scenarios`;
+- Mapping `re_entry_allowed: true` (terminale con eccezione documentata).
+
+**Cosa la guida correttamente NON ha guidato (variazioni linguistiche)**
+
+- Discriminated union TS vs `Union[Allowed, Refused]` Python;
+- `as const` TS vs `tuple` Python per transition table immutabile;
+- `node:test` vs `unittest` come test runner;
+- `from_state` invece di `from` nel modello Python (collisione con keyword) — il YAML usa `from:` perché in YAML non è keyword.
+
+**Anti-pattern dichiarati come universali**
+
+Indipendentemente dal linguaggio, la guida vieta esplicitamente: encoding della logica delle guard nel YAML, hard-coding della transition table invece di derivarla, mescolanza Pattern A + Pattern C nello stesso workflow.
+
+**Significato per il giro 2**
+
+Il messaggio "POM è multi-linguaggio" smette di essere una promessa documentale (era così già nel round 1) e diventa **verificata da due implementazioni reali** dello stesso modello. La consolidazione del giro 2 può ora citare due evidence H4 affiancate, non una; e il path "aggiungere un terzo linguaggio" è esplicitato come sequenza ripetibile (template Language Profile + evidence con uguale copertura dei test).
+
 **Prossimi passi del giro**
 
 - Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator" e l'input/output mapping).
