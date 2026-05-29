@@ -1,0 +1,159 @@
+{
+  "id": "ticket_lifecycle",
+  "initial": "new",
+  "states": {
+    "new": {
+      "description": "Ticket has just been created. No triage has happened yet. Content,\nreproduction steps, and severity may still be incomplete.",
+      "on": {
+        "triage": {
+          "target": "triaged",
+          "guard": "has_reproduction_steps"
+        },
+        "mark_duplicate": "duplicate",
+        "mark_wont_fix": "wont_fix"
+      }
+    },
+    "triaged": {
+      "description": "Triage has confirmed the ticket is actionable: reproducible (when\napplicable), within scope, and prioritized. Not yet assigned to\nwork.",
+      "on": {
+        "assign": "in_progress",
+        "mark_duplicate": "duplicate",
+        "mark_wont_fix": "wont_fix"
+      }
+    },
+    "in_progress": {
+      "description": "The ticket is actively being worked on by an assignee.",
+      "on": {
+        "request_info": "waiting_customer",
+        "resolve": "resolved",
+        "mark_duplicate": "duplicate",
+        "mark_wont_fix": "wont_fix"
+      }
+    },
+    "waiting_customer": {
+      "description": "Work is paused waiting for the reporter or customer to provide\nadditional information, decisions, or access. The ticket remains\nopen and the assignee is the same.",
+      "on": {
+        "info_received": "in_progress"
+      }
+    },
+    "resolved": {
+      "description": "The support team declares the ticket fixed. Awaiting verification\nby the reporter. This is NOT a closed state: a rejected fix sends\nthe ticket back to in_progress.",
+      "on": {
+        "verify": "verified",
+        "reject_fix": "in_progress"
+      }
+    },
+    "verified": {
+      "description": "The reporter has confirmed the fix works. Ready to be closed\nadministratively.",
+      "on": {
+        "close": "closed"
+      }
+    },
+    "closed": {
+      "description": "The ticket is administratively closed. By policy, closed tickets\ncan be reopened if the issue recurs. This state is terminal in\nthe lifecycle sense but admits a documented reverse transition,\ndeclared explicitly via re_entry_allowed.",
+      "on": {
+        "reopen": {
+          "target": "in_progress",
+          "description": "Reopen sends the ticket back to in_progress, not to triaged,\nbecause triage has already happened and the assignee is typically\nkept. The validator is expected to warn about a terminal state\nwith an outgoing transition; see open_points."
+        }
+      },
+      "meta": {
+        "pom": {
+          "is_final": true,
+          "re_entry_allowed": true
+        }
+      }
+    },
+    "duplicate": {
+      "description": "The ticket is closed as a duplicate of another ticket. Terminal.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "wont_fix": {
+      "description": "The ticket is closed without resolution by an explicit policy\ndecision (out of scope, by design, deferred indefinitely). Terminal.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    }
+  },
+  "meta": {
+    "pom": {
+      "version": 1,
+      "description": "Lifecycle of a support or bug ticket in an application that uses POM.\nA ticket starts as new, gets triaged, may be put in progress and worked\non, may be paused waiting for customer input, gets resolved by the\nsupport team, is then verified by the reporter, and finally closed.\nTickets can be closed as duplicates or as wont_fix from earlier stages,\nand a closed ticket can be reopened.",
+      "events": [
+        {
+          "name": "triage",
+          "description": "Triage decision: the ticket is actionable and may be worked on."
+        },
+        {
+          "name": "assign",
+          "description": "An assignee picks up the ticket and starts work."
+        },
+        {
+          "name": "request_info",
+          "description": "The assignee blocks waiting for customer or reporter input."
+        },
+        {
+          "name": "info_received",
+          "description": "The requested information arrived; the assignee resumes work."
+        },
+        {
+          "name": "resolve",
+          "description": "The assignee declares the ticket fixed and hands it to the reporter\nfor verification."
+        },
+        {
+          "name": "verify",
+          "description": "The reporter confirms the fix."
+        },
+        {
+          "name": "reject_fix",
+          "description": "The reporter says the fix does not work; the ticket returns to\nin_progress."
+        },
+        {
+          "name": "close",
+          "description": "The ticket is administratively closed after verification or after\na duplicate / wont_fix decision."
+        },
+        {
+          "name": "reopen",
+          "description": "A closed ticket is reopened because the issue recurred or new\nevidence emerged."
+        },
+        {
+          "name": "mark_duplicate",
+          "description": "The ticket is identified as a duplicate of another and closed\nas such."
+        },
+        {
+          "name": "mark_wont_fix",
+          "description": "The ticket is closed without implementation by an explicit\npolicy decision."
+        }
+      ],
+      "guards": [
+        {
+          "name": "has_reproduction_steps",
+          "description": "The ticket has enough information to be reproduced (or, for\nnon-defect tickets, enough context to be actioned). Required to\npass triage."
+        }
+      ],
+      "invariants": [
+        "A ticket cannot be marked duplicate or wont_fix once it has reached\nresolved or verified. Those terminal flavors apply to the early\nstages of the lifecycle. After resolution, the path is verify +\nclose, with reopen as the only re-entry.",
+        "verified can only be reached from resolved. The reporter cannot\nverify a ticket that has not been declared resolved by the\nassignee.",
+        "waiting_customer never bypasses verification: from waiting_customer\nthe only way to terminal states is via in_progress -> resolved ->\nverified -> closed. If the customer never responds, an external\npolicy may force mark_wont_fix from in_progress, not directly\nfrom waiting_customer.",
+        "A reopened ticket reuses the same identifier; it does not become\na new ticket. The reopen transition is the schema-level\nrepresentation of that policy."
+      ],
+      "open_points": [
+        "Pause state modeling: waiting_customer is modeled as a primary\nstate here, while spec-evolution excluded Deferred/Blocked/Waiting.\nThe two examples make the difference explicit. Open question:\nshould the schema let a state declare itself a pause variant\nof another state, to keep the lifecycle main path readable?\n",
+        "Timer-based transition: a real ticket system often closes a\nticket automatically after N days in waiting_customer. The schema\ndoes not support timer / temporal transitions in v1 (declared out\nof scope). If usage shows this is needed, a future schema may add\na time_trigger field on transitions; v1 keeps it out.\n",
+        "Reopen target: chosen to go back to in_progress, not to triaged.\nAlternative would be reopen -> triaged when the previous assignee\nis no longer available. Could be a guard rather than a separate\ntransition.\n",
+        "mark_duplicate from new is allowed even without\nhas_reproduction_steps. This is intentional: dedup can happen\nbefore triage. But the schema does not currently express\n\"guard does not apply\" — it just omits the guard. If models grow\ncomplex, a \"no_guard_required: true\" marker may help readability.\n"
+      ],
+      "closed_points": [
+        "\"closed admits reopen out-transition\" — resolved via the schema\nattribute re_entry_allowed: true. The validator no longer flags\nW003 on closed. Same decision applied to spec-evolution's\n\"complete\" state.\n"
+      ]
+    }
+  }
+}

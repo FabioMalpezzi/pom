@@ -284,6 +284,53 @@ Pattern A (transition table) sulla base dei criteri del `WORKFLOW_IMPLEMENTATION
 
 La guida ha portato da YAML a codice eseguibile e testato senza imporre librerie, framework o architettura. Le cose non guidate sono correttamente di pertinenza del target, non lacune della guida. Pattern B e C restano non verificati da questa evidenza; per la promozione bastano (e gli altri pattern possono essere stressati in round successivi).
 
+## Compatibilità XState (verifica esterna, 2026-05-29)
+
+Verifica esterna richiesta: il formato POM YAML è compatibile come definizioni con XState (statelyai/xstate)? L'obiettivo non è adottare XState come runtime di POM, ma confermare che il modello dichiarativo non sia un formalismo privato senza precedenti, e dare ai progetti che usano XState un percorso per condividere un'unica fonte autoritativa.
+
+**Cosa esiste in XState**
+
+- `packages/core/src/machine.schema.json` nel repo XState (338 righe, JSON Schema draft-07): definisce il *serialized state node format* — la rappresentazione interna a runtime, non l'input di `createMachine()`. Snapshot in `xstate-compat/xstate-machine.schema.json`.
+- L'input `MachineConfig` di `createMachine()` non ha JSON Schema pubblicato: è definito dai TypeScript types e dalla documentazione `stately.ai/docs/`. È questo il livello rilevante per POM (è quello che uno sviluppatore scrive a mano).
+
+**Mappatura POM YAML → XState MachineConfig**
+
+Dettaglio completo in `xstate-compat/COMPATIBILITY.md`. Sintesi:
+
+| Concetto POM | Slot XState | Esito |
+|---|---|---|
+| `workflow`, `initial_state`, `states[].name`, `description` | `id`, `initial`, `states.<name>`, `description` | Mapping diretto. |
+| `states[].is_final: true` + no `re_entry_allowed` | `type: "final"` | Mapping diretto. |
+| `states[].is_final: true` + `re_entry_allowed: true` | atomic state + `on{}`, `meta.pom` per l'intento POM | Nessun equivalente XState; preservato come metadato. |
+| `events[]` + descrizione | stringhe sotto `on`, descrizioni in `meta.pom.events[]` | XState non dichiara eventi globalmente. |
+| `guards[]` + descrizione | nome sotto `guard:`, descrizioni in `meta.pom.guards[]` | XState non dichiara guards globalmente; predicate function in `options.guards`. |
+| `transitions[]` flat | nidificati in `states[<from>].on[<event>]` | Trasformazione strutturale (array piatto → object nidificato). |
+| `invariants[]` | `meta.pom.invariants[]` | Nessun equivalente XState. |
+| Più transizioni stesso (from, event) | array sotto `on.<event>` | XState gestisce nativamente. |
+
+**Cosa XState ha che POM non modella**
+
+Stati compound/parallel/history, entry/exit/transition actions, invoke/actors, `context`, transizioni temporali (`after:`). La `WORKFLOW_IMPLEMENTATION_GUIDE.md` di POM rimanda esattamente a queste feature quando si sceglie Pattern C (library-based). POM resta un *sottoinsieme dichiarativo* del MachineConfig di XState.
+
+**PoC del transformer**
+
+`xstate-compat/to-xstate.mjs`: converte un workflow YAML in MachineConfig JSON XState v5. Riusa `js-yaml` locale dell'esperimento, zero dipendenze nuove. Eseguito sui tre esempi compilati; output sotto `evidence/xstate/`.
+
+| Esempio | Output JSON | Dimensione | Verifica strutturale |
+|---|---|---|---|
+| `spec-evolution.yaml` | `evidence/xstate/spec-evolution.xstate.json` | 6.4 KB | `complete` → atomic + `meta.pom.re_entry_allowed`; `superseded/withdrawn/rejected` → `type: "final"` |
+| `ticket-lifecycle.yaml` | `evidence/xstate/ticket-lifecycle.xstate.json` | 7.8 KB | `closed` → atomic + `meta.pom.re_entry_allowed`; `duplicate/wont_fix` → `type: "final"` |
+| `document-approval.yaml` | `evidence/xstate/document-approval.xstate.json` | 8.7 KB | `archived/withdrawn` → `type: "final"`; role guards passati come nomi (predicate function in target code) |
+
+**Cosa non è stato fatto (follow-up opzionali)**
+
+- Validazione runtime con `createMachine()` di XState: richiede di installare `xstate` come dipendenza locale dell'esperimento. Volontariamente fuori scope: l'obiettivo è documentale, non runtime.
+- Transformer inverso XState → POM: deliberatamente *non* progettato, perché un MachineConfig XState che usa compound/parallel/actions non si flatta nel formato POM senza perdita di semantica.
+
+**Verdetto**
+
+POM YAML è un sottoinsieme dichiarativo del MachineConfig di XState, esteso con slot documentali (descrizioni di eventi/guards, invariants, `re_entry_allowed`, open/closed points) che XState non possiede ma accetta sotto `meta`. Conversione POM → XState lossless è possibile e implementata; conversione inversa è esplicitamente fuori scope. La forma dichiarativa POM non è quindi un'invenzione privata: è coerente con una libreria FSM mainstream, e un progetto che usa XState può mantenere POM come fonte autoritativa per la porzione flat-FSM e generare il config XState on demand.
+
 ## Stato finale delle quattro ipotesi
 
 - **H1** (espressività YAML): **confermata** su tre workflow eterogenei (spec-evolution, ticket-lifecycle, document-approval), nessuna modifica allo schema dopo il primo.
