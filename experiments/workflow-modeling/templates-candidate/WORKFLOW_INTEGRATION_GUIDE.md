@@ -18,7 +18,7 @@ POM workflow fits a project that has:
 
 It does **not** fit:
 
-- pure rule-engine classification with concurrent candidate machines (see Syntonia Family rules);
+- pure rule-engine classification with concurrent candidate machines (see internal AI agent Family rules);
 - workflows whose primary complexity is concurrency, real-time, or distributed coordination;
 - UI state with deep nesting and parallel regions (XState or a UI-state library is the right tool).
 

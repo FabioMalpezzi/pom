@@ -1,0 +1,25 @@
+stateDiagram-v2
+  %% operational_fsm: internal AI agent pipeline orchestrator. Seven active steps from safety
+  [*] --> safety_pre_screen
+  safety_pre_screen --> question_normalizer : pre_screen_passed
+  safety_pre_screen --> [*] : non_business_signal
+  question_normalizer --> analyzer : normalized
+  analyzer --> execution_contract : analyzer_done_full_pipeline
+  analyzer --> output_generator : analyzer_done_direct_output
+  analyzer --> [*] : clarification_signal
+  analyzer --> [*] : analyzer_block_signal
+  analyzer --> [*] : non_business_signal
+  analyzer --> [*] : loop_guard_signal
+  execution_contract --> sql_generator : contract_built
+  sql_generator --> execute_and_validate : sql_generated
+  sql_generator --> [*] : policy_block_signal
+  sql_generator --> [*] : sql_refusal_signal
+  sql_generator --> [*] : loop_guard_signal
+  execute_and_validate --> output_generator : execution_validated
+  execute_and_validate --> [*] : sql_refusal_signal
+  execute_and_validate --> [*] : loop_guard_signal
+  output_generator --> [*] : answer_rendered
+  note right of analyzer
+    invoke: analyzer_fsm
+    on_completion: completed -> analyzer_done_full_pipeline, deterministic_reply_resolved -> analyzer_done_direct_output, pending_scope_resolved -> analyzer_done_direct_output, llm_failure -> analyzer_block_signal, parse_exhausted -> analyzer_block_signal, schema_exhausted -> analyzer_block_signal, coherence_exhausted -> analyzer_block_signal
+  end note

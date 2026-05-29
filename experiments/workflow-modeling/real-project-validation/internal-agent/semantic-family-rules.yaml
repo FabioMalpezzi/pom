@@ -1,0 +1,279 @@
+# POM modeling of the internal AI agent Semantic Family rules.
+#
+# Source: the internal AI agent source tree/pipeline-contract/
+#         family-state-rules.ts
+#         types.ts (FamilyState enum, FamilyId enum)
+#
+# DISCLAIMER: This is the "forced" mapping requested by the user.
+# The source is not a traditional FSM: it is a declarative rule engine
+# that evaluates 40+ guards across 13 candidate families with 20+
+# precedence rules, then computes a dominant family and the resulting
+# FamilyState transition. The POM model below captures only the
+# top-level state graph (7 FamilyState values + transitions between
+# them); the body of the rule engine (40 guards, 20 precedence rules,
+# 13 family-rule records with their own entry/clarification/ready
+# guards) is documented in the metadata as open points.
+#
+# This file is therefore deliberately incomplete relative to the source.
+# FINDINGS.md explains where POM stops and why.
+
+workflow: semantic_family_fsm
+version: 1
+description: |
+  High-level FamilyState graph used by the internal AI agent semantic
+  layer. Each user turn starts in turn_received, is classified into a
+  family candidate, may need scope or semantic clarification, may be
+  blocked, otherwise reaches family_ready and then completed. The
+  classification logic (40 guards, 20 precedence rules, 13 family-rule
+  records) is documental metadata in this model.
+
+context_schema:
+  input:
+    - { name: turn_id,           type: string }
+    - { name: question_signals,  type: object, description: "QuestionSignals payload from the normalizer." }
+    - { name: scope_context,     type: object, description: "Profile + policy scope context." }
+  output_by_terminal:
+    completed:
+      - { name: family_id,           type: string, description: "One of the 13 FamilyId values." }
+      - { name: analysis_type,       type: string }
+      - { name: comparison_mode,     type: string }
+      - { name: expected_answer_shape, type: string }
+    blocked:
+      - { name: block_reason,        type: string }
+      - { name: canonical_stop_reason, type: string }
+
+initial_state: turn_received
+
+states:
+  - name: turn_received
+    description: |
+      Entry state: the turn has been received, no classification yet.
+    is_final: false
+
+  - name: family_candidate
+    description: |
+      A candidate family has been selected (after entryGuards match
+      and precedence-rule resolution). May still need clarification.
+    is_final: false
+
+  - name: needs_scope_clarification
+    description: |
+      Scope is missing (scope_missing guard true). The user must
+      provide more context before the family can resolve.
+    is_final: false
+
+  - name: needs_semantic_clarification
+    description: |
+      Semantic ambiguity in the candidate family (e.g.,
+      ratio_pair_or_denominator_ambiguous, kpi_or_scenario_ambiguous).
+      The user must disambiguate.
+    is_final: false
+
+  - name: family_ready
+    description: |
+      All readyGuards match and no clarification is needed. The family
+      output spec is known; the operational pipeline can proceed.
+    is_final: false
+
+  - name: blocked
+    description: |
+      A block guard matched (e.g., out_of_scope_data,
+      policy_scope_violation, unsupported_output_shape). Terminal.
+    is_final: true
+
+  - name: completed
+    description: |
+      The semantic turn is closed: the family produced its output and
+      the pipeline returned a final answer.
+    is_final: true
+
+events:
+  - name: classify
+    description: |
+      Run the family resolver (entryGuards + precedence rules).
+      Single composite event covering 40+ underlying guard evaluations.
+  - name: scope_resolved
+    description: |
+      The scope ambiguity has been resolved (user reply or deterministic
+      resolution).
+  - name: semantic_resolved
+    description: |
+      The semantic ambiguity has been resolved.
+  - name: ready_guards_matched
+    description: |
+      All readyGuards for the candidate family are true. The family can
+      proceed to ready.
+  - name: scope_missing_signal
+    description: |
+      scope_missing guard true.
+  - name: semantic_ambiguity_signal
+    description: |
+      One of the semantic ambiguity guards true.
+  - name: block_signal
+    description: |
+      One of the block guards matched (out_of_scope_*, policy_*, etc).
+  - name: turn_finalized
+    description: |
+      The pipeline reported the final answer; the semantic turn closes.
+
+guards:
+  - name: any_entry_guard_matches
+    description: |
+      Composite documental guard: at least one entry guard from
+      ALL_FAMILY_GUARDS (analysis_snapshot, entity_listing_request,
+      analysis_ranking, analysis_benchmark, analysis_trend,
+      analysis_diagnosis, analysis_cascade) matches. In the source the
+      actual matching is driven by precedence rules (see
+      ALL_FAMILY_PRECEDENCE_RULES, 19 entries).
+
+  - name: scope_missing
+    description: |
+      The scope context cannot satisfy the family's scope requirements.
+      Triggers needs_scope_clarification.
+
+  - name: any_semantic_ambiguity
+    description: |
+      At least one of the family-specific ambiguity guards is true
+      (e.g., ratio_pair_or_denominator_ambiguous,
+      kpi_or_scenario_ambiguous, bundle_denominator_or_components_ambiguous,
+      threshold_or_direction_ambiguous, ranking_metric_ambiguous,
+      topn_or_total_ambiguous, benchmark_target_ambiguous,
+      tradeoff_drivers_ambiguous, yoy_driver_ambiguous,
+      diagnostic_driver_ambiguous, bridge_perimeter_ambiguous,
+      semantic_detail_missing, multi_intent_overload).
+
+  - name: any_block_guard
+    description: |
+      At least one block guard is true (unsupported_output_shape,
+      unsupported_time_grain, external_benchmark_without_proxy,
+      out_of_scope_data, out_of_scope_architecture,
+      policy_scope_violation).
+
+  - name: all_ready_guards_for_candidate
+    description: |
+      The candidate family's readyGuards all evaluate true. Different
+      families declare different readyGuards (see FAMILY_STATE_RULES
+      records).
+
+transitions:
+  - from: turn_received
+    to: family_candidate
+    event: classify
+    guard: any_entry_guard_matches
+    description: |
+      Composite transition: under the hood the family resolver applies
+      ALL_FAMILY_PRECEDENCE_RULES (19 rules) over all FamilyRuleRecord
+      records, picks a dominant family, and writes the candidate.
+
+  - from: turn_received
+    to: blocked
+    event: block_signal
+    guard: any_block_guard
+    description: |
+      Some block guards can fire before any classification (e.g.,
+      out_of_scope_architecture).
+
+  - from: family_candidate
+    to: needs_scope_clarification
+    event: scope_missing_signal
+    guard: scope_missing
+
+  - from: family_candidate
+    to: needs_semantic_clarification
+    event: semantic_ambiguity_signal
+    guard: any_semantic_ambiguity
+
+  - from: family_candidate
+    to: family_ready
+    event: ready_guards_matched
+    guard: all_ready_guards_for_candidate
+
+  - from: family_candidate
+    to: blocked
+    event: block_signal
+    guard: any_block_guard
+
+  - from: needs_scope_clarification
+    to: family_candidate
+    event: scope_resolved
+
+  - from: needs_semantic_clarification
+    to: family_candidate
+    event: semantic_resolved
+
+  - from: family_ready
+    to: completed
+    event: turn_finalized
+
+invariants:
+  - description: |
+      A semantic turn always terminates: every non-terminal state has
+      at least one outgoing transition. The two terminals are blocked
+      and completed.
+
+  - description: |
+      Clarification states (needs_scope_clarification,
+      needs_semantic_clarification) cycle back to family_candidate, not
+      to a fresh turn_received. The candidate family is preserved across
+      the clarification round.
+
+  - description: |
+      block_signal is reachable from both turn_received and
+      family_candidate. The model does not enforce which specific block
+      guard can fire where; that policy lives in the source rule records.
+
+metadata:
+  owner: internal AI agent canonical server
+  source_file: pipeline-contract/family-state-rules.ts (registry) + types.ts (FamilyState enum)
+  tags: [real-project, validation, forced-mapping, rule-engine]
+
+  open_points:
+    - |
+      FUNDAMENTAL LIMIT: this file models the *top-level state graph*
+      (7 FamilyState values) but cannot model the *rule engine* that
+      drives the transitions. The source declares:
+      - 40 guards (ALL_FAMILY_GUARDS, family-state-rules.ts:14-50);
+      - 19 precedence rules (ALL_FAMILY_PRECEDENCE_RULES, lines 52-70);
+      - 13 family-rule records (FAMILY_STATE_RULES, lines 125+), each
+        with its own entryGuards, clarificationGuards, readyGuards,
+        blockGuards, and output spec.
+      POM has no primitive to express "evaluate all 13 candidate
+      machines concurrently, apply precedence rules to pick the
+      dominant one, then drive the FamilyState transitions of that
+      one". This is a rule-engine concern, not a FSM concern.
+
+    - |
+      Precedence rules across families. The source has explicit
+      precedence rules like "yoy_driver_diagnosis_on_consecutive_years"
+      or "share_of_total_on_share_or_cardinality" that mean:
+      "if both family A and family B match, prefer A". POM workflow
+      has no slot for cross-machine precedence. This is the most
+      visible expressivity gap.
+
+    - |
+      Per-family entry/clarification/ready guard lists. Each of the 13
+      FAMILY_STATE_RULES has its own list of guards (e.g.,
+      single_kpi_snapshot has entryGuards [analysis_snapshot],
+      clarificationGuards [scope_missing, kpi_or_scenario_ambiguous]).
+      The POM guard list here is the union, declared documentally; it
+      does not capture which family each guard belongs to. Modeling
+      this faithfully would require 13 parallel sub-workflows, one per
+      family — closer to XState parallel regions, which POM declared
+      out of scope.
+
+    - |
+      Output spec per family. Each family-rule record carries an output
+      spec (analysisType + comparisonMode + expectedAnswerShape) used
+      downstream by the operational pipeline. POM models this only
+      partially: the `completed` terminal output_by_terminal lists the
+      fields but does not vary by family. A finer-grained model would
+      need one terminal per family — again, closer to a fan-out the
+      schema does not support.
+
+    - |
+      Terminator families (controlMode: "terminator", lines 105-123)
+      vs analytical families (controlMode: "analytical"). The terminator
+      family records short-circuit to blocked; the analytical ones
+      proceed through ready. The composite `any_block_guard` masks this
+      distinction. A faithful model would have two parallel control
+      paths.

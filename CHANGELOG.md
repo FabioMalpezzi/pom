@@ -20,14 +20,14 @@ Adds the workflow modeling capability (SPEC-0006) to POM. Opt-in per target proj
 
 ### Provenance
 
-The capability was developed entirely inside `experiments/workflow-modeling/` on branch `exp/workflow-modeling` and consolidated via the canonical promotion path declared in SPEC-0006. The experiment folder is preserved as the historical record (status: consolidated), including all evidences: 21+ validated YAML workflows, 30 broken-fixture tests for the validator, three language H4 evidences (TypeScript single-machine, Python single-machine, TypeScript composed stack with suspend/restore), 38 Mermaid diagrams generated in one sweep, and a real-project validation on the Syntonia ai-agent codebase covering a three-level invoke chain (operational → analyzer → clean-family-repair).
+The capability was developed entirely inside `experiments/workflow-modeling/` on branch `exp/workflow-modeling` and consolidated via the canonical promotion path declared in SPEC-0006. The experiment folder is preserved as the historical record (status: consolidated), including all evidences: 21+ validated YAML workflows, 30 broken-fixture tests for the validator, three language H4 evidences (TypeScript single-machine, Python single-machine, TypeScript composed stack with suspend/restore), 38 Mermaid diagrams generated in one sweep, and a real-project validation on the internal AI agent codebase covering a three-level invoke chain (operational → analyzer → clean-family-repair).
 
 ### Open points carried forward (candidates for a future SPEC-0007)
 
-- `loop_guard` primitive with `max_visits` and named exhaustion exits (motivated by `MAX_LLM_ATTEMPTS` and `MAX_FAMILY_REPAIR_ATTEMPTS` in Syntonia ai-agent).
+- `loop_guard` primitive with `max_visits` and named exhaustion exits (motivated by `MAX_LLM_ATTEMPTS` and `MAX_FAMILY_REPAIR_ATTEMPTS` in internal AI agent).
 - Pipeline-level structured context passing between members.
 - Validator Info rules (cycle diagnostics, naming conventions).
-- TypeScript guided-implementation evidence for the pipeline orchestrator case (deferred to the actual POM deploy on the Syntonia ai-agent project).
+- TypeScript guided-implementation evidence for the pipeline orchestrator case (deferred to the actual POM deploy on the internal AI agent project).
 
 ## 0.1.0 - 2026-05-18
 

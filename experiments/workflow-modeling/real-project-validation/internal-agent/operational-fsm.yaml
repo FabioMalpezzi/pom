@@ -1,0 +1,294 @@
+# POM modeling of the internal AI agent Operational FSM.
+#
+# Source: the internal AI agent source tree/pipeline/family/operational-fsm.ts
+#
+# Mapping notes:
+# - The 7 PIPELINE_STEP names become 7 active (non-final) states.
+# - The 6 PIPELINE_STOP_EXIT ids + loop_guard_exhausted become 7 terminal states.
+# - PIPELINE_STEP_TRANSITION_RULES (linear) becomes the spine of transitions.
+# - PIPELINE_STOP_EXIT_RULES become per-step branches with early-stop semantics.
+# - The `analyzer` state declares a synchronous state-invoke of the analyzer
+#   FSM (analyzer-fsm.yaml), mapping each analyzer terminal to a parent
+#   next_event. This is the natural fit for the POM state-invoke primitive
+#   (round 2).
+#
+# Open points captured here, expanded in FINDINGS.md:
+# - Loop guard with maximum visit count per step (e.g., analyzer max 3
+#   visits) is not expressible in POM. Declared as documental metadata
+#   and left to target code.
+# - The post-analyzer "direct_output" routing (analyzer skips SQL and
+#   jumps straight to output_generator) is modeled as a dedicated event.
+
+workflow: operational_fsm
+version: 1
+description: |
+  internal AI agent pipeline orchestrator. Seven active steps from safety
+  pre-screen to output generation; six declared stop exits plus a loop-
+  guard terminal. The analyzer step invokes the analyzer FSM
+  synchronously; on a clean analyzer terminal the pipeline proceeds,
+  on a blocking analyzer terminal the pipeline early-stops.
+
+context_schema:
+  input:
+    - { name: turn_id,           type: string }
+    - { name: tenant_id,         type: string }
+    - { name: role_family,       type: string, description: "Role/family of the caller for messaging." }
+    - { name: question,          type: string, description: "User question, raw." }
+  output_by_terminal:
+    completed:
+      - { name: final_answer,        type: string }
+      - { name: output_classification, type: string }
+    clarification:
+      - { name: clarification_kind, type: string }
+      - { name: final_answer,       type: string }
+    analyzer_block:
+      - { name: block_reason,   type: string }
+      - { name: final_answer,   type: string }
+    non_business:
+      - { name: final_answer,   type: string }
+    policy_block:
+      - { name: access_violation_kind, type: string }
+      - { name: final_answer,          type: string }
+    sql_refusal:
+      - { name: final_answer,   type: string }
+    loop_guard_exhausted:
+      - { name: exhausted_step, type: string }
+      - { name: final_answer,   type: string }
+
+initial_state: safety_pre_screen
+
+states:
+  - name: safety_pre_screen
+    description: Filters obviously non-business or unsafe inputs.
+    is_final: false
+  - name: question_normalizer
+    description: Normalizes the question, builds reusable signals.
+    is_final: false
+  - name: analyzer
+    description: |
+      LLM #1 boundary. Runs the analyzer FSM synchronously to produce an
+      AnalyzerOutput or a routing signal (full_pipeline / direct_output /
+      stop). The parent is blocked here until the child terminates.
+    is_final: false
+    invoke:
+      workflow: analyzer-fsm.yaml
+      input:
+        question: question
+        tenant_id: tenant_id
+        role_family: role_family
+      on_completion:
+        - terminal_state: completed
+          next_event: analyzer_done_full_pipeline
+        - terminal_state: deterministic_reply_resolved
+          next_event: analyzer_done_direct_output
+        - terminal_state: pending_scope_resolved
+          next_event: analyzer_done_direct_output
+        - terminal_state: llm_failure
+          next_event: analyzer_block_signal
+        - terminal_state: parse_exhausted
+          next_event: analyzer_block_signal
+        - terminal_state: schema_exhausted
+          next_event: analyzer_block_signal
+        - terminal_state: coherence_exhausted
+          next_event: analyzer_block_signal
+  - name: execution_contract
+    description: |
+      Builds the ExecutionContract from the AnalyzerOutput. Deterministic.
+    is_final: false
+  - name: sql_generator
+    description: LLM #2 boundary. Generates SQL within the contract.
+    is_final: false
+  - name: execute_and_validate
+    description: Runs the SQL and validates the result set.
+    is_final: false
+  - name: output_generator
+    description: LLM #3 boundary. Renders the FinalAnswer.
+    is_final: false
+
+  # Terminal stop-exits, one per PIPELINE_STOP_EXIT_RULES entry.
+  - name: clarification
+    description: |
+      Early-stop from analyzer with a clarification request.
+      PIPELINE_STOP_EXIT_RULES[id='clarification'].
+    is_final: true
+  - name: analyzer_block
+    description: |
+      Early-stop from analyzer because the question cannot be processed
+      (LLM failure, parse exhausted, etc).
+      PIPELINE_STOP_EXIT_RULES[id='analyzer_block'].
+    is_final: true
+  - name: non_business
+    description: |
+      Early-stop because the question is out of business scope.
+      PIPELINE_STOP_EXIT_RULES[id='non_business'].
+    is_final: true
+  - name: policy_block
+    description: |
+      Early-stop because the access policy denies execution.
+      PIPELINE_STOP_EXIT_RULES[id='policy_block'].
+    is_final: true
+  - name: sql_refusal
+    description: |
+      Early-stop because SQL generation or execution failed.
+      PIPELINE_STOP_EXIT_RULES[id='sql_refusal'].
+    is_final: true
+  - name: completed
+    description: |
+      Successful termination. The output_generator produced a FinalAnswer.
+    is_final: true
+  - name: loop_guard_exhausted
+    description: |
+      Per-step visit budget exhausted (e.g., analyzer cycled 3 times).
+      Modeled as a single terminal; the specific exhausted step lives
+      in the output payload.
+    is_final: true
+
+events:
+  # Linear progression
+  - name: pre_screen_passed
+    description: Safety pre-screen accepted the input.
+  - name: normalized
+    description: Question normalizer completed.
+  - name: analyzer_done_full_pipeline
+    description: Analyzer returned with routing full_pipeline.
+  - name: analyzer_done_direct_output
+    description: Analyzer returned with routing direct_output (skip SQL).
+  - name: contract_built
+    description: ExecutionContract built successfully.
+  - name: sql_generated
+    description: SQL generator produced a candidate query.
+  - name: execution_validated
+    description: SQL executed and validated against the contract.
+  - name: answer_rendered
+    description: Output generator produced the FinalAnswer.
+
+  # Early-stop events
+  - name: clarification_signal
+    description: Analyzer requested a clarification.
+  - name: analyzer_block_signal
+    description: Analyzer cannot proceed (block).
+  - name: non_business_signal
+    description: Question is out of business scope.
+  - name: policy_block_signal
+    description: Access policy denies execution.
+  - name: sql_refusal_signal
+    description: SQL stage refused execution.
+  - name: loop_guard_signal
+    description: Per-step visit budget exhausted.
+
+transitions:
+  # Linear spine
+  - from: safety_pre_screen
+    to: question_normalizer
+    event: pre_screen_passed
+  - from: safety_pre_screen
+    to: non_business
+    event: non_business_signal
+    description: |
+      Pre-screen can immediately reject obviously off-domain or unsafe
+      input.
+
+  - from: question_normalizer
+    to: analyzer
+    event: normalized
+
+  - from: analyzer
+    to: execution_contract
+    event: analyzer_done_full_pipeline
+  - from: analyzer
+    to: output_generator
+    event: analyzer_done_direct_output
+    description: |
+      Analyzer returned a deterministic reply or pending scope; pipeline
+      jumps over SQL straight to the output generator.
+  - from: analyzer
+    to: clarification
+    event: clarification_signal
+  - from: analyzer
+    to: analyzer_block
+    event: analyzer_block_signal
+  - from: analyzer
+    to: non_business
+    event: non_business_signal
+  - from: analyzer
+    to: loop_guard_exhausted
+    event: loop_guard_signal
+    description: |
+      Analyzer cycled beyond its budget (max visits per step in the
+      operational loop guard). See open_points.
+
+  - from: execution_contract
+    to: sql_generator
+    event: contract_built
+
+  - from: sql_generator
+    to: execute_and_validate
+    event: sql_generated
+  - from: sql_generator
+    to: policy_block
+    event: policy_block_signal
+  - from: sql_generator
+    to: sql_refusal
+    event: sql_refusal_signal
+  - from: sql_generator
+    to: loop_guard_exhausted
+    event: loop_guard_signal
+
+  - from: execute_and_validate
+    to: output_generator
+    event: execution_validated
+  - from: execute_and_validate
+    to: sql_refusal
+    event: sql_refusal_signal
+  - from: execute_and_validate
+    to: loop_guard_exhausted
+    event: loop_guard_signal
+
+  - from: output_generator
+    to: completed
+    event: answer_rendered
+
+invariants:
+  - description: |
+      A successful turn always reaches "completed". All other terminals
+      are early-stops (clarification, block, refusal, policy, non-business,
+      loop guard).
+  - description: |
+      The analyzer state is the only step that invokes a child workflow.
+      Other steps are deterministic or call LLMs directly without a
+      synchronous sub-FSM.
+  - description: |
+      direct_output routing from the analyzer must skip execution_contract,
+      sql_generator and execute_and_validate. Modeled as a single
+      transition analyzer -> output_generator on analyzer_done_direct_output.
+
+metadata:
+  owner: internal AI agent canonical server
+  source_file: pipeline/family/operational-fsm.ts
+  tags: [real-project, validation, agent-orchestrator]
+
+  open_points:
+    - |
+      Loop guard with maximum visit count per step (analyzer max 3,
+      sql_generator/execute_and_validate cycles with max_transitions=36)
+      is not expressible in the POM YAML schema. The "loop_guard_exhausted"
+      terminal is declared, but the per-step counters and the cycle-tail
+      patterns (stepPathTail / stepPathContains) that the runtime uses to
+      diagnose which loop exhausted live entirely in target code. POM
+      schema growth would require a `loop_guard` primitive with
+      max_visits per state and named exhaustion exits.
+
+    - |
+      The PipelineStopExitConfig in the source carries rich rendering
+      logic (buildFinalAnswer functions, blockCategory, output
+      classification, family-state resolution). POM captures only the
+      structural choice (which terminal). The rendering and message
+      construction stay in target code by design — coherent with POM's
+      "documentation, not runtime" stance.
+
+    - |
+      The "analyzer_done_direct_output" path corresponds to AnalyzerRouting
+      = "direct_output" (deterministic reply or pending scope). It is
+      modeled as a dedicated event from the analyzer state. Could also
+      be modeled as a guard on "analyzer_done_*" event; the dedicated
+      event is more readable and equally expressive in this case.

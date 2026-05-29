@@ -263,7 +263,7 @@ If any invariant fails, restore raises an explicit error. **The implementation g
 
 When the YAML has a bounded loop (`MAX_LLM_ATTEMPTS`, `MAX_FAMILY_REPAIR_ATTEMPTS`), the retry counter belongs in `context`, not in a global. Suspend writes the counter; restore reads it. The bound is still enforced in target code (no POM primitive for it), but the counter survives restarts.
 
-This is the practical answer to the "bounded retry" open point raised by the Syntonia analyzer FSM: the cycle is structural in the YAML, the bound is enforced by target code, and the counter survives suspend/restore because it lives in `context`.
+This is the practical answer to the "bounded retry" open point raised by the internal AI agent analyzer FSM: the cycle is structural in the YAML, the bound is enforced by target code, and the counter survives suspend/restore because it lives in `context`.
 
 ### What POM does NOT do
 

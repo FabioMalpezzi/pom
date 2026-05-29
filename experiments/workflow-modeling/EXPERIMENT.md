@@ -109,7 +109,7 @@ Tutte e quattro le ipotesi (H1 espressività, H2 validatore efficace, H3 skill e
 
 ### Cosa H1–H4 sono diventate
 
-- **H1 (espressività YAML)**: confermata su tre workflow eterogenei sintetici (`spec-evolution`, `ticket-lifecycle`, `document-approval`), due workflow reali combinati (`order-processing` pipeline e `loan-application` multi-primitiva), e quattro FSM reali del progetto Syntonia ai-agent (operational, analyzer, clean-family-repair, semantic-family-master con 7 famiglie). Tutti modellabili senza modifiche allo schema, salvo l'aggiunta motivata di `re_entry_allowed` e `context_schema` durante l'esperimento.
+- **H1 (espressività YAML)**: confermata su tre workflow eterogenei sintetici (`spec-evolution`, `ticket-lifecycle`, `document-approval`), due workflow reali combinati (`order-processing` pipeline e `loan-application` multi-primitiva), e quattro FSM reali del progetto internal AI agent (operational, analyzer, clean-family-repair, semantic-family-master con 7 famiglie). Tutti modellabili senza modifiche allo schema, salvo l'aggiunta motivata di `re_entry_allowed` e `context_schema` durante l'esperimento.
 - **H2 (validatore efficace)**: 50 regole Error + 4 Warning implementate, 30 fixture broken ciascuna che scatta la regola attesa, regressione zero sui 21+ workflow validati. Bug interno trovato e corretto grazie a un caso reale (E056 era controllato sul key invece che sul value).
 - **H3 (skill sufficiente entro vincoli)**: skill `workflow` 62 righe, prompt 112 righe, entrambi sotto i tetti dichiarati. Prompt operativo con 5 modi e collegamento al validator concreto.
 - **H4 (guida implementativa efficace senza imposizioni)**: confermata in TypeScript (Pattern A, 15 test passing) e in Python (Pattern A, 15 test passing) sullo stesso modello. Sezione "Suspend and Restore" con 3 evidence aggiuntive (17 test totali) che dimostra persistenza tra processi senza che POM fornisca runtime.
@@ -120,7 +120,7 @@ Tutte e quattro le ipotesi (H1 espressività, H2 validatore efficace, H3 skill e
 - **Mapping XState v5** + workflow operativo stately.ai per visualizzazione e simulazione interattiva.
 - **Generatore Mermaid integrato nel validator** (`--mermaid-dir`): 38 diagrammi generati in una passata sweep, drift YAML↔diagramma impossibile per costruzione.
 - **Guida di adozione+estensione** (`WORKFLOW_INTEGRATION_GUIDE.md`) per i team che adotteranno POM-workflow nei loro progetti.
-- **Validazione su progetto reale Syntonia ai-agent**, inclusa modellazione spinta della Semantic Family (7 famiglie + master dispatcher) e composizione a 3 livelli (operational → analyzer → clean-family-repair).
+- **Validazione su progetto reale internal AI agent**, inclusa modellazione spinta della Semantic Family (7 famiglie + master dispatcher) e composizione a 3 livelli (operational → analyzer → clean-family-repair).
 
 ### Cosa resta come open point dichiarato (non blocca promozione)
 
@@ -576,11 +576,11 @@ Durante la compilazione del loan-application il validator ha prodotto un E056 sp
 | Regressione su esempi storici | 0 |
 | Bug del validator scoperti e corretti grazie ai casi reali | 1 (E056) |
 
-**Validazione su progetto reale: Syntonia ai-agent (completata in questo commit)**
+**Validazione su progetto reale: internal AI agent (completata in questo commit)**
 
-L'utente ha proposto di validare il modello su un progetto reale che mantiene: `/Users/fabio/WA/Syntonia/ai-agent/src/server`. Tre FSM esplicitamente dichiarate nel codice sorgente: operational FSM (pipeline orchestrator a 7 step), analyzer FSM (sub-pipeline a 13 step con retry loop), semantic family rules (rule engine per la classificazione semantica).
+L'utente ha proposto di validare il modello su un progetto reale che mantiene: `the internal AI agent source tree`. Tre FSM esplicitamente dichiarate nel codice sorgente: operational FSM (pipeline orchestrator a 7 step), analyzer FSM (sub-pipeline a 13 step con retry loop), semantic family rules (rule engine per la classificazione semantica).
 
-Esito sintetico (dettagli in `real-project-validation/syntonia-ai-agent/FINDINGS.md`):
+Esito sintetico (dettagli in `real-project-validation/internal-agent/FINDINGS.md`):
 
 | FSM | Sorgente | Verdetto | Validator | Schema growth necessario? |
 |---|---|---|---|---|
@@ -602,7 +602,7 @@ POM round 2 (state-invoke + event-invoke + context-injection + pipeline) ha mode
 
 **Push aggiuntivo richiesto dall'utente — modellazione spinta della Semantic Family**
 
-Dopo la conferma del limite "forced fit lossy", l'utente ha chiesto di spingere oltre per essere sicuri delle capacità del modello: 7 famiglie come workflow autonomi + un master FSM con 7 state-invoke consecutivi in ordine di precedence. Esito in `real-project-validation/syntonia-ai-agent/semantic-family-pushed/` (8 file YAML, tutti PASS pulito al primo tentativo).
+Dopo la conferma del limite "forced fit lossy", l'utente ha chiesto di spingere oltre per essere sicuri delle capacità del modello: 7 famiglie come workflow autonomi + un master FSM con 7 state-invoke consecutivi in ordine di precedence. Esito in `real-project-validation/internal-agent/semantic-family-pushed/` (8 file YAML, tutti PASS pulito al primo tentativo).
 
 | Metrica | Forced fit | Pushed modeling | Delta |
 |---|---|---|---|
@@ -672,7 +672,7 @@ Esteso `to-xstate.mjs` per coprire le primitive sincrone del round 2 + context i
 | Round-1 historical (regressione) | 3 | `evidence/xstate/*.xstate.json` |
 | Round-2 toys | 4 | `evidence/xstate/round2/*.xstate.json` |
 | Casi reali combinati | 2 | `evidence/xstate/round2/*.xstate.json` |
-| Validazione Syntonia | 4 | `evidence/xstate/round2/syntonia-ai-agent/*.xstate.json` |
+| Validazione AI agent interno | 4 | `evidence/xstate/round2/internal-agent/*.xstate.json` |
 
 Tre verifiche puntuali fatte sul JSON generato:
 - `loan-application.yaml` event-invoke su `submit_for_underwriting` produce uno stato intermedio sintetico con `invoke.input`, `onDone` discriminato, `assign` con i path `child.offer_id`/`child.rate`/`child.terms`;
@@ -740,7 +740,7 @@ L'utente ha chiesto che supporto POM ha per suspend/restore di una macchina a st
 
 **Step A — Sezione "Suspend and Restore" nel `WORKFLOW_IMPLEMENTATION_GUIDE.md`**
 
-Documenta: il principio (Pattern A stateless = funzione pura, suspend = scrivi due valori); le tre forme di snapshot (single machine, composed stack di frame, pipeline); le opzioni di storage (DB columns, document DB, KV, JSON file, distributed log); il contratto suspend/restore con tre invarianti di validazione (workflow name, version, state in modello) e la regola "no best-effort restore"; la posizione dei retry counter (in `context`, sopravvivono al restart — risposta concreta al "bounded retry" emerso da Syntonia analyzer); cosa POM NON fa (persistenza, scheduling, instance identification, versioning automatico); confronto con XState v5 (`actor.getSnapshot()` / `createActor(machine, { snapshot })` sono primitive native — motivo concreto per scegliere Pattern C quando la persistenza è critica).
+Documenta: il principio (Pattern A stateless = funzione pura, suspend = scrivi due valori); le tre forme di snapshot (single machine, composed stack di frame, pipeline); le opzioni di storage (DB columns, document DB, KV, JSON file, distributed log); il contratto suspend/restore con tre invarianti di validazione (workflow name, version, state in modello) e la regola "no best-effort restore"; la posizione dei retry counter (in `context`, sopravvivono al restart — risposta concreta al "bounded retry" emerso da internal AI agent analyzer); cosa POM NON fa (persistenza, scheduling, instance identification, versioning automatico); confronto con XState v5 (`actor.getSnapshot()` / `createActor(machine, { snapshot })` sono primitive native — motivo concreto per scegliere Pattern C quando la persistenza è critica).
 
 **Step B — Tre evidence H4 estese**
 
@@ -840,7 +840,7 @@ L'utente ha notato che il generatore Mermaid era ancora "Target for promotion" �
 | `evidence/mermaid/context-injection-toy/` | 2 |
 | `evidence/mermaid/order-processing/` | 5 |
 | `evidence/mermaid/loan-application/` | 3 |
-| `evidence/mermaid/syntonia-ai-agent/` | 4 |
+| `evidence/mermaid/internal-agent/` | 4 |
 | `evidence/mermaid/semantic-family-pushed/` | 8 |
 | **Totale** | **38** |
 
