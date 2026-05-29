@@ -186,9 +186,11 @@ Un blocco `loop_guard:` su uno stato con self-transition dichiara fino a due bou
 
 ```yaml
 loop_guard:
-  max_visits: N             # opzionale: bound sul conteggio (intero >= 1)
-  max_duration: <duration>  # opzionale: bound sul tempo cumulativo
-  on_exhaustion: <target>   # obbligatorio: stato target all'esaurimento
+  max_visits: N                  # opzionale: bound sul conteggio (intero >= 1)
+  max_duration: <duration>       # opzionale: bound sul tempo cumulativo
+  on_exhaustion: <target>        # obbligatorio: fallback comune a entrambe le cause
+  on_visits_exhausted: <target>  # opzionale: override quando esaurisce max_visits
+  on_duration_exhausted: <target> # opzionale: override quando scade max_duration
 ```
 
 **Esempi (la presenza/assenza di chiave attiva/disattiva la dimensione)**
@@ -205,17 +207,28 @@ Solo tempo (conteggio unbounded):
 
 ```yaml
 loop_guard:
-  max_duration: 30m
+  max_duration: 30min
   on_exhaustion: planning_failed
 ```
 
-Entrambi (il loop termina alla prima soglia raggiunta):
+Entrambi (il loop termina alla prima soglia raggiunta, stesso target per entrambe le cause):
 
 ```yaml
 loop_guard:
   max_visits: 5
-  max_duration: 30m
+  max_duration: 30min
   on_exhaustion: planning_failed
+```
+
+Entrambi con routing differenziato per causa (override opzionali):
+
+```yaml
+loop_guard:
+  max_visits: 5
+  max_duration: 30min
+  on_exhaustion: planning_failed              # fallback
+  on_visits_exhausted: escalate_to_human      # override per "esauriti tentativi"
+  on_duration_exhausted: schedule_resume      # override per "scaduto il tempo"
 ```
 
 Errore (validator emette Error: il guard non vincolerebbe nulla):
@@ -225,15 +238,29 @@ loop_guard:
   on_exhaustion: planning_failed   # né max_visits né max_duration → invalid
 ```
 
-**Tipi e formati fissati**
+**Tipi e formati fissati (C1)**
 
 - `max_visits`: intero ≥ 1.
-- `max_duration`: stringa nel formato compatto `<N><unit>` con `unit ∈ {s, m, h, d}` (esempi: `30s`, `15m`, `2h`, `7d`); accettato anche il formato ISO 8601 duration (`PT30M`, `PT2H`, `P7D`).
-- `on_exhaustion`: nome di stato dichiarato in `states[]` del workflow.
+- `max_duration`: stringa con suffisso esplicito non ambiguo, formato `<N><suffix>` con `suffix ∈ {s, min, h, d}` (esempi: `30s`, `15min`, `2h`, `7d`). **Decisione netta su C1**: il suffisso `m` da solo è **vietato** perché ambiguo (potrebbe significare "minuti" o "millisecondi" a seconda della convenzione del linguaggio target — `m` in Go è minuti, `ms` in JavaScript è millisecondi, `m` in alcuni shell è minuti). Si usa sempre `min` per minuti. Accettato in alternativa il formato ISO 8601 duration (`PT30S`, `PT15M`, `PT2H`, `P7D`) come input non ambiguo.
+- `on_exhaustion`, `on_visits_exhausted`, `on_duration_exhausted`: nomi di stato dichiarati in `states[]` del workflow.
 
-**Semantica del tempo**
+**Routing della causa di esaurimento (C4)**
 
-`max_duration` si misura come **tempo cumulativo speso nel loop** dall'ingresso iniziale nello stato fino al momento in cui il bound viene controllato. Non è un timeout per singola visita. Coerente con il caso d'uso motivante "budget di tempo del ciclo".
+- `on_exhaustion` è **obbligatorio** e serve da fallback comune.
+- `on_visits_exhausted` e `on_duration_exhausted` sono **opzionali override per causa**.
+- Quando un override è presente, prende precedenza sul fallback per la sua causa specifica.
+- Quando un override è assente, l'esaurimento di quella causa va a `on_exhaustion`.
+- Se nel `loop_guard` è presente una sola delle due dimensioni (es. solo `max_visits`), l'override corrispondente all'altra dimensione è inutile e la sua presenza è un Warning del validator (non un Error, perché non rompe nulla a runtime).
+
+**Semantica del tempo (C2 + C3)**
+
+- **Misurazione**: `max_duration` è il tempo cumulativo speso nel loop calcolato come somma degli intervalli ` (uscita_visita_i − ingresso_visita_i)` per le visite consecutive del loop corrente.
+- **Reset per-entry (C2)**: i counter (`visit_count` e `cumulative_duration`) **si resettano** ogni volta che il loop riceve un ingresso "da fuori" — cioè una transizione che arriva nello stato di loop da uno stato diverso. Si **accumulano** invece sulle self-transition interne. In pratica: un loop riavviato da un evento esterno parte con budget pieno; lo stesso loop che cicla su sé stesso consuma il budget. Questo è coerente con l'intuizione "budget per esecuzione del loop".
+- **Persistenza in context (C3)**: i due counter sono materializzati esplicitamente in `context` con nomi convenzionali fissati:
+  - `_loop_guard_<state_name>__visit_count`: intero, incrementato a ogni self-transition.
+  - `_loop_guard_<state_name>__started_at`: timestamp UTC ISO 8601 dell'ingresso iniziale nel loop corrente.
+  - Il prefisso `_loop_guard_` segnala convenzione interna (per evitare collisioni con i campi del context utente). Il target code legge/scrive questi due campi durante l'enforcement del bound.
+- **Misurazione del tempo durante suspend/restore (C3)**: il tempo conta come **wall-clock**, non come "tempo attivo del processo". Un agente sospeso 7 giorni con `max_duration: 30min` al restore ha **esaurito** il bound: la differenza `now() − started_at` è ben oltre 30 minuti. Questa decisione è coerente con il caso d'uso "budget per non bloccare l'utente". Per workflow che richiedono "tempo attivo soltanto" (esclude le pause di sospensione), serve una primitiva diversa che resta open point per un futuro round.
 
 ### H7 — Timeout su stato non-loop come primitiva di schema
 
@@ -259,13 +286,13 @@ states:
   - name: llm_planning_loop
     is_final: false
     loop_guard:
-      max_visits: 5        # H6: massimo 5 iterazioni di planning
-      max_duration: 10m    # H6: e comunque non oltre 10 minuti totali
+      max_visits: 5            # H6: massimo 5 iterazioni di planning
+      max_duration: 10min      # H6: e comunque non oltre 10 minuti totali
       on_exhaustion: planning_failed
   - name: waiting_human_review
     is_final: false
     timeout:
-      duration: 24h        # H7: lo stato attende un umano per max 24 ore
+      duration: 24h            # H7: lo stato attende un umano per max 24 ore
       on_timeout: review_auto_escalated
 ```
 
