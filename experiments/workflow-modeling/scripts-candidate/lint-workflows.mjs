@@ -49,6 +49,13 @@ const ERROR_RULES = {
   E027: 'Cycle detected in the pipeline (a member is reachable from itself).',
   E028: 'Pipeline file declares both "workflow" and "pipeline" root keys (must be exactly one).',
   E029: 'Pipeline declares an asynchronous mode (mode: async / parallel). Asynchronous composition is out of scope; use Pattern C (XState invoke/spawn).',
+  E030: 'A state invoke block has no "workflow" path or a non-string path.',
+  E031: 'A state invoke references a workflow file that does not exist on disk.',
+  E032: 'A state invoke has no "on_completion" or it is empty.',
+  E033: 'A state invoke on_completion[].terminal_state does not exist as is_final: true in the child workflow.',
+  E034: 'A state invoke on_completion[].next_event does not exist in the parent workflow events.',
+  E035: 'A state declares invoke but is is_final: true (terminal states cannot host an invoke).',
+  E036: 'A state invoke declares an asynchronous mode (mode: async / parallel). Asynchronous composition is out of scope; use Pattern C (XState invoke/spawn).',
 };
 
 const WARNING_RULES = {
@@ -236,8 +243,83 @@ function validateWarnings(model, stateNames) {
   return warnings;
 }
 
-function validate(model) {
+function validateStateInvokes(model, sourceDir) {
+  const errors = [];
+  const states = Array.isArray(model?.states) ? model.states : [];
+  const eventNames = new Set(
+    (Array.isArray(model?.events) ? model.events : [])
+      .filter((e) => isNonEmptyString(e?.name))
+      .map((e) => e.name),
+  );
+
+  for (let i = 0; i < states.length; i++) {
+    const s = states[i];
+    if (!s || s.invoke == null) continue;
+    const where = `states[${i}].invoke`;
+    const inv = s.invoke;
+
+    if (s.is_final === true) {
+      errors.push(err('E035', `states[${i}]`, `name=${s.name ?? '?'}`));
+    }
+
+    if (inv.mode === 'async' || inv.mode === 'parallel') {
+      errors.push(err('E036', `${where}.mode`, `value=${inv.mode}`));
+    }
+
+    if (!isNonEmptyString(inv.workflow)) {
+      errors.push(err('E030', where));
+      continue;
+    }
+
+    const absPath = isAbsolute(inv.workflow)
+      ? inv.workflow
+      : join(sourceDir, inv.workflow);
+
+    let childTerminals = null;
+    if (!existsSync(absPath)) {
+      errors.push(err('E031', where, `path=${inv.workflow}`));
+    } else {
+      const child = loadWorkflowSafe(absPath);
+      if (child && Array.isArray(child.states)) {
+        childTerminals = new Set();
+        for (const cs of child.states) {
+          if (isNonEmptyString(cs?.name) && cs?.is_final === true) {
+            childTerminals.add(cs.name);
+          }
+        }
+      }
+    }
+
+    if (!Array.isArray(inv.on_completion) || inv.on_completion.length === 0) {
+      errors.push(err('E032', where));
+      continue;
+    }
+
+    for (let j = 0; j < inv.on_completion.length; j++) {
+      const c = inv.on_completion[j];
+      const cwhere = `${where}.on_completion[${j}]`;
+
+      if (!isNonEmptyString(c?.terminal_state)) {
+        errors.push(err('E033', cwhere, 'terminal_state missing'));
+      } else if (childTerminals && !childTerminals.has(c.terminal_state)) {
+        errors.push(err('E033', cwhere, `terminal_state=${c.terminal_state}`));
+      }
+
+      if (!isNonEmptyString(c?.next_event)) {
+        errors.push(err('E034', cwhere, 'next_event missing'));
+      } else if (eventNames.size > 0 && !eventNames.has(c.next_event)) {
+        errors.push(err('E034', cwhere, `next_event=${c.next_event}`));
+      }
+    }
+  }
+
+  return errors;
+}
+
+function validate(model, sourceDir = '.') {
   const { errors, stateNames } = validateErrors(model);
+  const invokeErrors = validateStateInvokes(model, sourceDir);
+  errors.push(...invokeErrors);
   const warnings = errors.some((e) => ['E004', 'E005'].includes(e.code))
     ? []
     : validateWarnings(model, stateNames);
@@ -490,7 +572,7 @@ function main() {
       const v = validatePipeline(model, dirname(source));
       errors = v.errors;
     } else {
-      const v = validate(model);
+      const v = validate(model, dirname(source));
       errors = v.errors;
       warnings = v.warnings;
     }

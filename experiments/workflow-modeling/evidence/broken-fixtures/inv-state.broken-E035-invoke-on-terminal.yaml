@@ -1,0 +1,32 @@
+# Expected to trigger: E035 (invoke declared on an is_final: true state).
+
+workflow: broken_e035
+version: 1
+description: |
+  The "done" terminal state declares an invoke. Semantically invalid:
+  a terminal state cannot host an invocation.
+
+initial_state: idle
+states:
+  - name: idle
+    description: starting point
+    is_final: false
+  - name: done
+    description: terminal with an illegal invoke block
+    is_final: true
+    invoke:
+      workflow: ../../examples/invoke-state-toy/state-invoke-child.yaml
+      on_completion:
+        - terminal_state: validated
+          next_event: ignored
+
+events:
+  - name: finish
+    description: parent finishes
+  - name: ignored
+    description: would never fire
+
+transitions:
+  - from: idle
+    to: done
+    event: finish

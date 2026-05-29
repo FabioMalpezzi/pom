@@ -372,12 +372,43 @@ Implementato:
 
 Ogni fixture produce la regola attesa, nessuna cascata. La regola "no async" (E029) entra in vigore già su questa primitiva: declarare `mode: async` produce subito Error con messaggio che rimanda a Pattern C.
 
+**Primitiva 2 — invoke da stato sincrono (completata in questo commit)**
+
+Schema: blocco opzionale `invoke:` su uno stato `is_final: false`. Quando il padre entra nello stato, parte un workflow figlio; il padre resta bloccato finché il figlio non raggiunge uno dei suoi terminali, e ricava da `on_completion: [{terminal_state, next_event}]` quale evento applicarsi.
+
+Implementato:
+
+- `templates-candidate/WORKFLOW_TEMPLATE.yaml` documenta lo slot `invoke:` sullo stato.
+- `scripts-candidate/lint-workflows.mjs` aggiunge 7 regole Error (E030–E036), tra cui E035 che vieta l'invoke su stato `is_final: true` e E036 che ribadisce il divieto di async.
+- Esempio toy: `examples/invoke-state-toy/{state-invoke-parent,state-invoke-child}.yaml` con padre `idle → validating → done/rejected` che invoca un figlio `start → validated/refused`.
+- 5 fixture broken per E031 (child mancante), E033 (terminale non in child), E034 (next_event non dichiarato nel padre), E035 (invoke su terminale), E036 (mode async).
+
+**Verifica**
+
+| File | Errors | Verdict |
+|---|---|---|
+| `examples/invoke-state-toy/state-invoke-child.yaml` | 0 | PASS |
+| `examples/invoke-state-toy/state-invoke-parent.yaml` | 0 | PASS |
+| `inv-state.broken-E031-missing-child.yaml` | 1 (E031) | FAIL |
+| `inv-state.broken-E033-terminal-not-in-child.yaml` | 1 (E033) | FAIL |
+| `inv-state.broken-E034-event-undeclared.yaml` | 1 (E034) + W001/W002 cascata legittima | FAIL |
+| `inv-state.broken-E035-invoke-on-terminal.yaml` | 1 (E035) | FAIL |
+| `inv-state.broken-E036-async-invoke.yaml` | 1 (E036) | FAIL |
+
+**Caso d'uso emerso durante questo commit: orchestratore di agenti**
+
+Domanda dell'utente: "POM riesce a modellare un agent orchestrator che gestisce più agenti contemporaneamente?". Risposta consolidata:
+
+- **Lifecycle dell'orchestratore stesso** (es. `idle → planning → dispatching → waiting → consolidating → returning`): SI, è una FSM standard. Modellabile come workflow POM. Lo `validating` di questo commit è esattamente il building block per "orchestratore che chiama UN sub-agente sincrono per stato".
+- **Gestione parallela di N sub-agenti** (fan-out / fan-in / race tra agenti): NO, è fuori scope permanente (Pattern C territory). Equivale a parallel regions e actor model, già vietato da E029/E036.
+
+La regola "no async" implica direttamente il limite sull'orchestrazione parallela, e la spec lo dichiarerà esplicitamente come caso d'uso di Pattern C nel commit di consolidazione del giro 2.
+
 **Prossimi passi del giro**
 
-- Primitiva 2 (invoke da stato sincrono): nuovo blocco `states[].invoke` con `workflow` + `on_completion: [{terminal_state, next_event}]`.
 - Primitiva 3 (invoke da evento sincrono): nuovo blocco `transitions[].invoke` con `workflow` + `on_completion: [{terminal_state, target}]`.
-- Due casi reali combinati: `order-processing` (pipeline pura) + `loan-application` (combinazione di invoke da stato e da evento).
-- Mapping XState invoke + COMPATIBILITY update.
+- Due casi reali combinati: `order-processing` (pipeline pura) + `loan-application` (combinazione di invoke da stato e da evento, con orchestrator-like control flow).
+- Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator").
 - Codice TypeScript guidato per pipeline orchestrator (Pattern A) come evidence di H4 esteso.
 
 ## Follow-up

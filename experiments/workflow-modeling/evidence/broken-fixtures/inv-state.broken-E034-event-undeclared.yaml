@@ -1,0 +1,33 @@
+# Expected to trigger: E034 (next_event not declared in parent events).
+
+workflow: broken_e034
+version: 1
+description: |
+  Parent maps a child terminal to next_event "ghost_event" which is not
+  declared among the parent's events.
+
+initial_state: idle
+states:
+  - name: idle
+    description: starting point
+    is_final: false
+  - name: validating
+    description: invokes a child and maps to a parent event that does not exist
+    is_final: false
+    invoke:
+      workflow: ../../examples/invoke-state-toy/state-invoke-child.yaml
+      on_completion:
+        - terminal_state: validated
+          next_event: ghost_event             # not declared in parent
+  - name: done
+    description: terminal
+    is_final: true
+
+events:
+  - name: start
+    description: starts the parent
+
+transitions:
+  - from: idle
+    to: validating
+    event: start

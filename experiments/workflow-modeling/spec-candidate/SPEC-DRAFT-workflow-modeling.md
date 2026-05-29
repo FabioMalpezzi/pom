@@ -254,6 +254,45 @@ Invariants of the pipeline primitive:
 - the boundary is named — only the terminal state name, no event-bus or shared context;
 - the schema admits no async mode; E029 rejects it.
 
+## Composition: Invoke from State (synchronous)
+
+A state of a parent workflow may declare an `invoke:` block. When the parent enters that state, a child workflow starts; while the child runs, the parent is blocked in the invoking state. When the child reaches one of its terminal states, the parent receives the declared `next_event` and applies its own normal transitions.
+
+```yaml
+states:
+  - name: validating
+    description: parent is blocked while the child runs
+    is_final: false
+    invoke:
+      workflow: workflows/validation-flow.yaml
+      on_completion:
+        - terminal_state: validated
+          next_event: validation_passed
+        - terminal_state: refused
+          next_event: validation_failed
+```
+
+New Error rules:
+
+| Code | Check |
+|---|---|
+| E030 | Invoke block has no `workflow` path or non-string path. |
+| E031 | Invoke `workflow` references a file that does not exist. |
+| E032 | Invoke has no `on_completion` or it is empty. |
+| E033 | `on_completion[].terminal_state` is not declared as `is_final: true` in the child workflow. |
+| E034 | `on_completion[].next_event` is not declared in the parent's `events[]`. |
+| E035 | Invoke declared on a state that is `is_final: true`. Terminal states cannot host an invoke. |
+| E036 | Invoke declares an asynchronous mode (`async` / `parallel`). Out of scope. |
+
+Invariants of the invoke-from-state primitive:
+- the parent's state blocks until the child terminates (synchronous);
+- the child knows nothing of the parent: it does not receive context, events, or callbacks during its lifetime;
+- the boundary is named — only the child's terminal state name and the parent's `next_event`;
+- a child workflow must validate as a standalone POM workflow on its own;
+- the schema admits no async mode; E036 rejects it.
+
+Use case in mind: an orchestrator parent whose lifecycle includes a state like `validating_payment`, `running_kyc_check`, `awaiting_sub_agent_decision`. The child runs a self-contained mini-workflow and reports its outcome only via terminal state name. This is the building block for an "orchestrator that calls one sub-agent synchronously per state" pattern; orchestrators that need to fan out to N sub-agents in parallel are Pattern C, not POM.
+
 ## Promotion Path
 
 If promoted, this draft becomes `SPEC-0006-workflow-modeling.md` and the artefacts move out of `experiments/workflow-modeling/`:

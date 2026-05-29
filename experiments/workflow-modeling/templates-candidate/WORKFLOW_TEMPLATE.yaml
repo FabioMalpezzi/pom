@@ -45,6 +45,31 @@ states:
     # Default false. Has no effect on non-final states (open point).
     re_entry_allowed: false
 
+  # Optional: invoke declares a synchronous child workflow that runs
+  # while the parent is in this state. When the child reaches a
+  # declared terminal state, the parent receives the corresponding
+  # next_event and its normal transitions take over.
+  #
+  # Invariants:
+  #   - child workflow file exists and validates as a POM workflow;
+  #   - on_completion[].terminal_state is is_final: true in the child;
+  #   - on_completion[].next_event is declared in the parent's events[];
+  #   - mode: async / parallel is rejected (E029-equivalent for invoke).
+  #
+  # Use case: orchestrator parent that calls one child synchronously per
+  # state entry (e.g., validating_payment -> payment_validation_flow).
+  - name: validating
+    description: |
+      Parent is awaiting the child workflow to terminate.
+    is_final: false
+    invoke:
+      workflow: workflows/validation-flow.yaml
+      on_completion:
+        - terminal_state: validated
+          next_event: validation_passed
+        - terminal_state: refused
+          next_event: validation_failed
+
 events:
   - name: submit
     description: |
