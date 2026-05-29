@@ -213,6 +213,10 @@ These are deliberately left undecided until the experiment provides evidence:
 
 - **Synchronous composition primitives (linear pipeline; invoke from state; invoke from event)** are in scope. **Asynchronous composition is permanently out of scope.** The decision rests on the invariant that a child workflow communicates with the parent only at the boundary (entry from a trigger, exit by terminal state name). Asynchronous fire-and-forget composition requires parallel-region semantics that POM has declared off-limits since the v1 spec; teams that need it should adopt Pattern C (XState `invoke`/`spawn`). Declaring `mode: async` or `mode: parallel` in a pipeline or invoke block is an Error (E029).
 
+- **Context injection (`Result<Terminal, Output>` model)** is the chosen mechanism for a parent and child to exchange structured data. Each workflow has a **private context**. The parent extracts an `input` object and hands it to the child at invocation; the child elaborates on its own private context; on terminal, the child returns the terminal name (tag) and an `output` object (payload). The parent reads the output and integrates it via `assign:`. Shared context visibility between parent and child is rejected as a violation of FSM autonomy and is treated as Pattern C territory. The validator implements the documental level only (nominal coherence, no type-checking, no path evaluation). Full rationale in `CONTEXT-INJECTION.md` (closed design decision).
+
+- **Four invariants of the composition model** (the pillars that distinguish POM-workflow from a YAML dialect of XState): (1) no asynchronous composition; (2) no shared global state; (3) no inheritance / override between workflows; (4) no runtime in POM itself.
+
 ## Composition: Linear Pipeline (synchronous)
 
 A pipeline file declares a sequence of POM workflows that activate one after the other. The handoff happens when a member reaches a declared terminal state; the pipeline file says which successor (if any) starts next.

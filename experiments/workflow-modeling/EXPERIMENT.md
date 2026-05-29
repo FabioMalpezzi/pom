@@ -435,10 +435,22 @@ Implementato:
 
 A questo punto il giro 2 ha tutte e tre le primitive a posto: pipeline lineare (composizione esterna), invoke da stato (composizione interna sincrona durante un periodo), invoke da evento (composizione sincrona innescata da un trigger event).
 
+**Decisione architetturale presa fuori dalle primitive: context injection**
+
+Durante la riflessione sui prossimi due casi reali è emerso il punto: una macchina figlia che ritorna solo un terminale-tag (`validated` / `refused`) è anemica. Per fare lavoro reale serve scambiare anche un *payload* strutturato. Discussione e decisione consolidate in `CONTEXT-INJECTION.md` (closed design decision):
+
+- modello scelto: `Result<Terminal, Output>` (iniezione + ritorno tipato), NON visibilità diretta del context del padre;
+- livello di implementazione: documentale (nominal coherence) — NON strict typing;
+- principio: ogni FSM ha context privato; comunicazione SOLO via boundary (`invoke.input` ingresso, `on_completion[].assign` uscita);
+- quarto pilastro della disciplina di composizione: "no shared global state", aggiunto accanto a no-async, no-inheritance, no-runtime.
+
+La spec recepisce la decisione in Closed Decisions; l'implementazione (`context_schema` su workflow, `input`/`assign` su invoke) è il commit immediatamente successivo (giro context-injection).
+
 **Prossimi passi del giro**
 
-- Due casi reali combinati: `order-processing` (pipeline pura) + `loan-application` (combinazione di invoke da stato e da evento, control flow di tipo orchestratore).
-- Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator").
+- Implementazione context injection (estensione schema YAML + validator + esempio toy + spec).
+- Due casi reali combinati: `order-processing` (pipeline pura) + `loan-application` (combinazione di invoke da stato e da evento, con context injection), entrambi modellati col context dal commit successivo.
+- Mapping XState invoke + COMPATIBILITY update (anche il caso "agent orchestrator" e l'input/output mapping).
 - Codice TypeScript guidato per pipeline orchestrator (Pattern A) come evidence di H4 esteso.
 - Consolidazione finale del giro 2.
 
