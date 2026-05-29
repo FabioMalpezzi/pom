@@ -504,6 +504,14 @@
       </ul>
 
       <p>Esempi reali sono forniti come template di partenza sotto <code>templates/examples/workflow/</code>: <code>spec-evolution.yaml</code>, <code>ticket-lifecycle.yaml</code>, <code>document-approval.yaml</code>. Coprono i lifecycle canonici e sono utilizzabili come punti di partenza o come riferimenti didattici.</p>
+
+      <h3>Composizione con gli esperimenti POM</h3>
+      <p>La modellazione workflow è pienamente compatibile con la skill <code>spike</code> di POM e con il pattern <code>experiments/</code>. Un team che vuole valutare un workflow candidato prima di affidarlo al codice stabile può tenere il YAML sotto <code>experiments/&lt;topic&gt;/workflows-candidate/&lt;nome&gt;.yaml</code>, eseguire il validatore e il generatore Mermaid contro quel path, e promuovere il file a <code>workflows/&lt;nome&gt;.yaml</code> solo quando l'esperimento si chiude. Le due skill si compongono:</p>
+      <ul>
+        <li><code>spike</code> definisce la disciplina di isolamento (branch, cartella, niente contaminazione di codice o documentazione stabili, decisione di consolidamento esplicita alla fine).</li>
+        <li><code>workflow</code> definisce la disciplina di modellazione dentro quell'isolamento (design / validate / diagram / scenarios / implement).</li>
+      </ul>
+      <p>La capacità di modellazione workflow stessa è il case study di riferimento. È stata sviluppata in <code>experiments/workflow-modeling/</code> sul branch <code>exp/workflow-modeling</code>, validata su tre FSM reali di un progetto target (Syntonia ai-agent: orchestratore operativo, sub-pipeline analyzer, clean-family-repair), e solo dopo promossa ai path canonici POM come SPEC-0006 più la skill, il prompt, i template, gli script e le doc che oggi sono in v0.2.0. La cartella esperimento rimane su <code>main</code> con stato <code>consolidated</code> come traccia storica. Il pattern completo, incluso lo scenario "workflow candidato in valutazione" e "spike applicativo che modella anche il proprio workflow", è documentato in <code>templates/WORKFLOW_INTEGRATION_GUIDE.md</code> nelle sezioni "As a temporary experiment before promotion" e "When the experiment is also an applicative spike".</p>
     </section>
 
     <section class="warning" id="recommendations">

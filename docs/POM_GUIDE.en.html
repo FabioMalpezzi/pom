@@ -504,6 +504,14 @@
       </ul>
 
       <p>Worked examples ship as starter templates under <code>templates/examples/workflow/</code>: <code>spec-evolution.yaml</code>, <code>ticket-lifecycle.yaml</code>, <code>document-approval.yaml</code>. They cover the canonical lifecycles and are usable as starting points or as didactic references.</p>
+
+      <h3>Composing with POM experiments</h3>
+      <p>Workflow modeling is fully compatible with the POM <code>spike</code> skill and the <code>experiments/</code> pattern. A team that wants to evaluate a candidate workflow before committing it to stable code can keep the YAML under <code>experiments/&lt;topic&gt;/workflows-candidate/&lt;name&gt;.yaml</code>, run the validator and the Mermaid generator against that path, and promote the file to <code>workflows/&lt;name&gt;.yaml</code> only after the experiment closes. The two skills compose:</p>
+      <ul>
+        <li><code>spike</code> defines the isolation discipline (branch, folder, no contamination of stable code or documentation, explicit consolidation decision at the end).</li>
+        <li><code>workflow</code> defines the modeling discipline inside that isolation (design / validate / diagram / scenarios / implement).</li>
+      </ul>
+      <p>The workflow modeling capability itself is the worked case study. It was developed inside <code>experiments/workflow-modeling/</code> on branch <code>exp/workflow-modeling</code>, validated against three real FSMs of a target project (Syntonia ai-agent: operational orchestrator, analyzer sub-pipeline, clean-family-repair), and only then promoted to canonical POM paths as SPEC-0006 plus the skill, prompt, templates, scripts, and docs that are now in v0.2.0. The experiment folder remains on <code>main</code> at status <code>consolidated</code> as the historical record. The full pattern, including the two scenarios "candidate workflow under evaluation" and "applicative spike that also models its workflow", is documented in <code>templates/WORKFLOW_INTEGRATION_GUIDE.md</code> under "As a temporary experiment before promotion" and "When the experiment is also an applicative spike".</p>
     </section>
 
     <section class="warning" id="recommendations">
