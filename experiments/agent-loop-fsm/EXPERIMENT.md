@@ -161,23 +161,49 @@ Ogni iterazione deve lasciare traccia di:
 | Stato | Proposed |
 | Priorità | Media |
 
-### H6 — Loop bounded per numero di iterazioni come primitiva di schema
+### H6 — Loop bounded come primitiva di schema (per numero di iterazioni e/o per durata totale)
 
 | Campo | Valore |
 |---|---|
-| Descrizione | Il concetto di ciclo bounded per numero di iterazioni (es. `max_visits: 3`) deve diventare una primitiva esplicita del workflow YAML, non solo una convenzione documentale o un counter nel context del codice target. Esempio motivante: `MAX_LLM_ATTEMPTS = 3` dell'analyzer-fsm Syntonia + `MAX_FAMILY_REPAIR_ATTEMPTS = 3` della repair. Forma candidata: `loop_guard: { max_visits: N, on_exhaustion: <target> }` su uno stato con self-transition. |
+| Descrizione | Il concetto di ciclo bounded deve diventare una primitiva esplicita del workflow YAML lungo **due dimensioni** combinabili: (a) numero massimo di iterazioni e (b) durata massima totale del ciclo. Entrambi i bound sono opzionali e indipendenti; il ciclo termina alla prima esaurita. Esempi motivanti reali: l'analyzer-fsm Syntonia ha `MAX_LLM_ATTEMPTS = 3` (count) ma in produzione vorrebbe anche "non oltre 30 minuti totali di retry per non bloccare l'utente" (duration); un agente di planning può avere un budget di "5 step OPPURE 10 minuti, qualunque arrivi prima". Forma candidata: |
+| Forma YAML | `loop_guard: { max_visits: N, max_duration: <ISO8601-duration>, on_exhaustion: <target> }` su uno stato con self-transition. Almeno una delle due chiavi `max_visits` o `max_duration` deve essere presente. |
 | Stato | Proposed (schema-level) |
 | Priorità | Alta |
 | Nota | Richiede modifica al core schema SPEC-0006. Fuori scope per questo esperimento. Candidata per SPEC-0007 in un esperimento separato `exp/schema-loop-guard-timeout`. |
 
-### H7 — Transizioni guidate dal tempo come primitiva di schema
+### H7 — Timeout su stato non-loop come primitiva di schema
 
 | Campo | Valore |
 |---|---|
-| Descrizione | Il concetto di tempo di permanenza in uno stato e di transizione automatica dopo una durata deve diventare una primitiva esplicita (es. `after: 15m → expired`). Esempi motivanti: ticket-lifecycle (autoclose dopo N giorni in `waiting_customer`); payment-flow (`pending → expired` dopo 15 min); agent loop (timeout su uno step LLM). Forma candidata: `timeout: { duration: <iso8601 or ms>, on_timeout: <target> }` su uno stato. |
+| Descrizione | Il concetto di tempo massimo di permanenza in un singolo stato non-loop deve diventare una primitiva esplicita, distinta dal `loop_guard` di H6. Questo è il caso di stati di attesa o di lavorazione la cui scadenza è naturale (non un ciclo da bounding). Esempi motivanti: ticket-lifecycle (autoclose dopo N giorni in `waiting_customer`); payment-flow (`pending → expired` dopo 15 min senza azione utente); agent loop (singolo step LLM con timeout di 60 secondi). Forma candidata: |
+| Forma YAML | `timeout: { duration: <ISO8601-duration>, on_timeout: <target> }` su uno stato non-loop. |
 | Stato | Proposed (schema-level) |
 | Priorità | Alta |
 | Nota | Richiede modifica al core schema SPEC-0006. Fuori scope per questo esperimento. Candidata per SPEC-0007 in un esperimento separato `exp/schema-loop-guard-timeout`. Open point già citato in `examples/ticket-lifecycle.yaml` (timer-based transitions). |
+
+### Perché H6 e H7 sono separate
+
+Sono due concetti che coabitano spesso ma rispondono a domande diverse:
+
+- **H6 (`loop_guard`)** risponde a "questo ciclo non deve protrarsi all'infinito": bound del ciclo nel suo complesso (count e/o tempo totale).
+- **H7 (`timeout`)** risponde a "questo stato non deve restare attivo all'infinito": bound della permanenza in uno specifico stato non-iterativo.
+
+Esempio combinato realistico (per fissare i due concetti):
+
+```yaml
+states:
+  - name: llm_planning_loop
+    is_final: false
+    loop_guard:
+      max_visits: 5        # H6: massimo 5 iterazioni di planning
+      max_duration: 10m    # H6: e comunque non oltre 10 minuti totali
+      on_exhaustion: planning_failed
+  - name: waiting_human_review
+    is_final: false
+    timeout:
+      duration: 24h        # H7: lo stato attende un umano per max 24 ore
+      on_timeout: review_auto_escalated
+```
 
 ## Piano degli esperimenti
 
