@@ -4,7 +4,7 @@
 |---|---|
 | Data | 2026-05-29 |
 | Tipo | research / metodo / estensione POM |
-| Stato | under evaluation |
+| Stato | consolidated 2026-05-29 (promosso a SPEC-0006 + skill workflow + script + template + 2 guide) |
 | Branch / Path | `exp/workflow-modeling` + `experiments/workflow-modeling/` |
 | Isolamento | branch dedicato + cartella esperimento |
 | Owner | POM maintainer |
@@ -103,20 +103,66 @@ Vedi `evidence/` per output del validatore, diagrammi Mermaid generati e codice 
 
 ## Esito
 
-Da definire alla fine. Opzioni:
+**Decisione: promozione completa.**
 
-- **Promozione completa**: SPEC-0006 + skill `workflow` + template + script + voce in `pom:help`. Mossa via `skills/extend.md`.
-- **Promozione parziale**: solo skill + template descrittivo, senza validatore (se H2 fallisce ma H1/H3/H4 reggono).
-- **Riformulazione**: lo scope va ripensato, nuovo giro di esperimento o nuova spec di indagine.
-- **Abbandono**: niente promozione, sintesi in `analysis/workflow-modeling.md` per memoria futura.
+Tutte e quattro le ipotesi (H1 espressività, H2 validatore efficace, H3 skill efficace entro vincoli, H4 guida implementativa efficace) sono **confermate** con evidenze concrete e ripetibili. L'esperimento ha prodotto materiale che eccede i criteri di valore minimi originali e ha aperto direzioni che inizialmente non erano in scope (composizione sincrona, context injection Result<Terminal,Output>, mapping XState + stately.ai, multi-language TS+Python, suspend/restore, generatore Mermaid integrato, validazione su progetto reale a 3 livelli di composizione).
+
+### Cosa H1–H4 sono diventate
+
+- **H1 (espressività YAML)**: confermata su tre workflow eterogenei sintetici (`spec-evolution`, `ticket-lifecycle`, `document-approval`), due workflow reali combinati (`order-processing` pipeline e `loan-application` multi-primitiva), e quattro FSM reali del progetto Syntonia ai-agent (operational, analyzer, clean-family-repair, semantic-family-master con 7 famiglie). Tutti modellabili senza modifiche allo schema, salvo l'aggiunta motivata di `re_entry_allowed` e `context_schema` durante l'esperimento.
+- **H2 (validatore efficace)**: 50 regole Error + 4 Warning implementate, 30 fixture broken ciascuna che scatta la regola attesa, regressione zero sui 21+ workflow validati. Bug interno trovato e corretto grazie a un caso reale (E056 era controllato sul key invece che sul value).
+- **H3 (skill sufficiente entro vincoli)**: skill `workflow` 62 righe, prompt 112 righe, entrambi sotto i tetti dichiarati. Prompt operativo con 5 modi e collegamento al validator concreto.
+- **H4 (guida implementativa efficace senza imposizioni)**: confermata in TypeScript (Pattern A, 15 test passing) e in Python (Pattern A, 15 test passing) sullo stesso modello. Sezione "Suspend and Restore" con 3 evidence aggiuntive (17 test totali) che dimostra persistenza tra processi senza che POM fornisca runtime.
+
+### Cosa il giro 2 ha aggiunto oltre lo scope iniziale
+
+- **Quattro primitive sincrone di composizione** (pipeline lineare, invoke-da-stato, invoke-da-evento, context-injection) con quattro pilastri esplicitati (no async / no shared state / no inheritance / no runtime).
+- **Mapping XState v5** + workflow operativo stately.ai per visualizzazione e simulazione interattiva.
+- **Generatore Mermaid integrato nel validator** (`--mermaid-dir`): 38 diagrammi generati in una passata sweep, drift YAML↔diagramma impossibile per costruzione.
+- **Guida di adozione+estensione** (`WORKFLOW_INTEGRATION_GUIDE.md`) per i team che adotteranno POM-workflow nei loro progetti.
+- **Validazione su progetto reale Syntonia ai-agent**, inclusa modellazione spinta della Semantic Family (7 famiglie + master dispatcher) e composizione a 3 livelli (operational → analyzer → clean-family-repair).
+
+### Cosa resta come open point dichiarato (non blocca promozione)
+
+- **Bounded retry / loop_guard primitive**: emerso da analyzer-fsm (`MAX_LLM_ATTEMPTS=3`), riemerge in clean-family-repair (`MAX_FAMILY_REPAIR_ATTEMPTS=3`), pattern ricorrente. Schema growth candidato concreto per un futuro giro 3. Il contatore stesso è già suspend-friendly perché vive in context — manca solo l'*enforcement* del bound a livello schema.
+- **Rule engine multi-machine** (semantic family classification): confermato out-of-scope. Il "forced fit" + "pushed modeling" hanno dimostrato sia il costo del forzarlo sia il limite duro. Resta Pattern C territory.
+- **Pipeline-level context passing**: oggi la pipeline lineare non passa context strutturato tra membri (il dataflow vive nell'orchestrator del target). Candidato per futura estensione se un caso reale lo richiede.
+- **Codice TypeScript guidato per pipeline orchestrator** (`order-processing`): pianificato come task del round 2, rinviato al deploy di POM su ai-agent (memoria utente). Non blocca la promozione: H4 già confermata su `spec-evolution` in TS+Python.
+- **Info rules nel validator** (cycles diagnostic, naming conventions): out-of-scope dichiarato fin dalla prima passata, candidato per giro 3.
 
 ## Consolidazione
 
-| Artefatto | Destinazione | Azione |
+| Artefatto sperimentale | Destinazione canonica | Azione |
 |---|---|---|
-|  |  |  |
+| `spec-candidate/SPEC-DRAFT-workflow-modeling.md` | `specs/SPEC-0006-workflow-modeling.md` | Promote + status: Complete |
+| `CONTEXT-INJECTION.md` (closed design decision) | `decisions/ADR-0002-workflow-context-injection.md` | Promote come ADR Accepted |
+| `skills-candidate/workflow.md` | `skills/workflow.md` | Promote skill card |
+| `prompts/workflow.md` | `prompts/27-workflow-modeling.md` | Promote prompt canonico |
+| `templates-candidate/WORKFLOW_TEMPLATE.yaml` | `templates/WORKFLOW_TEMPLATE.yaml` | Promote template |
+| `templates-candidate/PIPELINE_TEMPLATE.yaml` | `templates/PIPELINE_TEMPLATE.yaml` | Promote template |
+| `templates-candidate/WORKFLOW_IMPLEMENTATION_GUIDE.md` | `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` | Promote guide |
+| `templates-candidate/WORKFLOW_INTEGRATION_GUIDE.md` | `templates/WORKFLOW_INTEGRATION_GUIDE.md` | Promote guide |
+| `scripts-candidate/lint-workflows.mjs` | `scripts/lint-workflows.mjs` | Promote validator |
+| `scripts-candidate/mermaid.mjs` | `scripts/mermaid.mjs` | Promote shared renderer |
+| `scripts-candidate/to-mermaid.mjs` | `scripts/to-mermaid.mjs` | Promote CLI |
+| `xstate-compat/to-xstate.mjs` | `scripts/to-xstate.mjs` | Promote XState transformer |
+| `xstate-compat/COMPATIBILITY.md` | `docs/workflow-xstate-compatibility.md` | Promote como doc support |
+| `examples/spec-evolution.yaml`, `ticket-lifecycle.yaml`, `document-approval.yaml` | `templates/examples/workflow/` | Promote come esempi di template |
+| `evidence/typescript/spec-evolution/` | (resta nell'experiment come storia) | Lasciare in experiments |
+| `evidence/python/spec-evolution/` | (resta) | Lasciare in experiments |
+| Tutti gli `evidence/mermaid/*.mmd` | (resta) | Lasciare in experiments come archivio dei diagrammi originali |
+| `experiments/workflow-modeling/` | resta in repo come storia operativa | Marca status: `consolidated` su `EXPERIMENT.md` |
 
-Da compilare in fase di promozione.
+Aggiornamenti coordinati richiesti:
+
+- `README.md`: aggiungere riga su skill `workflow` in tabella Quickstart + sezione introduttiva.
+- `skills/README.md`: aggiungere voce `workflow` nella tabella delle skill.
+- `package.json`: aggiungere `"pom:workflow:lint": "node scripts/lint-workflows.mjs"`.
+- `scripts/pom-help.ts`: aggiungere voce `pom:workflow:lint`.
+- `scripts/install-pom.ts` + `templates/POM_UPDATE_TEMPLATE.mjs`: includere i nuovi file negli installer.
+- `CHANGELOG.md`: entry per SPEC-0006 + skill `workflow`.
+
+Tutte queste azioni vengono eseguite nei commit di promozione successivi a questo.
 
 ## Esito intermedio - prima passata validator (2026-05-29)
 
