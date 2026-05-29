@@ -1,0 +1,20 @@
+test_accepted_to_complete_guard_false (test_spec_evolution.TestGuardBranches.test_accepted_to_complete_guard_false) ... ok
+test_accepted_to_complete_guard_true (test_spec_evolution.TestGuardBranches.test_accepted_to_complete_guard_true) ... ok
+test_accepted_to_superseded_guard_false (test_spec_evolution.TestGuardBranches.test_accepted_to_superseded_guard_false) ... ok
+test_accepted_to_superseded_guard_true (test_spec_evolution.TestGuardBranches.test_accepted_to_superseded_guard_true) ... ok
+test_complete_to_superseded_via_re_entry (test_spec_evolution.TestGuardBranches.test_complete_to_superseded_via_re_entry) ... ok
+test_draft_to_under_review_on_submit (test_spec_evolution.TestPositiveTransitions.test_draft_to_under_review_on_submit) ... ok
+test_draft_to_withdrawn_on_withdraw (test_spec_evolution.TestPositiveTransitions.test_draft_to_withdrawn_on_withdraw) ... ok
+test_under_review_to_accepted_on_accept (test_spec_evolution.TestPositiveTransitions.test_under_review_to_accepted_on_accept) ... ok
+test_under_review_to_draft_on_request_changes (test_spec_evolution.TestPositiveTransitions.test_under_review_to_draft_on_request_changes) ... ok
+test_under_review_to_rejected_on_reject (test_spec_evolution.TestPositiveTransitions.test_under_review_to_rejected_on_reject) ... ok
+test_accepted_does_not_accept_submit (test_spec_evolution.TestRefusedTransitions.test_accepted_does_not_accept_submit) ... ok
+test_accepted_does_not_accept_withdraw (test_spec_evolution.TestRefusedTransitions.test_accepted_does_not_accept_withdraw) ... ok
+test_draft_does_not_accept_accept (test_spec_evolution.TestRefusedTransitions.test_draft_does_not_accept_accept) ... ok
+test_complete_refuses_every_event_except_supersede (test_spec_evolution.TestTerminalStates.test_complete_refuses_every_event_except_supersede) ... ok
+test_terminals_without_re_entry_refuse_every_event (test_spec_evolution.TestTerminalStates.test_terminals_without_re_entry_refuse_every_event) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.000s
+
+OK

@@ -1,0 +1,73 @@
+{
+  "id": "toy_pipeline",
+  "initial": "__member_0_stage_a",
+  "states": {
+    "__member_0_stage_a": {
+      "description": "Pipeline member 1: stage-a.yaml",
+      "invoke": {
+        "id": "invoke___member_0_stage_a",
+        "src": "stage_a",
+        "onDone": [
+          {
+            "guard": "_terminal_eq_succeeded",
+            "target": "__member_1_stage_b"
+          },
+          {
+            "guard": "_terminal_eq_aborted",
+            "target": "__pipeline_completed"
+          }
+        ]
+      }
+    },
+    "__member_1_stage_b": {
+      "description": "Pipeline member 2: stage-b.yaml",
+      "invoke": {
+        "id": "invoke___member_1_stage_b",
+        "src": "stage_b",
+        "onDone": [
+          {
+            "guard": "_terminal_eq_succeeded",
+            "target": "__member_2_stage_c"
+          },
+          {
+            "guard": "_terminal_eq_aborted",
+            "target": "__pipeline_completed"
+          }
+        ]
+      }
+    },
+    "__member_2_stage_c": {
+      "description": "Pipeline member 3: stage-c.yaml",
+      "invoke": {
+        "id": "invoke___member_2_stage_c",
+        "src": "stage_c",
+        "onDone": [
+          {
+            "guard": "_terminal_eq_succeeded",
+            "target": "__pipeline_completed"
+          },
+          {
+            "guard": "_terminal_eq_failed",
+            "target": "__pipeline_completed"
+          }
+        ]
+      }
+    },
+    "__pipeline_completed": {
+      "type": "final",
+      "description": "Pipeline terminated. Specific outcome lives in the last member output."
+    }
+  },
+  "meta": {
+    "pom": {
+      "kind": "pipeline",
+      "description": "Three minimal stages chained linearly. Used by the validator and the\nevidence harness to demonstrate that pipeline composition works on a\ntrivial example before any real-world use case.",
+      "version": 1,
+      "member_paths": [
+        "stage-a.yaml",
+        "stage-b.yaml",
+        "stage-c.yaml"
+      ]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: family_rolling_trend_tradeoff
+  %% Rolling trend with tradeoff analytical family.
+
+  state "Evaluating" as evaluating
+
+  [*] --> evaluating
+
+  evaluating --> [*] : entry_failed\n[trend_entry_guards]
+  evaluating --> [*] : scope_missing_signal\n[scope_missing]
+  evaluating --> [*] : semantic_ambiguity\n[tradeoff_drivers_ambiguous]
+  evaluating --> [*] : ready\n[trend_ready_guards]

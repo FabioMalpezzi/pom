@@ -1,0 +1,29 @@
+workflow: stage_b
+version: 1
+description: |
+  Minimal pipeline member for the toy example. Two terminal states:
+  succeeded (advances to stage_c) and aborted (ends the pipeline).
+
+initial_state: start
+states:
+  - name: start
+    description: starting point
+    is_final: false
+  - name: succeeded
+    description: stage B completed successfully
+    is_final: true
+  - name: aborted
+    description: stage B aborted
+    is_final: true
+events:
+  - name: finish
+    description: stage completes normally
+  - name: abort
+    description: stage is aborted
+transitions:
+  - from: start
+    to: succeeded
+    event: finish
+  - from: start
+    to: aborted
+    event: abort

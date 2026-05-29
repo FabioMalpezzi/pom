@@ -1,0 +1,12 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: order_flow_with_context
+  %% Minimal parent workflow that demonstrates context injection: the drafting state submits a payment…
+
+  state "Drafting" as drafting
+
+  [*] --> drafting
+
+  drafting --> [*] : submit_payment\n↪ payment_validation: validated
+  drafting --> [*] : submit_payment\n↪ payment_validation: refused

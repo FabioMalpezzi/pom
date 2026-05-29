@@ -1,0 +1,150 @@
+{
+  "id": "document_approval",
+  "initial": "draft",
+  "states": {
+    "draft": {
+      "description": "The author is writing or revising the document. Free editing.\nMay be re-entered from in_review when the reviewer asks for\nrevisions, keeping the same document identifier.",
+      "on": {
+        "assign_reviewer": "reviewer_assigned",
+        "withdraw": {
+          "target": "withdrawn",
+          "description": "Withdraw is only legal from draft. After assignment, the author\ncannot quietly retract; the reviewer must close the document\nvia reject or request_revisions followed by archive."
+        }
+      }
+    },
+    "reviewer_assigned": {
+      "description": "A reviewer has been assigned; the document is in their queue but\nthey have not started reviewing yet.",
+      "on": {
+        "start_review": "in_review"
+      }
+    },
+    "in_review": {
+      "description": "The reviewer has the document open and is forming a decision:\napprove, reject, or send back for revisions.",
+      "on": {
+        "approve": {
+          "target": "approved",
+          "guard": "is_approver"
+        },
+        "reject": {
+          "target": "rejected",
+          "guard": "is_approver"
+        },
+        "request_revisions": {
+          "target": "draft",
+          "guard": "is_approver"
+        }
+      }
+    },
+    "approved": {
+      "description": "The reviewer approved the document. Publication is now permitted\nbut not automatic. The document remains unpublished until an\nexplicit publish action runs.",
+      "on": {
+        "publish": {
+          "target": "published",
+          "guard": "has_required_signoffs"
+        },
+        "archive": {
+          "target": "archived",
+          "description": "An approved document that is never published may be archived.\nCloses the lifecycle without release; preserves the approval as\nhistorical record."
+        }
+      }
+    },
+    "rejected": {
+      "description": "The reviewer rejected the document. The document can only be\narchived from here; reopening for a new attempt requires creating\na fresh document with a new identifier.",
+      "on": {
+        "archive": "archived"
+      }
+    },
+    "published": {
+      "description": "The document has been released to its intended audience. From\npublished the only legitimate next step in this model is\narchiving.",
+      "on": {
+        "archive": {
+          "target": "archived",
+          "description": "A published document is archived when superseded or retired.\nThe model does not track the superseding document; that is a\nseparate concern (see open_points on versioning)."
+        }
+      }
+    },
+    "archived": {
+      "description": "Terminal: the document is stored for the record and is no longer\npart of the active set. Archive may be reached from approved\n(never published in time), published (superseded), or rejected.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "withdrawn": {
+      "description": "Terminal: the author retracted the document before review\nstarted. Preserves the document as \"considered, not pursued\".",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    }
+  },
+  "meta": {
+    "pom": {
+      "version": 1,
+      "description": "Lifecycle of an internal document that goes through review, approval,\nand publication. A document starts as draft, is assigned to a\nreviewer, may be approved or rejected (or sent back for revisions),\nmay be published after approval, and is eventually archived. The\nauthor may withdraw the document only before review starts.",
+      "events": [
+        {
+          "name": "assign_reviewer",
+          "description": "An editor or the author assigns a reviewer. Triggered manually,\nnot derived from state."
+        },
+        {
+          "name": "start_review",
+          "description": "The assigned reviewer opens the document and starts evaluating."
+        },
+        {
+          "name": "approve",
+          "description": "The reviewer approves the document. Conditional on the actor\nhaving the approver role."
+        },
+        {
+          "name": "reject",
+          "description": "The reviewer rejects the document. Conditional on the actor\nhaving the approver role."
+        },
+        {
+          "name": "request_revisions",
+          "description": "The reviewer asks the author to revise. The document returns to\ndraft so the author can edit freely. Conditional on the actor\nhaving the approver role."
+        },
+        {
+          "name": "publish",
+          "description": "The approved document is released. Distinct from approve to\npreserve the option of staged release, scheduled publication,\nand a final pre-publication checklist."
+        },
+        {
+          "name": "archive",
+          "description": "The document is moved to the archive. Reachable from approved,\npublished, or rejected — three distinct semantic motivations,\nsame destination."
+        },
+        {
+          "name": "withdraw",
+          "description": "The author retracts the document. Only legal from draft."
+        }
+      ],
+      "guards": [
+        {
+          "name": "is_approver",
+          "description": "The actor performing the transition holds the approver role\ndefined by the target project. The schema does not model roles\nas first-class entities in v1; the role check lives in target\ncode, behind this named predicate. See open_points."
+        },
+        {
+          "name": "has_required_signoffs",
+          "description": "The target project's publication policy is satisfied: legal,\nbranding, accessibility, or whatever the policy requires. The\nschema does not enumerate the signoffs; the predicate is opaque\nand lives in target code."
+        }
+      ],
+      "invariants": [
+        "Approval is not publication. A document in state approved is not\nyet visible to the intended audience. The two states are\ndeliberately separate so that staged release, scheduled\npublication, and a final pre-publication checklist remain\npossible without changing the model.",
+        "Withdrawal is only legal from draft. After reviewer_assigned the\ndocument must reach a terminal state through the review flow:\nreject + archive, or approve + (publish | archive). This mirrors\nspec-evolution's \"no quiet retraction after review starts\".",
+        "Archive has three distinct semantic sources: approved (never\npublished), published (retired or superseded), rejected (closed\nas not pursued). The model keeps them as separate transitions\nso the history records which path was taken.",
+        "Rejected is not terminal. It admits one transition: archive. The\nintent is to make archival explicit even for rejections, so\nevery document ends in archived or withdrawn — never lingering\nin rejected."
+      ],
+      "open_points": [
+        "Parallel / multi-signoff approval. Real organizations often\nrequire multiple approvers in parallel or in sequence (legal,\nbranding, technical). v1 of the schema models single sequential\napproval. If usage demands it, future schema may need a\n\"parallel_regions\" concept (heavy) or a convention for chaining\nmultiple in_review-equivalent states (lighter). Declared out of\nscope for the experiment.\n",
+        "Role as schema entity. is_approver and has_required_signoffs are\nnamed guards whose role semantics live in the target code's\nauthorization layer. The schema does not declare roles as\nfirst-class. Pro: keeps the schema minimal and target-agnostic.\nCon: the model does not visually expose \"who can do what\"; that\nlives in the implementation guide and target code. Worth\nreviewing when more workflows accumulate role-based gating.\n",
+        "Versioning of published documents. published -> archived via\narchive is fine when retiring; supersession by a newer version\nis not modeled here. Two options for future schema: explicit\nsupersede event (mirroring spec-evolution), or external\nrelation linking the archive event to the superseding document\nidentifier. Out of scope for v1.\n",
+        "rejected as non-terminal but with only one outgoing transition\n(archive). Borderline case: should the schema let archive be\nautomatic from rejected after N days? That would require timer\nsemantics, already declared out of scope. For now, archive from\nrejected is an explicit action.\n"
+      ],
+      "closed_points": [
+        "\"How to model multiple terminal flavors with distinct\nsemantics?\" — same pattern used in ticket-lifecycle (closed,\nduplicate, wont_fix). Here: archived and withdrawn. The schema\nhandles it cleanly via multiple is_final states reached by\ndifferent transitions.\n"
+      ]
+    }
+  }
+}

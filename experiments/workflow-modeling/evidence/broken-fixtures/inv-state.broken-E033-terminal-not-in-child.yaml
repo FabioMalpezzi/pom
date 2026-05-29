@@ -1,0 +1,37 @@
+# Expected to trigger: E033 (on_completion terminal_state not is_final: true in child).
+
+workflow: broken_e033
+version: 1
+description: |
+  References child terminal "approved" which does not exist in the child.
+
+initial_state: idle
+states:
+  - name: idle
+    description: starting point
+    is_final: false
+  - name: validating
+    description: invokes the toy child with a wrong terminal
+    is_final: false
+    invoke:
+      workflow: ../../examples/invoke-state-toy/state-invoke-child.yaml
+      on_completion:
+        - terminal_state: approved        # not present in child (validated/refused only)
+          next_event: passed
+  - name: done
+    description: terminal
+    is_final: true
+
+events:
+  - name: start
+    description: starts the parent
+  - name: passed
+    description: child returned success
+
+transitions:
+  - from: idle
+    to: validating
+    event: start
+  - from: validating
+    to: done
+    event: passed

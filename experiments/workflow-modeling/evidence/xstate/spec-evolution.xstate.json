@@ -1,0 +1,140 @@
+{
+  "id": "spec_evolution",
+  "initial": "draft",
+  "states": {
+    "draft": {
+      "description": "The spec is being written or actively revised. Not yet submitted for\nacceptance review. Free to change in shape, scope, and content.",
+      "on": {
+        "submit_for_review": "under_review",
+        "withdraw": {
+          "target": "withdrawn",
+          "description": "Withdrawal from draft preserves the document as a \"considered, not\npursued\" record without going through review."
+        }
+      }
+    },
+    "under_review": {
+      "description": "The spec has been submitted for acceptance review. Content is frozen\nfor the duration of the review; comments are tracked, but edits during\nreview require returning to draft.",
+      "on": {
+        "request_changes": "draft",
+        "accept": "accepted",
+        "reject": "rejected"
+      }
+    },
+    "accepted": {
+      "description": "The spec has passed review and represents intended behavior or\ncapability. Implementation work may begin. The status corresponds to\n\"Status | Accepted\" in the spec document header.",
+      "on": {
+        "implement_and_verify": {
+          "target": "complete",
+          "guard": "has_completion_verification_gate"
+        },
+        "supersede": {
+          "target": "superseded",
+          "guard": "superseding_spec_accepted"
+        }
+      }
+    },
+    "complete": {
+      "description": "The spec has been fully implemented and verified against its completion\nverification gate. Corresponds to \"Status | Complete\" in current POM\nspecs. Terminal, but admits the supersede out-transition explicitly.",
+      "on": {
+        "supersede": {
+          "target": "superseded",
+          "guard": "superseding_spec_accepted"
+        }
+      },
+      "meta": {
+        "pom": {
+          "is_final": true,
+          "re_entry_allowed": true
+        }
+      }
+    },
+    "superseded": {
+      "description": "A later spec replaces this one. The current spec is retained in repo\nfor history but no longer authoritative. Terminal.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "withdrawn": {
+      "description": "The author retracts the spec before acceptance. The spec is preserved\nin repo as a \"considered, not pursued\" record. Terminal.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "rejected": {
+      "description": "The spec is refused on review. Preserved as a documented rejection.\nTerminal.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    }
+  },
+  "meta": {
+    "pom": {
+      "version": 1,
+      "description": "POM SPEC document lifecycle. A SPEC starts as a draft, may be reviewed and\naccepted, may be implemented to completion, may be superseded by a later\nSPEC, may be withdrawn before acceptance, or may be rejected on review.\nPause states (Deferred/Blocked/Waiting) are deliberately not modeled as\nprimary states in this version.",
+      "events": [
+        {
+          "name": "submit_for_review",
+          "description": "Author declares the draft ready for acceptance review."
+        },
+        {
+          "name": "request_changes",
+          "description": "Reviewer asks for changes; spec returns to draft."
+        },
+        {
+          "name": "accept",
+          "description": "Reviewer approves the spec."
+        },
+        {
+          "name": "reject",
+          "description": "Reviewer refuses the spec."
+        },
+        {
+          "name": "implement_and_verify",
+          "description": "Implementation work is complete and the spec's verification gate\n(Goal-Backward Check + Scenario Tests + Semantic Validation, where\napplicable) is satisfied."
+        },
+        {
+          "name": "supersede",
+          "description": "A new spec is published that replaces this one. Triggered by the\nacceptance of the superseding spec."
+        },
+        {
+          "name": "withdraw",
+          "description": "The author retracts the spec before acceptance."
+        }
+      ],
+      "guards": [
+        {
+          "name": "has_completion_verification_gate",
+          "description": "The spec declares an explicit completion verification gate. Required\nto move from accepted to complete. The gate combines Goal-Backward\nCheck, Scenario Tests, and Semantic Validation as defined in\nCONTEXT.md."
+        },
+        {
+          "name": "superseding_spec_accepted",
+          "description": "The spec that supersedes this one is itself in state accepted or\ncomplete. Prevents supersession by drafts."
+        }
+      ],
+      "invariants": [
+        "A spec in state complete cannot return to any non-terminal state.\nUpdates to a completed spec require a new spec that supersedes it.",
+        "Withdrawal is only possible from draft. After review starts, the\noutcome must be acceptance, rejection, or further revision; the\nauthor cannot quietly retract.",
+        "Rejection is terminal. A rejected spec is not reopened; a fresh\nspec must be drafted instead. (This is a model choice to be\nvalidated; see open points in EXPERIMENT.md.)",
+        "A spec cannot be superseded by another spec that is itself in\ndraft or under_review. The superseding_spec_accepted guard\nenforces this at the workflow level."
+      ],
+      "open_points": [
+        "Pause states (Deferred, Blocked, Waiting from prompts/15) are not\nmodeled as primary states. If real usage shows the need, options are:\n(a) add them as primary states (paying the combinatorial cost),\n(b) treat them as an orthogonal modifier on the entity,\n(c) reserve them to PROJECT_STATE and not to the spec lifecycle.\n",
+        "Rejection is modeled as terminal. POM may want to allow a \"revise\nand resubmit\" path that does not require a brand-new spec id.\n",
+        "The accepted -> withdrawn path is intentionally absent. If real\npractice shows accepted specs being retracted (not superseded), the\nmodel needs adjustment.\n",
+        "Under-review changes return to draft. An alternative is a\n\"revisions_requested\" state that keeps the review thread open.\n"
+      ],
+      "closed_points": [
+        "\"complete admits supersede out-transition\" — resolved via the\nschema attribute re_entry_allowed: true. The validator no longer\nflags W003 on complete. Same decision applied to ticket-lifecycle's\n\"closed\" state.\n"
+      ]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: underwriting
+  %% Synchronous child workflow that performs the underwriting decision.
+
+  state "Ready" as ready
+  state "Assessing" as assessing
+
+  [*] --> ready
+
+  ready --> assessing : start
+  assessing --> [*] : approve
+  assessing --> [*] : reject

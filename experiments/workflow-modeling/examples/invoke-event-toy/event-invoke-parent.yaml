@@ -1,0 +1,38 @@
+workflow: event_invoke_parent
+version: 1
+description: |
+  Minimal parent workflow used to demonstrate synchronous invoke-from-event.
+  A transition declares invoke instead of a direct "to": when the event
+  fires from the source state, the child workflow runs synchronously.
+  When the child terminates, the parent jumps to the target declared in
+  on_completion (one target per child terminal).
+
+initial_state: drafting
+
+states:
+  - name: drafting
+    description: author is preparing the document
+    is_final: false
+  - name: accepted
+    description: validation passed, document is accepted
+    is_final: true
+  - name: rejected
+    description: validation refused, document is rejected
+    is_final: true
+
+events:
+  - name: submit_for_review
+    description: |
+      author submits the document; the validation child workflow runs
+      synchronously to decide the next parent state.
+
+transitions:
+  - from: drafting
+    event: submit_for_review
+    invoke:
+      workflow: event-invoke-child.yaml
+      on_completion:
+        - terminal_state: validated
+          target: accepted
+        - terminal_state: refused
+          target: rejected

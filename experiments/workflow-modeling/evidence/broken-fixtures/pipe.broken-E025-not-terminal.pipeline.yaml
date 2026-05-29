@@ -1,0 +1,11 @@
+# Expected to trigger: E025 (completes_on state is not is_final: true in member).
+
+pipeline: broken_e025
+version: 1
+description: References "start" state of stage-a, which is NOT terminal.
+
+sequence:
+  - workflow: ../../examples/pipeline-toy/stage-a.yaml
+    completes_on:
+      - state: start                    # not is_final: true
+        next: null

@@ -1,0 +1,66 @@
+{
+  "id": "event_invoke_parent",
+  "initial": "drafting",
+  "states": {
+    "drafting": {
+      "description": "author is preparing the document",
+      "on": {
+        "submit_for_review": {
+          "target": "__invoking_submit_for_review_from_drafting"
+        }
+      }
+    },
+    "accepted": {
+      "description": "validation passed, document is accepted",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "rejected": {
+      "description": "validation refused, document is rejected",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "__invoking_submit_for_review_from_drafting": {
+      "description": "Synthetic intermediate state for event-invoke on event-invoke-child.yaml",
+      "invoke": {
+        "id": "invoke___invoking_submit_for_review_from_drafting",
+        "src": "event_invoke_child",
+        "onDone": [
+          {
+            "guard": "_terminal_eq_validated",
+            "target": "accepted"
+          },
+          {
+            "guard": "_terminal_eq_refused",
+            "target": "rejected"
+          }
+        ]
+      },
+      "meta": {
+        "pom": {
+          "synthetic_event_invoke": true
+        }
+      }
+    }
+  },
+  "meta": {
+    "pom": {
+      "version": 1,
+      "description": "Minimal parent workflow used to demonstrate synchronous invoke-from-event.\nA transition declares invoke instead of a direct \"to\": when the event\nfires from the source state, the child workflow runs synchronously.\nWhen the child terminates, the parent jumps to the target declared in\non_completion (one target per child terminal).",
+      "events": [
+        {
+          "name": "submit_for_review",
+          "description": "author submits the document; the validation child workflow runs\nsynchronously to decide the next parent state."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,35 @@
+# Expected to trigger: W003 (terminal state with outgoing transition).
+# Minimal isolated version of the pattern observed in spec-evolution
+# (complete -> superseded) and ticket-lifecycle (closed -> in_progress).
+
+workflow: broken_w003
+version: 1
+description: |
+  Fixture: state "done" is is_final: true but has an outgoing transition
+  to "reopened". The validator must report W003 on "done".
+initial_state: a
+states:
+  - name: a
+    description: start
+    is_final: false
+  - name: done
+    description: declared terminal but has outgoing transition
+    is_final: true
+  - name: reopened
+    description: |
+      target of the unexpected re-entry. Declared as is_final to keep the
+      fixture focused on W003; otherwise W002 (dead-end) would also fire
+      legitimately.
+    is_final: true
+events:
+  - name: finish
+    description: a -> done
+  - name: reopen
+    description: done -> reopened (the W003 source)
+transitions:
+  - from: a
+    to: done
+    event: finish
+  - from: done
+    to: reopened
+    event: reopen

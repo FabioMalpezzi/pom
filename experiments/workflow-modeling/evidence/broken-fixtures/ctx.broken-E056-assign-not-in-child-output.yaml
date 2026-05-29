@@ -1,0 +1,33 @@
+# Expected to trigger: E056 (assign field not declared in child output_by_terminal[terminal]).
+
+workflow: broken_e056
+version: 1
+description: Parent assigns "gateway_id" from child but child does not declare it on validated.
+
+initial_state: drafting
+states:
+  - name: drafting
+    description: starting
+    is_final: false
+  - name: accepted
+    description: terminal
+    is_final: true
+
+events:
+  - name: submit_payment
+    description: submission
+
+transitions:
+  - from: drafting
+    event: submit_payment
+    invoke:
+      workflow: ../../examples/context-injection-toy/payment-validation.yaml
+      input:
+        amount: order.total
+        method: order.method
+      on_completion:
+        - terminal_state: validated
+          target: accepted
+          assign:
+            validation_token: child.validation_token
+            gateway_id: child.gateway_id      # NOT declared in child output_by_terminal.validated

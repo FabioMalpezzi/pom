@@ -1,0 +1,14 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: family_single_kpi_snapshot
+  %% Single KPI snapshot analytical family.
+
+  state "Evaluating" as evaluating
+
+  [*] --> evaluating
+
+  evaluating --> [*] : entry_failed\n[snapshot_entry_guards]
+  evaluating --> [*] : scope_missing_signal\n[scope_missing]
+  evaluating --> [*] : semantic_ambiguity\n[kpi_or_scenario_ambiguous]
+  evaluating --> [*] : ready\n[snapshot_ready_guards]

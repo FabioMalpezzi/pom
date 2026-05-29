@@ -1,0 +1,56 @@
+workflow: credit_check
+version: 1
+description: |
+  Synchronous child workflow that verifies the applicant's credit
+  score against the requested amount. Returns either approved (with
+  score + max credit limit) or rejected (with a textual reason).
+
+context_schema:
+  input:
+    - { name: applicant_id,     type: string }
+    - { name: requested_amount, type: number, description: "Cents." }
+  output_by_terminal:
+    approved:
+      - { name: score,            type: number }
+      - { name: max_credit_limit, type: number, description: "Cents." }
+    rejected:
+      - { name: refusal_reason, type: string }
+
+initial_state: ready
+
+states:
+  - name: ready
+    description: has its input, ready to query the credit bureau
+    is_final: false
+  - name: querying
+    description: calling external credit bureau
+    is_final: false
+  - name: approved
+    description: credit check passed
+    is_final: true
+  - name: rejected
+    description: credit check failed
+    is_final: true
+
+events:
+  - name: start
+    description: trigger the bureau query
+  - name: pass
+    description: bureau returned an acceptable score
+  - name: deny
+    description: bureau returned an unacceptable score
+
+transitions:
+  - from: ready
+    to: querying
+    event: start
+  - from: querying
+    to: approved
+    event: pass
+  - from: querying
+    to: rejected
+    event: deny
+
+metadata:
+  owner: lending team
+  tags: [example, real, child-workflow]

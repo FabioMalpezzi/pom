@@ -1,0 +1,12 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: cart_flow
+  %% Shopping cart lifecycle.
+
+  state "Browsing" as browsing
+
+  [*] --> browsing
+
+  browsing --> [*] : proceed_to_checkout
+  browsing --> [*] : abandon

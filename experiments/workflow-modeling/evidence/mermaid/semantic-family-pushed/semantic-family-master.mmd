@@ -1,0 +1,74 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: semantic_family_master
+  %% Master FSM that orchestrates the seven family workflows in the precedence order declared in the…
+
+  state "Turn Received" as turn_received
+  state "Evaluating Gating Or Clarification" as evaluating_gating_or_clarification
+  state "Evaluating Cascade Bridge" as evaluating_cascade_bridge
+  state "Evaluating Yoy Driver Diagnosis" as evaluating_yoy_driver_diagnosis
+  state "Evaluating Rolling Trend Tradeoff" as evaluating_rolling_trend_tradeoff
+  state "Evaluating Benchmark Vs Media" as evaluating_benchmark_vs_media
+  state "Evaluating Ratio Threshold Ranking" as evaluating_ratio_threshold_ranking
+  state "Evaluating Single Kpi Snapshot" as evaluating_single_kpi_snapshot
+
+  [*] --> turn_received
+
+  turn_received --> evaluating_gating_or_clarification : start_classification
+  evaluating_gating_or_clarification --> [*] : gating_matched
+  evaluating_gating_or_clarification --> [*] : gating_blocked
+  evaluating_gating_or_clarification --> evaluating_cascade_bridge : try_cascade_bridge
+  evaluating_cascade_bridge --> [*] : family_matched
+  evaluating_cascade_bridge --> [*] : family_needs_scope
+  evaluating_cascade_bridge --> [*] : family_needs_semantic
+  evaluating_cascade_bridge --> evaluating_yoy_driver_diagnosis : try_yoy_driver_diagnosis
+  evaluating_yoy_driver_diagnosis --> [*] : family_matched
+  evaluating_yoy_driver_diagnosis --> [*] : family_needs_scope
+  evaluating_yoy_driver_diagnosis --> [*] : family_needs_semantic
+  evaluating_yoy_driver_diagnosis --> evaluating_rolling_trend_tradeoff : try_rolling_trend_tradeoff
+  evaluating_rolling_trend_tradeoff --> [*] : family_matched
+  evaluating_rolling_trend_tradeoff --> [*] : family_needs_scope
+  evaluating_rolling_trend_tradeoff --> [*] : family_needs_semantic
+  evaluating_rolling_trend_tradeoff --> evaluating_benchmark_vs_media : try_benchmark_vs_media
+  evaluating_benchmark_vs_media --> [*] : family_matched
+  evaluating_benchmark_vs_media --> [*] : family_needs_scope
+  evaluating_benchmark_vs_media --> [*] : family_needs_semantic
+  evaluating_benchmark_vs_media --> evaluating_ratio_threshold_ranking : try_ratio_threshold_ranking
+  evaluating_ratio_threshold_ranking --> [*] : family_matched
+  evaluating_ratio_threshold_ranking --> [*] : family_needs_scope
+  evaluating_ratio_threshold_ranking --> [*] : family_needs_semantic
+  evaluating_ratio_threshold_ranking --> evaluating_single_kpi_snapshot : try_single_kpi_snapshot
+  evaluating_single_kpi_snapshot --> [*] : family_matched
+  evaluating_single_kpi_snapshot --> [*] : family_needs_scope
+  evaluating_single_kpi_snapshot --> [*] : family_needs_semantic
+  evaluating_single_kpi_snapshot --> [*] : cascade_exhausted
+
+  note right of evaluating_gating_or_clarification
+    invokes family_gating_or_clarification
+    matched → gating_matched, blocked → gating_blocked, not_matched → try_cascade_bridge
+  end note
+  note right of evaluating_cascade_bridge
+    invokes family_cascade_bridge
+    matched → family_matched, needs_scope_clarification → family_needs_scope, needs_semantic_clarification → family_needs_semantic, not_matched → try_yoy_driver_diagnosis
+  end note
+  note right of evaluating_yoy_driver_diagnosis
+    invokes family_yoy_driver_diagnosis
+    matched → family_matched, needs_scope_clarification → family_needs_scope, needs_semantic_clarification → family_needs_semantic, not_matched → try_rolling_trend_tradeoff
+  end note
+  note right of evaluating_rolling_trend_tradeoff
+    invokes family_rolling_trend_tradeoff
+    matched → family_matched, needs_scope_clarification → family_needs_scope, needs_semantic_clarification → family_needs_semantic, not_matched → try_benchmark_vs_media
+  end note
+  note right of evaluating_benchmark_vs_media
+    invokes family_benchmark_vs_media
+    matched → family_matched, needs_scope_clarification → family_needs_scope, needs_semantic_clarification → family_needs_semantic, not_matched → try_ratio_threshold_ranking
+  end note
+  note right of evaluating_ratio_threshold_ranking
+    invokes family_ratio_threshold_ranking
+    matched → family_matched, needs_scope_clarification → family_needs_scope, needs_semantic_clarification → family_needs_semantic, not_matched → try_single_kpi_snapshot
+  end note
+  note right of evaluating_single_kpi_snapshot
+    invokes family_single_kpi_snapshot
+    matched → family_matched, needs_scope_clarification → family_needs_scope, needs_semantic_clarification → family_needs_semantic, not_matched → cascade_exhausted
+  end note

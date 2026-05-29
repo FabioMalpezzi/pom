@@ -1,0 +1,13 @@
+{
+  "name": "workflow-modeling-experiment-scripts",
+  "version": "0.0.0-experiment",
+  "private": true,
+  "type": "module",
+  "description": "Local experiment scripts for POM workflow-modeling. Isolated from the main POM repo package.json. Promotion to scripts/ requires re-evaluating dependencies.",
+  "scripts": {
+    "lint": "node lint-workflows.mjs"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  }
+}

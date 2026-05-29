@@ -1,0 +1,49 @@
+workflow: cart_flow
+version: 1
+description: |
+  Shopping cart lifecycle. A user assembles items, may abandon, may
+  complete the cart. Completing the cart hands off to checkout; abandoning
+  ends the order.
+
+context_schema:
+  input:
+    - { name: user_id, type: string, description: "Authenticated user id." }
+  output_by_terminal:
+    cart_completed:
+      - { name: cart_id,        type: string }
+      - { name: item_count,     type: number }
+      - { name: subtotal_cents, type: number }
+    cart_abandoned:
+      - { name: cart_id,         type: string }
+      - { name: abandoned_at,    type: string, description: "ISO-8601 instant." }
+
+initial_state: browsing
+
+states:
+  - name: browsing
+    description: user is selecting items
+    is_final: false
+  - name: cart_completed
+    description: user has chosen to proceed to checkout
+    is_final: true
+  - name: cart_abandoned
+    description: user left without completing
+    is_final: true
+
+events:
+  - name: proceed_to_checkout
+    description: user clicks checkout
+  - name: abandon
+    description: user navigates away or session expires
+
+transitions:
+  - from: browsing
+    to: cart_completed
+    event: proceed_to_checkout
+  - from: browsing
+    to: cart_abandoned
+    event: abandon
+
+metadata:
+  owner: e-commerce team
+  tags: [example, real, pipeline-member]

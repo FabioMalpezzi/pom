@@ -1,0 +1,13 @@
+# Expected to trigger: E026 (next references a path that is not a pipeline member).
+
+pipeline: broken_e026
+version: 1
+description: stage-a refers to stage-b as next, but stage-b is not in the sequence.
+
+sequence:
+  - workflow: ../../examples/pipeline-toy/stage-a.yaml
+    completes_on:
+      - state: succeeded
+        next: ../../examples/pipeline-toy/stage-b.yaml      # not a member of this pipeline
+      - state: aborted
+        next: null

@@ -1,0 +1,14 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: family_cascade_bridge
+  %% Cascade-bridge analytical family.
+
+  state "Evaluating" as evaluating
+
+  [*] --> evaluating
+
+  evaluating --> [*] : entry_failed\n[cascade_entry_guards]
+  evaluating --> [*] : scope_missing_signal\n[scope_missing]
+  evaluating --> [*] : semantic_ambiguity\n[bridge_perimeter_ambiguous]
+  evaluating --> [*] : ready\n[cascade_ready_guards]

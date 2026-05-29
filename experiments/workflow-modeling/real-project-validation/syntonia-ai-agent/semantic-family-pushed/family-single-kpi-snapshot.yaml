@@ -1,0 +1,56 @@
+workflow: family_single_kpi_snapshot
+version: 1
+description: |
+  Single KPI snapshot analytical family. Triggered as fallback for
+  snapshot intents. Precedence rule: single_kpi_snapshot_fallback
+  (position 7, terminal fallback in the precedence sequence).
+
+context_schema:
+  input:
+    - { name: signals,        type: object }
+    - { name: scope_context,  type: object }
+    - { name: role_family,    type: string }
+  output_by_terminal:
+    matched:
+      - { name: family_id,             type: string }
+      - { name: analysis_type,         type: string }
+      - { name: comparison_mode,       type: string }
+      - { name: expected_answer_shape, type: string }
+    not_matched:
+      - { name: family_id,             type: string }
+    needs_scope_clarification:
+      - { name: family_id,             type: string }
+    needs_semantic_clarification:
+      - { name: family_id,             type: string }
+      - { name: ambiguity_kind,        type: string }
+
+initial_state: evaluating
+
+states:
+  - { name: evaluating,                   description: "Evaluating snapshot entry, scope, and ambiguity guards.", is_final: false }
+  - { name: matched,                      description: "Single-KPI-snapshot family resolved (fallback default).", is_final: true }
+  - { name: not_matched,                  description: "Entry guards not satisfied even as fallback.", is_final: true }
+  - { name: needs_scope_clarification,    description: "scope_missing fired.", is_final: true }
+  - { name: needs_semantic_clarification, description: "kpi_or_scenario_ambiguous fired.", is_final: true }
+
+events:
+  - { name: entry_failed,         description: "Even the fallback entry guard (analysis_snapshot) is not satisfied." }
+  - { name: scope_missing_signal, description: "scope_missing guard true." }
+  - { name: semantic_ambiguity,   description: "kpi_or_scenario_ambiguous fired." }
+  - { name: ready,                description: "Fallback ready guards true; family resolved." }
+
+guards:
+  - { name: snapshot_entry_guards,      description: "analysis_snapshot (single, broad)." }
+  - { name: scope_missing,              description: "Scope cannot be resolved." }
+  - { name: kpi_or_scenario_ambiguous,  description: "KPI or scenario not uniquely identifiable." }
+  - { name: snapshot_ready_guards,      description: "analysis_snapshot AND scope_resolved." }
+
+transitions:
+  - { from: evaluating, to: not_matched,                  event: entry_failed,         guard: snapshot_entry_guards }
+  - { from: evaluating, to: needs_scope_clarification,    event: scope_missing_signal, guard: scope_missing }
+  - { from: evaluating, to: needs_semantic_clarification, event: semantic_ambiguity,   guard: kpi_or_scenario_ambiguous }
+  - { from: evaluating, to: matched,                      event: ready,                guard: snapshot_ready_guards }
+
+metadata:
+  source: pipeline-contract/family-state-rules.ts (single_kpi_snapshot record)
+  precedence_position: 7

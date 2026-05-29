@@ -1,0 +1,14 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: family_yoy_driver_diagnosis
+  %% Year-over-year driver diagnosis analytical family.
+
+  state "Evaluating" as evaluating
+
+  [*] --> evaluating
+
+  evaluating --> [*] : entry_failed\n[yoy_entry_guards]
+  evaluating --> [*] : scope_missing_signal\n[scope_missing]
+  evaluating --> [*] : semantic_ambiguity\n[yoy_driver_ambiguous]
+  evaluating --> [*] : ready\n[yoy_ready_guards]

@@ -1,0 +1,17 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: payment_flow
+  %% Payment lifecycle.
+
+  state "Pending" as pending
+  state "Authorizing" as authorizing
+  state "Authorized" as authorized
+
+  [*] --> pending
+
+  pending --> authorizing : start_authorization
+  authorizing --> authorized : authorization_succeeded
+  authorizing --> [*] : authorization_failed
+  authorized --> [*] : capture
+  authorized --> [*] : capture_failed

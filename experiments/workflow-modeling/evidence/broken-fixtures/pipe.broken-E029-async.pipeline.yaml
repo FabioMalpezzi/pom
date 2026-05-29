@@ -1,0 +1,14 @@
+# Expected to trigger: E029 (async mode declared, which is out of scope).
+
+pipeline: broken_e029
+version: 1
+description: Declares mode async on a member; the schema forbids it.
+
+sequence:
+  - workflow: ../../examples/pipeline-toy/stage-a.yaml
+    mode: async                          # forbidden
+    completes_on:
+      - state: succeeded
+        next: null
+      - state: aborted
+        next: null

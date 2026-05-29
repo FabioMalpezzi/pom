@@ -1,0 +1,282 @@
+# Example workflow: ticket lifecycle
+#
+# Second compiled example of the workflow-modeling experiment. Stresses the
+# YAML schema on properties that spec-evolution did not cover:
+#
+#   - reopen (a terminal state that admits a reverse transition);
+#   - a pause-like state (waiting_customer) modeled as a primary state, not
+#     excluded as in spec-evolution — useful for direct comparison;
+#   - guards on the triage step (has_reproduction_steps);
+#   - distinction between support-side resolution and reporter-side
+#     verification;
+#   - multiple terminal flavors (closed, duplicate, wont_fix) reached from
+#     different points of the model.
+#
+# By design, this example introduces a known validator concern: closed is
+# declared is_final: true and has an outgoing reopen transition. This is
+# expected to produce a Warning of type "Final state has outgoing
+# transitions". The experiment uses this case to evaluate whether the
+# schema should grow a re_entry_allowed attribute on the state to declare
+# the exception explicitly. See open_points below.
+
+workflow: ticket_lifecycle
+version: 1
+description: |
+  Lifecycle of a support or bug ticket in an application that uses POM.
+  A ticket starts as new, gets triaged, may be put in progress and worked
+  on, may be paused waiting for customer input, gets resolved by the
+  support team, is then verified by the reporter, and finally closed.
+  Tickets can be closed as duplicates or as wont_fix from earlier stages,
+  and a closed ticket can be reopened.
+
+initial_state: new
+
+states:
+  - name: new
+    description: |
+      Ticket has just been created. No triage has happened yet. Content,
+      reproduction steps, and severity may still be incomplete.
+    is_final: false
+
+  - name: triaged
+    description: |
+      Triage has confirmed the ticket is actionable: reproducible (when
+      applicable), within scope, and prioritized. Not yet assigned to
+      work.
+    is_final: false
+
+  - name: in_progress
+    description: |
+      The ticket is actively being worked on by an assignee.
+    is_final: false
+
+  - name: waiting_customer
+    description: |
+      Work is paused waiting for the reporter or customer to provide
+      additional information, decisions, or access. The ticket remains
+      open and the assignee is the same.
+    is_final: false
+
+  - name: resolved
+    description: |
+      The support team declares the ticket fixed. Awaiting verification
+      by the reporter. This is NOT a closed state: a rejected fix sends
+      the ticket back to in_progress.
+    is_final: false
+
+  - name: verified
+    description: |
+      The reporter has confirmed the fix works. Ready to be closed
+      administratively.
+    is_final: false
+
+  - name: closed
+    description: |
+      The ticket is administratively closed. By policy, closed tickets
+      can be reopened if the issue recurs. This state is terminal in
+      the lifecycle sense but admits a documented reverse transition,
+      declared explicitly via re_entry_allowed.
+    is_final: true
+    re_entry_allowed: true
+
+  - name: duplicate
+    description: |
+      The ticket is closed as a duplicate of another ticket. Terminal.
+    is_final: true
+
+  - name: wont_fix
+    description: |
+      The ticket is closed without resolution by an explicit policy
+      decision (out of scope, by design, deferred indefinitely). Terminal.
+    is_final: true
+
+events:
+  - name: triage
+    description: |
+      Triage decision: the ticket is actionable and may be worked on.
+
+  - name: assign
+    description: |
+      An assignee picks up the ticket and starts work.
+
+  - name: request_info
+    description: |
+      The assignee blocks waiting for customer or reporter input.
+
+  - name: info_received
+    description: |
+      The requested information arrived; the assignee resumes work.
+
+  - name: resolve
+    description: |
+      The assignee declares the ticket fixed and hands it to the reporter
+      for verification.
+
+  - name: verify
+    description: |
+      The reporter confirms the fix.
+
+  - name: reject_fix
+    description: |
+      The reporter says the fix does not work; the ticket returns to
+      in_progress.
+
+  - name: close
+    description: |
+      The ticket is administratively closed after verification or after
+      a duplicate / wont_fix decision.
+
+  - name: reopen
+    description: |
+      A closed ticket is reopened because the issue recurred or new
+      evidence emerged.
+
+  - name: mark_duplicate
+    description: |
+      The ticket is identified as a duplicate of another and closed
+      as such.
+
+  - name: mark_wont_fix
+    description: |
+      The ticket is closed without implementation by an explicit
+      policy decision.
+
+guards:
+  - name: has_reproduction_steps
+    description: |
+      The ticket has enough information to be reproduced (or, for
+      non-defect tickets, enough context to be actioned). Required to
+      pass triage.
+
+transitions:
+  - from: new
+    to: triaged
+    event: triage
+    guard: has_reproduction_steps
+
+  - from: new
+    to: duplicate
+    event: mark_duplicate
+
+  - from: new
+    to: wont_fix
+    event: mark_wont_fix
+
+  - from: triaged
+    to: in_progress
+    event: assign
+
+  - from: triaged
+    to: duplicate
+    event: mark_duplicate
+
+  - from: triaged
+    to: wont_fix
+    event: mark_wont_fix
+
+  - from: in_progress
+    to: waiting_customer
+    event: request_info
+
+  - from: in_progress
+    to: resolved
+    event: resolve
+
+  - from: in_progress
+    to: duplicate
+    event: mark_duplicate
+
+  - from: in_progress
+    to: wont_fix
+    event: mark_wont_fix
+
+  - from: waiting_customer
+    to: in_progress
+    event: info_received
+
+  - from: resolved
+    to: verified
+    event: verify
+
+  - from: resolved
+    to: in_progress
+    event: reject_fix
+
+  - from: verified
+    to: closed
+    event: close
+
+  - from: closed
+    to: in_progress
+    event: reopen
+    description: |
+      Reopen sends the ticket back to in_progress, not to triaged,
+      because triage has already happened and the assignee is typically
+      kept. The validator is expected to warn about a terminal state
+      with an outgoing transition; see open_points.
+
+invariants:
+  - description: |
+      A ticket cannot be marked duplicate or wont_fix once it has reached
+      resolved or verified. Those terminal flavors apply to the early
+      stages of the lifecycle. After resolution, the path is verify +
+      close, with reopen as the only re-entry.
+
+  - description: |
+      verified can only be reached from resolved. The reporter cannot
+      verify a ticket that has not been declared resolved by the
+      assignee.
+
+  - description: |
+      waiting_customer never bypasses verification: from waiting_customer
+      the only way to terminal states is via in_progress -> resolved ->
+      verified -> closed. If the customer never responds, an external
+      policy may force mark_wont_fix from in_progress, not directly
+      from waiting_customer.
+
+  - description: |
+      A reopened ticket reuses the same identifier; it does not become
+      a new ticket. The reopen transition is the schema-level
+      representation of that policy.
+
+metadata:
+  owner: POM maintainer
+  tags:
+    - example
+    - dogfooding
+    - ticket-lifecycle
+
+  open_points:
+    - |
+      Pause state modeling: waiting_customer is modeled as a primary
+      state here, while spec-evolution excluded Deferred/Blocked/Waiting.
+      The two examples make the difference explicit. Open question:
+      should the schema let a state declare itself a pause variant
+      of another state, to keep the lifecycle main path readable?
+
+    - |
+      Timer-based transition: a real ticket system often closes a
+      ticket automatically after N days in waiting_customer. The schema
+      does not support timer / temporal transitions in v1 (declared out
+      of scope). If usage shows this is needed, a future schema may add
+      a time_trigger field on transitions; v1 keeps it out.
+
+    - |
+      Reopen target: chosen to go back to in_progress, not to triaged.
+      Alternative would be reopen -> triaged when the previous assignee
+      is no longer available. Could be a guard rather than a separate
+      transition.
+
+    - |
+      mark_duplicate from new is allowed even without
+      has_reproduction_steps. This is intentional: dedup can happen
+      before triage. But the schema does not currently express
+      "guard does not apply" — it just omits the guard. If models grow
+      complex, a "no_guard_required: true" marker may help readability.
+
+  closed_points:
+    - |
+      "closed admits reopen out-transition" — resolved via the schema
+      attribute re_entry_allowed: true. The validator no longer flags
+      W003 on closed. Same decision applied to spec-evolution's
+      "complete" state.

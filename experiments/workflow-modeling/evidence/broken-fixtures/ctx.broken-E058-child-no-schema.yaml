@@ -1,0 +1,31 @@
+# Expected to trigger: E058 (parent declares input/assign but child has no context_schema).
+
+workflow: broken_e058
+version: 1
+description: Parent tries to pass input/assign but the child workflow does not declare a context_schema.
+
+initial_state: drafting
+states:
+  - name: drafting
+    description: starting
+    is_final: false
+  - name: accepted
+    description: terminal
+    is_final: true
+
+events:
+  - name: submit
+    description: submission
+
+transitions:
+  - from: drafting
+    event: submit
+    invoke:
+      workflow: ../../examples/invoke-event-toy/event-invoke-child.yaml    # no context_schema
+      input:
+        foo: bar.qux
+      on_completion:
+        - terminal_state: validated
+          target: accepted
+          assign:
+            x: child.x

@@ -1,0 +1,432 @@
+{
+  "id": "analyzer_fsm",
+  "initial": "signal_extraction",
+  "states": {
+    "signal_extraction": {
+      "description": "Builds typed signals from the question.",
+      "on": {
+        "signals_extracted": "ml_family_classification"
+      }
+    },
+    "ml_family_classification": {
+      "description": "Applies the ML family-prior hint.",
+      "on": {
+        "ml_hint_applied": "deterministic_reply_check"
+      }
+    },
+    "deterministic_reply_check": {
+      "description": "Short-circuit: known deterministic reply?",
+      "on": {
+        "deterministic_check_done": "contextual_followup_check",
+        "deterministic_reply_found": "deterministic_reply_resolved"
+      }
+    },
+    "contextual_followup_check": {
+      "description": "Short-circuit: contextual follow-up?",
+      "on": {
+        "followup_check_done": "pending_scope_resolution"
+      }
+    },
+    "pending_scope_resolution": {
+      "description": "Short-circuit: resolvable without the LLM?",
+      "on": {
+        "pending_scope_proceeded": "llm_call",
+        "pending_scope_resolved_directly": "pending_scope_resolved"
+      }
+    },
+    "llm_call": {
+      "description": "Boundary call to the analyzer LLM.",
+      "on": {
+        "llm_responded": "parse_and_validate",
+        "llm_call_failed": "llm_failure"
+      }
+    },
+    "parse_and_validate": {
+      "description": "Parses the LLM JSON and runs schema checks.",
+      "on": {
+        "parse_ok": "signal_merge",
+        "parse_retry": {
+          "target": "llm_call",
+          "description": "Parse or schema error: the step returns { kind: \"next\", nextStep:\n\"llm_call\" }. POM accepts cyclic transitions; the bounded budget\n(MAX_LLM_ATTEMPTS = 3) is enforced by target code, not the schema.\nSee open_points."
+        },
+        "parse_attempts_exhausted": "parse_exhausted",
+        "schema_attempts_exhausted": "schema_exhausted"
+      }
+    },
+    "signal_merge": {
+      "description": "Merges LLM draft with question signals.",
+      "on": {
+        "signals_merged": "scope_resolution"
+      }
+    },
+    "scope_resolution": {
+      "description": "Applies profile, policy, output spec.",
+      "on": {
+        "scope_applied": "deterministic_repairs"
+      }
+    },
+    "deterministic_repairs": {
+      "description": "Deterministic repairs on the resolved output.",
+      "on": {
+        "repairs_applied": "entity_grounding"
+      }
+    },
+    "entity_grounding": {
+      "description": "Grounds entities against the domain.",
+      "on": {
+        "entities_grounded": "family_enforcement"
+      }
+    },
+    "family_enforcement": {
+      "description": "Synchronously invokes the clean-family-repair sub-FSM (clean-family-\nrepair-fsm.yaml). The sub-FSM iterates up to MAX_FAMILY_REPAIR_\nATTEMPTS = 3 times to resolve a coherent family and produce a\nrepaired AnalyzerOutput. The five sub-FSM terminals all map to the\nsingle parent event family_enforced — the analyzer's own state\ngraph does not branch on the repair outcome here; the outcome is\nconsumed downstream (by coherence_validation and by the operational\norchestrator).",
+      "invoke": {
+        "id": "invoke_family_enforcement",
+        "src": "clean_family_repair_fsm",
+        "input": {
+          "question": "question",
+          "initial_output": "parsed_output",
+          "semantic_hints": "semantic_hints",
+          "question_signals": "question_signals",
+          "ctx": "ctx"
+        },
+        "onDone": [
+          {
+            "guard": "_terminal_eq_family_ready",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_enforced"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_scope_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_enforced"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_needs_semantic_clarification",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_enforced"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_blocked",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_enforced"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_exhausted",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "family_enforced"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "on": {
+        "family_enforced": "coherence_validation"
+      }
+    },
+    "coherence_validation": {
+      "description": "Final coherence check against the rules.",
+      "on": {
+        "coherence_ok": "completed",
+        "coherence_retry": {
+          "target": "llm_call",
+          "description": "Coherence error: same retry mechanism, different cause."
+        },
+        "coherence_attempts_exhausted": "coherence_exhausted"
+      }
+    },
+    "completed": {
+      "description": "Successful analyzer turn.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "deterministic_reply_resolved": {
+      "description": "Returned a deterministic reply, LLM skipped.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "pending_scope_resolved": {
+      "description": "Resolved the pending scope without the LLM.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "llm_failure": {
+      "description": "LLM call failed (network/timeout).",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "parse_exhausted": {
+      "description": "Parse retries exhausted MAX_LLM_ATTEMPTS.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "schema_exhausted": {
+      "description": "Schema-error retries exhausted.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "coherence_exhausted": {
+      "description": "Coherence retries exhausted.",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    }
+  },
+  "meta": {
+    "pom": {
+      "version": 1,
+      "description": "Syntonia ai-agent analyzer. 13 internal steps that transform a user\nquestion into an AnalyzerOutput plus a routing signal. Two short-\ncircuit paths (deterministic reply, pending scope) skip the LLM. The\nLLM call has bounded retry on parse / coherence errors.",
+      "events": [
+        {
+          "name": "signals_extracted",
+          "description": "Done with signal extraction."
+        },
+        {
+          "name": "ml_hint_applied",
+          "description": "ML classifier hint merged."
+        },
+        {
+          "name": "deterministic_check_done",
+          "description": "No deterministic reply, proceed."
+        },
+        {
+          "name": "followup_check_done",
+          "description": "No contextual followup, proceed."
+        },
+        {
+          "name": "pending_scope_proceeded",
+          "description": "Pending scope cannot be resolved here, call LLM."
+        },
+        {
+          "name": "llm_responded",
+          "description": "LLM returned a raw text."
+        },
+        {
+          "name": "parse_ok",
+          "description": "Parse and schema validation succeeded."
+        },
+        {
+          "name": "signals_merged",
+          "description": "Draft merged with signals."
+        },
+        {
+          "name": "scope_applied",
+          "description": "Scope resolution applied."
+        },
+        {
+          "name": "repairs_applied",
+          "description": "Deterministic repairs applied."
+        },
+        {
+          "name": "entities_grounded",
+          "description": "Entities grounded against domain."
+        },
+        {
+          "name": "family_enforced",
+          "description": "Family-state rules applied to output."
+        },
+        {
+          "name": "coherence_ok",
+          "description": "Final coherence check passed."
+        },
+        {
+          "name": "deterministic_reply_found",
+          "description": "Step returns kind:stop with a deterministic reply."
+        },
+        {
+          "name": "pending_scope_resolved_directly",
+          "description": "Step returns kind:stop without LLM."
+        },
+        {
+          "name": "parse_retry",
+          "description": "Parse or schema error, retry the LLM call."
+        },
+        {
+          "name": "coherence_retry",
+          "description": "Coherence error, retry the LLM call."
+        },
+        {
+          "name": "llm_call_failed",
+          "description": "LLM call failed irrecoverably (network/timeout)."
+        },
+        {
+          "name": "parse_attempts_exhausted",
+          "description": "MAX_LLM_ATTEMPTS reached on parse failure."
+        },
+        {
+          "name": "schema_attempts_exhausted",
+          "description": "MAX_LLM_ATTEMPTS reached on schema failure."
+        },
+        {
+          "name": "coherence_attempts_exhausted",
+          "description": "MAX_LLM_ATTEMPTS reached on coherence failure."
+        }
+      ],
+      "invariants": [
+        "Each retry transition (parse_retry, coherence_retry) is bounded by\nMAX_LLM_ATTEMPTS = 3 in target code. The POM model declares the\ncycle structurally but does not enforce the bound.",
+        "The two short-circuit exits (deterministic_reply_resolved,\npending_scope_resolved) happen BEFORE the LLM call. They are the\nonly legitimate ways to reach a terminal without llm_call having\never fired.",
+        "coherence_validation never proceeds linearly without success: the\nANALYZER_TRANSITION_RULES declares no nextStep for it. In practice\nthe step returns either kind:stop (coherence_ok -> completed) or\nkind:next with nextStep llm_call (coherence_retry)."
+      ],
+      "context_schema": {
+        "input": [
+          {
+            "name": "question",
+            "type": "string"
+          },
+          {
+            "name": "tenant_id",
+            "type": "string"
+          },
+          {
+            "name": "role_family",
+            "type": "string"
+          }
+        ],
+        "output_by_terminal": {
+          "completed": [
+            {
+              "name": "analyzer_output",
+              "type": "object",
+              "description": "Validated AnalyzerOutput payload."
+            },
+            {
+              "name": "routing",
+              "type": "string",
+              "description": "full_pipeline | direct_output | stop."
+            }
+          ],
+          "deterministic_reply_resolved": [
+            {
+              "name": "analyzer_output",
+              "type": "object"
+            },
+            {
+              "name": "routing",
+              "type": "string",
+              "description": "Usually direct_output or stop."
+            }
+          ],
+          "pending_scope_resolved": [
+            {
+              "name": "analyzer_output",
+              "type": "object"
+            },
+            {
+              "name": "routing",
+              "type": "string"
+            }
+          ],
+          "llm_failure": [
+            {
+              "name": "fallback_reason",
+              "type": "string"
+            },
+            {
+              "name": "fallback_suggested_question",
+              "type": "string"
+            }
+          ],
+          "parse_exhausted": [
+            {
+              "name": "fallback_reason",
+              "type": "string"
+            },
+            {
+              "name": "fallback_suggested_question",
+              "type": "string"
+            }
+          ],
+          "schema_exhausted": [
+            {
+              "name": "fallback_reason",
+              "type": "string"
+            },
+            {
+              "name": "fallback_suggested_question",
+              "type": "string"
+            }
+          ],
+          "coherence_exhausted": [
+            {
+              "name": "fallback_reason",
+              "type": "string"
+            },
+            {
+              "name": "fallback_suggested_question",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "open_points": [
+        "Bounded loop with retry counter. MAX_LLM_ATTEMPTS = 3 in\nanalyzer-fsm.ts:354. The POM model expresses the cycle structure\n(parse_retry, coherence_retry transitions) but cannot express the\nbound. The target code uses a loop guard with maxVisitsPerStep = 3\nand maxTransitions = 36. POM schema growth candidate: a loop_guard\nblock on a state with named exhaustion exits per cycle.\n",
+        "The retry budget is shared between parse_retry and coherence_retry\n(both consume MAX_LLM_ATTEMPTS). Modeled here as two distinct\nevents but the same exhaustion threshold; the POM YAML doesn't\nexpress the shared budget.\n",
+        "The step matrix in the source carries patches/state mutation\n(AnalyzerState grown additively across steps via patch + merge).\nThe POM context_schema captures the boundary (input + per-terminal\noutput) but not the intermediate state growth, which is intended\nunder the \"no shared global state\" invariant of the composition\nmodel. The intermediate AnalyzerState lives in target code.\n"
+      ]
+    }
+  }
+}

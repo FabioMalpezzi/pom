@@ -1,0 +1,45 @@
+workflow: order_flow_with_context
+version: 1
+description: |
+  Minimal parent workflow that demonstrates context injection: the
+  drafting state submits a payment validation via a transition invoke,
+  passing amount and method to the child and integrating the child's
+  output into the parent's own context via assign.
+
+initial_state: drafting
+
+states:
+  - name: drafting
+    description: order is being prepared
+    is_final: false
+  - name: accepted
+    description: payment validated, order confirmed
+    is_final: true
+  - name: rejected
+    description: payment refused, order canceled
+    is_final: true
+
+events:
+  - name: submit_payment
+    description: |
+      Parent submits the payment for validation; the child runs
+      synchronously and decides the parent's next state.
+
+transitions:
+  - from: drafting
+    event: submit_payment
+    invoke:
+      workflow: payment-validation.yaml
+      input:
+        amount: order.total_cents             # parent path -> child input
+        method: order.payment_method
+      on_completion:
+        - terminal_state: validated
+          target: accepted
+          assign:
+            validation_token: child.validation_token
+            timestamp: child.timestamp
+        - terminal_state: refused
+          target: rejected
+          assign:
+            refusal_reason: child.refusal_reason

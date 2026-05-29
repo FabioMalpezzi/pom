@@ -1,0 +1,37 @@
+# Expected to trigger: E031 (state invoke references a non-existing workflow file).
+
+workflow: broken_e031
+version: 1
+description: |
+  invoke references a child file that does not exist on disk.
+
+initial_state: idle
+states:
+  - name: idle
+    description: starting point
+    is_final: false
+  - name: validating
+    description: invokes a non-existing child
+    is_final: false
+    invoke:
+      workflow: ../../examples/invoke-state-toy/does-not-exist.yaml
+      on_completion:
+        - terminal_state: validated
+          next_event: passed
+  - name: done
+    description: terminal
+    is_final: true
+
+events:
+  - name: start
+    description: starts the parent
+  - name: passed
+    description: child returned success
+
+transitions:
+  - from: idle
+    to: validating
+    event: start
+  - from: validating
+    to: done
+    event: passed

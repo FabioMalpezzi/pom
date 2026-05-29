@@ -1,0 +1,11 @@
+test_malformed_rejected (test_suspend.TestRestoreInvariants.test_malformed_rejected) ... ok
+test_unknown_state_rejected (test_suspend.TestRestoreInvariants.test_unknown_state_rejected) ... ok
+test_wrong_version_rejected (test_suspend.TestRestoreInvariants.test_wrong_version_rejected) ... ok
+test_wrong_workflow_name_rejected (test_suspend.TestRestoreInvariants.test_wrong_workflow_name_rejected) ... ok
+test_round_trip_is_identity (test_suspend.TestSerializeRoundTrip.test_round_trip_is_identity) ... ok
+test_three_step_suspend_restore (test_suspend.TestSuspendRestoreFlow.test_three_step_suspend_restore) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.001s
+
+OK

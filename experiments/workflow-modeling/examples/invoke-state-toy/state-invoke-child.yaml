@@ -1,0 +1,32 @@
+workflow: state_invoke_child
+version: 1
+description: |
+  Minimal child workflow used to demonstrate synchronous invoke-from-state.
+  Two terminal states (validated, refused). The parent maps each terminal
+  to one of its own events via the invoke.on_completion mapping.
+
+initial_state: start
+states:
+  - name: start
+    description: starting point
+    is_final: false
+  - name: validated
+    description: child completed successfully
+    is_final: true
+  - name: refused
+    description: child completed with refusal
+    is_final: true
+
+events:
+  - name: finish_ok
+    description: signals success
+  - name: finish_ko
+    description: signals failure
+
+transitions:
+  - from: start
+    to: validated
+    event: finish_ok
+  - from: start
+    to: refused
+    event: finish_ko

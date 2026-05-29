@@ -1,0 +1,30 @@
+# Expected to trigger: W001 (unreachable state).
+# Model has an island state "lost" that no transition reaches.
+
+workflow: broken_w001
+version: 1
+description: |
+  Fixture: state "lost" is declared but no transition reaches it from
+  initial_state. The validator must report W001 on "lost" and on "end_via_lost"
+  if reachable only through it.
+initial_state: a
+states:
+  - name: a
+    description: start
+    is_final: false
+  - name: b
+    description: end
+    is_final: true
+  - name: lost
+    description: |
+      orphan state, no transition reaches it. Declared as is_final to keep
+      the fixture focused on W001; otherwise W002 (dead-end) would also fire
+      legitimately.
+    is_final: true
+events:
+  - name: go
+    description: only event
+transitions:
+  - from: a
+    to: b
+    event: go

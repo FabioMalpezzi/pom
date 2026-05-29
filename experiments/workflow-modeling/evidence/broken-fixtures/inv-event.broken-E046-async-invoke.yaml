@@ -1,0 +1,29 @@
+# Expected to trigger: E046 (transition invoke with async mode).
+
+workflow: broken_e046
+version: 1
+description: |
+  Transition invoke declares mode async. Forbidden by design.
+
+initial_state: drafting
+states:
+  - name: drafting
+    description: starting point
+    is_final: false
+  - name: accepted
+    description: terminal
+    is_final: true
+
+events:
+  - name: submit_for_review
+    description: submission
+
+transitions:
+  - from: drafting
+    event: submit_for_review
+    invoke:
+      workflow: ../../examples/invoke-event-toy/event-invoke-child.yaml
+      mode: async                              # forbidden
+      on_completion:
+        - terminal_state: validated
+          target: accepted

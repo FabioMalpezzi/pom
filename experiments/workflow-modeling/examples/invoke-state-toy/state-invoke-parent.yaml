@@ -1,0 +1,58 @@
+workflow: state_invoke_parent
+version: 1
+description: |
+  Minimal parent workflow used to demonstrate synchronous invoke-from-state.
+  When the parent enters the "validating" state, a child workflow is
+  invoked. The child runs synchronously; on terminal it dispatches the
+  declared next_event back to the parent, which applies its own
+  transition.
+
+initial_state: idle
+
+states:
+  - name: idle
+    description: parent is waiting for the start signal
+    is_final: false
+
+  - name: validating
+    description: |
+      parent has handed off to the child workflow and is blocked until
+      the child terminates. The child's terminal state determines which
+      parent event fires next.
+    is_final: false
+    invoke:
+      workflow: state-invoke-child.yaml
+      on_completion:
+        - terminal_state: validated
+          next_event: validation_passed
+        - terminal_state: refused
+          next_event: validation_failed
+
+  - name: done
+    description: parent reached its successful terminal
+    is_final: true
+
+  - name: rejected
+    description: parent reached its failure terminal
+    is_final: true
+
+events:
+  - name: start
+    description: external trigger that moves the parent out of idle
+  - name: validation_passed
+    description: child returned with success
+  - name: validation_failed
+    description: child returned with refusal
+
+transitions:
+  - from: idle
+    to: validating
+    event: start
+
+  - from: validating
+    to: done
+    event: validation_passed
+
+  - from: validating
+    to: rejected
+    event: validation_failed

@@ -1,0 +1,18 @@
+stateDiagram-v2
+  direction LR
+
+  %% Pipeline: toy_pipeline
+  %% Three minimal stages chained linearly.
+
+  state "Stage A" as stage_a
+  state "Stage B" as stage_b
+  state "Stage C" as stage_c
+
+  [*] --> stage_a
+
+  stage_a --> stage_b : succeeded
+  stage_a --> [*] : aborted
+  stage_b --> stage_c : succeeded
+  stage_b --> [*] : aborted
+  stage_c --> [*] : succeeded
+  stage_c --> [*] : failed

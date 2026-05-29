@@ -1,0 +1,61 @@
+workflow: underwriting
+version: 1
+description: |
+  Synchronous child workflow that performs the underwriting decision.
+  Receives the requested amount plus the credit score, the credit
+  limit, and a flag confirming documentation completeness. Returns
+  either approved (with rate + terms) or rejected (with reason).
+
+context_schema:
+  input:
+    - { name: applicant_id,           type: string }
+    - { name: requested_amount,       type: number }
+    - { name: score,                  type: number }
+    - { name: max_credit_limit,       type: number }
+    - { name: documentation_complete, type: boolean }
+  output_by_terminal:
+    approved:
+      - { name: offer_id, type: string }
+      - { name: rate,     type: number, description: "APR." }
+      - { name: terms,    type: string, description: "Free text or product tag." }
+    rejected:
+      - { name: refusal_reason, type: string }
+
+initial_state: ready
+
+states:
+  - name: ready
+    description: has full underwriting input
+    is_final: false
+  - name: assessing
+    description: underwriter reviewing
+    is_final: false
+  - name: approved
+    description: underwriting succeeded
+    is_final: true
+  - name: rejected
+    description: underwriting refused
+    is_final: true
+
+events:
+  - name: start
+    description: trigger underwriting
+  - name: approve
+    description: underwriter approves
+  - name: reject
+    description: underwriter rejects
+
+transitions:
+  - from: ready
+    to: assessing
+    event: start
+  - from: assessing
+    to: approved
+    event: approve
+  - from: assessing
+    to: rejected
+    event: reject
+
+metadata:
+  owner: lending team
+  tags: [example, real, child-workflow]

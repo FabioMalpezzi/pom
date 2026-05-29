@@ -1,0 +1,17 @@
+# Expected to trigger: E023 (member workflow file does not exist).
+
+pipeline: broken_e023
+version: 1
+description: References a workflow file that is not on disk.
+
+sequence:
+  - workflow: ../../examples/pipeline-toy/stage-a.yaml
+    completes_on:
+      - state: succeeded
+        next: ../../examples/pipeline-toy/does-not-exist.yaml
+      - state: aborted
+        next: null
+  - workflow: ../../examples/pipeline-toy/does-not-exist.yaml
+    completes_on:
+      - state: succeeded
+        next: null

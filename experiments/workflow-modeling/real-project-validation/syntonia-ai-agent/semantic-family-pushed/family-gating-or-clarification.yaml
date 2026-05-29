@@ -1,0 +1,56 @@
+workflow: family_gating_or_clarification
+version: 1
+description: |
+  Terminator family from FAMILY_STATE_RULES (controlMode: terminator).
+  Highest precedence: evaluated first. If any of its block guards or
+  semantic-detail-missing guards fire, the whole semantic turn ends in
+  blocked without proceeding to analytical families. Source:
+  pipeline-contract/family-state-rules.ts.
+
+context_schema:
+  input:
+    - { name: signals,        type: object }
+    - { name: scope_context,  type: object }
+    - { name: role_family,    type: string }
+  output_by_terminal:
+    matched:
+      - { name: family_id,         type: string }
+      - { name: terminator_reason, type: string }
+    not_matched:
+      - { name: family_id,         type: string }
+    blocked:
+      - { name: family_id,         type: string }
+      - { name: block_reason,      type: string }
+
+initial_state: evaluating
+
+states:
+  - { name: evaluating, description: "Evaluating block and gating guards.", is_final: false }
+  - { name: matched,    description: "Gating fired; the turn is terminated as a clarification or block.", is_final: true }
+  - { name: not_matched, description: "No gating; analytical families may try.", is_final: true }
+  - { name: blocked,    description: "Hard block guard matched (out_of_scope_*, policy_*).", is_final: true }
+
+events:
+  - { name: gating_matched,   description: "semantic_detail_missing or multi_intent_overload fired." }
+  - { name: block_matched,    description: "A hard block guard fired." }
+  - { name: not_a_match,      description: "No terminator guards fired." }
+
+guards:
+  - name: any_terminator_guard
+    description: |
+      semantic_detail_missing, multi_intent_overload (terminator
+      clarificationGuards in the source).
+  - name: any_hard_block_guard
+    description: |
+      out_of_scope_data, out_of_scope_architecture,
+      policy_scope_violation, unsupported_output_shape,
+      unsupported_time_grain, external_benchmark_without_proxy.
+
+transitions:
+  - { from: evaluating, to: blocked,     event: block_matched, guard: any_hard_block_guard }
+  - { from: evaluating, to: matched,     event: gating_matched, guard: any_terminator_guard }
+  - { from: evaluating, to: not_matched, event: not_a_match }
+
+metadata:
+  source: pipeline-contract/family-state-rules.ts (terminator family record)
+  precedence_position: 1

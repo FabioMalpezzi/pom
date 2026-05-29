@@ -1,0 +1,214 @@
+{
+  "id": "loan_application",
+  "initial": "submitted",
+  "states": {
+    "submitted": {
+      "description": "application received, not yet processed",
+      "on": {
+        "submit": "validating_credit"
+      }
+    },
+    "validating_credit": {
+      "description": "Parent is blocked in this state while the credit_check child\nruns synchronously. The child's terminal determines which\nnext_event fires.",
+      "invoke": {
+        "id": "invoke_validating_credit",
+        "src": "credit_check",
+        "input": {
+          "applicant_id": "applicant_id",
+          "requested_amount": "requested_amount"
+        },
+        "onDone": [
+          {
+            "guard": "_terminal_eq_approved",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "credit_approved"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "guard": "_terminal_eq_rejected",
+            "actions": [
+              {
+                "type": "raise",
+                "params": {
+                  "event": {
+                    "type": "credit_rejected"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "on": {
+        "credit_approved": "ready_for_underwriting",
+        "credit_rejected": "rejected_at_credit"
+      }
+    },
+    "ready_for_underwriting": {
+      "description": "credit check passed, waiting for underwriting submission",
+      "on": {
+        "submit_for_underwriting": {
+          "target": "__invoking_submit_for_underwriting_from_ready_for_underwriting"
+        }
+      }
+    },
+    "rejected_at_credit": {
+      "description": "terminal failure at credit check",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "rejected_at_underwriting": {
+      "description": "terminal failure at underwriting",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "approved": {
+      "description": "underwriting approved, offer ready for disbursement",
+      "on": {
+        "disburse": "disbursed"
+      }
+    },
+    "disbursed": {
+      "description": "funds disbursed, application closed successfully",
+      "type": "final",
+      "meta": {
+        "pom": {
+          "is_final": true
+        }
+      }
+    },
+    "__invoking_submit_for_underwriting_from_ready_for_underwriting": {
+      "description": "Synthetic intermediate state for event-invoke on underwriting.yaml",
+      "invoke": {
+        "id": "invoke___invoking_submit_for_underwriting_from_ready_for_underwriting",
+        "src": "underwriting",
+        "input": {
+          "applicant_id": "applicant_id",
+          "requested_amount": "requested_amount",
+          "score": "score",
+          "max_credit_limit": "max_credit_limit",
+          "documentation_complete": "documentation_complete"
+        },
+        "onDone": [
+          {
+            "guard": "_terminal_eq_approved",
+            "target": "approved",
+            "actions": {
+              "type": "assign",
+              "params": {
+                "offer_id": "child.offer_id",
+                "rate": "child.rate",
+                "terms": "child.terms"
+              }
+            }
+          },
+          {
+            "guard": "_terminal_eq_rejected",
+            "target": "rejected_at_underwriting",
+            "actions": {
+              "type": "assign",
+              "params": {
+                "underwriting_refusal_reason": "child.refusal_reason"
+              }
+            }
+          }
+        ]
+      },
+      "meta": {
+        "pom": {
+          "synthetic_event_invoke": true
+        }
+      }
+    }
+  },
+  "meta": {
+    "pom": {
+      "version": 1,
+      "description": "End-to-end loan application as a single parent workflow that uses\nBOTH composition primitives:\n- state invoke on \"validating_credit\" (synchronous credit check while\n  the parent is blocked in that state);\n- event invoke on \"submit_for_underwriting\" (the parent's transition\n  runs an underwriting child workflow that decides the next state).\n\nThis is the multi-primitive showcase: the same parent orchestrates a\nstate-driven sub-workflow and an event-driven sub-workflow, both\nsynchronously, both with structured input and output via context\ninjection (Result<Terminal, Output>).",
+      "events": [
+        {
+          "name": "submit",
+          "description": "applicant submits the application"
+        },
+        {
+          "name": "credit_approved",
+          "description": "dispatched by validating_credit invoke when credit passes"
+        },
+        {
+          "name": "credit_rejected",
+          "description": "dispatched by validating_credit invoke when credit fails"
+        },
+        {
+          "name": "submit_for_underwriting",
+          "description": "trigger that runs underwriting child synchronously"
+        },
+        {
+          "name": "disburse",
+          "description": "funds released after offer acceptance"
+        }
+      ],
+      "invariants": [
+        "A rejected_at_credit application cannot return to validating_credit:\nit must be resubmitted as a new application with a new id.",
+        "submit_for_underwriting is only legal from ready_for_underwriting.\nThe model enforces this structurally: the transition with the\ninvoke has from: ready_for_underwriting and no other source."
+      ],
+      "context_schema": {
+        "input": [
+          {
+            "name": "applicant_id",
+            "type": "string"
+          },
+          {
+            "name": "requested_amount",
+            "type": "number"
+          },
+          {
+            "name": "documentation_complete",
+            "type": "boolean"
+          }
+        ],
+        "output_by_terminal": {
+          "rejected_at_credit": [
+            {
+              "name": "credit_refusal_reason",
+              "type": "string"
+            }
+          ],
+          "rejected_at_underwriting": [
+            {
+              "name": "underwriting_refusal_reason",
+              "type": "string"
+            }
+          ],
+          "disbursed": [
+            {
+              "name": "offer_id",
+              "type": "string"
+            },
+            {
+              "name": "disbursement_id",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "open_points": [
+        "State invoke on validating_credit currently does not declare\nassign on the on_completion entries: the child output (score,\nmax_credit_limit) is captured by the target code into the\nparent's private context outside the YAML. A future schema\nrevision may allow assign also on state-invoke on_completion;\nfor now it is documental in the implementation guide.\n"
+      ]
+    }
+  }
+}

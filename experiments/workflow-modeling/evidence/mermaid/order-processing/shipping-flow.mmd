@@ -1,0 +1,16 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: shipping_flow
+  %% Shipping lifecycle.
+
+  state "Preparing" as preparing
+  state "Handed To Carrier" as handed_to_carrier
+  state "In Transit" as in_transit
+
+  [*] --> preparing
+
+  preparing --> handed_to_carrier : hand_off
+  handed_to_carrier --> in_transit : depart
+  in_transit --> [*] : deliver
+  in_transit --> [*] : declare_lost

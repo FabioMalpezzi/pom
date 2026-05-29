@@ -1,0 +1,136 @@
+# Workflow Template
+#
+# This is the draft schema for a POM workflow model.
+# It lives inside experiments/workflow-modeling/ and is not part of POM main yet.
+#
+# A workflow file declares:
+#   - identifying metadata
+#   - states (named, with description, optional is_final)
+#   - events (named, with description)
+#   - guards (named, with description; predicates that condition a transition)
+#   - transitions (from, to, event, optional guard)
+#   - invariants (textual; checked by humans and by the validator when possible)
+#
+# Conventions:
+#   - state, event, and guard names are snake_case;
+#   - exactly one initial_state, listed also under states;
+#   - descriptions are domain-level (what the state means, not how it is implemented);
+#   - guards are referenced by name from transitions; their semantics live in the description and in target code;
+#   - the file is the source of authority; Mermaid, validation report, scenarios, and code are derived.
+
+workflow: example_workflow      # snake_case unique name
+version: 1                       # integer, bumped on incompatible model changes
+description: |
+  Short paragraph describing the business process this workflow models.
+  Plain language; the reader should understand the domain after reading it.
+
+initial_state: draft             # must appear in states[]
+
+states:
+  - name: draft
+    description: |
+      Domain-level description of what it means to be in this state.
+    is_final: false
+  - name: in_progress
+    description: |
+      ...
+    is_final: false
+  - name: done
+    description: |
+      ...
+    is_final: true
+    # Optional: re_entry_allowed declares a terminal state that admits
+    # a documented exception out-transition (reopen, supersede, ...).
+    # When true, the validator suppresses W003 on this state.
+    # Default false. Has no effect on non-final states (open point).
+    re_entry_allowed: false
+
+  # Optional: invoke declares a synchronous child workflow that runs
+  # while the parent is in this state. When the child reaches a
+  # declared terminal state, the parent receives the corresponding
+  # next_event and its normal transitions take over.
+  #
+  # Invariants:
+  #   - child workflow file exists and validates as a POM workflow;
+  #   - on_completion[].terminal_state is is_final: true in the child;
+  #   - on_completion[].next_event is declared in the parent's events[];
+  #   - mode: async / parallel is rejected (E029-equivalent for invoke).
+  #
+  # Use case: orchestrator parent that calls one child synchronously per
+  # state entry (e.g., validating_payment -> payment_validation_flow).
+  - name: validating
+    description: |
+      Parent is awaiting the child workflow to terminate.
+    is_final: false
+    invoke:
+      workflow: workflows/validation-flow.yaml
+      on_completion:
+        - terminal_state: validated
+          next_event: validation_passed
+        - terminal_state: refused
+          next_event: validation_failed
+
+events:
+  - name: submit
+    description: |
+      What real-world action triggers this transition.
+  - name: complete
+    description: |
+      ...
+
+guards:
+  - name: has_required_fields
+    description: |
+      Predicate condition for the transition to fire.
+      The validator only checks that the name resolves; the actual predicate lives in target code.
+
+transitions:
+  - from: draft
+    to: in_progress
+    event: submit
+    guard: has_required_fields   # optional
+    description: |
+      Optional prose explaining why this transition exists and any nuance not obvious from from/to/event.
+  - from: in_progress
+    to: done
+    event: complete
+
+  # Optional: transition-level invoke declares a synchronous child
+  # workflow triggered when the event fires from the source state.
+  # While the child runs, the parent is blocked in "from". When the
+  # child reaches one of its terminal states, the parent jumps to the
+  # target declared in on_completion (one target per child terminal).
+  #
+  # Invariants:
+  #   - the transition has invoke OR a "to" field, never both;
+  #   - child workflow exists and validates as a POM workflow;
+  #   - on_completion[].terminal_state is is_final: true in the child;
+  #   - on_completion[].target is a declared state in this parent;
+  #   - mode: async / parallel is rejected.
+  #
+  # Use case: precondition that requires its own sub-workflow before
+  # the parent can decide which state to enter (e.g., submit_for_review
+  # -> validation_flow -> accepted | rejected).
+  - from: drafting
+    event: submit_for_review
+    invoke:
+      workflow: workflows/validation-flow.yaml
+      on_completion:
+        - terminal_state: validated
+          target: accepted
+        - terminal_state: refused
+          target: rejected
+
+invariants:
+  - description: |
+      Plain-text rule that must hold across the workflow.
+      Example: "A done item cannot return to draft."
+  - description: |
+      Example: "Every accepted item must eventually reach done or rejected."
+
+# Optional metadata block for documentation and indexing.
+metadata:
+  owner: team or role
+  tags:
+    - example
+    - draft
