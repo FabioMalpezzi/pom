@@ -161,6 +161,24 @@ Ogni iterazione deve lasciare traccia di:
 | Stato | Proposed |
 | Priorità | Media |
 
+### H6 — Loop bounded per numero di iterazioni come primitiva di schema
+
+| Campo | Valore |
+|---|---|
+| Descrizione | Il concetto di ciclo bounded per numero di iterazioni (es. `max_visits: 3`) deve diventare una primitiva esplicita del workflow YAML, non solo una convenzione documentale o un counter nel context del codice target. Esempio motivante: `MAX_LLM_ATTEMPTS = 3` dell'analyzer-fsm Syntonia + `MAX_FAMILY_REPAIR_ATTEMPTS = 3` della repair. Forma candidata: `loop_guard: { max_visits: N, on_exhaustion: <target> }` su uno stato con self-transition. |
+| Stato | Proposed (schema-level) |
+| Priorità | Alta |
+| Nota | Richiede modifica al core schema SPEC-0006. Fuori scope per questo esperimento. Candidata per SPEC-0007 in un esperimento separato `exp/schema-loop-guard-timeout`. |
+
+### H7 — Transizioni guidate dal tempo come primitiva di schema
+
+| Campo | Valore |
+|---|---|
+| Descrizione | Il concetto di tempo di permanenza in uno stato e di transizione automatica dopo una durata deve diventare una primitiva esplicita (es. `after: 15m → expired`). Esempi motivanti: ticket-lifecycle (autoclose dopo N giorni in `waiting_customer`); payment-flow (`pending → expired` dopo 15 min); agent loop (timeout su uno step LLM). Forma candidata: `timeout: { duration: <iso8601 or ms>, on_timeout: <target> }` su uno stato. |
+| Stato | Proposed (schema-level) |
+| Priorità | Alta |
+| Nota | Richiede modifica al core schema SPEC-0006. Fuori scope per questo esperimento. Candidata per SPEC-0007 in un esperimento separato `exp/schema-loop-guard-timeout`. Open point già citato in `examples/ticket-lifecycle.yaml` (timer-based transitions). |
+
 ## Piano degli esperimenti
 
 ### Esperimento 1
@@ -232,6 +250,8 @@ Ogni iterazione deve lasciare traccia di:
 - sistemi multi-agente concorrenti;
 - coordinamento distribuito;
 - generazione automatica di agenti.
+
+Nota: le ipotesi **H6 (loop_guard per numero di iterazioni)** e **H7 (timeout per tempo di esecuzione)** richiedono entrambe modifica al core schema SPEC-0006 e quindi *non vengono eseguite in questo esperimento*. Sono tracciate qui nel backlog per visibilità e priorità, ma il loro luogo di lavoro corretto è un esperimento parallelo dedicato (proposto: `exp/schema-loop-guard-timeout`) che apre SPEC-0007. Quando quell'esperimento conclude, le primitive risultanti diventeranno disponibili a questo esperimento per riformulare H3 e H5 con strumenti di schema più forti.
 
 ## Limiti dell'esperimento
 
