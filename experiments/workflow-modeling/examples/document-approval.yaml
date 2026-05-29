@@ -1,49 +1,273 @@
-# Example workflow: document approval (skeleton)
+# Example workflow: document approval
 #
-# This file is a placeholder for the third stress example of the
-# workflow-modeling experiment. It will be compiled in a follow-up
-# iteration.
+# Third compiled example of the workflow-modeling experiment. Stresses the
+# YAML schema on properties the first two examples did not cover:
 #
-# Intended scope: a multi-step approval workflow for an internal document
-# (policy, contract draft, release plan). States expected (subject to
-# revision):
-#   - draft
-#   - reviewer_assigned
-#   - in_review
-#   - approved
-#   - rejected
-#   - published
-#   - archived
+#   - role-based guards (is_approver) modeled via the guards section, not
+#     as a first-class schema concept;
+#   - publication as a transition distinct from approval (approve does
+#     not equal publish);
+#   - archiving from multiple distinct states (approved, published,
+#     rejected) — three independent paths into the same terminal;
+#   - withdrawal allowed only from draft (parallel to spec-evolution's
+#     "withdraw only before review");
+#   - revision request that sends the document back to draft, instead
+#     of opening a separate "revisions_requested" state.
 #
-# Useful properties to stress the schema:
-#   - guards over role (only "approver" can transition to approved);
-#   - parallel approvals (out of scope for v1 of the schema — should the
-#     skeleton document the limit clearly?);
-#   - publication as a distinct transition from approval (approval !=
-#     publication);
-#   - archiving from published vs from rejected.
+# Out-of-scope for v1 (declared in metadata.open_points):
+#   - parallel / multi-signoff approval (sequential single approver only);
+#   - role as a first-class schema entity (here role lives inside the
+#     is_approver guard's description, not in the schema).
 
 workflow: document_approval
-version: 0           # 0 = not stabilized
+version: 1
 description: |
-  TODO: write description after compiling the model.
+  Lifecycle of an internal document that goes through review, approval,
+  and publication. A document starts as draft, is assigned to a
+  reviewer, may be approved or rejected (or sent back for revisions),
+  may be published after approval, and is eventually archived. The
+  author may withdraw the document only before review starts.
 
 initial_state: draft
 
-states: []
-events: []
-guards: []
-transitions: []
-invariants: []
+states:
+  - name: draft
+    description: |
+      The author is writing or revising the document. Free editing.
+      May be re-entered from in_review when the reviewer asks for
+      revisions, keeping the same document identifier.
+    is_final: false
+
+  - name: reviewer_assigned
+    description: |
+      A reviewer has been assigned; the document is in their queue but
+      they have not started reviewing yet.
+    is_final: false
+
+  - name: in_review
+    description: |
+      The reviewer has the document open and is forming a decision:
+      approve, reject, or send back for revisions.
+    is_final: false
+
+  - name: approved
+    description: |
+      The reviewer approved the document. Publication is now permitted
+      but not automatic. The document remains unpublished until an
+      explicit publish action runs.
+    is_final: false
+
+  - name: rejected
+    description: |
+      The reviewer rejected the document. The document can only be
+      archived from here; reopening for a new attempt requires creating
+      a fresh document with a new identifier.
+    is_final: false
+
+  - name: published
+    description: |
+      The document has been released to its intended audience. From
+      published the only legitimate next step in this model is
+      archiving.
+    is_final: false
+
+  - name: archived
+    description: |
+      Terminal: the document is stored for the record and is no longer
+      part of the active set. Archive may be reached from approved
+      (never published in time), published (superseded), or rejected.
+    is_final: true
+
+  - name: withdrawn
+    description: |
+      Terminal: the author retracted the document before review
+      started. Preserves the document as "considered, not pursued".
+    is_final: true
+
+events:
+  - name: assign_reviewer
+    description: |
+      An editor or the author assigns a reviewer. Triggered manually,
+      not derived from state.
+
+  - name: start_review
+    description: |
+      The assigned reviewer opens the document and starts evaluating.
+
+  - name: approve
+    description: |
+      The reviewer approves the document. Conditional on the actor
+      having the approver role.
+
+  - name: reject
+    description: |
+      The reviewer rejects the document. Conditional on the actor
+      having the approver role.
+
+  - name: request_revisions
+    description: |
+      The reviewer asks the author to revise. The document returns to
+      draft so the author can edit freely. Conditional on the actor
+      having the approver role.
+
+  - name: publish
+    description: |
+      The approved document is released. Distinct from approve to
+      preserve the option of staged release, scheduled publication,
+      and a final pre-publication checklist.
+
+  - name: archive
+    description: |
+      The document is moved to the archive. Reachable from approved,
+      published, or rejected — three distinct semantic motivations,
+      same destination.
+
+  - name: withdraw
+    description: |
+      The author retracts the document. Only legal from draft.
+
+guards:
+  - name: is_approver
+    description: |
+      The actor performing the transition holds the approver role
+      defined by the target project. The schema does not model roles
+      as first-class entities in v1; the role check lives in target
+      code, behind this named predicate. See open_points.
+
+  - name: has_required_signoffs
+    description: |
+      The target project's publication policy is satisfied: legal,
+      branding, accessibility, or whatever the policy requires. The
+      schema does not enumerate the signoffs; the predicate is opaque
+      and lives in target code.
+
+transitions:
+  - from: draft
+    to: reviewer_assigned
+    event: assign_reviewer
+
+  - from: draft
+    to: withdrawn
+    event: withdraw
+    description: |
+      Withdraw is only legal from draft. After assignment, the author
+      cannot quietly retract; the reviewer must close the document
+      via reject or request_revisions followed by archive.
+
+  - from: reviewer_assigned
+    to: in_review
+    event: start_review
+
+  - from: in_review
+    to: approved
+    event: approve
+    guard: is_approver
+
+  - from: in_review
+    to: rejected
+    event: reject
+    guard: is_approver
+
+  - from: in_review
+    to: draft
+    event: request_revisions
+    guard: is_approver
+
+  - from: approved
+    to: published
+    event: publish
+    guard: has_required_signoffs
+
+  - from: approved
+    to: archived
+    event: archive
+    description: |
+      An approved document that is never published may be archived.
+      Closes the lifecycle without release; preserves the approval as
+      historical record.
+
+  - from: published
+    to: archived
+    event: archive
+    description: |
+      A published document is archived when superseded or retired.
+      The model does not track the superseding document; that is a
+      separate concern (see open_points on versioning).
+
+  - from: rejected
+    to: archived
+    event: archive
+
+invariants:
+  - description: |
+      Approval is not publication. A document in state approved is not
+      yet visible to the intended audience. The two states are
+      deliberately separate so that staged release, scheduled
+      publication, and a final pre-publication checklist remain
+      possible without changing the model.
+
+  - description: |
+      Withdrawal is only legal from draft. After reviewer_assigned the
+      document must reach a terminal state through the review flow:
+      reject + archive, or approve + (publish | archive). This mirrors
+      spec-evolution's "no quiet retraction after review starts".
+
+  - description: |
+      Archive has three distinct semantic sources: approved (never
+      published), published (retired or superseded), rejected (closed
+      as not pursued). The model keeps them as separate transitions
+      so the history records which path was taken.
+
+  - description: |
+      Rejected is not terminal. It admits one transition: archive. The
+      intent is to make archival explicit even for rejections, so
+      every document ends in archived or withdrawn — never lingering
+      in rejected.
 
 metadata:
-  status: skeleton
   owner: POM maintainer
   tags:
     - example
-    - skeleton
-  todo:
-    - Compile states, events, guards, transitions.
-    - Decide whether role-based guards are first-class in the schema or
-      always belong to target code only.
-    - Document the parallel-approval limit clearly: v1 schema is sequential.
+    - document-approval
+
+  open_points:
+    - |
+      Parallel / multi-signoff approval. Real organizations often
+      require multiple approvers in parallel or in sequence (legal,
+      branding, technical). v1 of the schema models single sequential
+      approval. If usage demands it, future schema may need a
+      "parallel_regions" concept (heavy) or a convention for chaining
+      multiple in_review-equivalent states (lighter). Declared out of
+      scope for the experiment.
+
+    - |
+      Role as schema entity. is_approver and has_required_signoffs are
+      named guards whose role semantics live in the target code's
+      authorization layer. The schema does not declare roles as
+      first-class. Pro: keeps the schema minimal and target-agnostic.
+      Con: the model does not visually expose "who can do what"; that
+      lives in the implementation guide and target code. Worth
+      reviewing when more workflows accumulate role-based gating.
+
+    - |
+      Versioning of published documents. published -> archived via
+      archive is fine when retiring; supersession by a newer version
+      is not modeled here. Two options for future schema: explicit
+      supersede event (mirroring spec-evolution), or external
+      relation linking the archive event to the superseding document
+      identifier. Out of scope for v1.
+
+    - |
+      rejected as non-terminal but with only one outgoing transition
+      (archive). Borderline case: should the schema let archive be
+      automatic from rejected after N days? That would require timer
+      semantics, already declared out of scope. For now, archive from
+      rejected is an explicit action.
+
+  closed_points:
+    - |
+      "How to model multiple terminal flavors with distinct
+      semantics?" — same pattern used in ticket-lifecycle (closed,
+      duplicate, wont_fix). Here: archived and withdrawn. The schema
+      handles it cleanly via multiple is_final states reached by
+      different transitions.

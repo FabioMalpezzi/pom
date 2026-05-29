@@ -214,11 +214,37 @@ L'evidenza emersa dalla seconda passata Warning ha portato a chiudere l'open poi
 
 La soppressione è chirurgica: si attiva solo se l'attributo è esplicito; non maschera altri errori. La fixture positiva di conferma esiste accanto a quella che testa la regola, così la prossima persona che legge il validatore vede entrambe le facce della stessa decisione.
 
+## Esito intermedio - terzo esempio: document-approval (2026-05-29)
+
+Compilato `examples/document-approval.yaml` e fatto girare il validator. Risultato: PASS pulito al primo tentativo, zero errori, zero warning. Nessuna modifica allo schema è stata richiesta dal terzo modello.
+
+**Proprietà nuove che il terzo esempio ha messo alla prova**
+
+| Proprietà | Modellata come | Esito |
+|---|---|---|
+| Guard di ruolo (chi può approvare?) | Guard `is_approver` con descrizione testuale, semantica nel codice target | Regge. Il ruolo non diventa entità prima classe; resta nel guard. |
+| Publication ≠ approval | Stato `approved` separato da `published`, transizione `publish` esplicita | Regge. Il modello mostra a colpo d'occhio che l'approvazione è un permesso, non l'azione finale. |
+| Archive da stati multipli | Tre transizioni `archive` distinte: da `approved`, `published`, `rejected` | Regge. Lo schema accetta più transizioni con stesso evento da stati diversi senza ambiguità. |
+| Withdrawal solo da draft | Una sola transizione `withdraw` da `draft` | Regge. Stesso pattern di `spec-evolution`. |
+| Revisione che torna a draft | Transizione `request_revisions` da `in_review` a `draft` | Regge. Alternativa "revisions_requested" come stato separato resta open point in spec-evolution. |
+| `rejected` non-terminale ma con un solo evento in uscita | Stato non-final con una transizione `archive` | Regge senza warning, perché esce. Ma è borderline: confluisce in archived sempre. |
+
+**Open point nuovi dichiarati dal modello**
+
+- Parallel / multi-signoff approval (fuori scope v1; richiederebbe sotto-macchine o catena di stati);
+- Role come entità prima classe nello schema (oggi vive solo nel guard `is_approver`);
+- Versioning dei documenti pubblicati (supersessione non modellata; lasciata al codice target);
+- Archive automatico per tempo da rejected (timer transition, già dichiarato fuori scope).
+
+**H1: confermata**
+
+I criteri di valore minimi richiedevano tre workflow modellati senza forzature evidenti del formato. Il terzo esempio è stato modellato senza modifiche allo schema, ha trovato proprietà nuove e le ha gestite con i meccanismi esistenti (guard nominata per ruoli, transizioni multiple sullo stesso evento per archive). H1 è confermata sul set di esempi previsto dall'esperimento.
+
 ## Follow-up
 
 - [x] Compilare `examples/spec-evolution.yaml` con lifecycle reale delle SPEC POM.
 - [x] Compilare `examples/ticket-lifecycle.yaml`. *(2026-05-29: compilato; ha generato 5 nuovi open point, inclusa la proposta di estensione schema `re_entry_allowed` su stato terminale con riapertura.)*
-- [ ] Compilare `examples/document-approval.yaml`.
+- [x] Compilare `examples/document-approval.yaml`. *(2026-05-29: compilato; PASS pulito al primo tentativo, nessuna modifica allo schema richiesta. Stressa role guard, publication ≠ approval, archive da stati multipli. Chiude H1 sui tre esempi.)*
 - [ ] Stabilizzare `templates-candidate/WORKFLOW_TEMPLATE.yaml`.
 - [x] Implementare `scripts-candidate/lint-workflows.mjs` — regole Error. *(2026-05-29: prima passata completa.)*
 - [x] Estendere `lint-workflows.mjs` con regole Warning (irraggiungibilità, dead-end, terminale con uscita, non-determinismo). *(2026-05-29: seconda passata completa; ha confermato il pattern "terminale con eccezione dichiarata" su entrambi gli esempi.)*
