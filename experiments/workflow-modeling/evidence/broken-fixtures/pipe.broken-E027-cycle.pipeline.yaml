@@ -1,0 +1,21 @@
+# Expected to trigger: E027 (cycle in the pipeline graph).
+# stage-a succeeds -> stage-b; stage-b succeeds -> stage-a.
+
+pipeline: broken_e027
+version: 1
+description: Cyclic pipeline. The two stages reference each other.
+
+sequence:
+  - workflow: ../../examples/pipeline-toy/stage-a.yaml
+    completes_on:
+      - state: succeeded
+        next: ../../examples/pipeline-toy/stage-b.yaml
+      - state: aborted
+        next: null
+
+  - workflow: ../../examples/pipeline-toy/stage-b.yaml
+    completes_on:
+      - state: succeeded
+        next: ../../examples/pipeline-toy/stage-a.yaml      # cycle back to a
+      - state: aborted
+        next: null

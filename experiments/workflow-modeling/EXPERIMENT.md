@@ -338,6 +338,48 @@ POM YAML è un sottoinsieme dichiarativo del MachineConfig di XState, esteso con
 - **H3** (skill sufficiente entro vincoli dimensionali): **confermata** — skill 62 righe (sotto 100), prompt 112 righe (sotto 200), prompt operativo realmente esistente e usato in H4.
 - **H4** (guida implementativa efficace senza imposizioni): **confermata** per Pattern A; B e C non testati ma non bloccanti per la promozione.
 
+## Giro 2 — composizione sincrona (2026-05-29)
+
+Apertura giro 2 per coprire un caso d'uso applicativo emerso durante la riflessione: macchine a stati che ne attivano altre, con il vincolo "isolate tra loro se non da stati iniziali e finali". Scope decisione:
+
+- in scope: tre primitive sincrone (pipeline lineare, invoke da stato, invoke da evento);
+- fuori scope, permanente: composizione asincrona / parallel regions, già fuori dalla spec v1.
+
+**Primitiva 1 — pipeline lineare (completata in questo commit)**
+
+Schema: nuovo file `<name>.pipeline.yaml` con root key `pipeline:` e `sequence:`. Ogni membro dichiara `completes_on: [{state, next}]` dove `state` è uno stato terminale del workflow membro e `next` è un altro membro o `null`.
+
+Implementato:
+
+- `templates-candidate/PIPELINE_TEMPLATE.yaml`: schema documentato.
+- `scripts-candidate/lint-workflows.mjs`: dispatcher che riconosce file pipeline tramite root key; 10 nuove regole Error (E020–E029); cycle detection statica via DFS coloring; risoluzione path relativa al file pipeline.
+- Esempio toy: `examples/pipeline-toy/{stage-a,stage-b,stage-c,toy.pipeline}.yaml` per dimostrare il pattern.
+- 5 fixture broken per E023 (file mancante), E025 (stato non terminale), E026 (next non-membro), E027 (ciclo), E029 (mode async).
+
+**Verifica**
+
+| File | Errors | Verdict |
+|---|---|---|
+| `examples/pipeline-toy/stage-a.yaml` | 0 | PASS |
+| `examples/pipeline-toy/stage-b.yaml` | 0 | PASS |
+| `examples/pipeline-toy/stage-c.yaml` | 0 | PASS |
+| `examples/pipeline-toy/toy.pipeline.yaml` | 0 | PASS |
+| `pipe.broken-E023-missing-member.pipeline.yaml` | 1 (E023) | FAIL |
+| `pipe.broken-E025-not-terminal.pipeline.yaml` | 1 (E025) | FAIL |
+| `pipe.broken-E026-unknown-next.pipeline.yaml` | 1 (E026) | FAIL |
+| `pipe.broken-E027-cycle.pipeline.yaml` | 1 (E027) | FAIL |
+| `pipe.broken-E029-async.pipeline.yaml` | 1 (E029) | FAIL |
+
+Ogni fixture produce la regola attesa, nessuna cascata. La regola "no async" (E029) entra in vigore già su questa primitiva: declarare `mode: async` produce subito Error con messaggio che rimanda a Pattern C.
+
+**Prossimi passi del giro**
+
+- Primitiva 2 (invoke da stato sincrono): nuovo blocco `states[].invoke` con `workflow` + `on_completion: [{terminal_state, next_event}]`.
+- Primitiva 3 (invoke da evento sincrono): nuovo blocco `transitions[].invoke` con `workflow` + `on_completion: [{terminal_state, target}]`.
+- Due casi reali combinati: `order-processing` (pipeline pura) + `loan-application` (combinazione di invoke da stato e da evento).
+- Mapping XState invoke + COMPATIBILITY update.
+- Codice TypeScript guidato per pipeline orchestrator (Pattern A) come evidence di H4 esteso.
+
 ## Follow-up
 
 - [x] Compilare `examples/spec-evolution.yaml` con lifecycle reale delle SPEC POM.

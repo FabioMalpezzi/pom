@@ -16,8 +16,8 @@
 // This script lives in experiments/workflow-modeling/scripts-candidate/ and
 // uses a local node_modules (js-yaml) isolated from the POM main repo.
 
-import { readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { resolve, dirname, join, isAbsolute } from 'node:path';
 import yaml from 'js-yaml';
 
 const ERROR_RULES = {
@@ -39,6 +39,16 @@ const ERROR_RULES = {
   E015: 'A transition "to" references a state not declared in states.',
   E016: 'A transition "event" references an event not declared in events.',
   E017: 'A transition "guard" references a guard not declared in guards.',
+  E020: 'Pipeline name is missing or not a non-empty string.',
+  E021: 'Pipeline sequence is missing or empty.',
+  E022: 'A pipeline member has no "workflow" path or a non-string path.',
+  E023: 'A pipeline member references a workflow file that does not exist on disk.',
+  E024: 'A pipeline member has no "completes_on" or it is empty.',
+  E025: 'A pipeline member completes_on[].state does not exist as is_final: true in the referenced workflow.',
+  E026: 'A pipeline member completes_on[].next is not null and does not reference another member of the same pipeline.',
+  E027: 'Cycle detected in the pipeline (a member is reachable from itself).',
+  E028: 'Pipeline file declares both "workflow" and "pipeline" root keys (must be exactly one).',
+  E029: 'Pipeline declares an asynchronous mode (mode: async / parallel). Asynchronous composition is out of scope; use Pattern C (XState invoke/spawn).',
 };
 
 const WARNING_RULES = {
@@ -234,7 +244,144 @@ function validate(model) {
   return { errors, warnings };
 }
 
-function formatReport({ source, model, errors, warnings }) {
+function loadWorkflowSafe(absPath) {
+  try {
+    const raw = readFileSync(absPath, 'utf8');
+    const parsed = yaml.load(raw);
+    if (parsed && typeof parsed === 'object') return parsed;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function validatePipeline(model, sourceDir) {
+  const errors = [];
+
+  if ('workflow' in (model ?? {}) && 'pipeline' in (model ?? {})) {
+    errors.push(err('E028', 'root'));
+  }
+
+  if (!isNonEmptyString(model?.pipeline)) {
+    errors.push(err('E020', 'pipeline'));
+  }
+
+  if (model?.mode === 'async' || model?.mode === 'parallel') {
+    errors.push(err('E029', 'mode', `value=${model.mode}`));
+  }
+
+  if (!Array.isArray(model?.sequence) || model.sequence.length === 0) {
+    errors.push(err('E021', 'sequence'));
+    return { errors };
+  }
+
+  // Resolve member workflow files and collect their terminal state names.
+  const members = [];
+  const memberByPath = new Map();
+  for (let i = 0; i < model.sequence.length; i++) {
+    const m = model.sequence[i];
+    const where = `sequence[${i}]`;
+
+    if (!isNonEmptyString(m?.workflow)) {
+      errors.push(err('E022', where));
+      members.push(null);
+      continue;
+    }
+
+    const absPath = isAbsolute(m.workflow)
+      ? m.workflow
+      : join(sourceDir, m.workflow);
+
+    if (!existsSync(absPath)) {
+      errors.push(err('E023', where, `path=${m.workflow}`));
+      members.push({ path: m.workflow, absPath, model: null, terminalNames: new Set() });
+      memberByPath.set(m.workflow, i);
+      continue;
+    }
+
+    const childModel = loadWorkflowSafe(absPath);
+    const terminalNames = new Set();
+    if (childModel && Array.isArray(childModel.states)) {
+      for (const s of childModel.states) {
+        if (isNonEmptyString(s?.name) && s?.is_final === true) {
+          terminalNames.add(s.name);
+        }
+      }
+    }
+    members.push({ path: m.workflow, absPath, model: childModel, terminalNames });
+    memberByPath.set(m.workflow, i);
+  }
+
+  // Validate completes_on per member, and build the successor graph for
+  // cycle detection.
+  const graph = new Map(); // memberIndex -> Set<memberIndex>
+  for (let i = 0; i < model.sequence.length; i++) {
+    const m = model.sequence[i];
+    const where = `sequence[${i}]`;
+    const member = members[i];
+    graph.set(i, new Set());
+
+    if (m?.mode === 'async' || m?.mode === 'parallel') {
+      errors.push(err('E029', where + '.mode', `value=${m.mode}`));
+    }
+
+    if (!Array.isArray(m?.completes_on) || m.completes_on.length === 0) {
+      errors.push(err('E024', where));
+      continue;
+    }
+
+    for (let j = 0; j < m.completes_on.length; j++) {
+      const c = m.completes_on[j];
+      const cwhere = `${where}.completes_on[${j}]`;
+
+      if (!isNonEmptyString(c?.state)) {
+        errors.push(err('E025', cwhere, 'state missing'));
+      } else if (member?.model && !member.terminalNames.has(c.state)) {
+        errors.push(err('E025', cwhere, `state=${c.state}`));
+      }
+
+      if (c?.next == null) continue;
+      if (!isNonEmptyString(c.next)) {
+        errors.push(err('E026', cwhere, 'next is not a string or null'));
+        continue;
+      }
+      if (!memberByPath.has(c.next)) {
+        errors.push(err('E026', cwhere, `next=${c.next}`));
+        continue;
+      }
+      graph.get(i).add(memberByPath.get(c.next));
+    }
+  }
+
+  // Cycle detection (DFS coloring).
+  const WHITE = 0, GRAY = 1, BLACK = 2;
+  const color = new Array(model.sequence.length).fill(WHITE);
+  let cycleFound = false;
+  function dfs(u) {
+    if (cycleFound) return;
+    color[u] = GRAY;
+    for (const v of graph.get(u) ?? []) {
+      if (color[v] === GRAY) { cycleFound = true; return; }
+      if (color[v] === WHITE) dfs(v);
+    }
+    color[u] = BLACK;
+  }
+  for (let i = 0; i < model.sequence.length; i++) {
+    if (color[i] === WHITE) dfs(i);
+    if (cycleFound) break;
+  }
+  if (cycleFound) {
+    errors.push(err('E027', 'sequence'));
+  }
+
+  return { errors };
+}
+
+function isPipelineModel(model) {
+  return model && typeof model === 'object' && 'pipeline' in model;
+}
+
+function formatReport({ source, model, errors, warnings, kind }) {
   const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
   let verdict;
   if (errors.length > 0) {
@@ -245,7 +392,11 @@ function formatReport({ source, model, errors, warnings }) {
     verdict = 'PASS';
   }
   const lines = [];
-  lines.push(`# Workflow validation report - ${model?.workflow ?? '(unknown)'}`);
+  const titleName = kind === 'pipeline'
+    ? model?.pipeline ?? '(unknown)'
+    : model?.workflow ?? '(unknown)';
+  const titleKind = kind === 'pipeline' ? 'Pipeline' : 'Workflow';
+  lines.push(`# ${titleKind} validation report - ${titleName}`);
   lines.push('');
   lines.push('| Field | Value |');
   lines.push('|---|---|');
@@ -329,10 +480,15 @@ function main() {
 
     let errors = [];
     let warnings = [];
+    let kind = 'workflow';
     if (parseError) {
       errors.push(err('E000', 'parse', parseError.message));
     } else if (model == null || typeof model !== 'object') {
       errors.push(err('E000', 'parse', 'YAML root is not a mapping.'));
+    } else if (isPipelineModel(model)) {
+      kind = 'pipeline';
+      const v = validatePipeline(model, dirname(source));
+      errors = v.errors;
     } else {
       const v = validate(model);
       errors = v.errors;
@@ -340,7 +496,7 @@ function main() {
     }
     totalErrors += errors.length;
 
-    const report = formatReport({ source: file, model: model ?? {}, errors, warnings });
+    const report = formatReport({ source: file, model: model ?? {}, errors, warnings, kind });
     reports.push({ file, report });
   }
 

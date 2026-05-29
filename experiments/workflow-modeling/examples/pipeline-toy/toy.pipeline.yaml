@@ -1,0 +1,47 @@
+# Toy pipeline used to demonstrate the synchronous-linear composition
+# primitive. Three stages chained on the "succeeded" terminal of each
+# member; "aborted" or "failed" terminate the pipeline early.
+#
+# Structure:
+#   stage_a --succeeded--> stage_b --succeeded--> stage_c
+#       \                       \                     \
+#        aborted (end)           aborted (end)         failed (end)
+#
+# Members live next to this file. The validator resolves the workflow
+# paths relative to the pipeline file location.
+
+pipeline: toy_pipeline
+version: 1
+description: |
+  Three minimal stages chained linearly. Used by the validator and the
+  evidence harness to demonstrate that pipeline composition works on a
+  trivial example before any real-world use case.
+
+sequence:
+  - workflow: stage-a.yaml
+    completes_on:
+      - state: succeeded
+        next: stage-b.yaml
+      - state: aborted
+        next: null
+
+  - workflow: stage-b.yaml
+    completes_on:
+      - state: succeeded
+        next: stage-c.yaml
+      - state: aborted
+        next: null
+
+  - workflow: stage-c.yaml
+    completes_on:
+      - state: succeeded
+        next: null
+      - state: failed
+        next: null
+
+metadata:
+  owner: POM maintainer
+  tags:
+    - example
+    - pipeline
+    - toy

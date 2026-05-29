@@ -211,6 +211,49 @@ These are deliberately left undecided until the experiment provides evidence:
 
 - **`re_entry_allowed: true` on a final state** suppresses W003. The attribute is opt-in, defaults to `false`, and was added after both compiled examples (`spec-evolution`, `ticket-lifecycle`) independently produced the same W003 on terminal states with a documented exception (`supersede`, `reopen`). See `EXPERIMENT.md` "Decisione: re_entry_allowed" for the evidence trail.
 
+- **Synchronous composition primitives (linear pipeline; invoke from state; invoke from event)** are in scope. **Asynchronous composition is permanently out of scope.** The decision rests on the invariant that a child workflow communicates with the parent only at the boundary (entry from a trigger, exit by terminal state name). Asynchronous fire-and-forget composition requires parallel-region semantics that POM has declared off-limits since the v1 spec; teams that need it should adopt Pattern C (XState `invoke`/`spawn`). Declaring `mode: async` or `mode: parallel` in a pipeline or invoke block is an Error (E029).
+
+## Composition: Linear Pipeline (synchronous)
+
+A pipeline file declares a sequence of POM workflows that activate one after the other. The handoff happens when a member reaches a declared terminal state; the pipeline file says which successor (if any) starts next.
+
+```yaml
+pipeline: order_processing
+sequence:
+  - workflow: workflows/cart-flow.yaml
+    completes_on:
+      - state: cart_completed
+        next: workflows/checkout-flow.yaml
+      - state: cart_abandoned
+        next: null
+  - workflow: workflows/checkout-flow.yaml
+    completes_on:
+      - state: checkout_confirmed
+        next: workflows/payment-flow.yaml
+      - state: checkout_canceled
+        next: null
+```
+
+Validator detects pipeline files via the root key `pipeline:` (mutually exclusive with `workflow:`). New Error rules:
+
+| Code | Check |
+|---|---|
+| E020 | Pipeline name is missing. |
+| E021 | Sequence is missing or empty. |
+| E022 | A member has no `workflow` path. |
+| E023 | Member workflow file does not exist. |
+| E024 | A member has no `completes_on`. |
+| E025 | `completes_on[].state` is not declared as `is_final: true` in the referenced member workflow. |
+| E026 | `completes_on[].next` is not null and does not reference another member of the same pipeline. |
+| E027 | Cycle in the pipeline graph. |
+| E028 | Root declares both `workflow` and `pipeline`. |
+| E029 | Asynchronous mode declared. Out of scope. |
+
+Invariants of the pipeline primitive:
+- members are mutually isolated: a child knows nothing of the pipeline or its siblings;
+- the boundary is named — only the terminal state name, no event-bus or shared context;
+- the schema admits no async mode; E029 rejects it.
+
 ## Promotion Path
 
 If promoted, this draft becomes `SPEC-0006-workflow-modeling.md` and the artefacts move out of `experiments/workflow-modeling/`:

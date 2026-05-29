@@ -1,0 +1,29 @@
+workflow: stage_c
+version: 1
+description: |
+  Final pipeline member for the toy example. Only succeeded reaches a
+  pipeline-level success; failed is a terminal failure.
+
+initial_state: start
+states:
+  - name: start
+    description: starting point
+    is_final: false
+  - name: succeeded
+    description: stage C completed successfully
+    is_final: true
+  - name: failed
+    description: stage C failed
+    is_final: true
+events:
+  - name: finish
+    description: stage completes normally
+  - name: fail
+    description: stage fails
+transitions:
+  - from: start
+    to: succeeded
+    event: finish
+  - from: start
+    to: failed
+    event: fail
