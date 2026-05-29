@@ -89,7 +89,10 @@ Escluso dall'esperimento:
 
 ## Open point dichiarati
 
-- **Stati ortogonali / di pausa**: come modellare `Deferred`, `Blocked`, `Waiting` rispetto al lifecycle principale? Stato separato, modifier ortogonale, o esclusi dal modello FSM? Da decidere durante la compilazione di `spec-evolution.yaml`.
+- **Stati ortogonali / di pausa**: come modellare `Deferred`, `Blocked`, `Waiting` rispetto al lifecycle principale? Stato separato, modifier ortogonale, o esclusi dal modello FSM? Esempi a confronto: `spec-evolution.yaml` li esclude, `ticket-lifecycle.yaml` modella `waiting_customer` come stato primario. Open question derivata: il formato deve permettere a uno stato di dichiararsi "variante di pausa" di un altro stato, per tenere leggibile il percorso principale?
+- **Stato terminale con riapertura ammessa**: `closed` in `ticket-lifecycle.yaml` è `is_final: true` ma ha una transizione `reopen` in uscita. Il validatore deve warnare. Proposta di estensione schema: attributo opzionale `re_entry_allowed: true` sullo stato, che il validatore tratta come eccezione dichiarata. Alternativa: rimuovere `is_final` e affidarsi solo alla struttura delle transizioni — al costo di perdere l'indicazione visiva in Mermaid.
+- **Guard "non applicabili"**: in `ticket-lifecycle.yaml`, `mark_duplicate` da `new` salta volutamente la guard `has_reproduction_steps`. Il modello lo esprime omettendo la guard, ma non dichiara esplicitamente che la guard non si applica. Se i modelli crescono, può servire un marcatore `no_guard_required: true`.
+- **Transizioni temporali**: ticket reali si chiudono automaticamente dopo N giorni in `waiting_customer`. Dichiarate fuori scope per v1; se l'uso le richiede, futura estensione `time_trigger` su transizione.
 - **Guard testuali vs codificate**: nel modello YAML le guard sono prosa, ma l'agente di coding deve poterle trasformare in codice. Va definita una convenzione (nome simbolico + descrizione testuale).
 - **Workflow-set vs singolo workflow**: un progetto può avere più workflow correlati (es. ticket e approvazione collegati). Per ora si modellano separati; la composizione resta open point.
 - **Versionamento del modello**: cosa succede quando il workflow cambia e ci sono istanze "in vita" nel codice target? Da definire come raccomandazione, non come funzione POM.
@@ -118,7 +121,7 @@ Da compilare in fase di promozione.
 ## Follow-up
 
 - [ ] Compilare `examples/spec-evolution.yaml` con lifecycle reale delle SPEC POM.
-- [ ] Compilare `examples/ticket-lifecycle.yaml`.
+- [x] Compilare `examples/ticket-lifecycle.yaml`. *(2026-05-29: compilato; ha generato 5 nuovi open point, inclusa la proposta di estensione schema `re_entry_allowed` su stato terminale con riapertura.)*
 - [ ] Compilare `examples/document-approval.yaml`.
 - [ ] Stabilizzare `templates-candidate/WORKFLOW_TEMPLATE.yaml`.
 - [ ] Implementare `scripts-candidate/lint-workflows.mjs`.
