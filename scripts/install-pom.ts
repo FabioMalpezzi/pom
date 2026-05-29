@@ -207,6 +207,24 @@ function resolveProjectReaderScript(): string {
   return "pom/scripts/project-reader/server.mjs";
 }
 
+function resolveWorkflowLintScript(): string {
+  if (pathExists("pom/scripts/lint-workflows.mjs")) return "pom/scripts/lint-workflows.mjs";
+  if (pathExists("scripts/lint-workflows.mjs")) return "scripts/lint-workflows.mjs";
+  return "pom/scripts/lint-workflows.mjs";
+}
+
+function resolveWorkflowMermaidScript(): string {
+  if (pathExists("pom/scripts/to-mermaid.mjs")) return "pom/scripts/to-mermaid.mjs";
+  if (pathExists("scripts/to-mermaid.mjs")) return "scripts/to-mermaid.mjs";
+  return "pom/scripts/to-mermaid.mjs";
+}
+
+function resolveWorkflowXstateScript(): string {
+  if (pathExists("pom/scripts/to-xstate.mjs")) return "pom/scripts/to-xstate.mjs";
+  if (pathExists("scripts/to-xstate.mjs")) return "scripts/to-xstate.mjs";
+  return "pom/scripts/to-xstate.mjs";
+}
+
 function resolveUpdateScriptTemplate(): string {
   return resolveTemplate("POM_UPDATE_TEMPLATE.mjs");
 }
@@ -379,6 +397,9 @@ function upsertPackageScripts(): void {
     const helpScript = resolveHelpScript();
     const wikiRenderScript = resolveWikiRenderScript();
     const projectReaderScript = resolveProjectReaderScript();
+    const workflowLintScript = resolveWorkflowLintScript();
+    const workflowMermaidScript = resolveWorkflowMermaidScript();
+    const workflowXstateScript = resolveWorkflowXstateScript();
     const content: PackageJson = {
       private: true,
       type: "module",
@@ -389,10 +410,13 @@ function upsertPackageScripts(): void {
         "pom:lint": `node --experimental-strip-types ${lintScript}`,
         "pom:reader": `node ${projectReaderScript}`,
         "pom:wiki:render": `node ${wikiRenderScript}`,
+        "pom:workflow:lint": `node ${workflowLintScript}`,
+        "pom:workflow:mermaid": `node ${workflowMermaidScript}`,
+        "pom:workflow:xstate": `node ${workflowXstateScript}`,
       },
     };
     writeText(packagePath, `${JSON.stringify(content, null, 2)}\n`);
-    console.log("Created package.json with pom:init, pom:update, pom:help, pom:lint, pom:reader, and pom:wiki:render scripts.");
+    console.log("Created package.json with pom:init, pom:update, pom:help, pom:lint, pom:reader, pom:wiki:render, and pom:workflow:* scripts.");
     return;
   }
 
@@ -408,6 +432,9 @@ function upsertPackageScripts(): void {
   const helpScript = resolveHelpScript();
   const wikiRenderScript = resolveWikiRenderScript();
   const projectReaderScript = resolveProjectReaderScript();
+  const workflowLintScript = resolveWorkflowLintScript();
+  const workflowMermaidScript = resolveWorkflowMermaidScript();
+  const workflowXstateScript = resolveWorkflowXstateScript();
   const initCommand = pathExists("pom/scripts/install-pom.ts")
     ? "node --experimental-strip-types pom/scripts/install-pom.ts"
     : "node --experimental-strip-types scripts/install-pom.ts";
@@ -419,6 +446,9 @@ function upsertPackageScripts(): void {
     "pom:lint": `node --experimental-strip-types ${lintScript}`,
     "pom:reader": `node ${projectReaderScript}`,
     "pom:wiki:render": `node ${wikiRenderScript}`,
+    "pom:workflow:lint": `node ${workflowLintScript}`,
+    "pom:workflow:mermaid": `node ${workflowMermaidScript}`,
+    "pom:workflow:xstate": `node ${workflowXstateScript}`,
   };
 
   let changed = false;

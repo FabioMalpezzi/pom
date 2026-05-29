@@ -1,0 +1,52 @@
+# Pipeline Template (synchronous composition - linear)
+#
+# A pipeline file declares a sequence of POM workflows that activate one
+# after the other. The handoff between members happens when a member
+# reaches a declared terminal state; the pipeline file says which
+# successor (if any) starts next.
+#
+# Invariants (enforced by the validator):
+#   - every member workflow file exists;
+#   - every member workflow validates as a standalone POM workflow;
+#   - every "state" referenced under completes_on is is_final: true in
+#     the member workflow;
+#   - every "next" references either another member of the same
+#     pipeline or null (pipeline terminates here);
+#   - no cycles: a member cannot be its own successor, directly or
+#     indirectly. Validator detects cycles statically.
+#   - async / parallel composition is NOT supported by this schema;
+#     declaring async raises an Error. See COMPATIBILITY.md and the
+#     spec for the motivation.
+#
+# Members are isolated: a child workflow knows nothing about the
+# pipeline or its siblings. Communication happens only at the
+# boundary, via the terminal state name.
+
+pipeline: example_pipeline       # snake_case unique name
+version: 1
+description: |
+  Short paragraph describing the end-to-end process this pipeline
+  composes. Plain language; the reader should understand the domain
+  after reading it.
+
+sequence:
+  - workflow: workflows/cart-flow.yaml      # path relative to this file
+    completes_on:
+      - state: cart_completed
+        next: workflows/checkout-flow.yaml
+      - state: cart_abandoned
+        next: null                          # pipeline ends here
+
+  - workflow: workflows/checkout-flow.yaml
+    completes_on:
+      - state: checkout_confirmed
+        next: workflows/payment-flow.yaml
+      - state: checkout_canceled
+        next: null
+
+# Optional metadata block.
+metadata:
+  owner: team or role
+  tags:
+    - example
+    - pipeline

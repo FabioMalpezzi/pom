@@ -1,0 +1,68 @@
+---
+name: workflow
+description: Use this skill to design, validate, diagram, derive scenarios for, and guide the implementation of a domain workflow declared as a YAML state model — without runtime, without live instances, and without imposing an FSM library.
+---
+
+# Skill - workflow
+
+## When To Use
+
+- A target project has a domain process with explicit states and transitions (ticket lifecycle, document approval, request authorization, content publishing, internal spec evolution).
+- The team wants the workflow modeled, validated, diagrammed, and implemented coherently in the project code.
+- A coding agent must produce or update the code that implements the workflow and must stay aligned with the model.
+
+Not for: workflows that are essentially imperative scripts; concurrent or distributed coordination; real-time / hard timing; cases where the team already maintains a formal model in another tool (in which case import, do not duplicate).
+
+## Modes
+
+Pass the mode as the first instruction to the agent.
+
+| Mode | Purpose |
+|---|---|
+| `design` | Draft or revise a workflow YAML from informal description, surfacing ambiguities as open points instead of inventing rules. |
+| `validate` | Run the validator and produce the report. Declare what remains undecided. |
+| `diagram` | Regenerate the Mermaid diagram from the YAML (`pom:workflow:mermaid` or `pom:workflow:lint --mermaid-dir`). |
+| `scenarios` | Regenerate the language-agnostic verification scenarios. |
+| `implement` | Guide a coding agent to translate the YAML into target-language code, proposing patterns (table-based, switch-based, library-based) with selection criteria — never imposing one. |
+
+## Canonical Prompt
+
+`prompts/27-workflow-modeling.md`
+
+## Key Rules
+
+- The YAML model is the source of authority. Diagrams, validation reports, scenarios, and code are derived.
+- `design` mode never invents business rules; missing rules become open points in the YAML and in the conversation.
+- `validate` mode reports findings with severity (Error / Warning / Info); only Errors block downstream modes.
+- `diagram` and `scenarios` modes regenerate files under `workflows/generated/`. They never modify the YAML.
+- `implement` mode reads `pom.config.json` (language, framework, test runner) before proposing patterns. It proposes alternatives with criteria; the user picks one.
+- `implement` mode never installs a library on its own. If a library is proposed, the decision is recorded as an ADR.
+- The skill works only when `pom.config.json` declares `workflows.enabled: true`. Otherwise it stops and refers the user to `skills/config.md`.
+- The skill does not execute the workflow and does not track live instances.
+
+## Main Templates
+
+- `templates/WORKFLOW_TEMPLATE.yaml`
+- `templates/PIPELINE_TEMPLATE.yaml`
+- `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md`
+- `templates/WORKFLOW_INTEGRATION_GUIDE.md`
+
+## Output
+
+- in `design`: a new or updated `workflows/<name>.yaml`, plus a short list of open points;
+- in `validate`: `workflows/generated/<name>.validation.md` and a one-line verdict (pass / pass with warnings / fail);
+- in `diagram`: `workflows/generated/<name>.mmd`;
+- in `scenarios`: `workflows/generated/<name>.scenarios.md`;
+- in `implement`: a proposed change to the target code, plus a note on which pattern was chosen and why.
+
+## Memory Impact
+
+- A new workflow YAML is operating memory: it represents the agreed shape of a domain process. Treat it like a spec.
+- The validation report is short-lived and may be regenerated freely.
+- The Mermaid and scenarios files are derived and must never be hand-edited.
+
+## Reference
+
+- Spec: `specs/SPEC-0006-workflow-modeling.md`
+- ADR: `decisions/ADR-0002-workflow-context-injection.md`
+- XState compatibility: `docs/workflow-xstate-compatibility.md`

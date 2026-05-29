@@ -50,6 +50,7 @@ Use the smallest workflow that matches your situation:
 | Challenge a spec or decision before closure | `skills/challenge.md` |
 | Defer work without implementing | `skills/defer.md` |
 | Refresh or sync POM in a project | `skills/sync.md` |
+| Model, validate, diagram, and implement domain workflows | `skills/workflow.md` (opt-in via `workflows.enabled` in `pom.config.json`) |
 | See available commands | `npm run pom:help` |
 
 ### How to talk to the agent

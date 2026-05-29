@@ -106,6 +106,16 @@ function printHelp(): void {
   console.log("   cat pom/skills/validate.md");
   console.log("   Show the validation skill used after significant work, before handoff or commit.");
   console.log("");
+  console.log("9. Lint workflow YAML models (opt-in, requires workflows.enabled in pom.config.json)");
+  console.log("   npm run pom:workflow:lint -- workflows/<name>.yaml [--mermaid-dir workflows/generated/]");
+  console.log("   Validate the workflow against SPEC-0006 rules. When --mermaid-dir is passed, also writes <name>.mmd alongside.");
+  console.log("");
+  console.log("10. Render a workflow as a Mermaid stateDiagram-v2 (one-off)");
+  console.log("    npm run pom:workflow:mermaid -- workflows/<name>.yaml --out workflows/generated/<name>.mmd");
+  console.log("");
+  console.log("11. Render a workflow as an XState v5 MachineConfig JSON (for stately.ai)");
+  console.log("    npm run pom:workflow:xstate -- workflows/<name>.yaml --out workflows/generated/<name>.xstate.json");
+  console.log("");
   console.log("Source-only commands (POM repository itself, not installed in target projects):");
   console.log("");
   console.log("- npm run pom:test");

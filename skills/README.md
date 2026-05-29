@@ -78,6 +78,7 @@ Existing project structures should be mapped first, not moved by default.
 | `sync` | refresh an existing POM installation or align source POM changes with a target project's `pom/` | `prompts/17-sync-pom-framework.md` |
 | `reconcile` | classify and resolve a divergence between a source and project memory | `prompts/19-reconcile-memory.md` |
 | `validate` | audit POM governance after significant actions | `prompts/18-post-action-validator.md` |
+| `workflow` | design, validate, diagram, scenarios, and implement domain workflows declared as YAML state models | `prompts/27-workflow-modeling.md` |
 
 ## Rule
 

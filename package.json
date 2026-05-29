@@ -1,6 +1,6 @@
 {
   "name": "project-operating-memory",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "private": false,
   "engines": {
@@ -12,6 +12,12 @@
     "pom:lint": "node --experimental-strip-types scripts/lint-doc-governance.ts",
     "pom:reader": "node scripts/project-reader/server.mjs",
     "pom:test": "node tests/run-all.mjs",
-    "pom:wiki:render": "node scripts/render-wiki.mjs"
+    "pom:wiki:render": "node scripts/render-wiki.mjs",
+    "pom:workflow:lint": "node scripts/lint-workflows.mjs",
+    "pom:workflow:mermaid": "node scripts/to-mermaid.mjs",
+    "pom:workflow:xstate": "node scripts/to-xstate.mjs"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
   }
 }

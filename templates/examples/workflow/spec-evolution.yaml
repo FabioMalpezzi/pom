@@ -1,0 +1,203 @@
+# Example workflow: POM SPEC evolution
+#
+# Models the lifecycle of a POM SPEC document, from first draft to a terminal
+# state (complete, superseded, withdrawn, rejected). This example is part of
+# the workflow-modeling experiment and is meant to stress the YAML schema
+# against the real states POM already uses in its own specs/ folder.
+#
+# Canonical states observed in current specs/ files: Draft, Accepted, Complete.
+# Additional terminal states are added explicitly for cases that exist in the
+# method but are not yet represented in main: Superseded, Withdrawn, Rejected.
+#
+# Pause-like statuses (Deferred, Blocked, Waiting) from prompts/15 are NOT
+# modeled as primary states here: they are open points (see EXPERIMENT.md).
+# This is intentional and documents one of the experiment's stress points.
+
+workflow: spec_evolution
+version: 1
+description: |
+  POM SPEC document lifecycle. A SPEC starts as a draft, may be reviewed and
+  accepted, may be implemented to completion, may be superseded by a later
+  SPEC, may be withdrawn before acceptance, or may be rejected on review.
+  Pause states (Deferred/Blocked/Waiting) are deliberately not modeled as
+  primary states in this version.
+
+initial_state: draft
+
+states:
+  - name: draft
+    description: |
+      The spec is being written or actively revised. Not yet submitted for
+      acceptance review. Free to change in shape, scope, and content.
+    is_final: false
+
+  - name: under_review
+    description: |
+      The spec has been submitted for acceptance review. Content is frozen
+      for the duration of the review; comments are tracked, but edits during
+      review require returning to draft.
+    is_final: false
+
+  - name: accepted
+    description: |
+      The spec has passed review and represents intended behavior or
+      capability. Implementation work may begin. The status corresponds to
+      "Status | Accepted" in the spec document header.
+    is_final: false
+
+  - name: complete
+    description: |
+      The spec has been fully implemented and verified against its completion
+      verification gate. Corresponds to "Status | Complete" in current POM
+      specs. Terminal, but admits the supersede out-transition explicitly.
+    is_final: true
+    re_entry_allowed: true
+
+  - name: superseded
+    description: |
+      A later spec replaces this one. The current spec is retained in repo
+      for history but no longer authoritative. Terminal.
+    is_final: true
+
+  - name: withdrawn
+    description: |
+      The author retracts the spec before acceptance. The spec is preserved
+      in repo as a "considered, not pursued" record. Terminal.
+    is_final: true
+
+  - name: rejected
+    description: |
+      The spec is refused on review. Preserved as a documented rejection.
+      Terminal.
+    is_final: true
+
+events:
+  - name: submit_for_review
+    description: Author declares the draft ready for acceptance review.
+
+  - name: request_changes
+    description: Reviewer asks for changes; spec returns to draft.
+
+  - name: accept
+    description: Reviewer approves the spec.
+
+  - name: reject
+    description: Reviewer refuses the spec.
+
+  - name: implement_and_verify
+    description: |
+      Implementation work is complete and the spec's verification gate
+      (Goal-Backward Check + Scenario Tests + Semantic Validation, where
+      applicable) is satisfied.
+
+  - name: supersede
+    description: |
+      A new spec is published that replaces this one. Triggered by the
+      acceptance of the superseding spec.
+
+  - name: withdraw
+    description: The author retracts the spec before acceptance.
+
+guards:
+  - name: has_completion_verification_gate
+    description: |
+      The spec declares an explicit completion verification gate. Required
+      to move from accepted to complete. The gate combines Goal-Backward
+      Check, Scenario Tests, and Semantic Validation as defined in
+      CONTEXT.md.
+
+  - name: superseding_spec_accepted
+    description: |
+      The spec that supersedes this one is itself in state accepted or
+      complete. Prevents supersession by drafts.
+
+transitions:
+  - from: draft
+    to: under_review
+    event: submit_for_review
+
+  - from: under_review
+    to: draft
+    event: request_changes
+
+  - from: under_review
+    to: accepted
+    event: accept
+
+  - from: under_review
+    to: rejected
+    event: reject
+
+  - from: draft
+    to: withdrawn
+    event: withdraw
+    description: |
+      Withdrawal from draft preserves the document as a "considered, not
+      pursued" record without going through review.
+
+  - from: accepted
+    to: complete
+    event: implement_and_verify
+    guard: has_completion_verification_gate
+
+  - from: accepted
+    to: superseded
+    event: supersede
+    guard: superseding_spec_accepted
+
+  - from: complete
+    to: superseded
+    event: supersede
+    guard: superseding_spec_accepted
+
+invariants:
+  - description: |
+      A spec in state complete cannot return to any non-terminal state.
+      Updates to a completed spec require a new spec that supersedes it.
+
+  - description: |
+      Withdrawal is only possible from draft. After review starts, the
+      outcome must be acceptance, rejection, or further revision; the
+      author cannot quietly retract.
+
+  - description: |
+      Rejection is terminal. A rejected spec is not reopened; a fresh
+      spec must be drafted instead. (This is a model choice to be
+      validated; see open points in EXPERIMENT.md.)
+
+  - description: |
+      A spec cannot be superseded by another spec that is itself in
+      draft or under_review. The superseding_spec_accepted guard
+      enforces this at the workflow level.
+
+metadata:
+  owner: POM maintainer
+  tags:
+    - example
+    - dogfooding
+    - spec-lifecycle
+
+  open_points:
+    - |
+      Pause states (Deferred, Blocked, Waiting from prompts/15) are not
+      modeled as primary states. If real usage shows the need, options are:
+      (a) add them as primary states (paying the combinatorial cost),
+      (b) treat them as an orthogonal modifier on the entity,
+      (c) reserve them to PROJECT_STATE and not to the spec lifecycle.
+    - |
+      Rejection is modeled as terminal. POM may want to allow a "revise
+      and resubmit" path that does not require a brand-new spec id.
+    - |
+      The accepted -> withdrawn path is intentionally absent. If real
+      practice shows accepted specs being retracted (not superseded), the
+      model needs adjustment.
+    - |
+      Under-review changes return to draft. An alternative is a
+      "revisions_requested" state that keeps the review thread open.
+
+  closed_points:
+    - |
+      "complete admits supersede out-transition" — resolved via the
+      schema attribute re_entry_allowed: true. The validator no longer
+      flags W003 on complete. Same decision applied to ticket-lifecycle's
+      "closed" state.
