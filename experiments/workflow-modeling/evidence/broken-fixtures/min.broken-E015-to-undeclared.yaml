@@ -1,0 +1,21 @@
+# Expected to fail with: E015 (transition "to" references a state not declared in states).
+
+workflow: broken_to
+version: 1
+description: |
+  Fixture: a transition has to=ghost which is not in states[].
+initial_state: a
+states:
+  - name: a
+    description: start
+    is_final: false
+  - name: b
+    description: end
+    is_final: true
+events:
+  - name: go
+    description: only event
+transitions:
+  - from: a
+    to: ghost
+    event: go

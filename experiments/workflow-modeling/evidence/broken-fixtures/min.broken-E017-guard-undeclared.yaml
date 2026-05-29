@@ -1,0 +1,25 @@
+# Expected to fail with: E017 (transition "guard" references a guard not declared in guards).
+
+workflow: broken_guard
+version: 1
+description: |
+  Fixture: a transition has guard=missing which is not in guards[].
+initial_state: a
+states:
+  - name: a
+    description: start
+    is_final: false
+  - name: b
+    description: end
+    is_final: true
+events:
+  - name: go
+    description: declared event
+guards:
+  - name: ok
+    description: declared guard
+transitions:
+  - from: a
+    to: b
+    event: go
+    guard: missing

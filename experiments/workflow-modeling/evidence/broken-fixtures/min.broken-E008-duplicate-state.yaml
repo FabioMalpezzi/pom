@@ -1,0 +1,24 @@
+# Expected to fail with: E008 (duplicate state name).
+
+workflow: broken_dup_state
+version: 1
+description: |
+  Fixture: state "a" appears twice in states[].
+initial_state: a
+states:
+  - name: a
+    description: first declaration
+    is_final: false
+  - name: a
+    description: duplicate declaration
+    is_final: false
+  - name: b
+    description: end
+    is_final: true
+events:
+  - name: go
+    description: only event
+transitions:
+  - from: a
+    to: b
+    event: go

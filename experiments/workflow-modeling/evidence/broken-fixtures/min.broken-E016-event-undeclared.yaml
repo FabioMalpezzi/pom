@@ -1,0 +1,21 @@
+# Expected to fail with: E016 (transition "event" references an event not declared in events).
+
+workflow: broken_event
+version: 1
+description: |
+  Fixture: a transition has event=phantom which is not in events[].
+initial_state: a
+states:
+  - name: a
+    description: start
+    is_final: false
+  - name: b
+    description: end
+    is_final: true
+events:
+  - name: go
+    description: declared event
+transitions:
+  - from: a
+    to: b
+    event: phantom

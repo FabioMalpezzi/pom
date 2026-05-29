@@ -1,0 +1,21 @@
+# Expected to fail with: E014 (transition "from" references a state not declared in states).
+
+workflow: broken_from
+version: 1
+description: |
+  Fixture: a transition has from=ghost which is not in states[].
+initial_state: a
+states:
+  - name: a
+    description: start
+    is_final: false
+  - name: b
+    description: end
+    is_final: true
+events:
+  - name: go
+    description: only event
+transitions:
+  - from: ghost
+    to: b
+    event: go

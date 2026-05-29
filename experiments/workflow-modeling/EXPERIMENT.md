@@ -118,13 +118,49 @@ Da definire alla fine. Opzioni:
 
 Da compilare in fase di promozione.
 
+## Esito intermedio - prima passata validator (2026-05-29)
+
+Il validatore prototipo `scripts-candidate/lint-workflows.mjs` è stato implementato nella sola modalità Error e fatto girare sui due esempi compilati e su sei fixture minimali con errori volutamente introdotti.
+
+**Setup**
+
+- Parser YAML: `js-yaml` 4.x, installato come dipendenza isolata in `scripts-candidate/package.json` locale all'esperimento. `node_modules/` ignorato; `package-lock.json` committato per riproducibilità. Nessuna modifica al `package.json` di POM principale.
+- Decisione differita: alla promozione si valuterà se `js-yaml` resta o si scrive un parser interno per il subset documentato. L'esperimento dimostra solo che il flusso regge.
+
+**Regole Error implementate (17)**
+
+E000 parse error, E001 nome workflow, E002 initial_state mancante, E003 initial_state non in states, E004 states vuoto, E005..E007 entry senza name, E008..E010 nomi duplicati, E011..E013 transizione senza from/to/event, E014..E017 transizione che riferisce stato/evento/guard non dichiarati.
+
+**Risultati**
+
+| File | Errors | Verdict |
+|---|---|---|
+| `examples/spec-evolution.yaml` | 0 | PASS |
+| `examples/ticket-lifecycle.yaml` | 0 | PASS |
+| `evidence/broken-fixtures/min.broken-E003-initial-state-missing.yaml` | 1 | FAIL (E003) |
+| `evidence/broken-fixtures/min.broken-E008-duplicate-state.yaml` | 1 | FAIL (E008) |
+| `evidence/broken-fixtures/min.broken-E014-from-undeclared.yaml` | 1 | FAIL (E014) |
+| `evidence/broken-fixtures/min.broken-E015-to-undeclared.yaml` | 1 | FAIL (E015) |
+| `evidence/broken-fixtures/min.broken-E016-event-undeclared.yaml` | 1 | FAIL (E016) |
+| `evidence/broken-fixtures/min.broken-E017-guard-undeclared.yaml` | 1 | FAIL (E017) |
+
+Ogni fixture broken produce *esattamente* la regola attesa, niente cascate. Gli esempi corretti passano senza falsi positivi. Il criterio di valore #2 dell'esperimento è soddisfatto per le sole regole Error; resta da estendere a Warning quando il giro sarà ampliato.
+
+**H1 e H2: stato**
+
+- **H1** (espressività YAML): regge sui due workflow eterogenei già compilati. Conferma parziale, dipendente da `document-approval.yaml`.
+- **H2** (validatore statico efficace): confermata per le regole Error sui casi minimi. Da rivedere quando si introdurranno Warning (irraggiungibilità, dead-end, terminale con uscita, non-determinismo).
+
 ## Follow-up
 
-- [ ] Compilare `examples/spec-evolution.yaml` con lifecycle reale delle SPEC POM.
+- [x] Compilare `examples/spec-evolution.yaml` con lifecycle reale delle SPEC POM.
 - [x] Compilare `examples/ticket-lifecycle.yaml`. *(2026-05-29: compilato; ha generato 5 nuovi open point, inclusa la proposta di estensione schema `re_entry_allowed` su stato terminale con riapertura.)*
 - [ ] Compilare `examples/document-approval.yaml`.
 - [ ] Stabilizzare `templates-candidate/WORKFLOW_TEMPLATE.yaml`.
-- [ ] Implementare `scripts-candidate/lint-workflows.mjs`.
+- [x] Implementare `scripts-candidate/lint-workflows.mjs` — regole Error. *(2026-05-29: prima passata completa; Warning e Info, Mermaid e scenari restano da implementare.)*
+- [ ] Estendere `lint-workflows.mjs` con regole Warning (irraggiungibilità, dead-end, terminale con uscita, non-determinismo).
+- [ ] Aggiungere generatore Mermaid `stateDiagram-v2`.
+- [ ] Aggiungere generatore scenari lingua-agnostici.
 - [ ] Stabilizzare `skills-candidate/workflow.md`.
 - [ ] Eseguire test di implementazione TypeScript guidata su un esempio.
 - [ ] Compilare sezione Esito e Consolidazione.

@@ -1,0 +1,22 @@
+# Expected to fail with: E003 (initial_state is not declared in states).
+# Minimal model with an initial_state that does not appear in states[].
+
+workflow: broken_initial_state
+version: 1
+description: |
+  Fixture: initial_state references a state that does not exist.
+initial_state: nowhere
+states:
+  - name: a
+    description: only state
+    is_final: false
+  - name: b
+    description: only state
+    is_final: true
+events:
+  - name: go
+    description: only event
+transitions:
+  - from: a
+    to: b
+    event: go
