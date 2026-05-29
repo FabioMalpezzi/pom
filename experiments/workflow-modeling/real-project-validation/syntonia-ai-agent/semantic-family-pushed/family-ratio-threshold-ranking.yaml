@@ -1,0 +1,56 @@
+workflow: family_ratio_threshold_ranking
+version: 1
+description: |
+  Ratio threshold ranking analytical family. Triggered on threshold cue
+  on a ranking intent. Precedence rule:
+  ratio_threshold_ranking_on_threshold_cue (position 6).
+
+context_schema:
+  input:
+    - { name: signals,        type: object }
+    - { name: scope_context,  type: object }
+    - { name: role_family,    type: string }
+  output_by_terminal:
+    matched:
+      - { name: family_id,             type: string }
+      - { name: analysis_type,         type: string }
+      - { name: comparison_mode,       type: string }
+      - { name: expected_answer_shape, type: string }
+    not_matched:
+      - { name: family_id,             type: string }
+    needs_scope_clarification:
+      - { name: family_id,             type: string }
+    needs_semantic_clarification:
+      - { name: family_id,             type: string }
+      - { name: ambiguity_kind,        type: string }
+
+initial_state: evaluating
+
+states:
+  - { name: evaluating,                   description: "Evaluating threshold/ranking entry, scope, and ambiguity guards.", is_final: false }
+  - { name: matched,                      description: "Ratio-threshold-ranking family resolved.", is_final: true }
+  - { name: not_matched,                  description: "Entry guards not satisfied.", is_final: true }
+  - { name: needs_scope_clarification,    description: "scope_missing fired.", is_final: true }
+  - { name: needs_semantic_clarification, description: "threshold_or_direction_ambiguous fired.", is_final: true }
+
+events:
+  - { name: entry_failed,         description: "Entry guards not satisfied." }
+  - { name: scope_missing_signal, description: "scope_missing guard true." }
+  - { name: semantic_ambiguity,   description: "threshold_or_direction_ambiguous fired." }
+  - { name: ready,                description: "All ready guards true; family resolved." }
+
+guards:
+  - { name: ratio_threshold_entry_guards,   description: "analysis_ranking, has_threshold_cue." }
+  - { name: scope_missing,                  description: "Scope cannot be resolved." }
+  - { name: threshold_or_direction_ambiguous, description: "Threshold or direction not uniquely identifiable." }
+  - { name: ratio_threshold_ready_guards,   description: "All ready guards true." }
+
+transitions:
+  - { from: evaluating, to: not_matched,                  event: entry_failed,         guard: ratio_threshold_entry_guards }
+  - { from: evaluating, to: needs_scope_clarification,    event: scope_missing_signal, guard: scope_missing }
+  - { from: evaluating, to: needs_semantic_clarification, event: semantic_ambiguity,   guard: threshold_or_direction_ambiguous }
+  - { from: evaluating, to: matched,                      event: ready,                guard: ratio_threshold_ready_guards }
+
+metadata:
+  source: pipeline-contract/family-state-rules.ts (ratio_threshold_ranking record)
+  precedence_position: 6

@@ -554,6 +554,27 @@ POM round 2 (state-invoke + event-invoke + context-injection + pipeline) ha mode
 
 - **Rule engine per classificazione + routing** (la semantic family layer). POM workflow declina, e il declino è principled: rule engine multi-machine richiederebbe parallel regions, cross-machine precedence e parametric terminals — tutti fuori dai 4 pilastri della composizione. Il "forced fit" YAML documenta esattamente il costo del forzarlo: un artefatto che mente sul sorgente.
 
+**Push aggiuntivo richiesto dall'utente — modellazione spinta della Semantic Family**
+
+Dopo la conferma del limite "forced fit lossy", l'utente ha chiesto di spingere oltre per essere sicuri delle capacità del modello: 7 famiglie come workflow autonomi + un master FSM con 7 state-invoke consecutivi in ordine di precedence. Esito in `real-project-validation/syntonia-ai-agent/semantic-family-pushed/` (8 file YAML, tutti PASS pulito al primo tentativo).
+
+| Metrica | Forced fit | Pushed modeling | Delta |
+|---|---|---|---|
+| YAML files | 1 | 8 | +7 |
+| State-invokes | 0 | 7 | +7 |
+| context_schema per famiglia | 0 | 7 | +7 |
+| output spec per famiglia | 0 | 7 | +7 |
+| Control modes (analytical vs terminator) modellati | 0 | 2 | +2 |
+| Precedence positions encoded as cascade order | 0 | 7 | +7 |
+| Non-linear precedence rules expressible | 0 | 0 | 0 |
+| Concurrent multi-candidate observability | no | no | unchanged |
+
+Il push **muove ogni metrica tranne le due che l'invariante 4-pilastri vieta per design**. La linea di espressività NON si è spostata: si è spostata la fedeltà entro la linea. Conferma forte e *positiva* della capacità del modello (scala a N child workflow sincroni sotto un parent, context injection scala anche su 7 invoke distinti); conferma anche del limite duro (non-linear precedence, parallel evaluation observability) che resta esattamente dove i pilastri lo collocano.
+
+**Conferma decisiva su H1–H4**
+
+Lo state-invoke + context-injection + Result<Terminal, Output> introdotti nel round 2 non solo gestiscono casi sintetici e un caso di produzione singolo (operational → analyzer): scalano fino a un dispatcher di 7 macchine simultaneamente sotto un parent. Le 4 ipotesi H1–H4 hanno ora la copertura più forte che l'esperimento potesse dare prima della consolidazione.
+
 **Tre file YAML prodotti, tutti PASS pulito** contro il validator post-round-2. Il "PASS clean" non è il criterio di successo: lo è la fedeltà al sorgente. La fedeltà è alta per i primi due, deliberatamente bassa e documentata per il terzo.
 
 **Prossimi passi del giro**

@@ -102,6 +102,63 @@ The exercise discovered a **negative result with value**: there is a concrete cl
 
 **Conclusion**: not a candidate for POM schema growth. A candidate for a **dedicated "POM-rules" or "POM-decision-tables" companion artifact** at most, separate from POM-workflow.
 
+### 3.bis Semantic Family — pushed modeling (added after the user request)
+
+The user asked to push the modeling further: not accept the forced flat fit, but try whether POM round 2 can in fact carry the rule engine when each candidate family is an autonomous workflow and a master FSM orchestrates them in precedence order.
+
+Result: **the round-2 schema accepts the construction in full**. Seven family workflows + one master FSM with seven consecutive state-invokes, all eight PASS clean. Files under `semantic-family-pushed/`.
+
+**Pattern used**
+
+- Each of the 7 representative families (gating_or_clarification, cascade_bridge, yoy_driver_diagnosis, rolling_trend_tradeoff, benchmark_vs_media, ratio_threshold_ranking, single_kpi_snapshot) is an autonomous workflow with 5 states, 4 events, 4 guards, 4 transitions, and per-terminal `context_schema.output_by_terminal`.
+- The master FSM `semantic-family-master.yaml` has 7 `evaluating_<family>` states, each declaring a state-invoke on the corresponding child. The cascade order matches `FAMILY_PRECEDENCE_RULE_SEQUENCE` in the source.
+- On every child's `not_matched` terminal the master moves to the next family in the cascade; on `matched` / `needs_scope_clarification` / `needs_semantic_clarification` / `blocked` it jumps to the matching master terminal.
+
+**Faithfulness gained over the flat forced fit**
+
+1. **Each family is a first-class autonomous workflow** with its own state graph, guards, terminals, and output spec — not a collapsed "any_*" guard.
+2. **The precedence order is explicitly encoded** as the sequence of evaluating_* states in the master, not lost in metadata.
+3. **Per-family output payloads** are now expressible via context_schema, so a future implementation guide can write the right TS discriminated unions.
+4. **The control-mode distinction** (terminator vs analytical) is faithfully represented: only `family_gating_or_clarification` has a `blocked` terminal mapped to the master's `blocked` state, the analytical families do not.
+5. **The "first match wins" semantics** of the rule engine is preserved by the cascade structure: every evaluating_* state only proceeds to the next on `not_matched`.
+
+**Faithfulness still missing (and why)**
+
+1. **Non-linear precedence rules**. The source has precedence rules like `yoy_driver_diagnosis_on_consecutive_years` whose meaning is "if cue X AND family A and family B both compete, choose A". A simple cascade can encode "A before B in the queue" but not "B is the right pick when condition Y is true and A actually fired first". The push cannot reach that level of precedence without violating the four pillars.
+2. **The 40 guard names are still nominal**. The actual evaluation of each guard against signals + scope_context lives in target code. This is consistent with POM's "documentation, not runtime" stance, so it is a design feature rather than a defect.
+3. **Concurrent evaluation observability**. The source evaluates all 13 candidates and can report on all of them; the master picks the first match in the declared order and the others are never invoked. Trace-wise the master is less informative.
+4. **13 → 7 simplification**. Six of the source's 13 families were not modeled in this push (only the 7 most representative). The pattern scales (each new family is a single new YAML + a new evaluating_* state in the master), but the 13-family roster was not produced because it would have been mechanical repetition without new information.
+
+**What this confirms about round 2**
+
+The push validates a previously unproven capability: **POM round 2 schema can host a dispatcher pattern of N synchronous child workflows under one parent**. The original real-project-validation pass had only one state-invoke (operational → analyzer); this push uses seven. The schema scales without modification, the validator handles the deeper file resolution (master → 7 children, each with its own `context_schema`), the context injection mechanism (input + assign nominal coherence) covers a multi-child case with the same conventions used in `loan-application`.
+
+**What this confirms about the limit**
+
+The push closes the question "could POM model the family rules if we tried harder?" with a precise answer:
+
+- **YES** for the structural shape, the precedence order as linear sequence, the per-family autonomous evaluation, the per-family output spec, and the control-mode distinction;
+- **NO** for non-linear precedence rules that depend on the conjunction of two or more candidate-family outcomes (the cross-family logic that makes the source a rule engine and not a switch).
+
+The line drawn by the four-pillar invariant of round 2 (no parallel regions, no shared state) holds where it was supposed to hold. The push moves the modeling much further than the flat forced fit; it does not move the line of expressivity.
+
+**Statistical update**
+
+| Metric | Forced fit | Pushed modeling | Delta |
+|---|---|---|---|
+| YAML files | 1 | 8 (7 families + 1 master) | +7 |
+| State-invokes used | 0 | 7 | +7 |
+| Per-family context_schema declared | 0 | 7 | +7 |
+| Per-family output payload spec | 0 | 7 | +7 |
+| Control modes faithfully represented | 0 of 2 | 2 of 2 | +2 |
+| Precedence-rule positions faithfully encoded | 0 | 7 (linear) | +7 |
+| Source guards visible to schema | 0 | 7 × 4 = 28 (nominal) | +28 |
+| Non-linear precedence rules expressible | 0 | 0 | 0 |
+| Concurrent multi-candidate observability | no | no | unchanged |
+| Validator clean | yes | yes | unchanged |
+
+The push moved every metric except the two that the four-pillar invariant forbids by design.
+
 ---
 
 ## Cross-cutting observations

@@ -1,0 +1,57 @@
+workflow: family_yoy_driver_diagnosis
+version: 1
+description: |
+  Year-over-year driver diagnosis analytical family. Triggered when the
+  user asks for diagnosis with consecutive years or yoy compare cue.
+  Precedence rule: yoy_driver_diagnosis_on_consecutive_years
+  (precedence position 3).
+
+context_schema:
+  input:
+    - { name: signals,        type: object }
+    - { name: scope_context,  type: object }
+    - { name: role_family,    type: string }
+  output_by_terminal:
+    matched:
+      - { name: family_id,             type: string }
+      - { name: analysis_type,         type: string }
+      - { name: comparison_mode,       type: string }
+      - { name: expected_answer_shape, type: string }
+    not_matched:
+      - { name: family_id,             type: string }
+    needs_scope_clarification:
+      - { name: family_id,             type: string }
+    needs_semantic_clarification:
+      - { name: family_id,             type: string }
+      - { name: ambiguity_kind,        type: string }
+
+initial_state: evaluating
+
+states:
+  - { name: evaluating,                   description: "Evaluating yoy entry, scope, and ambiguity guards.", is_final: false }
+  - { name: matched,                      description: "Yoy-driver-diagnosis family resolved.", is_final: true }
+  - { name: not_matched,                  description: "Entry guards not satisfied.", is_final: true }
+  - { name: needs_scope_clarification,    description: "scope_missing fired.", is_final: true }
+  - { name: needs_semantic_clarification, description: "yoy_driver_ambiguous fired.", is_final: true }
+
+events:
+  - { name: entry_failed,         description: "Yoy entry guards not satisfied." }
+  - { name: scope_missing_signal, description: "scope_missing guard true." }
+  - { name: semantic_ambiguity,   description: "yoy_driver_ambiguous fired." }
+  - { name: ready,                description: "All ready guards true; family resolved." }
+
+guards:
+  - { name: yoy_entry_guards,        description: "analysis_diagnosis, yoy_cue_or_relative_year, temporal_axis_present." }
+  - { name: scope_missing,           description: "Scope cannot be resolved." }
+  - { name: yoy_driver_ambiguous,    description: "Diagnostic driver not uniquely identifiable on yoy axis." }
+  - { name: yoy_ready_guards,        description: "All yoy ready guards true." }
+
+transitions:
+  - { from: evaluating, to: not_matched,                  event: entry_failed,         guard: yoy_entry_guards }
+  - { from: evaluating, to: needs_scope_clarification,    event: scope_missing_signal, guard: scope_missing }
+  - { from: evaluating, to: needs_semantic_clarification, event: semantic_ambiguity,   guard: yoy_driver_ambiguous }
+  - { from: evaluating, to: matched,                      event: ready,                guard: yoy_ready_guards }
+
+metadata:
+  source: pipeline-contract/family-state-rules.ts (yoy_driver_diagnosis record)
+  precedence_position: 3
