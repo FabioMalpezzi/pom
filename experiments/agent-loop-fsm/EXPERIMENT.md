@@ -165,11 +165,75 @@ Ogni iterazione deve lasciare traccia di:
 
 | Campo | Valore |
 |---|---|
-| Descrizione | Il concetto di ciclo bounded deve diventare una primitiva esplicita del workflow YAML lungo **due dimensioni** combinabili: (a) numero massimo di iterazioni e (b) durata massima totale del ciclo. Entrambi i bound sono opzionali e indipendenti; il ciclo termina alla prima esaurita. Esempi motivanti reali: l'analyzer-fsm Syntonia ha `MAX_LLM_ATTEMPTS = 3` (count) ma in produzione vorrebbe anche "non oltre 30 minuti totali di retry per non bloccare l'utente" (duration); un agente di planning può avere un budget di "5 step OPPURE 10 minuti, qualunque arrivi prima". Forma candidata: |
-| Forma YAML | `loop_guard: { max_visits: N, max_duration: <ISO8601-duration>, on_exhaustion: <target> }` su uno stato con self-transition. Almeno una delle due chiavi `max_visits` o `max_duration` deve essere presente. |
 | Stato | Proposed (schema-level) |
 | Priorità | Alta |
-| Nota | Richiede modifica al core schema SPEC-0006. Fuori scope per questo esperimento. Candidata per SPEC-0007 in un esperimento separato `exp/schema-loop-guard-timeout`. |
+| Scope | Fuori scope per questo esperimento. Richiede modifica al core schema SPEC-0006. Candidata per SPEC-0007 in un esperimento separato `exp/schema-loop-guard-timeout`. |
+
+**Descrizione**
+
+Il concetto di ciclo bounded deve diventare una primitiva esplicita del workflow YAML lungo **due dimensioni indipendenti e combinabili**:
+
+- numero massimo di iterazioni (`max_visits`);
+- durata massima cumulativa del ciclo (`max_duration`).
+
+Esempi motivanti reali: l'analyzer-fsm Syntonia ha `MAX_LLM_ATTEMPTS = 3` (count) ma in produzione vorrebbe anche un secondo bound del tipo "non oltre 30 minuti totali di retry per non bloccare l'utente" (duration); un agente di planning può avere un budget combinato "5 step oppure 10 minuti, qualunque arrivi prima".
+
+**Definizione**
+
+Un blocco `loop_guard:` su uno stato con self-transition dichiara fino a due bound indipendenti sul ciclo. **Una chiave bound è attiva se e solo se è presente nel YAML.** Per disattivare un bound, si omette la chiave; non esistono valori sentinella. Almeno una delle due chiavi `max_visits` o `max_duration` deve essere presente; un `loop_guard` privo di entrambe è un errore di validazione.
+
+**Forma generale**
+
+```yaml
+loop_guard:
+  max_visits: N             # opzionale: bound sul conteggio (intero >= 1)
+  max_duration: <duration>  # opzionale: bound sul tempo cumulativo
+  on_exhaustion: <target>   # obbligatorio: stato target all'esaurimento
+```
+
+**Esempi (la presenza/assenza di chiave attiva/disattiva la dimensione)**
+
+Solo conteggio (tempo unbounded):
+
+```yaml
+loop_guard:
+  max_visits: 5
+  on_exhaustion: planning_failed
+```
+
+Solo tempo (conteggio unbounded):
+
+```yaml
+loop_guard:
+  max_duration: 30m
+  on_exhaustion: planning_failed
+```
+
+Entrambi (il loop termina alla prima soglia raggiunta):
+
+```yaml
+loop_guard:
+  max_visits: 5
+  max_duration: 30m
+  on_exhaustion: planning_failed
+```
+
+Errore (validator emette Error: il guard non vincolerebbe nulla):
+
+```yaml
+loop_guard:
+  on_exhaustion: planning_failed   # né max_visits né max_duration → invalid
+```
+
+**Tipi e formati fissati**
+
+- `max_visits`: intero ≥ 1.
+- `max_duration`: stringa nel formato compatto `<N><unit>` con `unit ∈ {s, m, h, d}` (esempi: `30s`, `15m`, `2h`, `7d`); accettato anche il formato ISO 8601 duration (`PT30M`, `PT2H`, `P7D`).
+- `on_exhaustion`: nome di stato dichiarato in `states[]` del workflow.
+
+**Semantica del tempo**
+
+`max_duration` si misura come **tempo cumulativo speso nel loop** dall'ingresso iniziale nello stato fino al momento in cui il bound viene controllato. Non è un timeout per singola visita. Coerente con il caso d'uso motivante "budget di tempo del ciclo".
 
 ### H7 — Timeout su stato non-loop come primitiva di schema
 
