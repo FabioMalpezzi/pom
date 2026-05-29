@@ -23,6 +23,28 @@ L'obiettivo non è dimostrare la validità di una specifica soluzione tecnica, m
 
 Ogni ipotesi verrà verificata tramite uno o più esperimenti. Le soluzioni che dimostreranno valore saranno candidate alla promozione nel metodo POM. Le soluzioni che non produrranno benefici sufficienti saranno archiviate insieme alle evidenze raccolte.
 
+## Architettura concettuale
+
+Questo lavoro mette deliberatamente in relazione tre concetti POM distinti che, presi insieme, formano il quadro operativo dell'esperimento.
+
+### Concetto 1 — Esperimento POM
+
+Il pattern POM degli esperimenti come strumento di continuous improvement: isolamento (`experiments/<topic>/`), iterazioni piccole guidate da ipotesi, decisione esplicita di Adopt / Refine / Reject ad ogni iterazione, promozione canonica solo dopo verifica. Definito in `skills/spike.md` + `prompts/09-run-temporary-experiment.md`. Il metodo sperimentale a sette step descritto sotto è l'applicazione disciplinata di questo pattern al dominio agentico.
+
+### Concetto 2 — Loop / Goal degli agenti
+
+Il dominio applicativo: gli agenti AI lavorano in cicli (perception → planning → action → observation), perseguono goal con un proprio lifecycle (proposto → accettato → in lavorazione → bloccato → completato), gestiscono retry con bound, sopravvivono a interruzioni e riprese. È il problema da modellare, non lo strumento per farlo.
+
+### Concetto 3 — FSM / Workflow POM
+
+Lo strumento di modellazione introdotto in POM v0.2.0 (SPEC-0006): YAML dichiarativo, validatore strutturale, generatore Mermaid integrato, composizione sincrona (pipeline, state-invoke, event-invoke), context injection, suspend/restore. È il candidato per gestire correttamente il Concetto 2 con la disciplina che il Concetto 1 impone.
+
+### Come i tre concetti convergono
+
+L'esperimento è un'**istanza concreta** del pattern documentato in `templates/WORKFLOW_INTEGRATION_GUIDE.md` sezione "As a temporary experiment before promotion": usa il pattern POM degli esperimenti (Concetto 1) per verificare se e come la capability FSM (Concetto 3) gestisce in modo corretto il dominio agent loop / goal (Concetto 2). Ogni iterazione produce o un workflow candidato sotto `workflows-candidate/` che esemplifica la triplice intersezione, oppure una decisione documentata che riduce l'incertezza su un percorso non praticabile.
+
+La triplice intersezione è anche il motivo per cui il limite di scope è chiaro: niente runtime per agenti (escluderebbe il Concetto 1 a favore del Concetto 2), niente concorrenza (forzerebbe il Concetto 3 oltre i suoi pilastri), nessuna modifica al core schema (preserva l'integrità del Concetto 3 stabilita in v0.2.0). I tre concetti restano in equilibrio.
+
 ## Obiettivo
 
 Raggiungere una modalità chiara, verificabile e manutenibile per modellare sistemi agentici utilizzando le capability Workflow/FSM introdotte in POM v0.2.0.
