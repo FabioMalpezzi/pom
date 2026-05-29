@@ -68,6 +68,7 @@
         <a href="#overlay">Overlay</a>
         <a href="#adoption">Adoption</a>
         <a href="#skills">Skills</a>
+        <a href="#workflows">Workflows</a>
         <a href="#recommendations">Recommendations</a>
       </nav>
     </div>
@@ -439,8 +440,70 @@
           <tr><td data-label="Need">Review POM rules without editing files</td><td data-label="Skill"><code>validate</code></td></tr>
           <tr><td data-label="Need">Reduce unnecessary method weight</td><td data-label="Skill"><code>prune</code></td></tr>
           <tr><td data-label="Need">Debug a POM problem</td><td data-label="Skill"><code>diagnose</code></td></tr>
+          <tr><td data-label="Need">Model, validate, diagram, or implement a domain workflow as a YAML state machine</td><td data-label="Skill"><code>workflow</code></td></tr>
         </tbody>
       </table>
+    </section>
+
+    <section id="workflows">
+      <h2>Workflow modeling (FSM as a documented + implementable artifact)</h2>
+
+      <p>POM v0.2.0 adds an <strong>opt-in</strong> capability to model finite state machines (FSMs) as a first-class POM artifact, with the same discipline as specs and ADRs: a single YAML file is the source of authority, the validator catches structural mistakes, a diagram is regenerated automatically, and an agent can use the file to guide the implementation code in the target project's language.</p>
+
+      <p>Activate it per project by adding the section <code>"workflows": { "enabled": true, "root": "workflows/" }</code> to <code>pom.config.json</code>. If it is not active, every workflow command and the <code>workflow</code> skill stay quiet. POM keeps recommending without imposing.</p>
+
+      <h3>When is it the right tool</h3>
+      <p>Use POM workflow modeling when the project has at least one domain entity that <em>passes through a known sequence of discrete states</em>, with explicit events that cause transitions and clear rules for closure. Typical fits:</p>
+      <ul>
+        <li>Ticket and incident lifecycle.</li>
+        <li>Order processing (cart, checkout, payment, shipping).</li>
+        <li>Document approval and publishing flow.</li>
+        <li>Subscription, application, KYC, or loan flows.</li>
+        <li>Internal POM-style processes (spec lifecycle, ADR lifecycle).</li>
+        <li>Pipeline orchestrators that call one synchronous sub-FSM per phase (analyzer, repair, validator).</li>
+      </ul>
+
+      <p>Avoid it when the workflow is essentially a concurrent rule engine across many candidate machines, when the dominant complexity is real-time or distributed coordination, or when a stronger tool (XState, dedicated workflow engine) is already in use. POM workflow modeling is intentionally a subset of XState's expressive surface; the four pillars are: no async / no shared state between machines / no inheritance / no runtime owned by POM.</p>
+
+      <h3>What you get on the documentation and specification side</h3>
+      <ul>
+        <li><strong>The YAML model becomes the spec</strong> for that workflow: states, events, guards, transitions, optional <code>context_schema</code> for typed input and per-terminal output, and explicit invariants. Versioned, reviewed in PRs, archived in Git.</li>
+        <li><strong>The validator</strong> (<code>npm run pom:workflow:lint</code>) checks 50 Error rules and 4 Warning rules: unreachable states, silent dead-ends, terminal states with an undocumented exit, ambiguous transitions, missing references between parent and child, illegal asynchronous composition, and so on. Errors fail the build in CI; warnings travel as reviewer judgment.</li>
+        <li><strong>A Mermaid diagram</strong> is regenerated automatically every time the validator runs with <code>--mermaid-dir</code>. Drift between the model and its visual representation is impossible by construction. Renders natively on GitHub, embeddable anywhere Markdown is rendered, exportable to PNG/SVG.</li>
+        <li><strong>An XState v5 MachineConfig JSON</strong> (<code>npm run pom:workflow:xstate</code>) can be imported into <a href="https://stately.ai">stately.ai</a> for an online interactive simulation, layout, and export. The team reviews the model graphically before any code is touched.</li>
+        <li><strong>An ADR can record consequential schema decisions</strong> (for example: re-entry from a terminal, per-terminal output payload) with the same trail used for any other POM choice.</li>
+      </ul>
+
+      <h3>What you get on the code side</h3>
+      <ul>
+        <li><strong>Pattern A (transition table)</strong>: the most idiomatic minimal implementation. The agent produces an immutable transition table, an <code>applyTransition(state, event, context)</code> pure function, named guard predicates with docstrings copied verbatim from the YAML, and a set of tests covering positive transitions, refused transitions, guard branches, and terminal-state checks. Language profiles for TypeScript (with <code>node:test</code>) and Python (with <code>unittest</code>) are documented; both are verified with runnable evidence in the experiment.</li>
+        <li><strong>Pattern B (switch on state)</strong>: idiomatic when the team prefers method-based business logic and the model is small.</li>
+        <li><strong>Pattern C (FSM library)</strong>: when the project already uses XState (TypeScript), <code>transitions</code> / <code>python-statemachine</code> (Python), or similar. The transformer to XState JSON is the bridge.</li>
+        <li><strong>Suspend and restore</strong> are documented as a single snapshot shape (<code>workflow</code> + <code>version</code> + <code>state</code> + <code>context</code> for single machines; a stack of frames for composed workflows). The Pattern A code is stateless and the caller owns the state, so persisting between processes is two file writes and a load.</li>
+        <li><strong>Bounded retry counters</strong> (max attempts) live in <code>context</code>, which means they survive snapshot + restore automatically.</li>
+      </ul>
+
+      <h3>How a team typically uses it</h3>
+      <ol>
+        <li>Add the <code>workflows</code> section to <code>pom.config.json</code> (opt-in).</li>
+        <li>Use the <code>workflow</code> skill in mode <code>design</code> to draft <code>workflows/&lt;name&gt;.yaml</code> from prose, surfacing ambiguities as <code>open_points</code> instead of inventing rules.</li>
+        <li>Run <code>npm run pom:workflow:lint workflows/&lt;name&gt;.yaml --mermaid-dir workflows/generated/</code>. Read the report; review the diagram with the domain expert.</li>
+        <li>If a stately.ai simulation is wanted, run <code>npm run pom:workflow:xstate</code> on the same file and import the JSON into the editor.</li>
+        <li>Use the <code>workflow</code> skill in mode <code>implement</code> to produce target-language code. The agent reads <code>pom.config.json</code> for the language, picks a pattern with explicit criteria, generates the table + guard stubs + tests, and surfaces what was guided and what was left to the team to wire to the existing code.</li>
+        <li>Add a CI job that runs the validator on every PR touching <code>workflows/</code>. Drift between YAML, diagram, and code is prevented at the gate.</li>
+      </ol>
+
+      <h3>Where the discipline lives</h3>
+      <p>The capability ships four artifacts that explain the limits explicitly so adoption stays honest:</p>
+      <ul>
+        <li><code>specs/SPEC-0006-workflow-modeling.md</code>: schema, validator rules, the four pillars (no async / no shared state / no inheritance / no runtime in POM).</li>
+        <li><code>decisions/ADR-0002-workflow-context-injection.md</code>: closed decision on parent/child data exchange (<code>Result&lt;Terminal, Output&gt;</code>, no shared visibility).</li>
+        <li><code>templates/WORKFLOW_IMPLEMENTATION_GUIDE.md</code>: Pattern A/B/C catalogue, language profiles (TypeScript, Python), suspend/restore section, anti-patterns.</li>
+        <li><code>templates/WORKFLOW_INTEGRATION_GUIDE.md</code>: adoption + extension manual for teams (file layout, configuration, lifecycle, migration patterns for existing projects, how to extend a workflow without breaking in-flight instances, versioning, retirement).</li>
+        <li><code>docs/workflow-xstate-compatibility.md</code>: mapping table and the stately.ai workflow.</li>
+      </ul>
+
+      <p>Worked examples ship as starter templates under <code>templates/examples/workflow/</code>: <code>spec-evolution.yaml</code>, <code>ticket-lifecycle.yaml</code>, <code>document-approval.yaml</code>. They cover the canonical lifecycles and are usable as starting points or as didactic references.</p>
     </section>
 
     <section class="warning" id="recommendations">
