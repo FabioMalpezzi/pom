@@ -1,0 +1,48 @@
+{
+  "_comment": "Snapshot example for H5 — agent-orchestrator (ReAct minimal) suspended mid-loop, after the agent has executed two reason/act/observe cycles and is currently waiting on the third reasoning step. Conforms to the suspend/restore contract in templates/WORKFLOW_IMPLEMENTATION_GUIDE.md.",
+  "workflow": "agent_orchestrator",
+  "version": 1,
+  "state": "reasoning",
+  "context": {
+    "goal": "Find the cheapest flight from MXP to JFK on 2026-06-15 with ≤1 stop.",
+    "history": [
+      {
+        "thought": "I need a flight search API. Use the search tool with origin=MXP, destination=JFK, date=2026-06-15.",
+        "action": {
+          "tool": "flight_search",
+          "args": {"origin": "MXP", "destination": "JFK", "date": "2026-06-15"}
+        },
+        "observation": {
+          "results": 12,
+          "min_price": 612,
+          "min_price_stops": 1,
+          "currency": "EUR"
+        }
+      },
+      {
+        "thought": "Found 12 results. Cheapest is 612 EUR with 1 stop, matching constraint. I should verify by asking for the direct flights too to compare.",
+        "action": {
+          "tool": "flight_search",
+          "args": {"origin": "MXP", "destination": "JFK", "date": "2026-06-15", "max_stops": 0}
+        },
+        "observation": {
+          "results": 3,
+          "min_price": 1480,
+          "min_price_stops": 0,
+          "currency": "EUR"
+        }
+      }
+    ],
+    "last_observation": {
+      "results": 3,
+      "min_price": 1480,
+      "min_price_stops": 0,
+      "currency": "EUR"
+    }
+  },
+  "_meta": {
+    "_comment_snapshot_taken": "Snapshot was taken at the moment the agent re-entered `reasoning` after the second observation. Resume contract: ingest this JSON, validate workflow name + version + state-in-model + context schema, then enter the `reasoning` state and continue the loop.",
+    "suspended_at": "2026-05-30T00:30:00Z",
+    "suspension_reason": "operator-initiated checkpoint for evidence"
+  }
+}
