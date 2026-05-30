@@ -78,6 +78,44 @@ Quando H6 diventerà primitiva schema, questi due valori migreranno dentro al YA
 - **Snapshot/restore non implementato qui.** Il runtime non scrive automaticamente lo snapshot a 4-tupla `{workflow, version, state, context}` (validato in H5). Aggiungerlo costa ~20 righe in `agent-runtime.ts`; sarà un'iterazione successiva.
 - **Tool mock.** I tool inclusi (`calculator`, `echo`, `fake_search`) sono volutamente piccoli. Per usi reali, aggiungi tool nel registro `TOOL_SCHEMAS` + `TOOL_IMPLS` di `tools.ts`.
 
+## Workflow Fit Auditor — agente POM eseguibile
+
+Sopra lo stesso runtime gira un agente specializzato (`workflow-fit-auditor.ts`) che automatizza la classificazione `clean / adapted / forced fit` di un workflow modellato — il lavoro che gli esperimenti H1–H5 hanno fatto a mano cinque volte.
+
+### Uso
+
+```sh
+npm run audit -- <path-to-workflow.yaml> [<output.fit.md>]
+```
+
+Esempio (richiede una chiave LLM in `.env`):
+
+```sh
+npm run audit -- \
+  experiments/agent-loop-fsm/workflows-candidate/agent-loop-table.yaml \
+  experiments/agent-loop-fsm/design/agent-loop-table-auto.fit.md
+```
+
+### Tool POM aggiuntivi (in `tools.ts`)
+
+- `read_workflow(path)` — legge il YAML
+- `lint_workflow(path)` — esegue `scripts/lint-workflows.mjs`
+- `list_pom_primitives()` — restituisce la lista canonica delle primitive POM (riferimento per classificare)
+- `write_design_note(path, content)` — scrive il `*.fit.md` (gated: path deve finire in `.fit.md` ed essere sotto `experiments/`)
+
+### Validazione (test reale 2026-05-30)
+
+Applicato a `agent-loop-table.yaml` (H2 modellato a mano). Confronto con il `agent-loop-table.fit.md` scritto a mano oggi: stesso giudizio su 6/6 stati e 7/7 transizioni (tutti clean fit), verdetto identico ("100% clean fit"), lunghezza simile (~50 righe), note più sintetiche ma sostanzialmente accurate. Tempo: ~30 secondi reali, 10 iterazioni FSM. Il modello DeepSeek ha usato spontaneamente parallel tool calls al primo turno (read_workflow + list_pom_primitives) — il runtime li gestisce.
+
+### Costo del fix scoperto durante questo test
+
+Due bug del runtime base sono stati corretti per supportare l'auditor:
+
+1. `reasoning` dopo `observing` con tool pendente non doveva ri-chiamare l'LLM — saltava direttamente all'esecuzione.
+2. `pendingToolCall` singola non bastava: i provider OpenAI-compatible emettono `tool_calls[]` come array (parallel tool calls). Ora il runtime esegue tutte le call del turno in ordine e produce un `tool` message per ogni `tool_call_id`. Senza questo fix l'API rifiuta la conversazione successiva come incoerente.
+
+Entrambi i fix migliorano anche `agent-runtime.ts` (il runtime base resta retro-compatibile).
+
 ## Stato
 
-Candidato. Vive in `experiments/agent-loop-fsm/runtime-candidate/` per la durata della validazione. Esecuzione end-to-end confermata su DeepSeek (`deepseek-chat`) il 2026-05-30 al primo tentativo (un fix di sintassi su una chiave oggetto a metà strada, niente di sostanziale).
+Candidato. Vive in `experiments/agent-loop-fsm/runtime-candidate/` per la durata della validazione. Esecuzione end-to-end confermata su DeepSeek (`deepseek-chat`) il 2026-05-30 sia per il calcolo aritmetico base sia per l'audit di un workflow POM reale.

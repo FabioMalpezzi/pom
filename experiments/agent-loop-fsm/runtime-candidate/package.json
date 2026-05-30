@@ -6,7 +6,7 @@
   "description": "Provider-agnostic TypeScript runtime per il workflow ReAct minimal modellato in H1 (agent-loop-fsm). Pattern A (transition table).",
   "scripts": {
     "start": "tsx agent-runtime.ts",
-    "demo": "tsx demo.ts"
+    "audit": "tsx workflow-fit-auditor.ts"
   },
   "dependencies": {
     "openai": "^4.77.0",

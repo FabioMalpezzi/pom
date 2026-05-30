@@ -178,6 +178,39 @@ Cosa dimostra in più rispetto a H1–H5:
 
 Il runtime non è promosso ai path canonici di POM — resta come `runtime-candidate/` accanto a `workflows-candidate/` finché non si decide se costruire un runtime di riferimento POM (decisione fuori scope per questo esperimento).
 
+## 4-ter. Workflow Fit Auditor — agente POM eseguibile sopra il runtime
+
+Subito dopo il primo test runtime (calcolo aritmetico), è stato scritto un secondo agente sopra lo stesso Pattern A: il **Workflow Fit Auditor**. Vive in `experiments/agent-loop-fsm/runtime-candidate/workflow-fit-auditor.ts` ed estende il registro di tool con quattro primitive POM (`read_workflow`, `lint_workflow`, `list_pom_primitives`, `write_design_note`).
+
+Compito dell'agente: dato il path di un workflow YAML modellato, produrre automaticamente il design note `*.fit.md` con la classificazione `clean / adapted / forced lossy` di ogni stato e di ogni transizione — esattamente il lavoro che gli esperimenti H1–H5 hanno fatto a mano cinque volte.
+
+Test reale eseguito il 2026-05-30 su `agent-loop-table.yaml` (H2). Output dell'agente: `experiments/agent-loop-fsm/design/agent-loop-table-auto.fit.md`, da confrontare con `agent-loop-table.fit.md` scritto a mano.
+
+Confronto:
+
+| Metrica | A mano (umano) | Agente automatico |
+|---|---|---|
+| Stati clean fit | 6/6 | 6/6 |
+| Transizioni clean fit | 7/7 | 7/7 |
+| Verdetto complessivo | 100% clean fit, CONFIRMED | 100% clean fit |
+| Lunghezza file | 49 righe | 50 righe |
+| Tempo | ~10 minuti | ~30 secondi, 10 iterazioni FSM |
+
+L'agente è arrivato agli stessi giudizi sostanziali (stesso fit per ogni elemento, stesso verdetto). Lo stile delle note differisce — il file scritto a mano ha più dettaglio domain-level ("ReAct pattern's thought stage"), quello dell'agente è più sintetico ma rigoroso e ha aggiunto un'osservazione corretta che il mio non aveva ("scelta deliberata di non usare primitive compositive, coerente con l'ipotesi H2"). Il modello DeepSeek ha anche usato spontaneamente parallel tool calls al primo turno (`read_workflow + list_pom_primitives` in parallelo), confermando un'ottimizzazione che il runtime ora supporta.
+
+Cosa questo dimostra al di là del calcolo aritmetico di 4-bis:
+
+- Il runtime Pattern A regge anche su task **multi-iter strutturato**: 10 transizioni FSM (4 cicli completi reasoning → acting → observing), tre tool diversi chiamati in sequenza, output strutturato in markdown scritto su disco.
+- Lo stesso runtime serve sia per task generici (calcolo) sia per task POM-specifici (audit). La distinzione vive solo nel **tool registry** e nel **system prompt**, non nel runtime — esattamente la promessa del Pattern A "transition table generica".
+- POM ora ha un'automazione concreta dei propri stessi workflow di validazione: il design note che era prodotto a mano può essere generato automaticamente, con qualità comparabile, e usato come baseline per la revisione umana.
+
+Bug runtime scoperti e corretti durante questo test:
+
+1. Quando `observing` produce una nuova tool call (loop_continue), lo step `reasoning` successivo non doveva ri-chiamare l'LLM: doveva applicare direttamente la tool call pendente. Senza il fix, la API rifiutava la conversazione perché l'assistant message con `tool_calls` non aveva la corrispondente `tool` response.
+2. Il runtime gestiva solo una tool call per turno; i provider OpenAI-compatible (DeepSeek, OpenAI, Groq...) emettono `tool_calls` come array (parallel tool calls). Senza gestire l'intero array, l'API rifiutava la conversazione successiva come incoerente. Il runtime ora esegue tutte le call del turno in ordine, generando una `tool` response per ogni `tool_call_id`.
+
+Entrambi i fix migliorano anche `agent-runtime.ts` (calcolo aritmetico ancora funziona).
+
 ---
 
 ## 5. Cosa resta aperto
