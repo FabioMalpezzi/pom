@@ -211,6 +211,47 @@ Bug runtime scoperti e corretti durante questo test:
 
 Entrambi i fix migliorano anche `agent-runtime.ts` (calcolo aritmetico ancora funziona).
 
+## 4-quater. Auditor su composizione + Scenarios Generator (secondo giro)
+
+Subito dopo il primo audit, è stato eseguito un secondo test su un workflow con composizione (`agent-supervisor.yaml` di H4, che invoca `agent-orchestrator-goal-lifecycle.yaml` via `state-invoke`) per misurare due cose: la robustezza dell'auditor su un caso non triviale, e l'autonomia dell'agente nel seguire le composizioni senza istruzioni esplicite.
+
+### Auditor naked su composizione
+
+Stessa invocazione del primo audit, ma sul supervisor: `npm run audit -- agent-supervisor.yaml agent-supervisor-auto.fit.md`. Risultato in 10 iterazioni.
+
+L'agente ha classificato correttamente: 5/5 stati clean fit, 6/6 transizioni clean fit, ha riconosciuto `state-invoke` come primitiva POM, ha citato esplicitamente `state-invoke.on_completion[]` per i dispatch sui terminal del sub-workflow. Verdetto: 100% clean fit, coerente con il `agent-supervisor.fit.md` scritto a mano.
+
+Ma — finding diagnostico — l'agente **NON ha letto il sub-workflow** `agent-orchestrator-goal-lifecycle.yaml`. Ha trattato `agent-supervisor.yaml` come standalone, ignorando la composizione. Per un audit di forma è sufficiente; per un audit di integrità della composizione (verificare che il sub-workflow esista, validi, e abbia davvero i terminal citati nell'invoke) no. Una riga aggiuntiva nel system prompt risolverebbe: "se vedi state-invoke o event-invoke, leggi anche il sub-workflow referenziato e includilo nell'analisi". Lasciato come miglioramento per una v2 dell'auditor.
+
+### Workflow Scenarios Generator (nuovo agente)
+
+Sopra lo stesso runtime Pattern A, è stato scritto un terzo agente: `workflow-scenarios-generator.ts`. Dato un workflow POM, enumera i path significativi attraverso la FSM e produce un file `<name>.scenarios.md` con uno scenario per ogni path interessante (happy path, failure path per ogni failure mode dichiarato, loop path, edge case).
+
+Nuovo tool nel registro: `write_scenarios(path, content)` (gated su path che finiscono in `.scenarios.md` sotto `experiments/`). Niente lint (non serve per la generazione di scenari). Il registro POM scenarios è quindi più piccolo dell'auditor (3 tool invece di 4).
+
+Il system prompt include esplicitamente: "se il workflow contiene state-invoke o event-invoke, leggi ANCHE il sub-workflow referenziato per capire i suoi terminal_state, così puoi enumerare i path della composizione". Test: applicato a `agent-supervisor.yaml`, lo stesso workflow su cui l'auditor naked aveva ignorato il sub-workflow.
+
+Risultato in 10 iterazioni:
+
+- L'agente ha letto `agent-supervisor.yaml`, poi (questa volta) `agent-orchestrator-goal-lifecycle.yaml`, ha analizzato la composizione, e ha scritto un file di ~10 KB con **7 scenari** che coprono:
+  - happy path completo (supervisor + sub-workflow `done`)
+  - tre failure path distinti (goal_invalid, plan_failed, impossible)
+  - due varianti con replan loop (success dopo replan, failure dopo replan)
+  - terminal `stopped` del supervisor
+- Ogni scenario ha: descrizione, stato iniziale, stato finale atteso, context iniziale, sequenza tabellare di `(stato, evento) → transizione + side-effect` per ogni transizione attraversata (compreso l'attraversamento del sub-workflow), assertioni finali.
+- Una **tabella di copertura** finale mappa ogni terminale al suo scenario, dimostrando che la copertura è completa.
+- L'agente ha usato solo eventi dichiarati nei due workflow (verificato), ha riconosciuto che `handling_goal` rimane attivo per tutta la durata del sub-workflow (semantica corretta dell'invoke sincrono), e ha distinto correttamente i terminali (`stopped`) dai cicli di rientro (`idle` via `acknowledging`/`escalating`).
+
+Quello che dimostra: con l'istruzione esplicita nel prompt, l'agente segue la composizione e produce materiale che POM oggi **non automatizza affatto** — gli scenari di test sono fixture utili a un runtime per validare l'implementazione, e oggi vanno scritti a mano. Tre agenti diversi (calculator, auditor, scenarios), tre system prompt, tre tool registry diversi, **stesso runtime Pattern A invariato**.
+
+### Cosa ha capito POM da questo secondo giro
+
+Sul runtime: il Pattern A regge sia su task semplici (4 iter del calcolo) sia su task agentici strutturati (10 iter dell'auditor o dello scenarios generator) senza modifiche al loop principale. Il punto di estensione è il **tool registry + system prompt**, non il runtime.
+
+Sul prompt design: l'agente è bravo a usare i tool che ha, ma non a *cercarli* spontaneamente se la guida non li nomina. Pattern netto: per ogni capability extra (es. "leggi anche il sub-workflow"), serve una riga esplicita nel system prompt. Questo è materiale per il prompt v3 di `define-loop-goal-criteria` (`task #66`) — il principio "le opzioni di configurazione siano logicamente correlate e ci sia un feedback sulle conseguenze" che hai chiesto si applica anche qui: l'agente vede `state-invoke` ma non collega "primitiva composita → devo seguirne l'estensione".
+
+Sul valore POM: dopo questo giro POM ha due automazioni concrete sopra workflow modellati (fit.md e scenarios.md), entrambe con qualità sufficiente per essere riviste da un umano invece che scritte da zero. Sono il primo esempio di "agenti POM eseguibili sopra POM stesso", e mostrano una via concreta per integrare LLM nel workflow di documentazione POM in progetti target.
+
 ---
 
 ## 5. Cosa resta aperto

@@ -200,6 +200,25 @@ function writeDesignNote(notePath: string, content: string): { ok: boolean; outp
   }
 }
 
+function writeScenarios(notePath: string, content: string): { ok: boolean; output: string } {
+  const abs = toAbsPomPath(notePath);
+  if (!abs.endsWith('.scenarios.md')) {
+    return { ok: false, output: `write_scenarios accetta solo path che finiscono in .scenarios.md (richiesto: ${notePath}).` };
+  }
+  if (!abs.includes('/experiments/')) {
+    return { ok: false, output: `write_scenarios accetta solo path dentro experiments/ (richiesto: ${notePath}).` };
+  }
+  try {
+    mkdirSync(dirname(abs), { recursive: true });
+    writeFileSync(abs, content, 'utf8');
+    const size = content.length;
+    return { ok: true, output: `Scritto ${abs} (${size} bytes).` };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, output: `Errore scrittura: ${msg}` };
+  }
+}
+
 // ─── Schema e registro ───────────────────────────────────────────────
 
 const MOCK_SCHEMAS: ChatTool[] = [
@@ -322,8 +341,36 @@ const POM_AUDITOR_SCHEMAS: ChatTool[] = [
   },
 ];
 
+const POM_SCENARIOS_SCHEMAS: ChatTool[] = [
+  POM_AUDITOR_SCHEMAS[0], // read_workflow
+  POM_AUDITOR_SCHEMAS[2], // list_pom_primitives
+  {
+    type: 'function',
+    function: {
+      name: 'write_scenarios',
+      description:
+        "Scrive un file `*.scenarios.md` con la lista degli scenari di test per un workflow POM. Per sicurezza, accetta solo path che finiscono in `.scenarios.md` e che vivono sotto `experiments/`.",
+      parameters: {
+        type: 'object',
+        properties: {
+          path: {
+            type: 'string',
+            description: 'Path destinazione (deve finire in `.scenarios.md`, dentro `experiments/`).',
+          },
+          content: {
+            type: 'string',
+            description: 'Contenuto markdown completo del file di scenari.',
+          },
+        },
+        required: ['path', 'content'],
+      },
+    },
+  },
+];
+
 export const TOOL_SCHEMAS: ChatTool[] = MOCK_SCHEMAS;
 export const TOOL_SCHEMAS_POM_AUDITOR: ChatTool[] = POM_AUDITOR_SCHEMAS;
+export const TOOL_SCHEMAS_POM_SCENARIOS: ChatTool[] = POM_SCENARIOS_SCHEMAS;
 
 export const TOOL_IMPLS: Record<string, ToolImpl> = {
   calculator: async (input) => {
@@ -354,6 +401,8 @@ export const TOOL_IMPLS: Record<string, ToolImpl> = {
   list_pom_primitives: async () => listPomPrimitives(),
   write_design_note: async (input) =>
     writeDesignNote(String(input.path ?? ''), String(input.content ?? '')),
+  write_scenarios: async (input) =>
+    writeScenarios(String(input.path ?? ''), String(input.content ?? '')),
 };
 
 export async function runTool(name: string, input: Record<string, unknown>): Promise<ToolResult> {
