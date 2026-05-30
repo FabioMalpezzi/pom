@@ -126,7 +126,7 @@ Ogni iterazione deve lasciare traccia di:
 | Campo | Valore |
 |---|---|
 | Descrizione | Il control flow di un agente AI può essere modellato tramite workflow POM senza introdurre complessità eccessiva. |
-| Stato | Proposed |
+| Stato | **Confirmed (2026-05-30)** — due pattern eterogenei (ReAct minimal, Goal Lifecycle) modellati con 100% clean fit, 0 estensioni schema fuori dal backlog, 0 forced-fit. Vedi `design/agent-orchestrator.fit.md`. |
 | Priorità | Alta |
 
 ### H2 — Loop agente come transition table
@@ -304,9 +304,11 @@ states:
 |---|---|
 | Ipotesi | H1 |
 | Obiettivo | Verificare la modellazione FSM dell'agente. |
-| Artefatti | design note; `agent-orchestrator.yaml` |
+| Artefatti | `design/criteria-experiment-1-h1.md` (contratto); `workflows-candidate/agent-orchestrator.yaml` (ReAct minimal, iter 1); `workflows-candidate/agent-orchestrator-goal-lifecycle.yaml` (Goal Lifecycle, iter 2); `design/agent-orchestrator.fit.md` (classificazione fit). |
 | Evidenze richieste | workflow valido; diagramma Mermaid leggibile |
-| Decisione | Da compilare |
+| Evidenze prodotte | 4 gate verdi in entrambe le iterazioni; `evidence/mermaid/agent-orchestrator.{mmd,svg}` e `evidence/mermaid/agent-orchestrator-goal-lifecycle.{mmd,svg}` parsati da `mmdc`. |
+| Iterazioni | 2 di 10 (max_visits del loop_guard); ~12 min di 2h budget. |
+| Decisione | **CONFIRMED** — 100% clean fit su entrambi i pattern, 0 estensioni schema fuori backlog, 0 forced-fit. Conclusione narrow su due pattern (ReAct minimal, Goal Lifecycle); OODA non testato (marginal-return). |
 
 ### Esperimento 2
 
