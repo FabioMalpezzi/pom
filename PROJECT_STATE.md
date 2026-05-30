@@ -47,24 +47,29 @@ _Current operational state. Update at every significant session or when prioriti
 POM v0.2.0 released and tagged. The most recent active branch is `exp/agent-loop-fsm` (commits up to `403efed` pushed to `origin`), where five hypotheses on agent loop/goal modeling (H1–H5) have all been confirmed at 100% clean fit, and several methodological byproducts have been added:
 
 - five canonical workflow examples promoted to `templates/examples/workflow/loop-goal/` (ReAct minimal, Goal Lifecycle, flat SPAO, bounded retry, supervisor+invoke);
-- one candidate skill `experiments/agent-loop-fsm/skills-candidate/loop-goal.md` with five modes (`define-criteria`, `model`, `audit`, `scenarios`, `runtime-guide`);
-- three candidate prompts in `experiments/agent-loop-fsm/prompts-candidate/` (`define-loop-goal-criteria` v2, `audit-loop-goal-workflow`, `scenarios-loop-goal-workflow`) — all coding-agent-native;
+- one candidate skill `experiments/agent-loop-fsm/skills-candidate/loop-goal.md` with six modes (`define-criteria`, `model`, `audit`, `scenarios`, `runtime-guide`, `conclude`);
+- four candidate prompts in `experiments/agent-loop-fsm/prompts-candidate/` (`define-loop-goal-criteria` v3, `audit-loop-goal-workflow`, `scenarios-loop-goal-workflow`, `conclude-loop-goal-experiment`) — all coding-agent-native;
 - one external TypeScript runtime in `experiments/agent-loop-fsm/runtime-candidate/` as evidence that the modeled workflows are executable end-to-end (validated on DeepSeek);
 - two auto-generated outputs in `experiments/agent-loop-fsm/design/` (`*-auto.fit.md`, `agent-supervisor.scenarios.md`) as proof that the same tasks are automatable by an external LLM.
 
-The `agent-loop-fsm` experiment is **not yet closed**: H6 `loop_guard` and H7 `timeout` (schema-level primitives) remain in the backlog as motivated extensions, and prompt v3 of `define-loop-goal-criteria` (with Consistency Check + dialog-mode hint) is still to be written.
+The `agent-loop-fsm` experiment is **not yet closed**: H6 `loop_guard` and H7 `timeout` (schema-level primitives) remain in the backlog as motivated extensions, and the runtime snapshot write/restore is still stubbed. Prompt v3 of `define-loop-goal-criteria` (Consistency Check section 7 + dialog-mode note, resolving D1–D5) was written on 2026-05-30; what remains for the prompt is its first real use in dialog-mode (the H1 test exercised only template-mode).
+
+On 2026-05-30 the method gained a **fourth named agent and a full experiment lifecycle**, designed in confronto with the user:
+- `define-criteria` was re-framed from an extractive interview into a **reasoned confronto** (the agent proposes, motivates, shows consequences on the objective, accepts off-grid questions), with an explicit boundary (the agent proposes and challenges but does not decide for the user, and must declare when it has over-steered) and **continuous + final auditing** (local consequences shown inline at every answer; cross-checks reconciled in section 7).
+- the confronto now **leaves a trace** in a separate `*.dialog.md` file (consequences signalled, off-grid questions, user calibrations) — both an anti-shortcut safeguard (the conversational auditing otherwise leaves no trace and is the part most easily skipped when the same agent "changes hat") and raw material for future improvement.
+- the fourth agent, `conclude-loop-goal-experiment`, is an **independent adversarial evaluator**: it reads only the artifacts (frozen `criteria.md`, `.fit.md`, scenarios, runtime output), never the criteria-definition dialog, and tries to falsify rather than confirm. If budget remains it leaves improvement **advice for the Coordinator** (never for the user, never retroactive); on a next round `define-criteria` reads that advice into the confronto. The four-agent lifecycle has **not yet been exercised** in a real dialog-mode round.
 
 ### Current Objective
 
-Close the loop on `agent-loop-fsm` by addressing the three open methodological items (H6/H7 in a separate experiment, prompt v3, runtime snapshot), then promote skill `loop-goal` to `skills/` canonical with numbered prompts.
+Close the loop on `agent-loop-fsm` by addressing the remaining open methodological items (H6/H7 in a separate experiment, runtime snapshot, plus the dialog-mode first-use of prompt v3 — itself now written), then promote skill `loop-goal` to `skills/` canonical with numbered prompts.
 
 ### Priorities
 
 | Priority | Activity | Status | Dependencies |
 |---|---|---|---|
 | 1 | Open parallel experiment `exp/schema-loop-guard-timeout` for H6 `loop_guard` + H7 `timeout` → SPEC-0007 | pending (#63) | — |
-| 2 | Write prompt v3 of `define-loop-goal-criteria` with Consistency Check (D4) + dialog-mode hint (D5) | pending (#66) | — |
-| 3 | Test prompt v2 in dialog-mode on a new experiment (not the same template-mode used so far) | pending | needs a new experiment trigger |
+| 2 | Write prompt v3 of `define-loop-goal-criteria` with Consistency Check (D4) + dialog-mode hint (D5) | **done (#66, 2026-05-30)** — resolves D1–D5; adds section 7 Consistency Check and a 4th promotion criterion | — |
+| 3 | First real **dialog-mode** run of the full four-agent lifecycle (`define-criteria` confronto + trace → … → `conclude` adversarial evaluation) on a new experiment | pending — this is now the way to "bring the criterion to regime" before any extension | needs a new experiment trigger |
 | 4 | Auditor v2: add explicit "follow `state-invoke`/`event-invoke`" instruction to the audit prompt | pending | minor, ~5 lines |
 | 5 | Runtime: implement actual snapshot write/restore (the runtime today shows state+context are alive but doesn't serialize them) | pending | ~20 LOC |
 | 6 | Close `agent-loop-fsm` experiment formally and promote `skills-candidate/loop-goal.md` → `skills/loop-goal.md` + prompts to `prompts/28..30-*.md` | pending | depends on (1), (2) |
@@ -72,7 +77,8 @@ Close the loop on `agent-loop-fsm` by addressing the three open methodological i
 
 ### Next Actions
 
-- [ ] Decide which of the three open items (H6/H7 experiment, prompt v3, runtime snapshot) to address first when the next session opens. Default proposal: prompt v3, because it unblocks the dialog-mode test and is needed before opening any new experiment using the criteria pattern.
+- [x] Prompt v3 of `define-loop-goal-criteria` written (2026-05-30): resolves D1–D5, adds section 7 Consistency Check.
+- [ ] Of the two remaining open items (H6/H7 experiment, runtime snapshot), decide which to address next. The dialog-mode test of v3 (priority 3) is now the natural follow-up: it should ride on the next real experiment trigger rather than being run on a synthetic case.
 - [ ] If the user provides an Anthropic API key or wants to revisit the `/claude-api` skill, the runtime can be re-pointed to Anthropic SDK — but the existing DeepSeek-based runtime stays as evidence.
 - [ ] Before promoting `loop-goal` to canonical `skills/`, write a short ADR documenting the relationship between the generic `workflow` skill and the loop/goal sub-type (when to use which).
 
@@ -81,6 +87,7 @@ Close the loop on `agent-loop-fsm` by addressing the three open methodological i
 - Whether to extend the `workflow` canonical skill with a `loop-goal` mode or keep `loop-goal` as a separate canonical skill once it's promoted. Current direction: separate skill (loop/goal has distinct discipline: criteria → model → audit → scenarios order, fit vs conformity distinction, expected extensions from backlog).
 - Whether to promote the workflow examples already moved to `templates/examples/workflow/loop-goal/` further (e.g. into a worked tutorial in `docs/`) or leave them as examples-only.
 - Whether the `runtime-candidate/` should ever become a "reference runtime" documented in `templates/`, or whether it remains in the experiment folder as historical evidence (current direction: the latter, consistent with "no runtime in POM").
+- **Whether to generalize the criterion-definition method beyond loop/goal to all POM experiments** (idea raised by the user 2026-05-30). The structure is already mostly generic — `define-criteria` covers ten POM scopes, of which loop/goal is only a sub-type; the generic layer (reasoned confronto, coherence auditor, trace, independent adversarial evaluator, advice loop) is separable from the loop/goal-specific layer (FSM modeling, fit classification, backlog primitives, terminal-coverage scenarios, runtime). It would relate to the existing lighter `prompts/09-run-temporary-experiment.md` / `skills/spike.md` via a rigor threshold (light exploration below, measurable-hypothesis experiment above), not replace them. **Agreed direction: experiment and bring the loop/goal criterion to regime first, then evaluate if and how to extend** — generalizing an as-yet-unproven method would violate POM's "no promotion before evidence". A clean way to do both at once: treat "generalize the criterion" as itself a POM experiment (scope 1) and use it as the first dialog-mode exercise of the criterion.
 
 ### Blockers / Risks
 

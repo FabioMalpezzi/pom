@@ -1,6 +1,6 @@
 # Prompt — Definire obiettivo e misure di un esperimento loop/goal
 
-Versione: v2 (2026-05-30, applica P1+P2+P3 della review v1 → vedi `notes/2026-05-30-prompt-criteria-critical-review.md`).
+Versione: v3 (2026-05-30, applica D1–D5 del feedback di primo uso → vedi `notes/2026-05-30-prompt-v2-first-use-feedback.md`; eredita P1+P2+P3 di v2 dalla review v1 in `notes/2026-05-30-prompt-criteria-critical-review.md`).
 Stato: candidato, vive in `experiments/agent-loop-fsm/prompts-candidate/`.
 
 Scopo: guidare la prima parte di un esperimento POM che abbia dinamica loop/goal (cioè un ciclo iterativo che cerca di raggiungere un obiettivo dichiarato). Il prompt forza a fissare per iscritto, prima di scrivere YAML, codice o evidence:
@@ -17,16 +17,81 @@ Senza questa prima parte il loop non sa contare le iterazioni, non distingue il 
 ```text
 Sto aprendo un esperimento POM con dinamica loop/goal. Prima di
 modellare qualunque workflow, scrivere codice o produrre evidence,
-devo fissare per iscritto contesto, obiettivo e metriche. Guidami con
-le sei sezioni qui sotto, in ordine. Non lasciarmi saltare passi e
-non accettare risposte vaghe: riformula sempre in una claim binaria
-o numerica e fammi confermare.
+devo fissare per iscritto contesto, obiettivo e metriche. Le sette
+sezioni qui sotto sono ciò che insieme dobbiamo definire — non un
+modulo che tu mi fai compilare, ma l'agenda di un confronto ragionato
+tra te e me da cui l'obiettivo e le scelte per raggiungerlo escono più
+nitidi di come sono entrati.
+
+NOTA OPERATIVA (leggi prima di iniziare). Questo prompt si usa come
+*confronto logico*, non come template né come intervista a senso unico.
+La differenza è sostanziale e ne va il motivo per cui il prompt esiste:
+
+- NON compilare tutte le sezioni e passarmi il modulo da revisionare.
+- NON limitarti a chiedere, registrare la mia risposta, riformularla in
+  una frase netta e passare oltre. Quella è estrazione, non confronto.
+- INVECE, per ogni elemento da definire: proponi tu una prima
+  formulazione e *motivala*; mostrami cosa comporta per il resto
+  dell'esperimento e in particolare per l'obiettivo dichiarato; lasciami
+  controbattere; riformula insieme a me finché la scelta non regge. Una
+  mia risposta può aprire una domanda che nessuna delle sette sezioni
+  aveva previsto: accoglila e portala nel ragionamento, non ignorarla
+  perché fuori griglia. Le sezioni sono l'agenda, non una checklist
+  chiusa.
+
+Confine da rispettare (importante). Tu porti competenza — proponi
+formulazioni, sollevi incoerenze, mostri conseguenze, sfidi le mie
+scelte quando le vedi deboli — ma **non decidi al posto mio**.
+L'obiettivo e le scelte restano miei; il tuo ruolo è renderli più
+consapevoli, non sostituirli con quelli che ti sono più comodi da
+validare. Se a un certo punto ti accorgi di aver guidato troppo — di
+aver di fatto scritto tu l'obiettivo, o di avermi fatto accettare una
+formulazione per inerzia più che per convinzione — **dichiaralo** e
+restituiscimi la scelta in modo aperto.
+
+L'auditing della coerenza non è un collaudo finale: è acceso per tutto
+il confronto. A ogni mia risposta significativa verifica subito la
+coerenza con ciò che ho già detto (e segnala se la risposta, invece di
+chiudere, apre una nuova domanda) e mostrami la conseguenza concreta di
+quella scelta sull'obiettivo. I controlli che hanno bisogno del quadro
+quasi completo — quelli incrociati — li raccogli in un giro finale di
+riconciliazione nella sezione 7, prima di scrivere il file. Continuo per
+le conseguenze locali, finale per gli incroci.
+
+Lascia traccia del confronto. Le conseguenze locali che mi segnali, le
+domande che emergono fuori griglia, i punti in cui correggo o irrigidisco
+una formulazione: queste sono parti essenziali dell'esperimento e la base
+del suo miglioramento futuro (le debolezze del prompt stesso sono nate
+così, da un confronto su un esperimento passato). Mentre procediamo
+annotale, e a fine confronto scrivile in un file di traccia separato
+`design/criteria-experiment-<N>-<HID>.dialog.md` — separato dal
+`criteria.md`, che resta il metro snello e congelato. La traccia non è la
+trascrizione integrale: è il registro delle conseguenze segnalate e delle
+decisioni di calibrazione, una riga ciascuna. Serve anche a rendere
+verificabile a posteriori che questo confronto è davvero avvenuto e non è
+stato accorciato in una compilazione.
+
+Procedi quindi sezione per sezione, ma come confronto: alla fine di ogni
+sezione abbiamo una scelta condivisa e consapevole delle sue
+conseguenze, non solo una casella riempita. Solo dopo il giro di
+riconciliazione della sezione 7 — con i controlli OK o i warning
+esplicitamente accettati — scrivi il file `criteria.md`.
 
 L'output finale di questa conversazione è il file
 `experiments/<topic>/design/criteria.md` con il formato definito in
 fondo, dove `<topic>` è il nome della cartella dell'esperimento sotto
 `experiments/`. Se il file esiste già, rifiuta di sovrascrivere e
 chiedi perché stiamo ridefinendo i criteri.
+
+Se stiamo aprendo un nuovo giro su un esperimento che ha già una
+valutazione precedente — cerca `design/evaluation-experiment-*.md` — e
+quella valutazione contiene una sezione di consigli indirizzati al
+Coordinatore (lasciati dal valutatore quando era avanzato budget),
+leggila e porta quei consigli nel confronto: presentameli, mostrami cosa
+implicherebbero per i nuovi criteri, e lascia che decida io se accoglierli.
+Non sono vincolanti e non sono criteri: sono un'idea di miglioria che ora
+va "lavata" da questo confronto prima di diventare, eventualmente, un
+nuovo metro da congelare.
 
 ## 0. Definizioni del contesto (quattro righe)
 
@@ -55,10 +120,21 @@ Chiedi all'utente di scrivere una riga per ciascuno:
   una metrica osservata, non l'unità di conteggio.
 
 - **Goal del SUT** (se diverso dall'obiettivo dell'esperimento): cosa
-  l'oggetto sotto test cerca di raggiungere nel suo dominio. Esempi:
-  "rispondere a una domanda producendo SQL valida", "raggiungere uno
-  stato terminale `done`". Se l'esperimento studia un sistema che
-  non ha un goal proprio (es. un validator), scrivi "n/a".
+  l'oggetto sotto test cerca di raggiungere nel suo dominio. Sono validi
+  esattamente tre valori, scegli quello giusto e annotalo:
+    - `<goal del SUT> (eseguito)` — il SUT viene fatto girare in questo
+      esperimento e il suo goal viene perseguito davvero. Esempio:
+      "rispondere a una domanda producendo SQL valida (eseguito)".
+    - `<goal del SUT> (solo modellato in questo esperimento)` — il SUT
+      ha un goal nel suo dominio ma qui lo studiamo come artefatto
+      statico, senza eseguirlo. Esempio: "raggiungere lo stato terminale
+      `done` (solo modellato)". È il caso tipico quando il SUT è un
+      workflow YAML che validiamo ma non lanciamo.
+    - `n/a (il SUT non ha un goal proprio)` — il SUT è un oggetto senza
+      lifecycle proprio, es. un validator o uno schema.
+  Distinguere "eseguito" da "solo modellato" non è cosmetico: cambia
+  quali metriche sono osservabili (un SUT non eseguito non produce
+  metriche runtime) e quale può essere la falsificazione (sezione 6).
 
 Rifiuta di proseguire alla sezione 1 finché queste quattro righe non
 sono scritte e accettate.
@@ -162,6 +238,20 @@ deterministica; `statistico` se la metrica è rumorosa (LLM, perf con
 varianza, conteggi umani). `relativo` è il default peggiore: usalo
 solo se l'utente sa giustificare perché.
 
+**Come scegliere il valore della soglia** (non basta scegliere il
+formato: serve un numero giustificato). Regola: un numero assoluto
+senza giustificazione è quasi sempre sbagliato. In ordine di preferenza:
+
+1. **Percentuale del totale** quando il totale è noto e finito. Es.
+   "100% degli stati clean fit", non "almeno 5 stati clean fit": il
+   secondo è un magic number che dipende da quanto è grande il caso.
+2. **Calibrazione al run 1** quando il valore corrente non è ancora
+   misurabile: `TBD calibrata al run 1`, e il confronto parte dal run 2.
+3. **Numero assoluto** solo se derivabile dal contesto con una frase di
+   giustificazione ("delta >= 1 workflow validato al giro perché ogni
+   iterazione modella un workflow nuovo"). Se l'utente propone un numero
+   assoluto senza saperlo giustificare, segnalalo e proponi (1) o (2).
+
 Rifiuta metriche soggettive ("è elegante", "leggibile"): chiedi di
 sostituirle con qualcosa che il loop possa misurare da solo. Se
 proprio non esiste una misura oggettiva, etichetta la metrica come
@@ -203,14 +293,89 @@ Forma attesa, almeno una per riga:
         max_duration: 30min
         on_exhaustion: forfait_no_progress
 
-- **Forfait per budget**: "durata totale >= T" oppure "costo totale
-  >= C".
+- **Forfait per budget**: non proporre un default. Chiedi all'utente:
+  "Quanto tempo (o costo) sei disposto a investire prima di considerare
+  questo esperimento troppo caro per il valore che dà?" La risposta
+  diventa "durata totale >= T" oppure "costo totale >= C". Il budget va
+  scelto dall'utente, non dedotto: un numero plausibile ma non voluto si
+  rivela quasi sempre sbagliato (vedi D2 nel feedback v2).
+
 - **Falsificazione**: il singolo artefatto/evento osservabile che, se
-  accade, dichiara l'ipotesi falsa. Esempio: "il validator richiede
-  un'estensione allo schema per modellare il caso minimo" → l'ipotesi
-  H1 è falsa. Deve essere visibile in un file/log, non un giudizio.
+  accade, dichiara l'ipotesi falsa. Deve essere visibile in un file/log,
+  non un giudizio. Definirla non è riempire un campo: è una
+  conversazione di calibrazione. Procedi così:
+    1. proponi tu una prima formulazione (es. "il validator richiede
+       un'estensione allo schema per modellare il caso minimo" →
+       l'ipotesi è falsa);
+    2. lascia che l'utente la rifinisca;
+    3. riformula e ripeti finché hai **due esempi concreti**: uno che
+       falsifica e uno che NON falsifica. L'esistenza di entrambi è il
+       criterio di chiusura della sezione.
+  Esempio reale di coppia da H1: *falsifica* = "serve una primitiva
+  strutturale nuova non prevista dal backlog"; *non falsifica* = "serve
+  un campo opzionale già previsto, o una primitiva già nel backlog
+  (`loop_guard`, `timeout`)". Senza la coppia, la falsificazione è
+  ancora vaga: non chiuderla.
 
 Tutte e quattro le condizioni devono essere dichiarate.
+
+## 7. Consistency Check — giro finale di riconciliazione
+
+Attenzione: l'auditing della coerenza **non comincia qui**. Come dice la
+nota operativa in testa, durante tutto il confronto, a ogni risposta
+significativa, hai già il doppio compito di (a) verificare la coerenza
+con ciò che è stato detto prima — e segnalare quando una risposta apre
+una nuova domanda invece di chiuderla — e (b) mostrare la conseguenza di
+quella scelta sull'obiettivo. Quelle sono le verifiche *locali*, che
+maturano subito perché riguardano una singola risposta o il suo
+rapporto con l'obiettivo.
+
+Questa sezione è il **giro finale** per i controlli *incrociati*: quelli
+che si possono fare solo con il quadro quasi completo, perché mettono in
+relazione più risposte tra loro. Eseguili dopo aver chiuso le sezioni
+0–6. Per ognuno restituisci o un **OK**, o un **avvertimento con la
+conseguenza concreta** della configurazione corrente — mai un OK
+silenzioso. Un controllo che dice solo "verificato" senza spiegare la
+conseguenza è inutile, ed eredita anche qui il confine della nota
+operativa: segnala e proponi, ma la decisione finale sull'eventuale
+warning resta dell'utente. Gli incroci sono almeno quattro:
+
+- **C-a — budget vs loop_guard.** Verifica che
+  `max_visits × tempo_realistico_per_iterazione ≈ max_duration`. Stima
+  tu il tempo per iterazione dalla definizione di "iterazione" della
+  sezione 0 (es. "una versione committata + lint + mermaid + revisione"
+  ≈ 10–15 min). Se i numeri non tornano, segnala con la stima:
+  "se mantieni 10 iterazioni e 20 minuti totali, ogni iterazione ha
+  2 minuti, troppo poco per il lavoro dichiarato — alza max_duration o
+  abbassa max_visits".
+
+- **C-b — signal vs gate.** Per ogni metrica classificata signal,
+  verifica che possa davvero *crescere*: una metrica con baseline al
+  pavimento (0) e direzione ↓ non segnala progresso, segnala solo
+  regressione — è un gate travestito. Segnalalo e proponi di spostarla
+  nei gate: "X ha baseline 0 e direzione ↓: non può salire, quindi non
+  misura progresso. Spostala nei gate come non-regressione".
+
+- **C-c — falsificazione vs backlog.** Se l'esperimento appartiene a un
+  backlog di più ipotesi (es. H1…H7), verifica che il criterio di
+  falsificazione escluda esplicitamente le altre ipotesi del backlog.
+  Altrimenti la conferma di questa ipotesi diventerebbe per errore la
+  falsificazione di un'altra. Segnala: "la tua falsificazione ('serve
+  una primitiva nuova') confermerebbe H6/H7 invece di falsificare
+  questa — escludi le primitive già nel backlog dal criterio".
+
+- **C-d — obiettivo vs backlog originale.** Confronta l'obiettivo della
+  sezione 2 con la formulazione originale nel backlog di `EXPERIMENT.md`.
+  Se la nuova è strettamente più forte o più debole, segnala la
+  differenza e chiedi conferma esplicita: "il backlog dice 'senza
+  complessità eccessiva', tu hai scritto 'senza alcuna estensione
+  schema': è più forte, ammette zero estensioni anche minime motivate.
+  Confermi l'irrigidimento o torno alla formulazione del backlog?".
+
+Aggiungi altri controlli incrociati se il caso lo richiede (es. metrica
+senza strumento di misura esistente → blocco prima della modellazione,
+vedi sezione 5). Registra l'esito nel file (vedi Output): per ogni
+check, OK oppure "warning accettato: <conseguenza>".
 
 ## Output
 
@@ -251,7 +416,13 @@ Scrivi `experiments/<topic>/design/criteria.md` con questa struttura:
     - Raggiunto: ...
     - Forfait per stallo: ... (loop_guard: max_visits=..., max_duration=...)
     - Forfait per budget: ...
-    - Falsificazione: ...
+    - Falsificazione: <esempio che falsifica> / NON falsifica: <esempio>
+
+    ## Consistency Check
+    - C-a budget vs loop_guard: OK | warning accettato: <conseguenza>
+    - C-b signal vs gate: OK | warning accettato: <conseguenza>
+    - C-c falsificazione vs backlog: OK | warning accettato: <conseguenza>
+    - C-d obiettivo vs backlog: OK | warning accettato: <conseguenza>
 
 Marca `status: draft` finché l'utente non conferma esplicitamente.
 Alla conferma cambia in `status: accepted` e aggiungi in fondo:
@@ -261,6 +432,32 @@ Alla conferma cambia in `status: accepted` e aggiungi in fondo:
     - Accettato da: <nome o ruolo>
     - Congelato fino a: chiusura esperimento o supersedere esplicito.
 
+Scrivi inoltre il file di traccia del confronto
+`experiments/<topic>/design/criteria-experiment-<N>-<HID>.dialog.md`,
+separato dal `criteria.md` (che resta il metro snello e congelato). È il
+registro essenziale del confronto, non la trascrizione integrale:
+
+    ---
+    experiment: <topic>
+    hypothesis: <Hx>
+    traces: criteria-experiment-<N>-<HID>.md
+    date: <YYYY-MM-DD>
+    ---
+
+    # Traccia del confronto — <Hx>
+
+    ## Conseguenze segnalate durante il dialogo
+    - <scelta> → <conseguenza che ho mostrato sull'obiettivo / sui criteri>
+
+    ## Domande emerse fuori griglia
+    - <domanda non prevista dalle sette sezioni, e come è stata risolta>
+
+    ## Calibrazioni e correzioni dell'utente
+    - <formulazione iniziale> → <come l'utente l'ha corretta/irrigidita, e perché>
+
+    ## Consigli del valutatore accolti (se è un nuovo giro)
+    - <consiglio dal precedente evaluation-*.md> → accolto / scartato, motivo
+
 ## Dopo il file
 
 Riepiloga all'utente in linguaggio normale (non in elenchi):
@@ -269,8 +466,10 @@ Riepiloga all'utente in linguaggio normale (non in elenchi):
 3. cosa il loop misura ad ogni iterazione (gate e signal, con il
    legame esplicito all'obiettivo);
 4. quando il loop si ferma per successo, per stallo, per budget, per
-   falsificazione;
-5. cosa NON viene misurato (out of scope).
+   falsificazione (con la coppia di esempi falsifica / non falsifica);
+5. cosa NON viene misurato (out of scope);
+6. l'esito dei controlli di coerenza (sezione 7): quali sono OK e quali
+   warning hai accettato, con la conseguenza concreta di ciascuno.
 
 Solo dopo che il file `criteria.md` è scritto e accettato, l'esperimento
 può passare al passo 2 del metodo POM sperimentale (modellazione).
@@ -279,6 +478,19 @@ per questo esperimento.
 ```
 
 ## Note di consolidazione
+
+Differenze rispetto a v2 (consolidate in v3, dal feedback di primo uso su H1):
+
+- **D1 (sezione 0, Goal del SUT)**: tre valori espliciti — `(eseguito)`, `(solo modellato in questo esperimento)`, `n/a`. Risolve l'attrito del SUT modellato ma non eseguito (caso tipico: un workflow YAML validato ma non lanciato).
+- **D2 (sezione 4 + sezione 6)**: guida alla calibrazione delle soglie (percentuale del totale > calibrazione al run 1 > assoluto giustificato; mai un magic number nudo) e budget riformulato come domanda all'utente invece che default dedotto.
+- **D3 (sezione 6, falsificazione)**: non più un campo singolo ma una conversazione che chiude solo quando esistono due esempi concreti — uno che falsifica e uno che no.
+- **D4 (auditing della coerenza, sezione 7 + nota operativa)**: i quattro controlli incrociati restano (budget×visite≈durata; signal degeneri→gate; falsificazione esclude il backlog; obiettivo confrontato col backlog originale), ciascuno con feedback sulla conseguenza concreta, non un OK silenzioso. Ma l'auditing non è più solo un collaudo finale: è **acceso per tutto il confronto**. Le verifiche *locali* (conseguenza di una singola risposta sull'obiettivo, coerenza con quanto già detto, risposta che apre una nuova domanda) avvengono in linea, a ogni passo; gli *incroci* — che richiedono il quadro quasi completo — si raccolgono nel giro finale di riconciliazione della sezione 7. Continuo per le conseguenze locali, finale per gli incroci. È la risposta diretta al principio dell'utente: "le opzioni di configurazione devono essere logicamente correlate e dare feedback sulle conseguenze".
+- **D5 (nota operativa in testa) — rivista nella sessione stessa**: il prompt non è solo "una guida di dialogo invece di un template", è un **confronto logico** invece di un'intervista a senso unico. L'agente non si limita a chiedere-registrare-riformulare-confermare (estrazione): propone formulazioni motivate, ne mostra le conseguenze sull'obiettivo, sfida le scelte deboli, accoglie le domande che emergono fuori griglia. Con un **confine esplicito**: l'agente propone e sfida ma non decide al posto dell'utente, e quando si accorge di aver guidato troppo lo dichiara e restituisce la scelta. Il test reale del prompt va fatto in questa modalità (confronto, non template) su un nuovo esperimento.
+
+Aggiunte di metodo della stessa sessione (oltre D1–D5):
+
+- **Traccia del confronto**: le parti essenziali del dialogo (conseguenze segnalate, domande emerse fuori griglia, calibrazioni e correzioni dell'utente) vanno scritte in un file separato `design/criteria-experiment-<N>-<HID>.dialog.md`, distinto dal `criteria.md` congelato. Doppio scopo: (1) rendere verificabile a posteriori che il confronto è davvero avvenuto e non è stato accorciato in una compilazione (la modalità di fallimento osservata in D5 e ricorrente quando lo stesso agente cambia "cappello"); (2) costituire materia prima per il miglioramento futuro dell'esperimento e del metodo — come D1–D5 sono nate dal confronto su H1.
+- **Handoff dal valutatore (quarto agente)**: quando si apre un nuovo giro su un esperimento che ha già un `design/evaluation-experiment-*.md`, il Coordinatore legge i consigli che il valutatore indipendente vi ha lasciato (Compito 2 di `conclude-loop-goal-experiment.md`) e li porta nel confronto con l'utente. I consigli non sono vincolanti né sono criteri: l'idea di miglioria parte dal valutatore ma viene "lavata" da questo confronto prima di diventare, eventualmente, un nuovo metro da congelare — così il valutatore non ha mai mano diretta sul metro.
 
 Differenze rispetto a v1 (consolidate in v2):
 
@@ -291,8 +503,9 @@ Restano aperti per giri futuri (rimando alla nota di review): catalogo dei dieci
 
 ## Stato
 
-Candidato v2. Vive in `experiments/agent-loop-fsm/prompts-candidate/` durante l'esperimento. La promozione a `prompts/` canonico è subordinata a:
+Candidato v3. Vive in `experiments/agent-loop-fsm/prompts-candidate/` durante l'esperimento. La promozione a `prompts/` canonico è subordinata a:
 
-1. usabilità senza customizzazione sui cinque esperimenti pianificati di `agent-loop-fsm` (H1–H5);
+1. usabilità senza customizzazione sui cinque esperimenti pianificati di `agent-loop-fsm` (H1–H5) — verificata su H1 con v2 (template-mode); ancora da verificare in dialog-mode con v3 (D5);
 2. almeno un esperimento rigettato per condizione di forfait, gate fallito o evento di falsificazione — il prompt deve dimostrare che può chiudere un'ipotesi sbagliata, non solo accompagnare quelle giuste;
-3. il file `criteria.md` prodotto resta sotto ~80 righe per esperimento (soglia rivista in v2 per tenere conto delle nuove colonne); oltre, il formato è troppo pesante per l'adozione su altri progetti POM-managed.
+3. il file `criteria.md` prodotto resta sotto ~80 righe per esperimento (la sezione Consistency Check di v3 aggiunge ~6 righe compatte all'output: H1 a 60 righe → stima ~66, margine ancora ampio); oltre, il formato è troppo pesante per l'adozione su altri progetti POM-managed;
+4. (nuovo in v3) almeno un Consistency Check che produce un warning reale e cambia il `criteria.md`, a riprova che la sezione 7 non è decorativa — H1 lo dimostrerebbe a posteriori (le quattro incoerenze D4 erano esattamente i quattro check), ma serve una conferma su un esperimento condotto da subito in dialog-mode con v3.
