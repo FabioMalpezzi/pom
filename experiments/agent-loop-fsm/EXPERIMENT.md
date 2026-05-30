@@ -4,7 +4,7 @@
 |---|---|
 | Data | 2026-05-30 |
 | Tipo | research / continuous improvement / estensione POM |
-| Stato | running |
+| Stato | chiuso (2026-05-30) |
 | Branch / Path | `exp/agent-loop-fsm` + `experiments/agent-loop-fsm/` |
 | Isolamento | branch dedicato + cartella esperimento |
 | Owner | POM maintainer |
@@ -134,7 +134,7 @@ Ogni iterazione deve lasciare traccia di:
 | Campo | Valore |
 |---|---|
 | Descrizione | Il ciclo `perception → planning → action → observation` può essere rappresentato tramite transition table mantenendo chiarezza e verificabilità. |
-| Stato | Proposed |
+| Stato | **Confirmed (2026-05-30)** — 100% clean fit (6/6 stati, 7/7 transizioni). Vedi `RESULTS.md` §H2. |
 | Priorità | Alta |
 
 ### H3 — Retry tramite self-transition
@@ -142,7 +142,7 @@ Ogni iterazione deve lasciare traccia di:
 | Campo | Valore |
 |---|---|
 | Descrizione | I meccanismi di retry possono essere rappresentati mediante transizioni cicliche e contatori di contesto. |
-| Stato | Proposed |
+| Stato | **Confirmed (2026-05-30)** — 100% clean fit; bounded retry esprimibile oggi (loop_guard H6 resta miglioramento sintattico, non necessità). Vedi `RESULTS.md` §H3. |
 | Priorità | Media |
 
 ### H4 — Goal lifecycle indipendente
@@ -150,7 +150,7 @@ Ogni iterazione deve lasciare traccia di:
 | Campo | Valore |
 |---|---|
 | Descrizione | Il lifecycle del goal può essere modellato come workflow autonomo e persistente. |
-| Stato | Proposed |
+| Stato | **Confirmed (2026-05-30)** — 100% clean fit; goal lifecycle invocabile via state-invoke senza modifiche. Vedi `RESULTS.md` §H4. |
 | Priorità | Alta |
 
 ### H5 — Suspend/restore del loop agente
@@ -158,14 +158,14 @@ Ogni iterazione deve lasciare traccia di:
 | Campo | Valore |
 |---|---|
 | Descrizione | Le capability esistenti sono sufficienti per sospendere e riprendere un agente preservandone lo stato. |
-| Stato | Proposed |
+| Stato | **Confirmed (2026-05-30)** — snapshot `{workflow, version, state, context}` interpretabile via schema; runtime a carico del target. Vedi `RESULTS.md` §H5. |
 | Priorità | Media |
 
 ### H6 — Loop bounded come primitiva di schema (per numero di iterazioni e/o per durata totale)
 
 | Campo | Valore |
 |---|---|
-| Stato | Proposed (schema-level) |
+| Stato | **Delegato (2026-05-30)** a un esperimento separato `exp/schema-loop-guard-timeout` → SPEC-0007. Ammesse come "estensioni attese", non falsificazioni. |
 | Priorità | Alta |
 | Scope | Fuori scope per questo esperimento. Richiede modifica al core schema SPEC-0006. Candidata per SPEC-0007 in un esperimento separato `exp/schema-loop-guard-timeout`. |
 
@@ -268,7 +268,7 @@ loop_guard:
 |---|---|
 | Descrizione | Il concetto di tempo massimo di permanenza in un singolo stato non-loop deve diventare una primitiva esplicita, distinta dal `loop_guard` di H6. Questo è il caso di stati di attesa o di lavorazione la cui scadenza è naturale (non un ciclo da bounding). Esempi motivanti: ticket-lifecycle (autoclose dopo N giorni in `waiting_customer`); payment-flow (`pending → expired` dopo 15 min senza azione utente); agent loop (singolo step LLM con timeout di 60 secondi). Forma candidata: |
 | Forma YAML | `timeout: { duration: <ISO8601-duration>, on_timeout: <target> }` su uno stato non-loop. |
-| Stato | Proposed (schema-level) |
+| Stato | **Delegato (2026-05-30)** a un esperimento separato `exp/schema-loop-guard-timeout` → SPEC-0007. Ammesse come "estensioni attese", non falsificazioni. |
 | Priorità | Alta |
 | Nota | Richiede modifica al core schema SPEC-0006. Fuori scope per questo esperimento. Candidata per SPEC-0007 in un esperimento separato `exp/schema-loop-guard-timeout`. Open point già citato in `examples/ticket-lifecycle.yaml` (timer-based transitions). |
 
@@ -449,9 +449,11 @@ Un esperimento fallito è considerato utile se riduce l'incertezza e consente di
 
 | Artefatto | Destinazione | Azione |
 |---|---|---|
-|  |  |  |
-
-Da compilare in fase di promozione.
+| Skill `skills-candidate/loop-goal.md` | `skills/loop-goal.md` (canonica) | da promuovere (gate dialog-mode superato; serve ADR relazione `workflow`↔`loop-goal`) |
+| 4 prompt candidati (`define-loop-goal-criteria` v4, `audit-`, `scenarios-`, `conclude-loop-goal-experiment`) | `prompts/NN-*.md` numerati | da promuovere con la skill |
+| 5 esempi workflow loop/goal | `templates/examples/workflow/loop-goal/` | **già promossi** |
+| Runtime esterno + agenti (`runtime-candidate/`) | resta nell'esperimento | evidenza di eseguibilità, non runtime canonico |
+| H6 `loop_guard`, H7 `timeout` | `exp/schema-loop-guard-timeout` → SPEC-0007 | delegati a esperimento separato |
 
 ## Follow-up
 
@@ -460,3 +462,15 @@ Da compilare in fase di promozione.
 - Registrare evidenze e lezioni apprese.
 - Rivalutare il backlog.
 - Compilare l'esito finale.
+
+## Esito finale e chiusura (2026-05-30)
+
+**Esperimento chiuso.** Le cinque ipotesi pianificate **H1–H5 sono tutte Confirmed** (100% clean fit su pattern eterogenei; dettagli per ipotesi sopra e in `RESULTS.md`). H6 `loop_guard` e H7 `timeout`, primitive a livello di schema, sono **delegate** a un esperimento separato `exp/schema-loop-guard-timeout` (→ SPEC-0007), ammesse nel frattempo come "estensioni attese".
+
+**Byproduct di metodo** (il valore principale, oltre alle ipotesi): un ciclo a quattro agenti `loop-goal` — Coordinatore+Auditor (`define-criteria`, confronto ragionato + traccia), Fit Auditor, Scenarios Generator, Valutatore indipendente avversariale (`conclude`) — con la disciplina criteri→model→audit→scenarios→conclude, la distinzione fit/conformità, il canale dei consigli al Coordinatore.
+
+**Collaudo sul campo.** Il ciclo ha avuto il suo primo uso reale in modalità confronto sull'esperimento `dynamic-workflows` (branch `exp/dynamic-workflows`, 2026-05-30): vedi `RESULTS.md` §4-septies e `notes/2026-05-30-lessons-learned.md`. Esito positivo (obiettivo migliorato dal confronto, signal mosso per la prima volta, deliverable raffinato dalla valutazione avversariale), con quattro limiti raccolti e già in parte risolti nei prompt v4 (confine, stime, indipendenza del valutatore).
+
+**Decisione (Adopt).** Promuovere la skill `loop-goal` e i quattro prompt a canonici, previo ADR sulla relazione tra la skill generica `workflow` e il sotto-tipo `loop-goal`. Vedi tabella di Consolidazione.
+
+**Cosa NON è stato fatto** (onestà): OODA, multi-agent e async non testati (out of scope o delegati); il Valutatore non è ancora stato eseguito come sessione realmente separata (limite registrato).

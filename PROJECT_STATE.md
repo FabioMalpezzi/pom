@@ -52,7 +52,7 @@ POM v0.2.0 released and tagged. The most recent active branch is `exp/agent-loop
 - one external TypeScript runtime in `experiments/agent-loop-fsm/runtime-candidate/` as evidence that the modeled workflows are executable end-to-end (validated on DeepSeek);
 - two auto-generated outputs in `experiments/agent-loop-fsm/design/` (`*-auto.fit.md`, `agent-supervisor.scenarios.md`) as proof that the same tasks are automatable by an external LLM.
 
-The `agent-loop-fsm` experiment is **not yet closed**: H6 `loop_guard` and H7 `timeout` (schema-level primitives) remain in the backlog as motivated extensions, and the runtime snapshot write/restore is still stubbed. Prompt v3 of `define-loop-goal-criteria` (Consistency Check section 7 + dialog-mode note, resolving D1–D5) was written on 2026-05-30; what remains for the prompt is its first real use in dialog-mode (the H1 test exercised only template-mode).
+The `agent-loop-fsm` experiment is **formally closed (2026-05-30)**: H1–H5 all Confirmed; H6 `loop_guard` and H7 `timeout` (schema-level primitives) delegated to a separate experiment `exp/schema-loop-guard-timeout` (→ SPEC-0007), admitted meanwhile as "expected extensions". What remains is the **promotion** of skill `loop-goal` + the four prompts to canonical (gated only on a short ADR on the `workflow`↔`loop-goal` relationship). Prompt v3 of `define-loop-goal-criteria` (Consistency Check section 7 + dialog-mode note, resolving D1–D5) was written on 2026-05-30; what remains for the prompt is its first real use in dialog-mode (the H1 test exercised only template-mode).
 
 On 2026-05-30 the method gained a **fourth named agent and a full experiment lifecycle**, designed in confronto with the user:
 - `define-criteria` was re-framed from an extractive interview into a **reasoned confronto** (the agent proposes, motivates, shows consequences on the objective, accepts off-grid questions), with an explicit boundary (the agent proposes and challenges but does not decide for the user, and must declare when it has over-steered) and **continuous + final auditing** (local consequences shown inline at every answer; cross-checks reconciled in section 7).
@@ -76,7 +76,8 @@ Close the loop on `agent-loop-fsm` by addressing the remaining open methodologic
 | 3c | Two **reference executors** of the contract (TypeScript, Python), simple in structure but functionally complete | in progress (this session) | — |
 | 4 | Auditor v2: add explicit "follow `state-invoke`/`event-invoke`" instruction to the audit prompt | pending | minor, ~5 lines |
 | 5 | Runtime: implement actual snapshot write/restore (the runtime today shows state+context are alive but doesn't serialize them) | pending | ~20 LOC |
-| 6 | Close `agent-loop-fsm` experiment formally and promote `skills-candidate/loop-goal.md` → `skills/loop-goal.md` + prompts to `prompts/28..30-*.md` | pending | depends on (1), (2) |
+| 6 | Promote `skills-candidate/loop-goal.md` → `skills/loop-goal.md` + the 4 prompts to `prompts/NN-*.md` | `agent-loop-fsm` **closed (2026-05-30)**; promotion pending the ADR below | needs (6a) |
+| 6a | Short **ADR**: relationship between generic `workflow` skill and the `loop-goal` sub-type (when to use which) — prerequisite to promotion | pending | — |
 | 7 | TypeScript guided code for pipeline orchestrator (inherited from workflow-modeling) | pending (#45) | deferred until POM deploy on a target project |
 
 ### Next Actions
