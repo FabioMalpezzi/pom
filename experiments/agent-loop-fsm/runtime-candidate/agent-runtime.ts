@@ -145,8 +145,10 @@ export async function runAgent(opts: RunAgentOptions): Promise<{
   iterations: number;
 }> {
   const tools = opts.tools ?? TOOL_SCHEMAS;
+  // Path canonico dalla POM root (risolto da workflow-loader.findPomRoot).
+  // Indipendente dalla profondità di questo file nel repo.
   const workflow = loadWorkflow(
-    opts.workflowPath ?? '../../../templates/examples/workflow/loop-goal/agent-orchestrator.yaml'
+    opts.workflowPath ?? 'templates/examples/workflow/loop-goal/agent-orchestrator.yaml'
   );
   const table = buildTransitionTable(workflow);
   const maxIter = opts.maxIterations ?? MAX_ITERATIONS;

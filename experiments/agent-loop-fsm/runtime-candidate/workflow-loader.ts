@@ -3,13 +3,64 @@
 // Nessuna validazione semantica qui: lo schema POM viene già verificato
 // dal validator (`pom:workflow:lint`); questo modulo si fida del file.
 
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve, isAbsolute, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
 import yaml from 'js-yaml';
 
 const here = dirname(fileURLToPath(import.meta.url));
+
+// Trova la root POM cercando verso l'alto due possibili marker:
+//   1. `pom.config.json` — caso target POM-installato (root del progetto)
+//   2. `package.json` con `name: "project-operating-memory"` — caso
+//      repo POM sorgente (root del repo POM stesso)
+// Risolvere i path dei workflow rispetto a questa root rende il runtime
+// indipendente dalla sua collocazione fisica.
+function findPomRoot(startDir: string): string {
+  let cur = startDir;
+  while (cur !== dirname(cur)) {
+    if (existsSync(join(cur, 'pom.config.json'))) return cur;
+    const pkgPath = join(cur, 'package.json');
+    if (existsSync(pkgPath)) {
+      try {
+        const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { name?: string };
+        if (pkg.name === 'project-operating-memory') return cur;
+      } catch {
+        // package.json corrotto: ignora e continua a risalire
+      }
+    }
+    cur = dirname(cur);
+  }
+  throw new Error(
+    'Non trovo né `pom.config.json` né il `package.json` del repo POM ' +
+      'risalendo da ' + startDir + '. Questo runtime deve girare dentro un repo POM ' +
+      'o dentro un progetto target POM-installato.'
+  );
+}
+
+const POM_ROOT = findPomRoot(here);
+
+// Risolve un path workflow con queste regole, in ordine:
+//   1. Assoluto → uso tale e quale.
+//   2. Esiste rispetto al cwd → uso tale e quale (caso shell-friendly).
+//   3. Esiste rispetto alla POM root → risolvo da lì (caso canonico).
+//   4. Esiste rispetto allo script (`here`) → risolvo da lì (legacy).
+//   Altrimenti errore esplicito.
+function resolveWorkflowPath(pathSpec: string): string {
+  if (isAbsolute(pathSpec) && existsSync(pathSpec)) return pathSpec;
+  const fromCwd = resolve(process.cwd(), pathSpec);
+  if (existsSync(fromCwd)) return fromCwd;
+  const fromPomRoot = resolve(POM_ROOT, pathSpec);
+  if (existsSync(fromPomRoot)) return fromPomRoot;
+  const fromHere = resolve(here, pathSpec);
+  if (existsSync(fromHere)) return fromHere;
+  throw new Error(
+    `Workflow non trovato: ${pathSpec}\n` +
+      `  cwd:     ${fromCwd}\n` +
+      `  pomroot: ${fromPomRoot}\n` +
+      `  script:  ${fromHere}`
+  );
+}
 
 export type StateName = string;
 export type EventName = string;
@@ -40,8 +91,8 @@ export interface Workflow {
 
 export type TransitionTable = Map<StateName, Map<EventName, StateName>>;
 
-export function loadWorkflow(relativePath: string): Workflow {
-  const abs = resolve(here, relativePath);
+export function loadWorkflow(pathSpec: string): Workflow {
+  const abs = resolveWorkflowPath(pathSpec);
   const raw = readFileSync(abs, 'utf8');
   const parsed = yaml.load(raw) as Workflow;
   if (!parsed || typeof parsed !== 'object') {

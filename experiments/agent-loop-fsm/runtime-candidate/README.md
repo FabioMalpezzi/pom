@@ -116,6 +116,21 @@ Due bug del runtime base sono stati corretti per supportare l'auditor:
 
 Entrambi i fix migliorano anche `agent-runtime.ts` (il runtime base resta retro-compatibile).
 
+## Risoluzione dei path workflow
+
+I path nei comandi (es. `npm run audit -- <workflow-path>`) sono risolti in questo ordine, tramite `findPomRoot()` in `workflow-loader.ts`:
+
+1. **assoluto** → tale e quale;
+2. **relativo al cwd** corrente → tale e quale (shell-friendly);
+3. **relativo alla POM root** (cercata risalendo fino a un `pom.config.json` per i target POM-installati, o a un `package.json` con `name: project-operating-memory` per il repo POM sorgente) → risolto da lì (forma canonica);
+4. **relativo allo script** → fallback legacy.
+
+Il default del runtime base è `'templates/examples/workflow/loop-goal/agent-orchestrator.yaml'` — path canonico dalla POM root. **Indipendente dalla profondità di questo script nel repo**: spostare `runtime-candidate/` in un'altra cartella non rompe la risoluzione.
+
+Questo significa che il runtime gira sia nel repo POM (dove i template di esempio vivono in `templates/examples/workflow/...`), sia in un target POM-installato (dove i workflow tipicamente vivono in `workflows/<name>.yaml` rispetto alla root del target).
+
 ## Stato
 
 Candidato. Vive in `experiments/agent-loop-fsm/runtime-candidate/` per la durata della validazione. Esecuzione end-to-end confermata su DeepSeek (`deepseek-chat`) il 2026-05-30 sia per il calcolo aritmetico base sia per l'audit di un workflow POM reale.
+
+Non destinato alla promozione canonica (POM rispetta il principio "no runtime in POM"). Quando l'esperimento `agent-loop-fsm` chiuderà, il runtime resta in repo come **evidence dimostrativa** che lo schema POM è eseguibile end-to-end; il team del target che voglia un runtime proprio segue `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` (Pattern A/B/C) e lo costruisce nel suo stack.
