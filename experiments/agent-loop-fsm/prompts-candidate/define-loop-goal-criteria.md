@@ -1,6 +1,6 @@
 # Prompt — Definire obiettivo e misure di un esperimento loop/goal
 
-Versione: v3 (2026-05-30, applica D1–D5 del feedback di primo uso → vedi `notes/2026-05-30-prompt-v2-first-use-feedback.md`; eredita P1+P2+P3 di v2 dalla review v1 in `notes/2026-05-30-prompt-criteria-critical-review.md`).
+Versione: v4 (2026-05-30, applica le lezioni del primo uso reale su `dynamic-workflows` → vedi `notes/2026-05-30-lessons-learned.md`, lezioni 1 e 6; eredita D1–D5 di v3 e P1+P2+P3 di v2).
 Stato: candidato, vive in `experiments/agent-loop-fsm/prompts-candidate/`.
 
 Scopo: guidare la prima parte di un esperimento POM che abbia dinamica loop/goal (cioè un ciclo iterativo che cerca di raggiungere un obiettivo dichiarato). Il prompt forza a fissare per iscritto, prima di scrivere YAML, codice o evidence:
@@ -48,6 +48,16 @@ validare. Se a un certo punto ti accorgi di aver guidato troppo — di
 aver di fatto scritto tu l'obiettivo, o di avermi fatto accettare una
 formulazione per inerzia più che per convinzione — **dichiaralo** e
 restituiscimi la scelta in modo aperto.
+
+E un rinforzo concreto, perché questo confine cede facilmente (lezione 1
+del primo uso reale: l'agente l'ha infranto due volte nella stessa
+sessione). Quando ho posto una domanda e sto ancora ragionando, o mi
+sono assentato: **fermati e aspetta**. Non trattare il mio silenzio come
+un assenso e non andare avanti a scrivere o decidere "tanto era
+implicito". E non riempire lo spazio con molte proposte mentre penso:
+una cosa alla volta — un confronto fatto di troppe proposte simultanee
+mi toglie la possibilità di rispondere, ed è una forma di "guidare
+troppo" tanto quanto decidere al posto mio.
 
 L'auditing della coerenza non è un collaudo finale: è acceso per tutto
 il confronto. A ogni mia risposta significativa verifica subito la
@@ -299,6 +309,14 @@ Forma attesa, almeno una per riga:
   diventa "durata totale >= T" oppure "costo totale >= C". Il budget va
   scelto dall'utente, non dedotto: un numero plausibile ma non voluto si
   rivela quasi sempre sbagliato (vedi D2 nel feedback v2).
+  Avvertenza sulle stime (lezione 6 del primo uso reale): se per aiutare
+  a calibrare devi stimare quanto dura un'iterazione, **parti da stime
+  basse**. Il lavoro eseguito da un agente di codifica (modella YAML +
+  valida + esegui + classifica) è molto più rapido del tempo umano: la
+  tendenza è sovrastimarlo di un ordine di grandezza. Su `dynamic-workflows`
+  una stima iniziale di 4 ore per ~20 iterazioni si è rivelata ~40 minuti
+  reali. Offri la stima come orientamento, non come tetto, e lascia
+  comunque all'utente la cifra finale.
 
 - **Falsificazione**: il singolo artefatto/evento osservabile che, se
   accade, dichiara l'ipotesi falsa. Deve essere visibile in un file/log,
@@ -478,6 +496,11 @@ per questo esperimento.
 ```
 
 ## Note di consolidazione
+
+Differenze rispetto a v3 (consolidate in v4, dal primo uso reale su `dynamic-workflows` — vedi `notes/2026-05-30-lessons-learned.md`):
+
+- **Lezione 1 (confine rinforzato)**: oltre a "proponi ma non decidere", la nota operativa ora impone esplicitamente di **fermarsi e aspettare** quando l'utente sta ragionando o si è assentato (il silenzio non è assenso) e di **non sovraccaricare** il confronto con molte proposte simultanee. È la risposta diretta alle due violazioni osservate nella sessione: l'agente è andato avanti da solo, e ha riempito lo spazio mentre l'utente pensava.
+- **Lezione 6 (stime di tempo)**: la sezione 6 avverte di partire da stime basse quando si calibra il budget, perché il lavoro d'agente è molto più rapido del tempo umano e la tendenza è sovrastimarlo (4h → 40min reali su `dynamic-workflows`).
 
 Differenze rispetto a v2 (consolidate in v3, dal feedback di primo uso su H1):
 
