@@ -1,0 +1,24 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: agent_supervisor
+  %% Supervisor workflow that serves user goals by invoking the goal- lifecycle workflow synchronously,…
+
+  state "Idle" as idle
+  state "Handling Goal" as handling_goal
+  state "Acknowledging" as acknowledging
+  state "Escalating" as escalating
+
+  [*] --> idle
+
+  idle --> handling_goal : new_goal
+  handling_goal --> acknowledging : goal_completed
+  handling_goal --> escalating : goal_failed
+  acknowledging --> idle : ack_sent
+  escalating --> idle : escalation_sent
+  idle --> [*] : stop
+
+  note right of handling_goal
+    invokes agent_orchestrator_goal_lifecycle
+    done → goal_completed, failed → goal_failed
+  end note
