@@ -60,23 +60,73 @@ These items are deferred to later hypotheses of `agent-loop-fsm` and are explici
 | Schema extensions outside backlog | diff vs SPEC-0006 | **PASS** — 0 extensions required. |
 | Forced-fit states in design note | this file | **PASS** — 0 forced fit. |
 
+## Iter 2 — Goal Lifecycle pattern
+
+Artifact: `workflows-candidate/agent-orchestrator-goal-lifecycle.yaml`. Pattern: Receive Goal → Planning → Executing → Reflecting → Done/Failed (with `reflecting → planning` replan loop). Structurally richer than ReAct: separates planning from execution, centralizes the replan/abort decision in `reflecting`.
+
+### Classification — states (6 total)
+
+| State | Fit | Note |
+|---|---|---|
+| `receive_goal` | clean | Initial gate stage; standard non-final state with two domain exits (`goal_validated`, `goal_invalid`). |
+| `planning` | clean | Computes a multi-step plan; two domain exits (`plan_ready`, `plan_failed`). |
+| `executing` | clean | Executes the next plan step; two outcomes both route to `reflecting`, centralizing the decision. POM supports multiple transitions from one state to the same target with different events. |
+| `reflecting` | clean | The decision hub: three domain exits (`continue` → planning replan loop, `goal_met` → done, `impossible` → failed). POM event-driven transitions express this fan-out with no compromise. |
+| `done` | clean | Terminal success, `is_final: true`. |
+| `failed` | clean | Terminal failure, `is_final: true`. |
+
+**Stati clean fit: 6/6 (100%).** **Stati forced fit: 0.**
+
+### Classification — transitions (9 total)
+
+| Transition | Fit | Note |
+|---|---|---|
+| `receive_goal → planning` on `goal_validated` | clean | Standard event-driven start. |
+| `receive_goal → failed` on `goal_invalid` | clean | Early failure path. |
+| `planning → executing` on `plan_ready` | clean | Standard event-driven transition. |
+| `planning → failed` on `plan_failed` | clean | Planning gives up. |
+| `executing → reflecting` on `step_done` | clean | Success path of a step. |
+| `executing → reflecting` on `step_error` | clean | Error path of a step. POM allows two distinct events from the same source to converge on the same target — no synthetic state needed. |
+| `reflecting → planning` on `continue` | clean | The replan loop edge — structurally analogous to the ReAct loop, but at the plan level instead of the step level. |
+| `reflecting → done` on `goal_met` | clean | Successful termination. |
+| `reflecting → failed` on `impossible` | clean | Reflective failure. |
+
+**Transizioni clean fit: 9/9 (100%).** **Transizioni forced fit: 0.**
+
+### What iter 2 specifically stresses vs iter 1
+
+- **Centralized post-step decision hub** (`reflecting` with three out-edges): tests whether POM handles a state with more than two domain-meaningful exits without forcing a split.
+- **Two events converging on the same target** (`step_done` and `step_error` both → `reflecting`): tests convergence without synthetic intermediate states.
+- **Loop at a higher abstraction level** (`reflecting → planning` is a *replan* loop, not a reason-step loop): tests whether POM treats the loop as structural, regardless of what it loops over.
+- **Two distinct failure paths** (`goal_invalid`, `plan_failed`, `impossible`): tests whether multiple terminal exits compose without compromise.
+
+All four stress tests passed without any schema gap.
+
 ## Signal — clean fit count
 
-| Iteration | clean fit states | total states | clean fit transitions | total transitions | % overall |
-|---|---|---|---|---|---|
-| **iter 1** (baseline calibrativa) | 6 | 6 | 7 | 7 | **100%** |
+| Iteration | Pattern | clean fit states | total states | clean fit transitions | total transitions | % overall |
+|---|---|---|---|---|---|---|
+| **iter 1** (calibrativa) | ReAct minimal | 6 | 6 | 7 | 7 | **100%** |
+| **iter 2** | Goal Lifecycle | 6 | 6 | 9 | 9 | **100%** |
 
-The signal is at the success threshold already in iter 1 on the ReAct minimal pattern. This means H1 is provisionally confirmed on ReAct minimal, but the breadth of the conclusion is limited: the criterion of generalization ("any AI agent") is not yet covered by a single pattern test.
+The signal stays at the success threshold across two structurally heterogeneous patterns. The signal is **not** trending downward, and no forced-fit states appeared between iter 1 and iter 2 — both stall and regression triggers of the `loop_guard` are clear.
 
-## Provisional verdict (iter 1)
+## Final verdict (after iter 2)
 
-On the **ReAct minimal** pattern (Reason → Act → Observe with single-step reasoning and no internal retry), the POM workflow schema accommodates the agent control flow with **100% clean fit**, **zero schema extensions outside the agent-loop-fsm backlog**, and **zero forced-fit lossy mappings**. The loop edge (observing → reasoning), which is the structural heart of the agentic paradigm, is expressed by a standard event-driven transition without any new primitive.
+H1 — "the control flow of a generic AI agent can be modeled via POM workflow without introducing excessive complexity, admitting only the backlog primitives (H6 `loop_guard`, H7 `timeout`) as documented extensions" — is **CONFIRMED**.
 
-This is a strong but **narrow** confirmation: it only covers ReAct minimal. To strengthen the H1 verdict to "generic AI agent", iter 2+ should test the same schema against at least one more canonical pattern (Goal Lifecycle, OODA, or a real-world agent reference) and confirm clean fit is preserved. Until then, the loop's success condition (100% clean fit) is met for this pattern but the experiment's objective (generic AI agent) is not fully demonstrated.
+Evidence:
 
-## Next iteration proposal
+- **Two structurally heterogeneous agentic patterns** modeled in the same POM workflow schema with 100% clean fit each (ReAct minimal: 6 states / 7 transitions; Goal Lifecycle: 6 states / 9 transitions).
+- **Zero schema extensions** required outside the agent-loop-fsm backlog.
+- **Zero forced-fit lossy mappings** in either iteration.
+- The **loop edge** — structural heart of agentic control flow — expressed by a standard event-driven transition in both patterns, at two different abstraction levels (step-level loop in ReAct, replan-level loop in Goal Lifecycle).
+- All four gates (validator, Mermaid, schema-extensions, forced-fit) green at the end of iter 2.
 
-- Either: add a second workflow `agent-orchestrator-goal-lifecycle.yaml` modeling the Goal Lifecycle pattern (Receive → Plan → Execute → Reflect → Done/Failed) and re-run the same classification. If still 100% clean fit, the H1 generalization broadens.
-- Or: declare H1 confirmed narrowly on ReAct minimal in the iter 1 verdict, and open H2 directly.
+Scope of the conclusion: confirmed on two canonical patterns (ReAct minimal, Goal Lifecycle); not tested on OODA (deferred as marginal-return), not tested on multi-agent or async patterns (out of scope per `criteria-experiment-1-h1.md`).
 
-Decision deferred to user.
+Items the experiment **did not** address but that the schema clearly needs for production agents (and that are already in the agent-loop-fsm backlog): bounded loop (H6 `loop_guard`), per-state timeout (H7 `timeout`), bounded retry as self-transition (H3). H1 confirms that the *structural* schema is sufficient; H3/H6/H7 will cover the *safety bounds* on top of it.
+
+## Budget used
+
+Cumulative time on H1: ≈12 minutes of the 2h budget (≈10% used). Two iterations consumed, eight available. Loop exits cleanly via the "Raggiunto" condition of `criteria-experiment-1-h1.md`.

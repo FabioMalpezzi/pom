@@ -1,0 +1,22 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: agent_orchestrator_goal_lifecycle
+  %% Goal Lifecycle control flow for a generic AI agent.
+
+  state "Receive Goal" as receive_goal
+  state "Planning" as planning
+  state "Executing" as executing
+  state "Reflecting" as reflecting
+
+  [*] --> receive_goal
+
+  receive_goal --> planning : goal_validated
+  receive_goal --> [*] : goal_invalid
+  planning --> executing : plan_ready
+  planning --> [*] : plan_failed
+  executing --> reflecting : step_done
+  executing --> reflecting : step_error
+  reflecting --> planning : continue
+  reflecting --> [*] : goal_met
+  reflecting --> [*] : impossible

@@ -1,0 +1,167 @@
+workflow: agent_orchestrator_goal_lifecycle
+version: 1
+description: |
+  Goal Lifecycle control flow for a generic AI agent. Compared to the
+  ReAct minimal variant (see agent-orchestrator.yaml), this pattern
+  separates planning from execution and introduces an explicit
+  reflection phase that decides whether to replan, declare the goal
+  met, or declare it impossible. The agent receives a goal, validates
+  it, produces a multi-step plan, executes each step, and after each
+  step reflects on whether to continue, conclude, or give up. Action
+  errors flow into reflection (not directly to failure) so the
+  reflection step can decide if a replan recovers the situation.
+
+  This iteration tests whether the POM workflow schema accommodates a
+  structurally richer agentic pattern than ReAct, without resorting to
+  schema extensions outside the agent-loop-fsm backlog. If both ReAct
+  minimal and Goal Lifecycle map cleanly, H1 generalizes beyond a
+  single agent paradigm.
+
+initial_state: receive_goal
+
+states:
+  - name: receive_goal
+    description: |
+      The agent receives a user goal and validates whether it is
+      tractable. Trivial sanity checks happen here (well-formed goal,
+      within agent capabilities); deeper feasibility analysis is the
+      job of planning.
+    is_final: false
+
+  - name: planning
+    description: |
+      The agent produces a structured multi-step plan towards the goal.
+      Unlike ReAct, the plan is computed once up front (or after a
+      reflection) and is not regenerated step-by-step.
+    is_final: false
+
+  - name: executing
+    description: |
+      The agent executes the next step of the current plan. After each
+      step, control hands off to reflecting, regardless of whether the
+      step succeeded or errored.
+    is_final: false
+
+  - name: reflecting
+    description: |
+      The agent evaluates the latest step's outcome (success or error)
+      against the goal and the current plan. Three domain-meaningful
+      exits: continue (run another step or trigger replan), goal_met
+      (terminate as done), impossible (terminate as failed).
+    is_final: false
+
+  - name: done
+    description: |
+      Terminal success state. Reflection has concluded the goal is met.
+    is_final: true
+
+  - name: failed
+    description: |
+      Terminal failure state. The goal was malformed, planning could
+      not produce a viable plan, or reflection concluded the goal is
+      not achievable from the current state.
+    is_final: true
+
+events:
+  - name: goal_validated
+    description: |
+      The received goal passes basic validation and the agent can
+      start planning.
+  - name: goal_invalid
+    description: |
+      The received goal is malformed or out of scope; no further
+      reasoning is attempted.
+  - name: plan_ready
+    description: |
+      Planning produced a usable multi-step plan; execution can begin.
+  - name: plan_failed
+    description: |
+      Planning could not produce a viable plan and the agent gives up.
+  - name: step_done
+    description: |
+      The current plan step completed successfully and produced a
+      usable result; the agent reflects on progress.
+  - name: step_error
+    description: |
+      The current plan step errored; the agent reflects on whether to
+      replan, abort, or treat the error as inconclusive.
+  - name: continue
+    description: |
+      Reflection decided more work is needed; control returns to
+      planning to either reuse the current plan or replan from the
+      updated state.
+  - name: goal_met
+    description: |
+      Reflection decided the goal is satisfied; the agent terminates
+      as done.
+  - name: impossible
+    description: |
+      Reflection decided the goal is unreachable from the current
+      state; the agent terminates as failed.
+
+transitions:
+  - from: receive_goal
+    to: planning
+    event: goal_validated
+  - from: receive_goal
+    to: failed
+    event: goal_invalid
+  - from: planning
+    to: executing
+    event: plan_ready
+  - from: planning
+    to: failed
+    event: plan_failed
+  - from: executing
+    to: reflecting
+    event: step_done
+  - from: executing
+    to: reflecting
+    event: step_error
+  - from: reflecting
+    to: planning
+    event: continue
+  - from: reflecting
+    to: done
+    event: goal_met
+  - from: reflecting
+    to: failed
+    event: impossible
+
+context_schema:
+  goal:
+    description: |
+      The user-supplied objective the agent is pursuing this session.
+    type: string
+  plan:
+    description: |
+      The current multi-step plan. Replaced on each replan; not
+      monotonic across replans.
+    type: array
+  step_index:
+    description: |
+      Index of the next step to execute within the current plan.
+    type: integer
+  step_results:
+    description: |
+      Outcomes of each executed step (success or error payloads),
+      preserved across replans for reflection.
+    type: array
+
+invariants:
+  - description: |
+      The agent cannot transition out of done or failed.
+  - description: |
+      Every entry into planning beyond the first must come from
+      reflecting (continue), so each replan is informed by prior
+      step_results.
+  - description: |
+      executing has exactly two domain-meaningful outcomes
+      (step_done, step_error); both route to reflecting so the
+      replan/abort decision is centralized.
+
+metadata:
+  experiment: agent-loop-fsm
+  hypothesis: H1
+  pattern: "Goal Lifecycle (Receive, Plan, Execute, Reflect)"
+  reference: 'Agentic goal lifecycle, e.g., Plan-and-Solve (Wang et al., 2023) and Reflexion (Shinn et al., 2023).'
