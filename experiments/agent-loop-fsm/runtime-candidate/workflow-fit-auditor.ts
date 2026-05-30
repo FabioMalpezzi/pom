@@ -51,12 +51,19 @@ const AUDITOR_SYSTEM = [
 ].join('\n');
 
 function defaultNotePathFor(workflowYamlPath: string): string {
-  // experiments/<topic>/workflows-candidate/foo.yaml
+  // Caso 1: workflow ancora nel candidate dell'esperimento
+  //   experiments/<topic>/workflows-candidate/foo.yaml
   //   → experiments/<topic>/design/foo.fit.md
-  // Sostituisce 'workflows-candidate' con 'design' e .yaml/.yml con .fit.md
-  return workflowYamlPath
-    .replace('/workflows-candidate/', '/design/')
-    .replace(/\.ya?ml$/, '.fit.md');
+  if (workflowYamlPath.includes('/workflows-candidate/')) {
+    return workflowYamlPath
+      .replace('/workflows-candidate/', '/design/')
+      .replace(/\.ya?ml$/, '.fit.md');
+  }
+  // Caso 2: workflow promosso a templates/examples/workflow/loop-goal/
+  //   → experiments/agent-loop-fsm/design/<basename>-auto.fit.md
+  // (auto suffix per non collidere con il fit.md scritto a mano)
+  const basename = workflowYamlPath.replace(/^.*\//, '').replace(/\.ya?ml$/, '');
+  return `experiments/agent-loop-fsm/design/${basename}-auto.fit.md`;
 }
 
 async function main() {

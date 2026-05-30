@@ -1,7 +1,7 @@
 ---
 experiment: agent-loop-fsm
 hypothesis: H4
-artifact: workflows-candidate/agent-supervisor.yaml
+artifact: templates/examples/workflow/loop-goal/agent-supervisor.yaml
 iteration: 1
 date: 2026-05-30
 pattern: Supervisor with goal-lifecycle as autonomous sub-workflow
@@ -48,7 +48,7 @@ This is the classic "child workflow as reusable subroutine" pattern, already str
 
 ## One issue caught and fixed in this iteration
 
-The first run of the lint failed with `E031` because the `invoke.workflow` path was specified as `workflows-candidate/agent-orchestrator-goal-lifecycle.yaml` (project-relative), whereas the validator resolves the path **relative to the caller file**. Fixed by using the bare filename, since the sub-workflow is a sibling.
+The first run of the lint failed with `E031` because the `invoke.workflow` path was specified as `templates/examples/workflow/loop-goal/agent-orchestrator-goal-lifecycle.yaml` (project-relative), whereas the validator resolves the path **relative to the caller file**. Fixed by using the bare filename, since the sub-workflow is a sibling.
 
 This is a workflow-modeling design choice already established in round 2: paths in `invoke.workflow` are caller-relative, not project-relative. Worth recording because it is the kind of small detail that costs an iteration when you forget it.
 

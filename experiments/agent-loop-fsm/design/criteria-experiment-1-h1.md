@@ -9,7 +9,7 @@ status: accepted
 
 ## Contesto
 
-- **SUT**: il workflow `experiments/agent-loop-fsm/workflows-candidate/agent-orchestrator.yaml` (modello FSM di un agente AI generico, modellato ma non eseguito).
+- **SUT**: il workflow `templates/examples/workflow/loop-goal/agent-orchestrator.yaml` (modello FSM di un agente AI generico, modellato ma non eseguito).
 - **Sperimentatore**: utente + agente di coding in sessione (loop manuale "modifica → lint → mermaid → revisione").
 - **Iterazione**: una versione di `agent-orchestrator.yaml` committata, accompagnata da rerun di `pom:workflow:lint` e rigenerazione del diagramma Mermaid. Costo stimato ≈ 10–15 minuti per iterazione.
 - **Goal del SUT**: terminare il ciclo decisionale dell'agente raggiungendo uno stato terminale (modellato come `is_final: true`; non eseguito in questo esperimento).

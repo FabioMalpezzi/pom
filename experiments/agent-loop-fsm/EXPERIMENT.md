@@ -304,7 +304,7 @@ states:
 |---|---|
 | Ipotesi | H1 |
 | Obiettivo | Verificare la modellazione FSM dell'agente. |
-| Artefatti | `design/criteria-experiment-1-h1.md` (contratto); `workflows-candidate/agent-orchestrator.yaml` (ReAct minimal, iter 1); `workflows-candidate/agent-orchestrator-goal-lifecycle.yaml` (Goal Lifecycle, iter 2); `design/agent-orchestrator.fit.md` (classificazione fit). |
+| Artefatti | `design/criteria-experiment-1-h1.md` (contratto); `templates/examples/workflow/loop-goal/agent-orchestrator.yaml` (ReAct minimal, iter 1); `templates/examples/workflow/loop-goal/agent-orchestrator-goal-lifecycle.yaml` (Goal Lifecycle, iter 2); `design/agent-orchestrator.fit.md` (classificazione fit). |
 | Evidenze richieste | workflow valido; diagramma Mermaid leggibile |
 | Evidenze prodotte | 4 gate verdi in entrambe le iterazioni; `evidence/mermaid/agent-orchestrator.{mmd,svg}` e `evidence/mermaid/agent-orchestrator-goal-lifecycle.{mmd,svg}` parsati da `mmdc`. |
 | Iterazioni | 2 di 10 (max_visits del loop_guard); ~12 min di 2h budget. |
@@ -316,7 +316,7 @@ states:
 |---|---|
 | Ipotesi | H2 |
 | Obiettivo | Verificare la rappresentazione del loop decisionale. |
-| Artefatti | `design/criteria-experiment-2-h2.md`; `workflows-candidate/agent-loop-table.yaml`; `design/agent-loop-table.fit.md`; `evidence/mermaid/agent-loop-table.{mmd,svg}`. |
+| Artefatti | `design/criteria-experiment-2-h2.md`; `templates/examples/workflow/loop-goal/agent-loop-table.yaml`; `design/agent-loop-table.fit.md`; `evidence/mermaid/agent-loop-table.{mmd,svg}`. |
 | Evidenze richieste | leggibilità; assenza di forzature concettuali |
 | Evidenze prodotte | 4 gate verdi (validator PASS, mermaid+mmdc PASS, 0 invoke, 0 unreachable). 6 stati / 7 transizioni. |
 | Iterazioni | 1 di 5; ~4 min di 1h budget. |
@@ -328,7 +328,7 @@ states:
 |---|---|
 | Ipotesi | H3 |
 | Obiettivo | Verificare bounded retry e loop guard. |
-| Artefatti | `design/criteria-experiment-3-h3.md`; `workflows-candidate/agent-retry-bounded.yaml`; `design/agent-retry-bounded.fit.md`; `evidence/mermaid/agent-retry-bounded.{mmd,svg}`. |
+| Artefatti | `design/criteria-experiment-3-h3.md`; `templates/examples/workflow/loop-goal/agent-retry-bounded.yaml`; `design/agent-retry-bounded.fit.md`; `evidence/mermaid/agent-retry-bounded.{mmd,svg}`. |
 | Evidenze richieste | validazione schema; comprensibilità del diagramma |
 | Evidenze prodotte | 4 gate verdi (validator PASS, mermaid+mmdc PASS, 1 self-transition, 2 guards). 5 stati / 5 transizioni (1 self). |
 | Iterazioni | 1 di 5; ~3 min di 30 min budget. |
@@ -340,7 +340,7 @@ states:
 |---|---|
 | Ipotesi | H4 |
 | Obiettivo | Verificare il workflow autonomo del goal. |
-| Artefatti | `design/criteria-experiment-4-h4.md`; `workflows-candidate/agent-supervisor.yaml`; `design/agent-supervisor.fit.md`; `evidence/mermaid/agent-supervisor.{mmd,svg}`. Riusa `agent-orchestrator-goal-lifecycle.yaml` di H1 iter 2 come sub-workflow invocato. |
+| Artefatti | `design/criteria-experiment-4-h4.md`; `templates/examples/workflow/loop-goal/agent-supervisor.yaml`; `design/agent-supervisor.fit.md`; `evidence/mermaid/agent-supervisor.{mmd,svg}`. Riusa `agent-orchestrator-goal-lifecycle.yaml` di H1 iter 2 come sub-workflow invocato. |
 | Evidenze richieste | persistenza; indipendenza dal control flow agente |
 | Evidenze prodotte | 4 gate verdi (validator PASS dopo fix del path relativo, mermaid+mmdc PASS, 1 invoke con 2 on_completion, sub-workflow validato). 5 stati / 6 transizioni. |
 | Iterazioni | 1 di 3 (1 fix path); ~6 min di 30 min budget. |

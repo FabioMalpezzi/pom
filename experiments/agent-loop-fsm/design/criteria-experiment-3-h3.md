@@ -8,7 +8,7 @@ status: accepted
 
 ## Contesto
 
-- **SUT**: `workflows-candidate/agent-retry-bounded.yaml` — workflow che modella un retry bounded su un'azione fallibile tramite self-transition guarded.
+- **SUT**: `templates/examples/workflow/loop-goal/agent-retry-bounded.yaml` — workflow che modella un retry bounded su un'azione fallibile tramite self-transition guarded.
 - **Sperimentatore**: utente + agente di coding (modalità autonoma).
 - **Iterazione**: una versione YAML + lint + mermaid + design note.
 - **Goal del SUT**: n/a (modellato).

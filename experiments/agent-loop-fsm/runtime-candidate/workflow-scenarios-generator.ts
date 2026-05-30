@@ -49,9 +49,14 @@ const SCENARIOS_SYSTEM = [
 ].join('\n');
 
 function defaultScenariosPathFor(workflowYamlPath: string): string {
-  return workflowYamlPath
-    .replace('/workflows-candidate/', '/design/')
-    .replace(/\.ya?ml$/, '.scenarios.md');
+  if (workflowYamlPath.includes('/workflows-candidate/')) {
+    return workflowYamlPath
+      .replace('/workflows-candidate/', '/design/')
+      .replace(/\.ya?ml$/, '.scenarios.md');
+  }
+  // Workflow promosso a templates/examples/...
+  const basename = workflowYamlPath.replace(/^.*\//, '').replace(/\.ya?ml$/, '');
+  return `experiments/agent-loop-fsm/design/${basename}.scenarios.md`;
 }
 
 async function main() {

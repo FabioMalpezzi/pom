@@ -1,7 +1,7 @@
 ---
 experiment: agent-loop-fsm
 hypothesis: H3
-artifact: workflows-candidate/agent-retry-bounded.yaml
+artifact: templates/examples/workflow/loop-goal/agent-retry-bounded.yaml
 iteration: 1
 date: 2026-05-30
 pattern: Bounded retry via guarded self-transition

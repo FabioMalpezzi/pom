@@ -8,7 +8,7 @@ status: accepted
 
 ## Contesto
 
-- **SUT**: `workflows-candidate/agent-supervisor.yaml` — workflow caller che invoca il goal lifecycle modellato in H1 iter 2 come sub-workflow sincrono.
+- **SUT**: `templates/examples/workflow/loop-goal/agent-supervisor.yaml` — workflow caller che invoca il goal lifecycle modellato in H1 iter 2 come sub-workflow sincrono.
 - **Sperimentatore**: utente + agente di coding.
 - **Iterazione**: una versione caller + lint + mermaid + design note.
 - **Goal del SUT**: n/a.

@@ -1,5 +1,5 @@
 // agent-runtime.ts — esecuzione Pattern A del workflow ReAct minimal
-// (`experiments/agent-loop-fsm/workflows-candidate/agent-orchestrator.yaml`,
+// (`templates/examples/workflow/loop-goal/agent-orchestrator.yaml`,
 // validato in H1 iter 1). Esegue il loop reasoning → acting → observing
 // chiamando l'LLM ai turni di reasoning/observing e i tool locali al
 // turno di acting. La transition table è generata dal YAML, così la
@@ -146,7 +146,7 @@ export async function runAgent(opts: RunAgentOptions): Promise<{
 }> {
   const tools = opts.tools ?? TOOL_SCHEMAS;
   const workflow = loadWorkflow(
-    opts.workflowPath ?? '../workflows-candidate/agent-orchestrator.yaml'
+    opts.workflowPath ?? '../../../templates/examples/workflow/loop-goal/agent-orchestrator.yaml'
   );
   const table = buildTransitionTable(workflow);
   const maxIter = opts.maxIterations ?? MAX_ITERATIONS;

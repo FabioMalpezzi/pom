@@ -92,7 +92,7 @@ Esempio (richiede una chiave LLM in `.env`):
 
 ```sh
 npm run audit -- \
-  experiments/agent-loop-fsm/workflows-candidate/agent-loop-table.yaml \
+  templates/examples/workflow/loop-goal/agent-loop-table.yaml \
   experiments/agent-loop-fsm/design/agent-loop-table-auto.fit.md
 ```
 

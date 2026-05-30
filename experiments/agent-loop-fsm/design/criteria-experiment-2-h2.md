@@ -8,7 +8,7 @@ status: accepted
 
 ## Contesto
 
-- **SUT**: `workflows-candidate/agent-loop-table.yaml` (loop perception → planning → action → observation espresso come transition table piatta).
+- **SUT**: `templates/examples/workflow/loop-goal/agent-loop-table.yaml` (loop perception → planning → action → observation espresso come transition table piatta).
 - **Sperimentatore**: utente + agente di coding in sessione.
 - **Iterazione**: una versione del file YAML committata + lint + mermaid.
 - **Goal del SUT**: n/a (modellato, non eseguito).

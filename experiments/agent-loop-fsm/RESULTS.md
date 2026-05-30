@@ -254,6 +254,30 @@ Sul valore POM: dopo questo giro POM ha due automazioni concrete sopra workflow 
 
 ---
 
+## 4-quinquies. Promozione del pattern a skill-candidate e degli esempi a templates
+
+Riconosciuto durante la sessione che il pattern di lavoro emerso è una **skill POM specifica** (loop-goal) — non un'estensione della skill generica `workflow`, ma un sotto-tipo per i workflow agentici che richiedono criteri misurabili, fit clean/adapted/forced, scenari di test con copertura dei terminali, e supporto a primitive in backlog (`H6 loop_guard`, `H7 timeout`) come "estensioni attese" anziché falsificazioni.
+
+Atti di promozione eseguiti il 2026-05-30:
+
+1. **Skill candidata** `experiments/agent-loop-fsm/skills-candidate/loop-goal.md` — descrive l'intero pattern, cinque modi (`define-criteria`, `model`, `audit`, `scenarios`, `runtime-guide`), la regola d'ordine non negoziabile criteri → modello → audit, e la distinzione fit / conformità.
+2. **Prompt candidati** `experiments/agent-loop-fsm/prompts-candidate/audit-loop-goal-workflow.md` e `scenarios-loop-goal-workflow.md` — istruzioni operative *coding-agent-native*: usano i tool nativi del coding agent (Read / Bash / Write), niente runtime LLM esterno, niente chiave API aggiuntiva. Sono la versione "POM in produzione" di quello che il runtime esterno automatizza.
+3. **Esempi workflow promossi** a `templates/examples/workflow/loop-goal/` — i cinque YAML modellati durante H1–H4 (ReAct minimal, Goal Lifecycle, SPAO, bounded retry, supervisor + invoke) escono dal candidate dell'esperimento e diventano esempi canonici del pattern. Sono affiancati agli esempi di dominio esistenti (`spec-evolution.yaml`, `ticket-lifecycle.yaml`, `document-approval.yaml`), in una sotto-cartella `loop-goal/` per separare pattern strutturali da pattern di dominio. README della cartella documenta provenance, catalogo e verifica.
+4. **Conformity check nell'audit**: il prompt `audit-loop-goal-workflow.md` include una sezione dedicata "Conformity check vs criteria" che confronta ogni gate/signal/condizione di uscita del criteria.md con il workflow modellato. Un workflow può essere `clean fit` sul piano della forma ed essere comunque non conforme ai criteri (es. manca un terminale di forfait, signal non misurabile). Verdetto "promovibile" solo se entrambe le dimensioni sono accettabili.
+
+Caveat di disciplina POM: la promozione degli esempi workflow a `templates/examples/workflow/loop-goal/` precede la chiusura dell'esperimento `agent-loop-fsm` (H6/H7 e prompt v3 ancora aperti). La scelta è motivata dal fatto che i cinque pattern strutturali (ReAct, Goal Lifecycle, SPAO, retry, supervisor) hanno valore generale separabile dalla skill candidata che li adotta, e sono già stati validati al 100% clean fit dai cinque mini-esperimenti H1–H5. La skill `loop-goal` resta candidate (non promossa) come da disciplina, finché l'esperimento non chiude.
+
+Il **runtime esterno** in `runtime-candidate/` e i suoi output di esempio (`design/*-auto.fit.md`, `design/agent-supervisor.scenarios.md`) restano in repo come **evidence dell'eseguibilità** del pattern con LLM esterno. Non sono il pattern operativo: il pattern operativo è la skill candidata, che usa la connessione del coding agent.
+
+Path aggiornati nel runtime e nei design note per riflettere la nuova location:
+
+- Runtime `agent-runtime.ts`: default workflow path ora `../../../templates/examples/workflow/loop-goal/agent-orchestrator.yaml`.
+- `workflow-fit-auditor.ts` e `workflow-scenarios-generator.ts`: gestione duale del `defaultNotePathFor` (vecchio `workflows-candidate/` e nuovo `templates/examples/`).
+- Design notes (`*.fit.md`, `criteria-*.md`) e `EXPERIMENT.md`: riferimenti aggiornati con il path canonico.
+- Sanity check post-promozione: validator PASS su tutti e cinque i workflow al path nuovo; runtime base gira correttamente; auditor con path duale funziona.
+
+---
+
 ## 5. Cosa resta aperto
 
 - **H6 `loop_guard`** e **H7 `timeout`**: già definite in dettaglio nel backlog (vedi sezioni dedicate di `EXPERIMENT.md`), pronte per essere prese in carico da un esperimento parallelo `exp/schema-loop-guard-timeout` su SPEC-0007. Quando promosse, permetteranno di riscrivere H3 in modo più dichiarativo.

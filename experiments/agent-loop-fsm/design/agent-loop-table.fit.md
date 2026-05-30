@@ -1,7 +1,7 @@
 ---
 experiment: agent-loop-fsm
 hypothesis: H2
-artifact: workflows-candidate/agent-loop-table.yaml
+artifact: templates/examples/workflow/loop-goal/agent-loop-table.yaml
 iteration: 1
 date: 2026-05-30
 pattern: Perception-Planning-Action-Observation (flat transition table)

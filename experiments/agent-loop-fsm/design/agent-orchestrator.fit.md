@@ -1,7 +1,7 @@
 ---
 experiment: agent-loop-fsm
 hypothesis: H1
-artifact: workflows-candidate/agent-orchestrator.yaml
+artifact: templates/examples/workflow/loop-goal/agent-orchestrator.yaml
 iteration: 1
 date: 2026-05-30
 pattern: ReAct minimal (Reason, Act, Observe)
@@ -62,7 +62,7 @@ These items are deferred to later hypotheses of `agent-loop-fsm` and are explici
 
 ## Iter 2 — Goal Lifecycle pattern
 
-Artifact: `workflows-candidate/agent-orchestrator-goal-lifecycle.yaml`. Pattern: Receive Goal → Planning → Executing → Reflecting → Done/Failed (with `reflecting → planning` replan loop). Structurally richer than ReAct: separates planning from execution, centralizes the replan/abort decision in `reflecting`.
+Artifact: `templates/examples/workflow/loop-goal/agent-orchestrator-goal-lifecycle.yaml`. Pattern: Receive Goal → Planning → Executing → Reflecting → Done/Failed (with `reflecting → planning` replan loop). Structurally richer than ReAct: separates planning from execution, centralizes the replan/abort decision in `reflecting`.
 
 ### Classification — states (6 total)
 
