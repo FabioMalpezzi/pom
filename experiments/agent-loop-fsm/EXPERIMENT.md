@@ -316,9 +316,11 @@ states:
 |---|---|
 | Ipotesi | H2 |
 | Obiettivo | Verificare la rappresentazione del loop decisionale. |
-| Artefatti | workflow dedicato; mapping con transition table |
+| Artefatti | `design/criteria-experiment-2-h2.md`; `workflows-candidate/agent-loop-table.yaml`; `design/agent-loop-table.fit.md`; `evidence/mermaid/agent-loop-table.{mmd,svg}`. |
 | Evidenze richieste | leggibilità; assenza di forzature concettuali |
-| Decisione | Da compilare |
+| Evidenze prodotte | 4 gate verdi (validator PASS, mermaid+mmdc PASS, 0 invoke, 0 unreachable). 6 stati / 7 transizioni. |
+| Iterazioni | 1 di 5; ~4 min di 1h budget. |
+| Decisione | **CONFIRMED** — SPAO loop espresso come transition table piatta, 100% clean fit, no forzatura concettuale. |
 
 ### Esperimento 3
 
@@ -326,9 +328,11 @@ states:
 |---|---|
 | Ipotesi | H3 |
 | Obiettivo | Verificare bounded retry e loop guard. |
-| Artefatti | `bounded-retry-agent.yaml` |
+| Artefatti | `design/criteria-experiment-3-h3.md`; `workflows-candidate/agent-retry-bounded.yaml`; `design/agent-retry-bounded.fit.md`; `evidence/mermaid/agent-retry-bounded.{mmd,svg}`. |
 | Evidenze richieste | validazione schema; comprensibilità del diagramma |
-| Decisione | Da compilare |
+| Evidenze prodotte | 4 gate verdi (validator PASS, mermaid+mmdc PASS, 1 self-transition, 2 guards). 5 stati / 5 transizioni (1 self). |
+| Iterazioni | 1 di 5; ~3 min di 30 min budget. |
+| Decisione | **CONFIRMED** — bounded retry esprimibile via self-transition guarded + context counter. H6 `loop_guard` resta motivata come miglioramento sintattico (declarative `max_visits` + `on_exhaustion`), non come necessità strutturale. |
 
 ### Esperimento 4
 
@@ -336,9 +340,11 @@ states:
 |---|---|
 | Ipotesi | H4 |
 | Obiettivo | Verificare il workflow autonomo del goal. |
-| Artefatti | `goal-lifecycle.yaml` |
+| Artefatti | `design/criteria-experiment-4-h4.md`; `workflows-candidate/agent-supervisor.yaml`; `design/agent-supervisor.fit.md`; `evidence/mermaid/agent-supervisor.{mmd,svg}`. Riusa `agent-orchestrator-goal-lifecycle.yaml` di H1 iter 2 come sub-workflow invocato. |
 | Evidenze richieste | persistenza; indipendenza dal control flow agente |
-| Decisione | Da compilare |
+| Evidenze prodotte | 4 gate verdi (validator PASS dopo fix del path relativo, mermaid+mmdc PASS, 1 invoke con 2 on_completion, sub-workflow validato). 5 stati / 6 transizioni. |
+| Iterazioni | 1 di 3 (1 fix path); ~6 min di 30 min budget. |
+| Decisione | **CONFIRMED** — il goal lifecycle è autonomo: workflow standalone invocabile via state-invoke + on_completion dispatch, senza modifiche al modello del sub-workflow. |
 
 ### Esperimento 5
 
@@ -346,9 +352,11 @@ states:
 |---|---|
 | Ipotesi | H5 |
 | Obiettivo | Verificare suspend/restore. |
-| Artefatti | esempio runtime; snapshot; restore |
+| Artefatti | `design/criteria-experiment-5-h5.md`; `evidence/snapshot/agent-orchestrator.suspended.json`; `design/agent-suspend-restore.fit.md`. Riusa `agent-orchestrator.yaml` di H1 iter 1. |
 | Evidenze richieste | ripresa corretta dello stato |
-| Decisione | Da compilare |
+| Evidenze prodotte | 4 gate verdi (JSON con 4 chiavi canoniche, state in `states[].name`, workflow+version match, context conforme a `context_schema`) verificati da script Node inline. Snapshot di un agente sospeso a metà loop in stato `reasoning` dopo due cicli reason/act/observe. |
+| Iterazioni | 1 di 2; ~5 min di 15 min budget. |
+| Decisione | **CONFIRMED** — suspend/restore supportato dallo schema POM as-is via il contratto a 4-tupla `{workflow, version, state, context}`. POM fornisce lo schema che rende lo snapshot interpretabile; il runtime di consumo è responsabilità del progetto target. |
 
 ## Scope
 
@@ -403,7 +411,22 @@ Ogni evidenza deve essere collegata a:
 
 ## Esito finale
 
-Da compilare al termine dell'esperimento.
+Esperimento `agent-loop-fsm` chiuso il 2026-05-30 dopo cinque iterazioni metodologiche su cinque ipotesi (H1–H5), tutte **confermate**. Una sesta e una settima ipotesi (H6 `loop_guard`, H7 `timeout`) sono rimaste tracciate nel backlog per essere prese in carico da un esperimento separato `exp/schema-loop-guard-timeout` su SPEC-0007. Il documento riassuntivo dei test e delle risultanze è in `RESULTS.md`.
+
+| Ipotesi | Stato | Pattern testati | Iterazioni | Budget consumato |
+|---|---|---|---|---|
+| H1 | Confirmed | ReAct minimal + Goal Lifecycle | 2 | ~12 min / 2h |
+| H2 | Confirmed | Perception-Planning-Action-Observation (flat) | 1 | ~4 min / 1h |
+| H3 | Confirmed | Bounded retry via guarded self-transition | 1 | ~3 min / 30 min |
+| H4 | Confirmed | Supervisor + goal-lifecycle sub-workflow | 1 | ~6 min / 30 min |
+| H5 | Confirmed | Suspend/restore snapshot a 4-tupla | 1 | ~5 min / 15 min |
+
+**Tempo totale**: ~30 minuti su 4 ore di budget cumulato (≈12%).
+**Pattern agentici coperti**: ReAct minimal, Goal Lifecycle, SPAO, bounded retry, sub-workflow invocato, snapshot+restore. OODA e multi-agent rimangono non testati per scelta (marginal-return o out of scope).
+**Estensioni schema richieste fuori dal backlog**: 0.
+**Stati forced-fit lossy**: 0 in tutti i workflow modellati.
+
+L'esperimento conferma il messaggio centrale: **POM (workflow schema attuale + Pattern A/B/C runtime + suspend/restore + state-invoke) è sufficiente a modellare il control flow di un agente AI generico**, includendo loop, retry bounded, goal lifecycle riusabile come sub-workflow, e checkpoint con ripresa. Le primitive H6 e H7 restano motivate come *miglioramenti sintattici* (più dichiarativi, meno codice runtime), non come necessità strutturali.
 
 Possibili esiti:
 

@@ -1,0 +1,172 @@
+# `agent-loop-fsm` — Risultati dei test e delle risultanze
+
+**Data chiusura**: 2026-05-30
+**Branch**: `exp/agent-loop-fsm`
+**Stato**: tutte e cinque le ipotesi pianificate (H1–H5) **confirmed**; H6 e H7 lasciate aperte per un esperimento separato `exp/schema-loop-guard-timeout`.
+**Documento di riferimento principale**: `EXPERIMENT.md` (contesto, backlog, piano, esito formale).
+**Questo documento**: racconto operativo dei test effettivamente svolti, dei loro risultati e dei pezzi di metodo emersi lungo la strada.
+
+---
+
+## 1. Cosa volevamo verificare
+
+L'esperimento parte da una domanda: il framework POM così com'è (workflow schema, primitive di composizione, suspend/restore, Pattern A/B/C di implementazione) è sufficiente a modellare il control flow di un agente AI generico (loop di percezione → ragionamento → azione → osservazione, con goal, retry, sospensione), oppure servono estensioni allo schema?
+
+La domanda è stata scomposta in sette ipotesi (H1–H7) e, per onestà di scope, si è deciso che cinque sarebbero state eseguite qui (H1–H5) e due delegate a un esperimento parallelo che tocca il core schema (H6 `loop_guard`, H7 `timeout`, candidate per SPEC-0007).
+
+In parallelo a queste cinque ipotesi tecniche, l'esperimento ha anche un secondo livello, metodologico: validare un **prompt POM riusabile** che guidi la prima parte di qualunque esperimento loop/goal (definizione di obiettivo + metriche di misura). Questo livello si è sviluppato in due iterazioni del prompt (v1 → v2) prima che cominciassero i test tecnici, e produce un terzo deliverable autonomo.
+
+---
+
+## 2. Come si è lavorato
+
+Ogni ipotesi è stata trattata come un mini-esperimento con una struttura ricorrente in cinque passi:
+
+1. **Contratto** (`design/criteria-experiment-<N>-<HID>.md`) — applicazione del prompt `define-loop-goal-criteria` v2: fissare per iscritto SUT / sperimentatore / iterazione / obiettivo / out-of-scope / metriche gate+signal / condizioni di uscita del loop e di falsificazione, prima di scrivere qualunque YAML.
+2. **Modello** (`workflows-candidate/<artifact>.yaml`) — un workflow YAML che rappresenta il pattern sotto verifica con il minimo strettamente necessario di stati, eventi, transizioni, guard, context.
+3. **Gate automatici** — esecuzione di `pom:workflow:lint`, generazione Mermaid con `to-mermaid.mjs`, parse via `mmdc`, eventuali check programmatici aggiuntivi (presenza di self-transition, conteggio invoke, conformità snapshot al contratto suspend/restore).
+4. **Design note** (`design/<artifact>.fit.md`) — classificazione di ogni stato e ogni transizione come `clean fit` / `adapted fit` / `forced fit lossy`, con motivazione domain-level per ognuno. Il numero di clean fit è il signal principale.
+5. **Commit** — un solo commit per ipotesi (eccetto H1 che ha avuto due iterazioni, e fix-up minori), con messaggio strutturato che riporta gate, signal, verdetto, budget consumato.
+
+Questo formato è stato applicato in modalità conversazionale-guidata per H1 (con revisione critica intermedia che ha portato a una revisione del contratto), e in modalità autonoma per H2–H5 quando l'utente ha esplicitato "procedi sino alla fine".
+
+---
+
+## 3. Cosa è stato testato, in ordine
+
+### H1 — Modellazione di un agente AI come FSM POM
+
+**Domanda**: lo schema POM accomoda il control flow agentico senza estensioni e senza forced-fit?
+
+**Cosa è stato modellato**: due pattern di letteratura, eterogenei sul piano strutturale.
+
+- *Iter 1* — **ReAct minimal** (Yao et al., 2022): tre stati attivi (`reasoning`, `acting`, `observing`) più `idle` e i due terminali `done`/`failed`. Sette transizioni, una delle quali è il loop edge `observing → reasoning`.
+- *Iter 2* — **Goal Lifecycle** (Plan-and-Solve, Reflexion): sei stati con `reflecting` come decisione hub a tre uscite (`continue` → replan, `goal_met` → done, `impossible` → failed), e due eventi distinti che convergono sullo stesso target (`step_done` e `step_error` → `reflecting`). Nove transizioni.
+
+**Risultanze**:
+- entrambi i pattern modellabili con **100% clean fit** su stati e transizioni;
+- zero estensioni allo schema POM richieste;
+- zero forced-fit lossy;
+- il loop edge — cuore strutturale dell'agentic paradigm — espresso da una semplice transizione event-driven, sia al livello del singolo step (ReAct) sia al livello del replan (Goal Lifecycle).
+
+**Tempo speso**: ~12 minuti su 2h di budget.
+
+**Verdetto**: H1 confirmed su due pattern eterogenei. Conclusione narrow nel senso che OODA non è stato testato (giudicato marginal-return, troppo simile a ReAct), e i pattern multi-agent / async sono fuori scope.
+
+**Cosa di interessante è emerso lungo la strada**: la prima versione del contratto criteria aveva quattro incoerenze interne (cortocircuito H1↔H6 nella falsificazione, budget×visits non coerente con il tempo per iterazione, due "signal" che erano in realtà gate degeneri, obiettivo silenziosamente irrigidito rispetto al backlog). La criticità è stata sollevata dall'utente con la domanda "tutto ti sembra logico?" e ha portato a una riscrittura del contratto e a una revisione del prompt stesso (v2 → input per v3) per richiedere un Consistency Check incrociato. Vedi `notes/2026-05-30-prompt-v2-first-use-feedback.md`.
+
+### H2 — Loop agentico come transition table piatta
+
+**Domanda**: il loop `perception → planning → action → observation` può vivere come singolo workflow piatto, senza ricorrere a `invoke` o a sub-workflow?
+
+**Cosa è stato modellato**: `agent-loop-table.yaml` con sei stati e sette transizioni. Loop edge `observation → perception`. Due failure path indipendenti (`perception_failed`, `action_failed`).
+
+**Risultanze**:
+- 100% clean fit (6/6 stati, 7/7 transizioni);
+- zero occorrenze di `invoke` nel YAML (vincolo della transition table piatta rispettato);
+- zero stati irraggiungibili (warning W001 = 0).
+
+**Tempo speso**: ~4 minuti.
+
+**Verdetto**: H2 confirmed. Il loop classico SPAO mappa allo schema POM as-is, leggibile end-to-end come singola tabella di 8 righe.
+
+### H3 — Bounded retry via self-transition guarded
+
+**Domanda**: il retry bounded di un'azione fallibile è esprimibile con le primitive attuali (senza la primitiva `loop_guard` di H6)?
+
+**Cosa è stato modellato**: `agent-retry-bounded.yaml`. Stato `acting` con tre uscite: una self-transition `acting → acting` su `retry_after_error` guardata da `has_attempts_left`; una transizione a `failed` su `retries_exhausted` guardata da `no_attempts_left`; una transizione a `observing` su `success`. Il contatore vive in `context.attempts_left`, decrementato dal runtime.
+
+**Risultanze**:
+- 100% clean fit (5/5 stati, 5/5 transizioni inclusa 1 self);
+- due guard distinti e mutuamente esclusivi;
+- bound espresso, anche se in modo *implicito* nel context counter.
+
+**Tempo speso**: ~3 minuti.
+
+**Verdetto**: H3 confirmed. La struttura del bounded retry è esprimibile oggi. La primitiva H6 `loop_guard` resta motivata come miglioramento sintattico (declarative `max_visits` + `on_exhaustion` al posto del counter manuale + evento manuale), non come necessità strutturale.
+
+### H4 — Goal lifecycle come workflow autonomo invocato
+
+**Domanda**: il goal lifecycle modellato in H1 iter 2 può essere usato come sub-workflow da un caller esterno, senza modifiche?
+
+**Cosa è stato modellato**: `agent-supervisor.yaml` con cinque stati. Lo stato `handling_goal` porta un blocco `invoke:` che cita `agent-orchestrator-goal-lifecycle.yaml` come sub-workflow, con `on_completion` che dispatch i terminali `done`/`failed` su due eventi nel parent (`goal_completed`/`goal_failed`).
+
+**Risultanze**:
+- 100% clean fit (5/5 stati, 6/6 transizioni);
+- 1 invoke + 2 on_completion entries dichiarati correttamente;
+- il sub-workflow esiste come file sibling, già validato in H1 iter 2.
+
+**Tempo speso**: ~6 minuti, di cui ~2 minuti sprecati per un fix del path (il path di `invoke.workflow` è caller-relative, non project-relative — dettaglio piccolo ma che costa un'iterazione se dimenticato).
+
+**Verdetto**: H4 confirmed. Il goal lifecycle è autonomo nel senso POM: standalone, riusabile, dispatchabile sui suoi terminali. Essenzialmente una riconferma specifica del lavoro di `experiments/workflow-modeling/` round 2 sulle composizioni sincrone.
+
+### H5 — Suspend e restore del loop agentico
+
+**Domanda**: il pattern snapshot+restore documentato in `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` regge sul workflow di un agente?
+
+**Cosa è stato modellato**: nessun nuovo workflow. Riuso di `agent-orchestrator.yaml` (ReAct minimal di H1 iter 1) e produzione di uno snapshot JSON realistico (`evidence/snapshot/agent-orchestrator.suspended.json`): un agente sospeso in stato `reasoning` dopo due cicli reason/act/observe, con `goal` (ricerca di un volo), `history` (due cicli completi), `last_observation` popolata.
+
+**Risultanze**: tutti e quattro gli invarianti del contratto restore verificati programmaticamente da uno script Node inline (≈20 righe):
+- snapshot JSON con le quattro chiavi canoniche `{workflow, version, state, context}`;
+- `state = "reasoning"` è uno stato dichiarato in `agent-orchestrator.yaml.states[].name`;
+- `workflow` + `version` corrispondono all'header del file (`agent_orchestrator` / 1);
+- `context` ha tutte e tre le chiavi previste dal `context_schema` (`goal`, `history`, `last_observation`).
+
+**Tempo speso**: ~5 minuti.
+
+**Verdetto**: H5 confirmed. POM fornisce lo schema che rende lo snapshot interpretabile (named states, named events, context_schema); il runtime che ne consuma il contenuto resta responsabilità del progetto target, coerentemente con il principio POM-as-method. Composed-stack snapshots (catene di invoke) non rivalidati qui — coperti dalla round 2 di workflow-modeling.
+
+---
+
+## 4. Pezzi di metodo emersi (anche se non erano l'obiettivo)
+
+Lungo la strada sono emerse cose che non riguardano le cinque ipotesi tecniche ma il metodo stesso. Le elenco perché sono ciò che resterà utile alla prossima volta che si apre un esperimento POM.
+
+### Il prompt `define-loop-goal-criteria` v1 → v2 → v3
+
+Prima ancora di toccare i workflow, è stato consolidato un prompt riusabile per la prima parte di qualunque esperimento POM con dinamica loop/goal. Il prompt è in `experiments/agent-loop-fsm/prompts-candidate/define-loop-goal-criteria.md`.
+
+- *v1*: prima bozza con cinque sezioni rigide.
+- Revisione critica dopo la v1 → individuate sette criticità materiali (C1–C7).
+- *v2*: chiude C1–C7 con tre fix maggiori (P1: sezione 0 "Contesto" che distingue SUT, sperimentatore, iterazione, goal-del-SUT; P2: colonna obbligatoria "Legame con obiettivo" per ogni metrica, deterrente concreto contro Goodhart; P3: formato forzato per il "trend atteso", a scelta tra assoluto / relativo / statistico). Nota di review archiviata in `notes/2026-05-30-prompt-criteria-critical-review.md`.
+- Primo uso reale del prompt su H1 → emerse altre due debolezze (D4: il prompt v2 non verifica la coerenza incrociata fra le scelte e non restituisce un feedback sulle conseguenze; D5: il prompt è stato applicato in template-mode invece che in dialog-mode). Nota di first-use in `notes/2026-05-30-prompt-v2-first-use-feedback.md`.
+- v3: pianificata (task #66 nel tracker) ma non eseguita in questo esperimento. Aggiungerà una *Consistency Check* incrociata (budget × visits ≈ duration; signal con baseline al pavimento → suggerisci spostamento in gate; falsificazione esclude le ipotesi del backlog; obiettivo confrontato col backlog originale) e una nota operativa "dialog-mode, non template-mode".
+
+### La distinzione gate / signal regge anche su pattern molto diversi
+
+Tutti e cinque gli esperimenti hanno usato la stessa struttura "almeno un gate (binario, fermati se rompe) + almeno un signal (continuo, fermati se non cresce)". Funziona. I gate hanno catturato sia errori grossolani (path relativo sbagliato in H4, YAML quoting in H1 iter 1) sia invarianti contrattuali (snapshot keys, state in workflow.states); i signal (clean fit count su stati e transizioni) hanno dato una misura comparabile di "quanto bene mappa il modello", utile anche se in tutti e cinque i casi è saturato al 100% rapidamente.
+
+### Il signal "clean fit count" satura presto: forse troppo presto
+
+In tutti i cinque esperimenti il signal è arrivato al 100% alla prima iterazione. Questo significa due cose, una positiva e una preoccupante. Positiva: lo schema POM è effettivamente molto adatto a questi pattern, non c'era niente da rifinire. Preoccupante: un signal che non si muove non è un buon signal — la sua direzionalità non è stata mai messa alla prova. Per esperimenti futuri su pattern più ostili (multi-agent, async) potrebbe essere utile un signal più granulare, ad esempio "stati con commenti di motivazione" oppure "domande sollevate e risolte nella design note" — qualcosa che possa effettivamente salire iterazione dopo iterazione.
+
+### Il pattern "primitive del backlog ammesse come estensioni attese" funziona
+
+In H3 il rischio era che il bisogno di `loop_guard` (H6) facesse dichiarare H3 falsa per circolarità. La revisione del contratto H1 (poi propagata implicitamente agli altri) ha introdotto la regola: una primitiva strutturale è considerata falsificazione solo se è **non già nel backlog**. Le primitive previste come estensione futura (`loop_guard`, `timeout`) sono ammesse come "estensioni attese". Questa è una regola metodologica generale che vale ogni volta che un esperimento ha un backlog interno di ipotesi multiple.
+
+### Tempo consumato vs budget: troppi margini significa che il budget era inutile
+
+I cinque esperimenti hanno consumato in totale ~30 minuti contro un budget cumulato di ~4 ore. Il loop guard del prompt non si è mai avvicinato a scattare. Significa che i budget sono stati calibrati troppo larghi. Per esperimenti analoghi futuri, si può scendere a 30 min per ipotesi semplice, 60 min per ipotesi complessa.
+
+---
+
+## 5. Cosa resta aperto
+
+- **H6 `loop_guard`** e **H7 `timeout`**: già definite in dettaglio nel backlog (vedi sezioni dedicate di `EXPERIMENT.md`), pronte per essere prese in carico da un esperimento parallelo `exp/schema-loop-guard-timeout` su SPEC-0007. Quando promosse, permetteranno di riscrivere H3 in modo più dichiarativo.
+- **Prompt v3** con Consistency Check + dialog-mode hint (task #66 nel tracker).
+- **Pattern non testati**: OODA (deferito come marginal-return), multi-agent, async, distributed. Restano open question, non urgenti per il messaggio centrale di questo esperimento.
+- **Test del prompt v2 in dialog-mode**: il prompt è stato applicato in template-mode in tutti e cinque gli esperimenti. Il test del dialog-mode (sezione per sezione con conferma) andrà fatto sul primo esperimento di un altro `exp/`.
+- **Codice TypeScript guidato per pipeline orchestrator** (task #45 ereditato da workflow-modeling): ancora deferito al momento del deploy POM su un progetto target.
+
+---
+
+## 6. Cosa proporrei di consolidare verso `main`
+
+Il branch `exp/agent-loop-fsm` come è oggi è autoconsistente. Le proposte di consolidazione:
+
+- **Non promuovere ai path canonici di POM** nessun workflow di questo esperimento — sono esempi di applicazione, non parti del metodo. Restano in `experiments/agent-loop-fsm/` come traccia storica e materiale didattico.
+- **Promuovere il prompt** `define-loop-goal-criteria` da v3 (quando scritto) verso `prompts/` canonico, una volta che i tre criteri di promozione del prompt stesso siano stati verificati su almeno un secondo esperimento. Oggi i criteri sono 1/3 verificati (file output sotto soglia su tutti e cinque).
+- **Aggiungere nel CHANGELOG** una nota su POM `Next` (o `0.3.x` quando arriverà) che riassuma in tre righe l'esito di `agent-loop-fsm`, senza promuovere artefatti.
+- **Tenere `exp/agent-loop-fsm` come branch consolidato** (non mergiare automaticamente in `main`); il contenuto vale come riferimento, non come metodo.
+
+Se H6 e H7 verranno completate nell'esperimento parallelo, allora avrà senso un giro di "rinfresco" di H3 e H5 con le nuove primitive — ma è una conversazione per dopo.
