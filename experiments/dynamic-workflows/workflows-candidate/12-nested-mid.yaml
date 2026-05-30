@@ -1,0 +1,32 @@
+workflow: dyn_nested_mid
+version: 1
+description: |
+  Giro 4 — workflow di livello intermedio per il fan-out ANNIDATO. È esso
+  stesso un Dynamic Workflow: lancia un sotto-batch di task e attende.
+  Usato come leaf dal livello top (12-nested-top.yaml). Dimostra che il
+  pattern launch/await compone ricorsivamente.
+
+initial_state: sub_launching
+
+states:
+  - name: sub_launching
+    is_final: false
+    fan_out_launch: { workflow: 01-task-pipeline.yaml, over: subtasks, handle: sub_batch }
+  - name: sub_awaiting
+    is_final: false
+    await: { handles: [sub_batch], join: all }
+  - name: mid_done
+    is_final: true
+
+events:
+  - name: sub_launched
+  - name: sub_ready
+
+transitions:
+  - { from: sub_launching, to: sub_awaiting, event: sub_launched }
+  - { from: sub_awaiting, to: mid_done, event: sub_ready }
+
+metadata:
+  experiment: dynamic-workflows
+  round: 4
+  theme: nested fan-out (mid level)

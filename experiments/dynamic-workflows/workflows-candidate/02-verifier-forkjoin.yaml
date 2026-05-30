@@ -1,0 +1,78 @@
+workflow: dyn_verifier_forkjoin
+version: 1
+description: |
+  Struttura 2 di 4: il fork/join dei verifier. Nel Dynamic Workflow
+  l'implementer apre DUE verifier che lavorano IN PARALLELO e convergono
+  su un fixer.
+
+  Limite incontrato: lo schema POM non ha fork. Una transizione ha
+  esattamente un "to" (validator E012/E015), quindi da `implementing`
+  NON si può andare a due stati insieme; e `mode: parallel` è vietato
+  (E036). Il meglio possibile con le primitive attuali è SEQUENZIALIZZARE
+  i due verifier (verifier_a poi verifier_b): la struttura "due rami che
+  convergono" diventa una catena, e l'ordine fra i due è un artefatto
+  imposto dal modello, non presente nel dominio.
+
+  Classificazione attesa: adapted (i due verifier esistono come stati
+  distinti, ma il fork/join strutturale è perso e l'ordine è artificiale).
+  La concorrenza vera è semantica runtime, fuori scope (vedi criteria.md).
+
+initial_state: implementing
+
+states:
+  - name: implementing
+    description: L'implementer produce la soluzione del task.
+    is_final: false
+  - name: verifying_a
+    description: |
+      Primo verifier. In origine parallelo al secondo; qui forzato come
+      primo della sequenza (ordine artificiale).
+    is_final: false
+  - name: verifying_b
+    description: |
+      Secondo verifier. In origine parallelo al primo; qui forzato come
+      secondo della sequenza.
+    is_final: false
+  - name: fixing
+    description: Il fixer corregge dopo che ENTRAMBI i verifier hanno risposto.
+    is_final: false
+  - name: task_done
+    description: Task completato.
+    is_final: true
+
+events:
+  - name: implemented
+    description: L'implementer ha prodotto la soluzione.
+  - name: verified_a
+    description: Il primo verifier ha risposto.
+  - name: verified_b
+    description: Il secondo verifier ha risposto.
+  - name: fixed
+    description: Il fixer ha applicato le correzioni.
+
+transitions:
+  - from: implementing
+    to: verifying_a
+    event: implemented
+  - from: verifying_a
+    to: verifying_b
+    event: verified_a
+  - from: verifying_b
+    to: fixing
+    event: verified_b
+  - from: fixing
+    to: task_done
+    event: fixed
+
+invariants:
+  - description: |
+      Il fixer entra solo dopo che entrambi i verifier hanno risposto.
+      Nel modello questo è garantito dalla sequenza verifying_a →
+      verifying_b → fixing, non da un join reale.
+
+metadata:
+  experiment: dynamic-workflows
+  structure: 2-verifier-forkjoin
+  iteration: 1
+  expected_fit: adapted
+  limit_hit: "no fork primitive; one transition = one target; mode:parallel forbidden (E036)"

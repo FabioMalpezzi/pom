@@ -1,0 +1,66 @@
+workflow: dyn_fanout
+version: 1
+description: |
+  Struttura 4 di 4: il fan-out dell'orchestratore. Nel Dynamic Workflow
+  l'orchestratore lancia N task (N può essere nell'ordine delle centinaia,
+  deciso a RUNTIME) e li raccoglie quando hanno finito.
+
+  Limite incontrato: lo schema POM ha stati nominali STATICI e
+  `state-invoke` SINCRONO E SINGOLO. Il meglio possibile con le primitive
+  attuali è invocare UN task-pipeline alla volta, in modo sincrono: questo
+  modello esprime quindi UN solo task, non N. Per N task servirebbe o N
+  stati scritti a mano nello YAML (ma N è dinamico, non lo conosco a
+  tempo di modellazione) oppure un loop sequenziale (ma allora i task non
+  sono paralleli e l'ordine è imposto). Il fan-out DINAMICO e PARALLELO a
+  N non è rappresentabile, e nessun design pattern sulle primitive attuali
+  lo evita (mode: parallel è vietato, E036 — vedi probe-parallel.yaml).
+
+  Classificazione attesa: forced lossy IRRIDUCIBILE → falsifica l'ipotesi.
+
+initial_state: dispatching
+
+states:
+  - name: dispatching
+    description: |
+      Vorrebbe lanciare N task. Con le primitive attuali invoca UN solo
+      task-pipeline, sincrono. Il "N dinamico" non è esprimibile.
+    is_final: false
+    invoke:
+      workflow: 01-task-pipeline.yaml
+      on_completion:
+        - terminal_state: task_done
+          next_event: task_returned
+  - name: aggregating
+    description: |
+      Raccoglie i risultati. Nel modello raccoglie un solo task (quello
+      invocato), non il fan-in di N.
+    is_final: false
+  - name: all_done
+    description: Tutti i task (qui uno solo) raccolti.
+    is_final: true
+
+events:
+  - name: task_returned
+    description: Il task invocato è terminato.
+  - name: done_all
+    description: Aggregazione completata.
+
+transitions:
+  - from: dispatching
+    to: aggregating
+    event: task_returned
+  - from: aggregating
+    to: all_done
+    event: done_all
+
+invariants:
+  - description: |
+      Il modello esprime un singolo task sincrono. Il fan-out a N dinamico
+      e parallelo è fuori dalla capacità espressiva dello schema attuale.
+
+metadata:
+  experiment: dynamic-workflows
+  structure: 4-fanout
+  iteration: 1
+  expected_fit: forced-irreducible
+  limit_hit: "static states + single synchronous state-invoke; dynamic N parallel fan-out not expressible; mode:parallel forbidden (E036)"

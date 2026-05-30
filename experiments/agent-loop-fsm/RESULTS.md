@@ -288,7 +288,27 @@ In una sessione di confronto con l'utente il metodo loop-goal è passato da tre 
 
 **Intuizione registrata (non ancora aperta).** L'utente ha osservato che lo strato generico di questo metodo (confronto, auditor di coerenza, traccia, valutatore avversariale, anello dei consigli) è separabile dallo strato loop/goal-specifico (FSM, fit, primitive di backlog, scenari sui terminali, runtime) e potrebbe essere portato a modello generico su tutti gli esperimenti POM. Direzione concordata: prima sperimentare e portare a regime il criterio loop/goal, poi valutare se e come estenderlo — generalizzare un metodo non ancora provato violerebbe la disciplina POM. Dettaglio in `PROJECT_STATE.md` (Open Decisions).
 
-Stato di disciplina: nessuno di questi quattro agenti è ancora stato esercitato in un giro reale in dialog-mode. La skill `loop-goal` resta candidate.
+Stato di disciplina: questi quattro agenti hanno avuto il loro **primo collaudo reale in dialog-mode** nell'esperimento `dynamic-workflows` (2026-05-30) — vedi 4-septies. La skill `loop-goal` resta candidate finché non si formalizza la promozione.
+
+---
+
+## 4-septies. Primo collaudo del metodo su `dynamic-workflows` (feedback, non contenuto)
+
+Il 2026-05-30 il ciclo a quattro agenti `loop-goal` ha avuto il suo primo uso reale, condotto come confronto, sull'esperimento **`dynamic-workflows`** (branch `exp/dynamic-workflows`). Quell'esperimento produce un contributo al dominio *workflow* (un contratto di estensione di SPEC-0006); qui registriamo solo ciò che ne torna al **metodo**, non il contratto.
+
+Cosa ha funzionato:
+- **Il confronto produce un obiettivo migliore di quello iniziale.** `define-criteria` v3 in dialog-mode ha portato a separare l'ipotesi falsificabile dal deliverable condizionale, e a definire operativamente "estensione *necessaria*" come forced lossy irriducibile che sopravvive a un tentativo avversariale di evitarlo con un design pattern. Nessuna delle due cose era nell'obiettivo grezzo di partenza.
+- **Il signal si è mosso davvero.** Per la prima volta (in H1–H5 saturava al 100% subito) il signal "forced lossy residui" è sceso iterando — da forced a adapted man mano che si trovavano i design pattern. La sua direzionalità è stata finalmente messa alla prova. Conferma il sospetto della sezione "il signal satura presto": su pattern ostili il signal granulare funziona.
+- **Il valutatore avversariale, co-condotto con l'utente, ha raffinato il deliverable.** La refutazione dell'irriducibilità del fan-out (il counted invoke loop) ha localizzato il vero irriducibile sul solo parallelismo; da lì l'utente ha proposto il pattern launch/await delegato, che ha ribaltato il costo dell'estensione da "cambio di paradigma" a "additivo".
+- **L'autonomia dell'esecuzione ha retto.** Dopo la partenza l'esperimento è proceduto da solo (modella → valida → esegui → classifica → itera) entro i tetti di budget, restituendo all'utente i verdetti, non i singoli passi.
+
+Limiti e correzioni emersi (input per la v4 del prompt e per la skill):
+- **Il valutatore non è stato una sessione separata** dal modellatore (stesso agente, due cappelli). L'indipendenza piena resta da esercitare: candidato a regola esplicita nel prompt `conclude-loop-goal-experiment`.
+- **Lo stallo per-struttura** è stato alzato da 3 a 5 in corsa, su richiesta dell'utente: nelle esplorazioni comparative di design servono più giri prima di dichiarare stallo.
+- **Le stime di tempo dell'agente erano gonfiate** (ragionate in tempo umano): il budget è stato ricalibrato dall'utente (4h → 40min → 1h). Vale come promemoria di calibrazione, non come difetto del metodo.
+- **Il confronto sovraccaricato**: in più punti l'agente ha riempito lo spazio con troppe proposte mentre l'utente ragionava, o è andato avanti da solo. Conferma sul campo l'importanza del confine "proponi, non decidere" e della nota dialog-mode della v3.
+
+Conseguenza per la promozione: questo è l'**evidenza che mancava** per la priorità 3 di `agent-loop-fsm` (primo giro dialog-mode del ciclo a quattro agenti). La skill `loop-goal` e i prompt candidati possono ora procedere verso la promozione canonica, integrando i quattro limiti sopra.
 
 ---
 

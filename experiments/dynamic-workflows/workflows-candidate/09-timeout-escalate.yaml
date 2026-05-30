@@ -1,0 +1,60 @@
+workflow: dyn_await_timeout
+version: 1
+description: |
+  Giro 3 — il timeout sull'attesa (primitiva H7 del backlog POM, qui in
+  contesto concreto). La FSM si sospende in awaiting; se i batch non
+  tornano entro il timeout, NON resta sospesa per sempre: si risveglia via
+  on_timeout e prende il percorso di gestione (qui: escalate → failed).
+
+  Coerente col punto chiave: è la macchina stessa (stato persistente +
+  suspend/restore) a coordinare; il timeout è ciò che la risveglia se il
+  processo lanciato non segnala. Campi timeout/on_timeout additivi: il
+  validator li ignora → PASS.
+
+initial_state: launching
+
+states:
+  - name: launching
+    is_final: false
+    fan_out_launch: { workflow: 01-task-pipeline.yaml, over: tasks, handle: batch }
+  - name: awaiting
+    description: |
+      Attesa con timeout. all_ready se il batch completa in tempo;
+      timed_out se scade il timeout (la FSM si risveglia comunque).
+    is_final: false
+    await: { handles: [batch], join: all, timeout: 30s, on_timeout: timed_out }
+  - name: aggregating
+    is_final: false
+  - name: escalating
+    description: Gestione del timeout (log, alert, eventuale retry/cancel).
+    is_final: false
+  - name: done
+    is_final: true
+  - name: failed
+    description: Terminale di fallimento per timeout irrecuperabile.
+    is_final: true
+
+events:
+  - name: launched
+  - name: all_ready
+  - name: timed_out
+  - name: aggregated
+  - name: escalated
+
+transitions:
+  - { from: launching, to: awaiting, event: launched }
+  - { from: awaiting, to: aggregating, event: all_ready }
+  - { from: awaiting, to: escalating, event: timed_out }
+  - { from: aggregating, to: done, event: aggregated }
+  - { from: escalating, to: failed, event: escalated }
+
+invariants:
+  - description: |
+      awaiting ha sempre due vie d'uscita: completamento (all_ready) o
+      timeout (timed_out). La FSM non resta mai sospesa per sempre.
+
+metadata:
+  experiment: dynamic-workflows
+  round: 3
+  theme: timeout (H7)
+  pattern: "await con timeout → on_timeout → percorso di gestione"

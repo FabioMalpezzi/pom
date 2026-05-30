@@ -1,0 +1,50 @@
+workflow: dyn_parent_control
+version: 1
+description: |
+  Giro 5 — padre che esercita il CANALE DI CONTROLLO della composizione.
+  Lancia la figlia (13-child-compensation), attende con un timeout a scala
+  di GIORNI (caso processo umano: un'approvazione che può tardare). Sul
+  canale di controllo può ricevere cancel (→ compensa, propaga, cancelled)
+  o suspend/resume (lifecycle, propagati). Il timeout a giorni rende il
+  suspend/restore (H5) non opzionale: la macchina vive su storage, non in
+  RAM.
+
+initial_state: launching
+
+states:
+  - name: launching
+    is_final: false
+    fan_out_launch: { workflow: 13-child-compensation.yaml, over: items, handle: work }
+  - name: awaiting
+    description: |
+      Attesa con timeout a giorni. ready se la figlia completa;
+      escalate_to_human se nessuna risposta entro il termine.
+    is_final: false
+    await: { handles: [work], join: all, timeout: 3d, on_timeout: escalate_to_human }
+  - name: aggregating
+    is_final: false
+  - name: done
+    is_final: true
+  - name: escalated
+    description: Terminale di escalation per timeout (avviso a un umano).
+    is_final: true
+
+compensation:
+  - undo: annulla l'aggregazione parziale già scritta
+
+events:
+  - name: launched
+  - name: ready
+  - name: escalate_to_human
+  - name: aggregated
+
+transitions:
+  - { from: launching, to: awaiting, event: launched }
+  - { from: awaiting, to: aggregating, event: ready }
+  - { from: awaiting, to: escalated, event: escalate_to_human }
+  - { from: aggregating, to: done, event: aggregated }
+
+metadata:
+  experiment: dynamic-workflows
+  round: 5
+  theme: control contract — cancel/suspend/resume propagati + timeout a giorni

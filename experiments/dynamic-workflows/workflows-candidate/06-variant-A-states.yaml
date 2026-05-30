@@ -1,0 +1,59 @@
+workflow: dyn_launch_await_A_states
+version: 1
+description: |
+  Giro 2, Variante A — lancio e attesa come STATI dedicati.
+  Scenario ricco richiesto: lancia batch A, fai lavoro intermedio, lancia
+  batch B, fai altro lavoro, e SOLO alla fine attendi il termine di tutte.
+  fan_out_launch / await sono campi additivi su stato (validator li ignora).
+
+initial_state: launching_a
+
+states:
+  - name: launching_a
+    description: Lancia il batch A (non bloccante) e prosegue.
+    is_final: false
+    fan_out_launch: { workflow: 01-task-pipeline.yaml, over: tasks_a, handle: batch_a }
+  - name: preparing
+    description: |
+      Lavoro intermedio: la FSM fa altro (prepara, decide) mentre A gira
+      nell'esterno. Stato normale, nessuna estensione.
+    is_final: false
+  - name: launching_b
+    description: Lancia il batch B (non bloccante) e prosegue.
+    is_final: false
+    fan_out_launch: { workflow: 01-task-pipeline.yaml, over: tasks_b, handle: batch_b }
+  - name: monitoring
+    description: Altro lavoro intermedio mentre A e B girano nell'esterno.
+    is_final: false
+  - name: awaiting_all
+    description: |
+      Istruzione di attesa finale: QUI e solo qui la FSM si blocca, finché
+      A e B sono entrambi completi.
+    is_final: false
+    await: { handles: [batch_a, batch_b], join: all }
+  - name: aggregating
+    description: Combina i risultati dei due batch.
+    is_final: false
+  - name: done
+    is_final: true
+
+events:
+  - name: launched_a
+  - name: prepared
+  - name: launched_b
+  - name: monitored
+  - name: all_ready
+  - name: aggregated
+
+transitions:
+  - { from: launching_a, to: preparing, event: launched_a }
+  - { from: preparing, to: launching_b, event: prepared }
+  - { from: launching_b, to: monitoring, event: launched_b }
+  - { from: monitoring, to: awaiting_all, event: monitored }
+  - { from: awaiting_all, to: aggregating, event: all_ready }
+  - { from: aggregating, to: done, event: aggregated }
+
+metadata:
+  experiment: dynamic-workflows
+  round: 2
+  variant: A-dedicated-states

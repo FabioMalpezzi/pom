@@ -1,0 +1,96 @@
+workflow: dyn_fanout_launch_await
+version: 1
+description: |
+  Struttura 4, iterazione 3 — il pattern proposto dall'utente:
+  l'orchestratore INTERNO (questa FSM) decide; l'esecutore ESTERNO esegue
+  le istanze in parallelo e ritorna l'aggregato. Con la precisazione
+  chiave: il blocco NON è al lancio, è all'ISTRUZIONE DI ATTESA.
+
+  Due istruzioni separate:
+   - fan_out_launch (LANCIO non bloccante): affida N istanze del leaf
+     all'esterno e prosegue subito. Si possono fare più lanci di fila —
+     è il motivo per cui il lancio non blocca: altrimenti non potrei
+     lanciare le altre FSM.
+   - await (ATTESA bloccante): SOLO qui la FSM si ferma, finché l'esterno
+     segnala che i batch sono pronti, poi raccoglie l'aggregato.
+
+  Le DECISIONI restano nella FSM, sincrona e deterministica. Il
+  parallelismo vive nell'esecutore esterno (Pattern C), coerente con
+  "POM è metodo, non runtime". I campi fan_out_launch/await sono additivi:
+  il validator attuale li ignora (non sono mode:async/parallel), quindi il
+  modello VALIDA già oggi — l'estensione è formalizzarli, non stravolgere
+  lo schema.
+
+initial_state: launching_a
+
+states:
+  - name: launching_a
+    description: |
+      Lancia il primo batch di task (non bloccante) e prosegue.
+    is_final: false
+    fan_out_launch:
+      workflow: 01-task-pipeline.yaml
+      over: tasks_a
+      handle: batch_a
+  - name: launching_b
+    description: |
+      Lancia un secondo batch (non bloccante). Possibile proprio perché il
+      lancio non ferma la FSM: ecco come si lanciano "le altre FSM".
+    is_final: false
+    fan_out_launch:
+      workflow: 01-task-pipeline.yaml
+      over: tasks_b
+      handle: batch_b
+  - name: awaiting
+    description: |
+      Istruzione di attesa: QUI la FSM si blocca finché entrambi i batch
+      lanciati sono completi. L'esterno esegue i leaf in parallelo e
+      ritorna gli aggregati.
+    is_final: false
+    await:
+      handles: [batch_a, batch_b]
+      join: all
+  - name: aggregating
+    description: Combina i risultati dei due batch.
+    is_final: false
+  - name: done
+    description: Tutti i task lanciati e raccolti.
+    is_final: true
+
+events:
+  - name: launched_a
+    description: Primo batch affidato all'esterno; la FSM prosegue.
+  - name: launched_b
+    description: Secondo batch affidato all'esterno; la FSM prosegue.
+  - name: batches_ready
+    description: L'esterno segnala che tutti i batch attesi sono completi.
+  - name: aggregated
+    description: Aggregazione finale completata.
+
+transitions:
+  - from: launching_a
+    to: launching_b
+    event: launched_a
+  - from: launching_b
+    to: awaiting
+    event: launched_b
+  - from: awaiting
+    to: aggregating
+    event: batches_ready
+  - from: aggregating
+    to: done
+    event: aggregated
+
+invariants:
+  - description: |
+      La FSM si blocca solo nello stato awaiting. I due lanci precedenti
+      non bloccano: è ciò che permette di avviare più batch / più FSM
+      prima di attendere. Il parallelismo effettivo è dell'esecutore
+      esterno, non rappresentato come struttura interna.
+
+metadata:
+  experiment: dynamic-workflows
+  structure: 4-fanout
+  iteration: 3
+  design_pattern: "internal FSM decides + external executor runs (launch non-blocking / await blocking)"
+  extension_needed: "fan_out_launch + await as invoke-contract fields (additive; validator ignores them today)"

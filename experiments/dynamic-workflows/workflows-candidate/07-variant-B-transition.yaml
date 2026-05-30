@@ -1,0 +1,48 @@
+workflow: dyn_launch_await_B_transition
+version: 1
+description: |
+  Giro 2, Variante B — il lancio è un EFFETTO DI TRANSIZIONE (campo
+  `launch` sulla transizione), non uno stato dedicato. Stesso scenario
+  ricco della Variante A, ma più compatto: gli stati sono solo gli stati
+  di lavoro; il lancio avviene "passando di lì". L'attesa resta uno stato
+  (await). Campi additivi: il validator ignora `launch`.
+
+  Trade-off da valutare: meno stati, ma il lancio diventa un effetto
+  laterale nascosto sulla transizione — meno visibile leggendo gli stati,
+  e introduce in POM il concetto di "effetto su transizione" che oggi non
+  esiste (le transizioni sono pure {from,to,event,guard}).
+
+initial_state: working_1
+
+states:
+  - name: working_1
+    description: Lavoro iniziale; uscendo, lancia il batch A.
+    is_final: false
+  - name: working_2
+    description: Lavoro intermedio (mentre A gira); uscendo, lancia il batch B.
+    is_final: false
+  - name: awaiting_all
+    description: Attesa finale bloccante di entrambi i batch.
+    is_final: false
+    await: { handles: [batch_a, batch_b], join: all }
+  - name: aggregating
+    is_final: false
+  - name: done
+    is_final: true
+
+events:
+  - name: step_1_done
+  - name: step_2_done
+  - name: all_ready
+  - name: aggregated
+
+transitions:
+  - { from: working_1, to: working_2, event: step_1_done, launch: { workflow: 01-task-pipeline.yaml, over: tasks_a, handle: batch_a } }
+  - { from: working_2, to: awaiting_all, event: step_2_done, launch: { workflow: 01-task-pipeline.yaml, over: tasks_b, handle: batch_b } }
+  - { from: awaiting_all, to: aggregating, event: all_ready }
+  - { from: aggregating, to: done, event: aggregated }
+
+metadata:
+  experiment: dynamic-workflows
+  round: 2
+  variant: B-transition-effect

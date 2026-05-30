@@ -1,0 +1,43 @@
+workflow: dyn_child_comp
+version: 1
+description: |
+  Giro 5 — figlia con COMPENSAZIONE. È l'unico costrutto nuovo del
+  contratto di controllo: una saga di undo eseguita se la figlia riceve
+  'cancel' dal padre. La figlia prenota risorse e apre una transazione;
+  se viene cancellata, la compensazione le rilascia/annulla in ordine
+  inverso, poi termina nel terminale standard implicito 'cancelled'.
+
+  cancelled NON è dichiarato fra gli states: è un terminale standard del
+  lifecycle (come suspend/resume sono lifecycle), raggiunto dal control
+  signal, non da una transizione di dominio. Così il validator non lo
+  segnala irraggiungibile. `compensation` è additivo → PASS.
+
+initial_state: reserving
+
+states:
+  - name: reserving
+    description: Prenota una risorsa esterna.
+    is_final: false
+  - name: processing
+    description: Elabora avendo aperto una transazione.
+    is_final: false
+  - name: child_done
+    description: Completata regolarmente.
+    is_final: true
+
+compensation:
+  - undo: rilascia la risorsa prenotata
+  - undo: annulla la transazione aperta
+
+events:
+  - name: reserved
+  - name: processed
+
+transitions:
+  - { from: reserving, to: processing, event: reserved }
+  - { from: processing, to: child_done, event: processed }
+
+metadata:
+  experiment: dynamic-workflows
+  round: 5
+  theme: control contract — compensation (saga undo)
