@@ -1,0 +1,127 @@
+workflow: agent_retry_bounded
+version: 1
+description: |
+  Minimal model of an agent performing a fallible action with bounded
+  retry. The acting state carries a self-transition on
+  `retry_after_error`, guarded by `has_attempts_left`, and a
+  retire-on-exhaustion transition guarded by `no_attempts_left`. The
+  retry counter lives in the workflow `context`; the bound is
+  declared in metadata as an extension expected from H6 `loop_guard`.
+
+  This iteration tests whether bounded retry can be expressed
+  structurally with current schema primitives (state + self-
+  transition + guard + context counter), so that the introduction of
+  H6 is a syntactic improvement rather than a structural necessity.
+
+initial_state: idle
+
+states:
+  - name: idle
+    description: |
+      Pre-loop quiescent. Receives the trigger to start the action.
+    is_final: false
+
+  - name: acting
+    description: |
+      Executes the fallible action. Three exits:
+      - success → observing;
+      - retry_after_error (self-loop, while attempts remain);
+      - retries_exhausted → failed (when the counter is exhausted).
+    is_final: false
+
+  - name: observing
+    description: |
+      The action succeeded; the agent inspects the result and either
+      terminates or extends with further behaviour (out of scope here).
+    is_final: false
+
+  - name: done
+    description: |
+      Terminal success.
+    is_final: true
+
+  - name: failed
+    description: |
+      Terminal failure after the retry budget is exhausted.
+    is_final: true
+
+events:
+  - name: start
+    description: |
+      External trigger to begin the loop.
+  - name: success
+    description: |
+      The action completed successfully.
+  - name: retry_after_error
+    description: |
+      The action errored and the agent has attempts left to retry.
+  - name: retries_exhausted
+    description: |
+      The action errored and no attempts remain.
+  - name: goal_met
+    description: |
+      Observation satisfies the goal; the agent terminates.
+
+guards:
+  - name: has_attempts_left
+    description: |
+      Predicate: `context.attempts_left > 0`. Decremented on each
+      retry. Initial value is set on entry to `acting` from `idle`.
+  - name: no_attempts_left
+    description: |
+      Predicate: `context.attempts_left == 0`. Mutually exclusive
+      with `has_attempts_left`.
+
+transitions:
+  - from: idle
+    to: acting
+    event: start
+  - from: acting
+    to: acting
+    event: retry_after_error
+    guard: has_attempts_left
+  - from: acting
+    to: failed
+    event: retries_exhausted
+    guard: no_attempts_left
+  - from: acting
+    to: observing
+    event: success
+  - from: observing
+    to: done
+    event: goal_met
+
+context_schema:
+  attempts_left:
+    description: |
+      Remaining retry budget for the current `acting` invocation.
+      Initialized on `start` (e.g., to 3) and decremented on each
+      retry_after_error. The bound is enforced by the guards.
+    type: integer
+  last_error:
+    description: |
+      The most recent error payload from a failed action attempt.
+    type: any
+
+invariants:
+  - description: |
+      The agent cannot transition out of done or failed.
+  - description: |
+      Every entry into the acting self-transition (retry_after_error)
+      requires has_attempts_left to hold; the validator can check
+      that the guard exists; runtime enforces the counter.
+  - description: |
+      retries_exhausted and success are mutually exclusive on a single
+      action attempt.
+
+metadata:
+  experiment: agent-loop-fsm
+  hypothesis: H3
+  pattern: Bounded retry via guarded self-transition
+  extension_expected: |
+    The retry bound is expressed implicitly through context counters
+    and guards. The H6 `loop_guard` primitive (in the agent-loop-fsm
+    backlog) will materialize this bound at schema level, replacing
+    the manual counter with declarative `max_visits` and
+    `on_exhaustion`. Until H6 is promoted, the present modeling is
+    structurally sufficient.
