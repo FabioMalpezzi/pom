@@ -76,8 +76,8 @@ Close the loop on `agent-loop-fsm` by addressing the remaining open methodologic
 | 3c | Two **reference executors** of the contract (TypeScript, Python), simple in structure but functionally complete | in progress (this session) | — |
 | 4 | Auditor v2: add explicit "follow `state-invoke`/`event-invoke`" instruction to the audit prompt | pending | minor, ~5 lines |
 | 5 | Runtime: implement actual snapshot write/restore (the runtime today shows state+context are alive but doesn't serialize them) | pending | ~20 LOC |
-| 6 | Promote `skills-candidate/loop-goal.md` → `skills/loop-goal.md` + the 4 prompts to `prompts/NN-*.md` | `agent-loop-fsm` **closed (2026-05-30)**; promotion pending the ADR below | needs (6a) |
-| 6a | Short **ADR**: relationship between generic `workflow` skill and the `loop-goal` sub-type (when to use which) — prerequisite to promotion | pending | — |
+| 6 | Promote `skills-candidate/loop-goal.md` → `skills/loop-goal.md` + the 4 prompts to `prompts/28..31-loop-goal-*.md` | **done (2026-05-30)** — skill canonical, prompts numbered, registries updated; candidates kept in the closed experiment as history | — |
+| 6a | Short **ADR**: relationship between generic `workflow` skill and the `loop-goal` sub-type | **done** — `decisions/ADR-0003-workflow-vs-loop-goal-skill.md` | — |
 | 7 | TypeScript guided code for pipeline orchestrator (inherited from workflow-modeling) | pending (#45) | deferred until POM deploy on a target project |
 
 ### Next Actions
