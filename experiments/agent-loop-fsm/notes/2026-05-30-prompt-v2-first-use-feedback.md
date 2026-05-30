@@ -41,11 +41,39 @@ L'utente ha rifinito la falsificazione iniziale ("anche un campo nuovo conta") i
 
 **Proposta per v3**: nella sezione 6, aggiungere come istruzione esplicita "proponi una formulazione, lascia che l'utente la rifinisca, riformula finché non hai due esempi: uno che falsifica e uno che NON falsifica". L'esistenza dei due esempi è il criterio di chiusura.
 
+### D4 — Manca controllo di coerenza incrociata fra le scelte (richiesto dall'utente)
+
+Una rilettura critica del `criteria.md` v1 ha rivelato quattro incoerenze interne che il prompt non aveva aiutato a individuare:
+
+1. **Cortocircuito H1 ↔ H6/H7**: la falsificazione di H1 era "nuova primitiva strutturale" senza escludere le primitive già nel backlog dell'esperimento stesso (H6 `loop_guard`, H7 `timeout`). Se H1 avesse scoperto che serve `loop_guard`, sarebbe stata dichiarata falsa per errore — confermando di fatto H6.
+2. **Budget ↔ loop_guard incoerenti**: `max_visits=10` con `max_duration=20min` avrebbe richiesto 2 minuti per iterazione; ma "una versione committata + lint + mermaid + revisione" costa realisticamente ≈ 10–15 minuti. Numeri internamente incompatibili.
+3. **Signal degeneri = gate**: due "signal" avevano baseline al pavimento (0) e direzione ↓; non possono segnalare progresso, solo regressione. Comportamento = gate. Erano stati classificati signal per inerzia.
+4. **Obiettivo irrigidito silenziosamente**: l'obiettivo riscritto come "senza estensioni schema E senza forced fit" era strettamente più forte del backlog ("senza complessità eccessiva"). La differenza non è cosmetica: il backlog ammette un'estensione minima motivata.
+
+L'utente ha esplicitato il principio: "il prompt deve dare un supporto per far sì che le diverse opzioni di configurazione siano logicamente correlate e che ci sia un feedback sulle possibili conseguenze".
+
+**Proposta per v3**: aggiungere una **sezione di Consistency Check** prima dell'acceptance. La sezione esegue almeno quattro controlli incrociati e restituisce all'utente il feedback sulle conseguenze:
+
+- *budget vs loop_guard*: `max_visits × tempo_per_iterazione ≈ max_duration`. Se non torna, segnala con stima quantitativa.
+- *signal vs gate*: ogni metrica con baseline al pavimento e direzione ↓ non è un signal. Suggerisci di spostarla nei gate.
+- *falsificazione vs backlog*: se l'esperimento appartiene a un backlog di ipotesi multiple, escludi esplicitamente le altre ipotesi dal criterio di falsificazione (altrimenti la prima ipotesi confermerebbe le altre come falsificazioni della prima).
+- *obiettivo vs backlog originale*: confronta l'obiettivo proposto con la formulazione originale del backlog; se la nuova formulazione è strettamente più forte o più debole, segnala la differenza e chiedi conferma esplicita.
+
+Ogni check deve produrre o un OK, o un avvertimento con la conseguenza concreta della scelta corrente ("se mantieni 20min totali e 10 iterazioni, ogni iterazione ha 2 min, troppo poco per il lavoro dichiarato"). Senza il feedback sulle conseguenze, il controllo è solo un altro modulo da riempire.
+
+### D5 — Il primo test del prompt è stato fatto in modalità sbagliata (template-mode invece di dialog-mode)
+
+Il prompt v2 dice esplicitamente: "guidami con le sei sezioni in ordine, non lasciarmi saltare passi, riformula sempre". L'utilizzo corretto è una conversazione guidata sezione per sezione. L'agente invece ha compilato tutte le sei sezioni in un colpo solo e ha passato il modulo all'utente per revisione. Questo è un uso difforme: testa il prompt come *template di output*, non come *guida di dialogo*.
+
+Conseguenza: il test di usabilità di H1 vale solo per il primo dei tre criteri di promozione (file output sotto soglia). Non sappiamo se il prompt funziona come dialogo guidato — è proprio quel ruolo che giustifica la sua esistenza vs un semplice template Markdown vuoto.
+
+**Proposta per v3**: aggiungere all'inizio del prompt una nota operativa per l'agente: "Questo prompt è una guida di dialogo, non un template. Non compilare tutte le sezioni in un colpo. Procedi sezione per sezione, chiedi conferma alla fine di ognuna, e applica i Consistency Check di D4 dopo aver raccolto tutte le risposte e prima di scrivere il file finale". Il test reale del prompt va fatto su H2 in modalità dialogo.
+
 ## Verdetto sul primo uso
 
-Il prompt v2 ha prodotto un `criteria.md` accettabile **in una sola passata di proposta + quattro fix dell'utente**, in meno di 15 minuti di conversazione. Le tre criticità alte (C1/C2/C3) risolte in v2 hanno effettivamente cambiato la conversazione: senza la sezione 0 avremmo passato tempo a discutere "cosa misuriamo, l'agente o il modello?".
+Il prompt v2 ha prodotto un `criteria.md` formalmente valido in meno di 15 minuti, ma la prima passata aveva quattro incongruenze interne (D4) che ne minavano la coerenza logica. Le tre criticità alte (C1/C2/C3) risolte in v2 hanno cambiato la conversazione (la sezione 0 è stata utile), ma il prompt non si è accorto delle incoerenze: è stato l'utente a farlo emergere chiedendo "tutto ti sembra logico?".
 
-Le debolezze D1, D2, D3 non bloccano l'uso ma generano attrito ripetitivo. Conviene raccoglierle e produrre v3 dopo aver applicato v2 a H2 (così avremo due usi reali su cui basare il prossimo giro, invece di iterare il prompt su un solo caso).
+Le debolezze D1, D2, D3 generano attrito ripetitivo ma non incoerenza. D4 e D5 invece sono più gravi: D4 dice che il prompt v2 non aiuta a validare l'output che produce, D5 dice che è stato testato male. Conviene affrontare D4 in v3 senza aspettare H2, perché senza Consistency Check ogni applicazione del prompt rischia di produrre risultati superficialmente validi e sostanzialmente incoerenti.
 
 ## Stato dei tre criteri di promozione (dopo H1)
 
