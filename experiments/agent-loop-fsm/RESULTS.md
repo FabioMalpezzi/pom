@@ -150,6 +150,36 @@ I cinque esperimenti hanno consumato in totale ~30 minuti contro un budget cumul
 
 ---
 
+## 4-bis. Esecuzione runtime end-to-end (aggiunta a fine sessione)
+
+Dopo la chiusura formale dell'esperimento, è stato scritto un runtime TypeScript provider-agnostic sopra `agent-orchestrator.yaml` (ReAct minimal) e fatto girare con un LLM reale. Il runtime vive in `experiments/agent-loop-fsm/runtime-candidate/`.
+
+Caratteristiche:
+- **Pattern A** (transition table) come da `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md`.
+- **Provider-agnostic**: client `openai` ufficiale con `baseURL` configurabile, funziona su OpenAI, DeepSeek, Groq, Mistral, Together, Ollama locale.
+- **Function calling nativo** per tool — niente parsing fragile di JSON in testo libero.
+- **Bound del loop a mano** (`MAX_ITERATIONS`, `MAX_DURATION_MS` da env) in attesa che H6 `loop_guard` diventi primitiva schema.
+
+Primo run reale (DeepSeek, `deepseek-chat`, goal "Calcola (12 + 5) * 3 e dimmi il risultato"):
+
+```
+[FSM] idle --goal_received--> reasoning  (iter 0)
+[FSM] reasoning --plan_ready--> acting   (iter 1)
+[FSM] acting --action_done--> observing  (iter 2)
+[FSM] observing --goal_met--> done       (iter 3)
+```
+
+Il modello ha generato la tool call `calculator({expression: "(12 + 5) * 3"})`, il tool ha restituito `51`, il modello al turno successivo ha riconosciuto il goal raggiunto e ha concluso. **Loop chiuso al primo tentativo**, con un solo fix di sintassi (chiavi oggetto con spazi non quotate) durante lo sviluppo.
+
+Cosa dimostra in più rispetto a H1–H5:
+- H1 aveva confermato che lo schema POM **modella** l'agente. L'esecuzione runtime dimostra che la transition table modellata è anche **eseguibile** senza adattamenti: la stessa tabella che il validator usa per dichiarare 100% clean fit è quella che il runtime applica passo-passo.
+- H5 aveva validato il contratto `{workflow, version, state, context}` come **snapshot statico**. Il runtime mostra che lo stato e il context sono effettivamente mantenuti vivi durante l'esecuzione e potrebbero essere serializzati a qualunque istante (lo snapshot/restore reale è rinviato a una iterazione successiva del runtime, ma il dato è disponibile).
+- H6 (`loop_guard`) era stata motivata come miglioramento sintattico. Il runtime conferma che è anche un miglioramento di portabilità: oggi i bound vivono in env var del singolo target; con `loop_guard` come primitiva schema vivrebbero dentro il YAML, e il runtime li leggerebbe da lì.
+
+Il runtime non è promosso ai path canonici di POM — resta come `runtime-candidate/` accanto a `workflows-candidate/` finché non si decide se costruire un runtime di riferimento POM (decisione fuori scope per questo esperimento).
+
+---
+
 ## 5. Cosa resta aperto
 
 - **H6 `loop_guard`** e **H7 `timeout`**: già definite in dettaglio nel backlog (vedi sezioni dedicate di `EXPERIMENT.md`), pronte per essere prese in carico da un esperimento parallelo `exp/schema-loop-guard-timeout` su SPEC-0007. Quando promosse, permetteranno di riscrivere H3 in modo più dichiarativo.
