@@ -73,19 +73,23 @@ Close the loop on `agent-loop-fsm` by addressing the remaining open methodologic
 | 2 | Write prompt v3 of `define-loop-goal-criteria` with Consistency Check (D4) + dialog-mode hint (D5) | **done (#66, 2026-05-30)** — resolves D1–D5; adds section 7 Consistency Check and a 4th promotion criterion | — |
 | 3 | First real **dialog-mode** run of the full four-agent lifecycle | **done (2026-05-30)** via `exp/dynamic-workflows`; feedback in `agent-loop-fsm` §4-septies (4 limits to fold into prompt v4 + skill promotion) | — |
 | 3b | Promote the **Dynamic Workflow contract** to the workflow filone: an ADR (control-plane/data-plane doctrine) + SPEC-0006 backlog entries for `fan_out_launch`/`await`/`compensation`; real validator+executor at target deploy | pending (#new) — user-approved direction (Adopt) | depends on workflow-domain decision |
-| 3c | Two **reference executors** of the contract (TypeScript, Python), simple in structure but functionally complete | in progress (this session) | — |
+| 3c | Two **reference executors** of the contract (TypeScript, Python), simple in structure but functionally complete | **done (2026-05-30)** — both verified on the scenarios; in `experiments/dynamic-workflows/runtime/` | — |
 | 4 | Auditor v2: add explicit "follow `state-invoke`/`event-invoke`" instruction to the audit prompt | pending | minor, ~5 lines |
 | 5 | Runtime: implement actual snapshot write/restore (the runtime today shows state+context are alive but doesn't serialize them) | pending | ~20 LOC |
 | 6 | Promote `skills-candidate/loop-goal.md` → `skills/loop-goal.md` + the 4 prompts to `prompts/28..31-loop-goal-*.md` | **done (2026-05-30)** — skill canonical, prompts numbered, registries updated; candidates kept in the closed experiment as history | — |
 | 6a | Short **ADR**: relationship between generic `workflow` skill and the `loop-goal` sub-type | **done** — `decisions/ADR-0003-workflow-vs-loop-goal-skill.md` | — |
 | 7 | TypeScript guided code for pipeline orchestrator (inherited from workflow-modeling) | pending (#45) | deferred until POM deploy on a target project |
+| 8 | **Integrate branches** `exp/agent-loop-fsm` + `exp/dynamic-workflows` toward `main` | pending | non-urgent; they overlap (dynamic-workflows branched from agent-loop-fsm and edits its files), so merge with care |
 
 ### Next Actions
 
-- [x] Prompt v3 of `define-loop-goal-criteria` written (2026-05-30): resolves D1–D5, adds section 7 Consistency Check.
-- [ ] Of the two remaining open items (H6/H7 experiment, runtime snapshot), decide which to address next. The dialog-mode test of v3 (priority 3) is now the natural follow-up: it should ride on the next real experiment trigger rather than being run on a synthetic case.
-- [ ] If the user provides an Anthropic API key or wants to revisit the `/claude-api` skill, the runtime can be re-pointed to Anthropic SDK — but the existing DeepSeek-based runtime stays as evidence.
-- [ ] Before promoting `loop-goal` to canonical `skills/`, write a short ADR documenting the relationship between the generic `workflow` skill and the loop/goal sub-type (when to use which).
+Stato a fine sessione 2026-05-30: il **lato metodo è completo** (agent-loop-fsm chiuso; prompt v4; ADR-0003; skill `loop-goal` + 4 prompt promossi a canonici; tutto pushato). Restano tre fronti aperti, registrati come da fare:
+
+- [ ] **Lato workflow — promuovere il contratto Dynamic Workflow** (priorità 3b): un ADR sulla dottrina control-plane/data-plane + voci di backlog su SPEC-0006 per `fan_out_launch`/`await`/`join`/`timeout`/`compensation`. Direzione Adopt approvata; implementazione vera del validator+esecutori rimandata al deploy su un target. Contratto e prove in `experiments/dynamic-workflows/`.
+- [ ] **Esperimento H6/H7** (priorità 1): aprire `exp/schema-loop-guard-timeout` per `loop_guard` + `timeout` → SPEC-0007.
+- [ ] **Integrare i rami verso `main`** (priorità 8): `exp/agent-loop-fsm` + `exp/dynamic-workflows` si sovrappongono; merge con cura.
+
+(Spunto non azionabile, registrato a parte: Prolog è un fit naturale per *validare/verificare* i workflow — non per eseguirli; valutazione esplorativa, non una cosa da fare.)
 
 ### Open Decisions
 
