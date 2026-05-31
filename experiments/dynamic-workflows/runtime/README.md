@@ -10,7 +10,7 @@ Tre file, tutti **riferimenti estensibili**, non il runtime canonico di POM (POM
 
 ## Copertura (entrambe le implementazioni)
 
-Control plane FSM sincrona + tutti i costrutti del contratto: `fan_out_launch` (lancio non bloccante), `await` (`join`: all/quorum/first, `timeout`/`on_timeout`), `react` (on_each + early-exit), `state-invoke`, canale di controllo `cancel`+`compensation`/`suspend`/`resume`, composizione ricorsiva (nested fan-out), `snapshot`/`restore`.
+Control plane FSM sincrona + tutti i costrutti del contratto: `fan_out_launch` (lancio non bloccante), `await` (`join`: all/quorum/first, `timeout`/`on_timeout`), lifecycle esplicito degli handle (`await` risolve, `cancel_handles` propaga cancel, `detach_handles` propaga detach), `react` (on_each + early-exit), `state-invoke`, canale di controllo `cancel`+`compensation`/`suspend`/`resume`, composizione ricorsiva (nested fan-out), `snapshot`/`restore`.
 
 ## Il punto di estensione: `Executor` (il data plane)
 

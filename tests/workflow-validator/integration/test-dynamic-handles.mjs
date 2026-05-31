@@ -30,6 +30,10 @@ function scenarioDynamicHandleLifecycle() {
   assert("selective await plus explicit detach passes", valid.status === 0, valid.stdout + valid.stderr);
   assert("valid handle lifecycle has no warnings", valid.stdout.includes("| Warnings | 0 |"), valid.stdout);
 
+  const cancelValid = runLint("experiments/dynamic-workflows/workflows-candidate/15-handle-cancel-lifecycle.yaml");
+  assert("explicit cancel handle lifecycle passes", cancelValid.status === 0, cancelValid.stdout + cancelValid.stderr);
+  assert("cancel handle lifecycle has no warnings", cancelValid.stdout.includes("| Warnings | 0 |"), cancelValid.stdout);
+
   const expected = new Map([
     ["handle.broken-E082-name.yaml", "E082"],
     ["handle.broken-E083-duplicate.yaml", "E083"],

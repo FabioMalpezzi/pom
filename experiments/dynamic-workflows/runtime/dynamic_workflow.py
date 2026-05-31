@@ -113,14 +113,8 @@ class Engine:
                 log(f"» cancel in '{state}'")
                 for u in reversed(wf.get("compensation", [])):
                     log(f"  · compenso: {u['undo']}")
-                for b in in_flight:
-                    log(f"  ↓ propago cancel a '{b['handle']}' ({b['workflow']})")
-                    try:
-                        c, _ = load_workflow(b["workflow"], wf_dir)
-                        for u in reversed(c.get("compensation", [])):
-                            log(f"    · figlia compensa: {u['undo']}")
-                    except Exception:
-                        pass
+                while in_flight:
+                    self._propagate_handle_signal("cancel", in_flight.pop(0), wf_dir, log)
                 return RunResult("cancelled", trace + ["cancelled"], leaves)
             if sig.suspend_at == state:
                 log(f"» suspend '{state}': snapshot+congela, propago; resume: restore e riprendo (reversibile)")
@@ -152,9 +146,7 @@ class Engine:
                     continue
                 to_run = ready if join == "all" else ready[:need]
                 for h in to_run:
-                    b = next((x for x in in_flight if x["handle"] == h), None)
-                    if not b:
-                        continue
+                    b = self._resolve_handle(in_flight, h)
                     res = self.executor.run_batch(b["workflow"], wf_dir, b["n"], sig)
                     leaves += sum(r["leaves"] for r in res)
                     extra = f" {need}/{len(want)}" if join == "quorum" else ""
@@ -164,6 +156,14 @@ class Engine:
                     break
                 state = outs[0]["to"]
                 continue
+
+            if "cancel_handles" in so:
+                for h in so["cancel_handles"]:
+                    self._propagate_handle_signal("cancel", self._resolve_handle(in_flight, h), wf_dir, log)
+
+            if "detach_handles" in so:
+                for h in so["detach_handles"]:
+                    self._propagate_handle_signal("detach", self._resolve_handle(in_flight, h), wf_dir, log)
 
             # --- react: attesa reattiva con early-exit ---
             if "react" in so:
@@ -207,7 +207,27 @@ class Engine:
                 log(f"» LANCIO su transizione: '{lc['handle']}'")
             state = chosen["to"]
 
+        if is_final(wf, state) and in_flight:
+            handles = ",".join(b["handle"] for b in in_flight)
+            raise RuntimeError(f"terminale '{state}' raggiunto con handle attivi: {handles}")
         return RunResult(state, trace, leaves)
+
+    def _resolve_handle(self, in_flight, handle):
+        for i, batch in enumerate(in_flight):
+            if batch["handle"] == handle:
+                return in_flight.pop(i)
+        raise RuntimeError(f"handle attivo non trovato: {handle}")
+
+    def _propagate_handle_signal(self, signal, batch, wf_dir, log):
+        log(f"  ↓ propago {signal} a '{batch['handle']}' ({batch['workflow']})")
+        if signal != "cancel":
+            return
+        try:
+            child, _ = load_workflow(batch["workflow"], wf_dir)
+            for u in reversed(child.get("compensation", [])):
+                log(f"    · figlia compensa: {u['undo']}")
+        except Exception:
+            pass
 
 
 def main():

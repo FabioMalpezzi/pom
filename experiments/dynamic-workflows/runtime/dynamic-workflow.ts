@@ -19,7 +19,7 @@ type Json = Record<string, any>;
 interface FanOut { workflow: string; over?: string; handle: string; }
 interface Await { handles?: string[]; handle?: string; join?: 'all' | 'quorum' | 'first'; k?: number; timeout?: string; on_timeout?: string; }
 interface React { on_each: string; on_early: string; on_done: string; }
-interface State { name: string; is_final?: boolean; invoke?: Json; fan_out_launch?: FanOut; await?: Await; react?: React; }
+interface State { name: string; is_final?: boolean; invoke?: Json; fan_out_launch?: FanOut; await?: Await; react?: React; cancel_handles?: string[]; detach_handles?: string[]; }
 interface Transition { from: string; to: string; event: string; guard?: string; launch?: FanOut; }
 interface Workflow { workflow: string; initial_state: string; states: State[]; transitions: Transition[]; compensation?: { undo: string }[]; }
 
@@ -47,7 +47,13 @@ const outgoing = (wf: Workflow, s: string) => (wf.transitions ?? []).filter((t) 
 
 // ---------- Engine = control plane (FSM sincrona, deterministica) ----------
 export class Engine {
-  constructor(private executor: Executor, public log: (s: string) => void = () => {}) {}
+  private executor: Executor;
+  public log: (s: string) => void;
+
+  constructor(executor: Executor, log: (s: string) => void = () => {}) {
+    this.executor = executor;
+    this.log = log;
+  }
 
   // Lo stub di default usa lo stesso Engine per eseguire le foglie (gestisce il nesting).
   static withStub(log: (s: string) => void = () => {}): Engine {
@@ -63,6 +69,21 @@ export class Engine {
 
   snapshot(state: string, context: Json) { return { state, context, inFlight: [...this.inFlight] }; }
   restore(snap: { state: string; context: Json; inFlight: any[] }) { this.inFlight = [...snap.inFlight]; return snap.state; }
+
+  private resolveHandle(inFlight: { handle: string; workflow: string; n: number }[], handle: string) {
+    const idx = inFlight.findIndex((x) => x.handle === handle);
+    if (idx < 0) throw new Error(`handle attivo non trovato: ${handle}`);
+    return inFlight.splice(idx, 1)[0];
+  }
+
+  private propagateHandleSignal(signal: 'cancel' | 'detach', batch: { handle: string; workflow: string; n: number }, dir: string, log: (s: string) => void) {
+    log(`  ↓ propago ${signal} a '${batch.handle}' (${batch.workflow})`);
+    if (signal !== 'cancel') return;
+    try {
+      const { wf: child } = loadWorkflow(batch.workflow, dir);
+      for (const u of [...(child.compensation ?? [])].reverse()) log(`    · figlia compensa: ${u.undo}`);
+    } catch {}
+  }
 
   run(path: string, baseDir = process.cwd(), sig: Signals = {}, silent = false): RunResult {
     const { wf, dir } = loadWorkflow(path, baseDir);
@@ -84,10 +105,7 @@ export class Engine {
       if (sig.cancelAt === state) {
         log(`» cancel in '${state}'`);
         for (const u of [...(wf.compensation ?? [])].reverse()) log(`  · compenso: ${u.undo}`);
-        for (const b of inFlight) {
-          log(`  ↓ propago cancel a '${b.handle}' (${b.workflow})`);
-          try { const { wf: c } = loadWorkflow(b.workflow, dir); for (const u of [...(c.compensation ?? [])].reverse()) log(`    · figlia compensa: ${u.undo}`); } catch {}
-        }
+        while (inFlight.length > 0) this.propagateHandleSignal('cancel', inFlight.shift()!, dir, log);
         return { terminal: 'cancelled', trace: [...trace, 'cancelled'], leaves };
       }
       if (sig.suspendAt === state) { log(`» suspend '${state}': snapshot+congela, propago; resume: restore e riprendo (reversibile)`); }
@@ -112,12 +130,26 @@ export class Engine {
           const t = outgoing(wf, state).find((x) => x.event === a.on_timeout); if (!t) break; state = t.to; continue;
         }
         for (const h of (join === 'all' ? ready : ready.slice(0, need))) {
-          const b = inFlight.find((x) => x.handle === h); if (!b) continue;
+          const b = this.resolveHandle(inFlight, h);
           const res = this.executor.runBatch(b.workflow, dir, b.n, sig);
           leaves += res.reduce((s, r) => s + r.leaves, 0);
           log(`» ATTESA (join ${join}${join === 'quorum' ? ` ${need}/${want.length}` : ''}) → '${h}': ${b.n}× '${b.workflow}'`);
         }
         const o = outgoing(wf, state).find((x) => x.event !== a.on_timeout) ?? outgoing(wf, state)[0]; if (!o) break; state = o.to; continue;
+      }
+
+      if (so.cancel_handles) {
+        for (const h of so.cancel_handles) {
+          const b = this.resolveHandle(inFlight, h);
+          this.propagateHandleSignal('cancel', b, dir, log);
+        }
+      }
+
+      if (so.detach_handles) {
+        for (const h of so.detach_handles) {
+          const b = this.resolveHandle(inFlight, h);
+          this.propagateHandleSignal('detach', b, dir, log);
+        }
       }
 
       // --- react: attesa reattiva con early-exit ---
@@ -144,6 +176,9 @@ export class Engine {
       if (self && exit) chosen = (visits.get(state)! < n) ? self : exit; // counted loop / join
       if (chosen.launch) { inFlight.push({ handle: chosen.launch.handle, workflow: chosen.launch.workflow, n }); log(`» LANCIO su transizione: '${chosen.launch.handle}'`); }
       state = chosen.to;
+    }
+    if (isFinal(wf, state) && inFlight.length > 0) {
+      throw new Error(`terminale '${state}' raggiunto con handle attivi: ${inFlight.map((x) => x.handle).join(',')}`);
     }
     return { terminal: state, trace, leaves };
   }
