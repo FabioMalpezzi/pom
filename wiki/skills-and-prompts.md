@@ -28,6 +28,7 @@ Important skill families:
 | `config` | Create or update project-specific POM configuration. |
 | `sync` | Refresh an existing POM installation or align source and target POM. |
 | `workflow` | Design, validate, diagram, derive scenarios for, and guide the implementation of a domain workflow declared as a YAML state model. Opt-in per target via `workflows.enabled` in `pom.config.json`; relies on `scripts/lint-workflows.mjs` for validation and Mermaid generation, and on `scripts/to-xstate.mjs` for stately.ai visualization. |
+| `loop-goal` | Model, audit, derive scenarios for, and conclude agent-shaped loop/goal workflows. The wiki tutorial `[[loop-goal-workflow-tutorial]]` explains how to choose between the verified examples and broader loop/goal dimensions. |
 
 The prompt set covers bootstrap, adoption, state, governance, planning, review, handoff, Project Reader note processing, config, experiments, wiki operations, extension, classification, deferral, sync, validation, reconciliation, clarification, pruning, diagnosis, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.
 
@@ -79,3 +80,4 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 - [[wiki-method]]
 - [[experiments-and-extension]]
 - [[templates-and-governance]]
+- [[loop-goal-workflow-tutorial]]

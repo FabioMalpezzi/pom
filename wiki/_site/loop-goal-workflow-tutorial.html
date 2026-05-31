@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="POM Wiki Reader">
+  <title>Loop/Goal Workflow Tutorial - POM Wiki Reader</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">POM</span>
+      <span>POM Wiki Reader</span>
+    </a>
+    <a class="source-link" href="../loop-goal-workflow-tutorial.md" target="_blank" rel="noopener noreferrer">Markdown source</a>
+  </header>
+
+  <div class="layout">
+    <aside class="site-nav" aria-label="Wiki pages">
+      <label class="search-label" for="page-search">Search wiki</label>
+      <input id="page-search" type="search" placeholder="Search title and content" autocomplete="off">
+      <p id="search-status" class="search-status" aria-live="polite"></p>
+      <nav id="page-nav">
+        <a href="index.html" data-title="POM Wiki - Index" data-nav-title="POM Wiki - Index" title="POM Wiki - Index">POM Wiki - Index</a>
+<a href="overview.html" data-title="POM Overview" data-nav-title="POM Overview" title="POM Overview">POM Overview</a>
+<a href="operating-memory.html" data-title="Operating Memory" data-nav-title="Operating Memory" title="Operating Memory">Operating Memory</a>
+<a href="wiki-method.html" data-title="Persistent Wiki Method" data-nav-title="Persistent Wiki Method" title="Persistent Wiki Method">Persistent Wiki Method</a>
+<a href="reader-capabilities.html" data-title="Reader Capabilities" data-nav-title="Reader Capabilities" title="Reader Capabilities">Reader Capabilities</a>
+<a href="adoption-and-installation.html" data-title="Adoption And Installation" data-nav-title="Adoption And Installation" title="Adoption And Installation">Adoption And Installation</a>
+<a href="skills-and-prompts.html" data-title="Skills And Prompts" data-nav-title="Skills And Prompts" title="Skills And Prompts">Skills And Prompts</a>
+<a href="templates-and-governance.html" data-title="Templates And Governance" data-nav-title="Templates And Governance" title="Templates And Governance">Templates And Governance</a>
+<a href="experiments-and-extension.html" data-title="Experiments And Extension" data-nav-title="Experiments And Extension" title="Experiments And Extension">Experiments And Extension</a>
+<a href="current-specs.html" data-title="Current POM Specs" data-nav-title="Current POM Specs" title="Current POM Specs">Current POM Specs</a>
+<a href="loop-goal-workflow-tutorial.html" data-title="Loop/Goal Workflow Tutorial" data-nav-title="Loop/Goal Tutorial" title="Loop/Goal Workflow Tutorial" aria-current="page">Loop/Goal Tutorial</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <article class="page">
+        <header class="page-head">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span title="Loop/Goal Workflow Tutorial">Loop/Goal Tutorial</span></nav>
+          <p class="eyebrow">Persistent Wiki</p>
+          <h1>Loop/Goal Workflow Tutorial</h1>
+          <p class="dek">Loop/goal workflows model agentshaped controllers: a system receives a goal, decides what to do next, acts, observes the result, and either continues or terminates. The five YAML files under...</p>
+          <div class="meta">
+            <span>Source: loop-goal-workflow-tutorial.md</span>
+            <span>Generated: 2026-05-31</span>
+          </div>
+        </header>
+        <aside class="generated-notice">
+          <strong>Generated reader view.</strong> Edit the Markdown source, then regenerate this static site. The HTML is not canonical Operating Memory.
+        </aside>
+        <h2 id="summary">Summary <a class="heading-anchor" href="#summary" aria-label="Copy link to Summary">#</a></h2>
+<p>Loop/goal workflows model agent-shaped controllers: a system receives a goal, decides what to do next, acts, observes the result, and either continues or terminates. The five YAML files under <code>templates/examples/workflow/loop-goal/</code> are verified examples, not the complete taxonomy of possible agent loops.</p>
+<h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
+<p>The canonical <code>loop-goal</code> skill is the procedure for defining criteria, modeling, auditing, deriving scenarios, guiding implementation, and concluding loop/goal experiments. This page is a human reading guide: it helps a reader choose a starting pattern before using the skill.</p>
+<p>The current verified examples cover five shapes:</p>
+<div class="table-wrap"><table><thead><tr><th>Example</th><th>Use It When</th></tr></thead><tbody><tr><td data-label="Example"><code>agent-orchestrator.yaml</code></td><td data-label="Use It When">The agent follows a compact ReAct-style loop: reason, act, observe, then continue or finish.</td></tr><tr><td data-label="Example"><code>agent-orchestrator-goal-lifecycle.yaml</code></td><td data-label="Use It When">Planning, execution, reflection, and replan are meaningfully separate.</td></tr><tr><td data-label="Example"><code>agent-loop-table.yaml</code></td><td data-label="Use It When">The whole control flow should stay flat: perception, planning, action, observation.</td></tr><tr><td data-label="Example"><code>agent-retry-bounded.yaml</code></td><td data-label="Use It When">The key behavior is retrying a failed action with an explicit bound.</td></tr><tr><td data-label="Example"><code>agent-supervisor.yaml</code></td><td data-label="Use It When">A parent controller delegates the goal to a synchronous child workflow and routes on the child terminal.</td></tr></tbody></table></div>
+<p>These examples were validated during the <code>agent-loop-fsm</code> experiment. They are safe starting points, but they do not exhaust the design space.</p>
+<h2 id="working-taxonomy">Working Taxonomy <a class="heading-anchor" href="#working-taxonomy" aria-label="Copy link to Working Taxonomy">#</a></h2>
+<p>Use the dimensions below to decide whether one of the verified examples is enough or whether the target project needs a new loop/goal workflow. The dimensions are not mutually exclusive; a real agent may combine several of them.</p>
+<div class="table-wrap"><table><thead><tr><th>Dimension</th><th>Question</th><th>Typical Starting Point</th></tr></thead><tbody><tr><td data-label="Dimension">Compact ReAct loop</td><td data-label="Question">Can reasoning, tool action, and observation be represented as three recurring stages?</td><td data-label="Typical Starting Point"><code>agent-orchestrator.yaml</code></td></tr><tr><td data-label="Dimension">Explicit planning lifecycle</td><td data-label="Question">Does the model need separate planning, execution, reflection, and replan states?</td><td data-label="Typical Starting Point"><code>agent-orchestrator-goal-lifecycle.yaml</code></td></tr><tr><td data-label="Dimension">Flat control table</td><td data-label="Question">Is the priority a small, inspectable transition table without sub-workflows?</td><td data-label="Typical Starting Point"><code>agent-loop-table.yaml</code></td></tr><tr><td data-label="Dimension">Bounded retry</td><td data-label="Question">Does the agent need a hard cap on retries or loop visits?</td><td data-label="Typical Starting Point"><code>agent-retry-bounded.yaml</code>; use <code>loop_guard</code> when the bound should be declarative.</td></tr><tr><td data-label="Dimension">Supervisor delegation</td><td data-label="Question">Does a parent workflow coordinate a child agent workflow and branch on the child's terminal?</td><td data-label="Typical Starting Point"><code>agent-supervisor.yaml</code></td></tr><tr><td data-label="Dimension">Suspend and restore</td><td data-label="Question">Can the loop pause across sessions or long waits and resume from named state plus context?</td><td data-label="Typical Starting Point">Start from the closest example and apply the snapshot/restore convention.</td></tr><tr><td data-label="Dimension">Tool-using agent</td><td data-label="Question">Are external tools part of the loop contract rather than hidden implementation detail?</td><td data-label="Typical Starting Point">Start from ReAct or Goal Lifecycle; model tool outcomes as events.</td></tr><tr><td data-label="Dimension">Evaluator or critic loop</td><td data-label="Question">Does a critic, verifier, or reflection step decide whether to continue, replan, or fail?</td><td data-label="Typical Starting Point">Start from Goal Lifecycle; keep the critic decision as an explicit state or child workflow.</td></tr><tr><td data-label="Dimension">Human-in-the-loop</td><td data-label="Question">Can the loop block on a human decision or long-running manual task?</td><td data-label="Typical Starting Point">Start from Goal Lifecycle; use <code>timeout</code> for residence bounds and target-owned scheduling.</td></tr><tr><td data-label="Dimension">Dynamic fan-out</td><td data-label="Question">Does the controller launch many concurrent child tasks and wait for fan-in?</td><td data-label="Typical Starting Point">Do not force it into native parallel FSM states; use the Dynamic Workflow control-plane/data-plane contract.</td></tr></tbody></table></div>
+<p>The last row is the boundary that matters most. POM workflow modeling does not add native parallel regions. Dynamic fan-out belongs to the Dynamic Workflow contract: the POM FSM records launch, await, timeout, reaction, cancellation, and compensation boundaries; the target project owns concurrent execution.</p>
+<h2 id="how-to-choose">How To Choose <a class="heading-anchor" href="#how-to-choose" aria-label="Copy link to How To Choose">#</a></h2>
+<p>Start with the simplest example that preserves the domain meaning.</p>
+<p>Use <code>agent-orchestrator.yaml</code> when the agent's control flow is mostly ReAct and the internal planning details are not part of the contract. This is the smallest readable loop/goal model.</p>
+<p>Use <code>agent-orchestrator-goal-lifecycle.yaml</code> when planning and replan are not implementation details. If reviewers need to see when the agent plans, executes, reflects, retries, or declares the goal impossible, model those as named states.</p>
+<p>Use <code>agent-loop-table.yaml</code> when the team wants one flat surface for review and implementation. This is useful when the loop is simple but needs to be translated directly into a table-driven runtime.</p>
+<p>Use <code>agent-retry-bounded.yaml</code> when the central question is not the whole agent architecture but a bounded retry behavior. If the bound is part of the reusable workflow contract, prefer <code>loop_guard</code> over an implicit counter in target code.</p>
+<p>Use <code>agent-supervisor.yaml</code> when a parent must treat an agent workflow as an autonomous child. The parent should see only the child's terminal state and output, not the child's private internal context.</p>
+<h2 id="operating-sequence">Operating Sequence <a class="heading-anchor" href="#operating-sequence" aria-label="Copy link to Operating Sequence">#</a></h2>
+<p>For an experiment or target adoption, the order matters:</p>
+<ol><li>Define criteria with <code>loop-goal define-criteria</code>.</li><li>Model the workflow YAML from the closest verified example.</li><li>Run <code>pom:workflow:lint</code>.</li><li>Audit fit and conformance with <code>loop-goal audit</code>.</li><li>Generate scenarios with <code>loop-goal scenarios</code>.</li><li>Guide implementation with the workflow implementation guide.</li><li>Conclude the experiment against the frozen criteria.</li></ol>
+<p>Do not skip criteria when the work is experimental. The criteria file is the measurement contract; without it, the audit can say the YAML is well formed but cannot say whether the experiment succeeded.</p>
+<h2 id="defining-the-measurement-contract">Defining The Measurement Contract <a class="heading-anchor" href="#defining-the-measurement-contract" aria-label="Copy link to Defining The Measurement Contract">#</a></h2>
+<p>Before choosing the YAML shape, define the experiment contract. This is not paperwork: it is the table that tells the loop what it is trying to prove, what must not regress, what progress looks like, and when to stop. The contract lives in <code>experiments/&lt;topic&gt;/design/criteria.md</code>.</p>
+<p>Start with four context rows. They remove the most common ambiguity:</p>
+<div class="table-wrap"><table><thead><tr><th>Row</th><th>Question It Answers</th><th>Good Shape</th></tr></thead><tbody><tr><td data-label="Row">SUT</td><td data-label="Question It Answers">What exact artifact is under test?</td><td data-label="Good Shape">A workflow YAML, schema primitive, validator rule, runtime pattern, or decision.</td></tr><tr><td data-label="Row">Sperimentatore</td><td data-label="Question It Answers">Who or what runs the loop?</td><td data-label="Good Shape">User plus coding agent, autonomous agent, CI pipeline, or another explicit executor.</td></tr><tr><td data-label="Row">Iteration</td><td data-label="Question It Answers">What counts as one loop step for measurement?</td><td data-label="Good Shape">One YAML revision, one lint-and-diff pass, one benchmark run, or one modeled workflow.</td></tr><tr><td data-label="Row">Goal del SUT</td><td data-label="Question It Answers">What goal does the artifact pursue, if any?</td><td data-label="Good Shape">Executed goal, modeled-only goal, or <code>n/a</code> for artifacts without a lifecycle.</td></tr></tbody></table></div>
+<p>Then write one objective. It should name the artifact and the class of cases it must cover. Avoid vague verbs such as &quot;explore&quot; or &quot;understand&quot;. If the work is exploratory, use the lighter spike procedure instead of pretending it is a measured loop.</p>
+<p>The controls table has two parts: gate metrics and signal metrics. They are deliberately different.</p>
+<p>Gate metrics are non-regression controls. If a gate fails, the loop stops immediately because the work is no longer preserving the minimum safe conditions.</p>
+<div class="table-wrap"><table><thead><tr><th>Column</th><th>Meaning</th></tr></thead><tbody><tr><td data-label="Column">Nome</td><td data-label="Meaning">Short name for the control.</td></tr><tr><td data-label="Column">Strumento</td><td data-label="Meaning">The command, script, review rule, or artifact read that measures it.</td></tr><tr><td data-label="Column">Soglia</td><td data-label="Meaning">The pass/fail threshold.</td></tr><tr><td data-label="Column">Baseline</td><td data-label="Meaning">Current value, or an explicit calibration note if no value exists yet.</td></tr><tr><td data-label="Column">Legame con obiettivo</td><td data-label="Meaning">Why this control protects the stated objective.</td></tr></tbody></table></div>
+<p>Signal metrics measure progress. A signal should be able to move between iterations. If it cannot move, it is probably a gate, not a signal.</p>
+<div class="table-wrap"><table><thead><tr><th>Column</th><th>Meaning</th></tr></thead><tbody><tr><td data-label="Column">Nome</td><td data-label="Meaning">Short name for the progress measure.</td></tr><tr><td data-label="Column">Strumento</td><td data-label="Meaning">The command, script, review rule, or artifact read that measures it.</td></tr><tr><td data-label="Column">Direzione</td><td data-label="Meaning">Expected direction: up, down, or stable.</td></tr><tr><td data-label="Column">Trend</td><td data-label="Meaning">One of <code>assoluto</code>, <code>relativo</code>, or <code>statistico</code>, with a justified threshold.</td></tr><tr><td data-label="Column">Baseline</td><td data-label="Meaning">Current value, or <code>TBD calibrata al run 1</code> when the first run must establish it.</td></tr><tr><td data-label="Column">Legame con obiettivo</td><td data-label="Meaning">Why movement in this number means movement toward the objective.</td></tr></tbody></table></div>
+<p>Budget is also part of the contract. It should answer three separate questions:</p>
+<div class="table-wrap"><table><thead><tr><th>Budget Row</th><th>What It Controls</th><th>Example Shape</th></tr></thead><tbody><tr><td data-label="Budget Row">Visit bound</td><td data-label="What It Controls">How many iterations may run before stalling out.</td><td data-label="Example Shape"><code>loop_guard.max_visits = 5</code> for five modeling attempts.</td></tr><tr><td data-label="Budget Row">Time bound</td><td data-label="What It Controls">How much wall-clock time the experiment may consume.</td><td data-label="Example Shape"><code>loop_guard.max_duration = 45min</code>.</td></tr><tr><td data-label="Budget Row">Human budget</td><td data-label="What It Controls">How much user attention or decision time is acceptable.</td><td data-label="Example Shape">&quot;One calibration checkpoint plus final acceptance.&quot;</td></tr></tbody></table></div>
+<p>The exit table closes the loop. It should be written before modeling, because changing it after seeing the result moves the goalposts.</p>
+<div class="table-wrap"><table><thead><tr><th>Exit</th><th>Required Definition</th></tr></thead><tbody><tr><td data-label="Exit">Raggiunto</td><td data-label="Required Definition">The exact condition under which the experiment succeeds.</td></tr><tr><td data-label="Exit">Forfait per stallo</td><td data-label="Required Definition">The visit or duration bound that stops a loop whose signal is not moving.</td></tr><tr><td data-label="Exit">Forfait per budget</td><td data-label="Required Definition">The budget condition that stops even if no technical falsification occurred.</td></tr><tr><td data-label="Exit">Falsificazione</td><td data-label="Required Definition">One concrete observation that falsifies the hypothesis, plus one similar observation that does not.</td></tr></tbody></table></div>
+<p>Finally, run the consistency check. Four checks catch most bad contracts:</p>
+<div class="table-wrap"><table><thead><tr><th>Check</th><th>What To Compare</th><th>Failure Smell</th></tr></thead><tbody><tr><td data-label="Check">Budget vs loop guard</td><td data-label="What To Compare">Visit count, expected iteration time, and duration budget.</td><td data-label="Failure Smell">The declared number of visits cannot fit inside the time budget.</td></tr><tr><td data-label="Check">Signal vs gate</td><td data-label="What To Compare">Every metric classified as progress or non-regression.</td><td data-label="Failure Smell">A &quot;signal&quot; has only pass/fail values and cannot show progress.</td></tr><tr><td data-label="Check">Falsification vs backlog</td><td data-label="What To Compare">The falsification event against accepted backlog primitives.</td><td data-label="Failure Smell">The experiment would be falsified by needing a primitive already admitted as expected work.</td></tr><tr><td data-label="Check">Objective vs backlog</td><td data-label="What To Compare">The objective against the original reason for opening the work.</td><td data-label="Failure Smell">The objective silently became narrower or stronger than what the backlog asked.</td></tr></tbody></table></div>
+<p>If a warning remains, record the consequence explicitly and get user acceptance. Silent &quot;OK&quot; is not enough when the contract is logically weak.</p>
+<h2 id="boundaries">Boundaries <a class="heading-anchor" href="#boundaries" aria-label="Copy link to Boundaries">#</a></h2>
+<p>Use the generic <code>workflow</code> skill instead of <code>loop-goal</code> for ordinary domain workflows such as ticket lifecycle, document approval, or spec evolution.</p>
+<p>Do not model real concurrency as native parallel states inside a POM workflow. If the controller launches multiple active children, use the Dynamic Workflow control-plane/data-plane contract and make handle lifecycle explicit: awaited, cancelled, or detached before terminal states.</p>
+<p>Do not treat the five verified examples as a closed category list. They are regression-safe anchors. New loop/goal shapes should still go through criteria, modeling, lint, audit, scenarios, and conclusion before being promoted as examples.</p>
+<h2 id="sources">Sources <a class="heading-anchor" href="#sources" aria-label="Copy link to Sources">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Source</th><th>Use</th></tr></thead><tbody><tr><td data-label="Source"><code>skills/loop-goal.md</code></td><td data-label="Use">Canonical operating procedure and modes for loop/goal work.</td></tr><tr><td data-label="Source"><code>templates/examples/workflow/loop-goal/README.md</code></td><td data-label="Use">Catalog of the five verified YAML examples.</td></tr><tr><td data-label="Source"><code>experiments/agent-loop-fsm/RESULTS.md</code></td><td data-label="Use">Evidence behind H1-H5 and the verified examples.</td></tr><tr><td data-label="Source"><code>specs/SPEC-0006-workflow-modeling.md</code></td><td data-label="Use">Workflow schema, composition rules, and Dynamic Workflow backlog doctrine.</td></tr><tr><td data-label="Source"><code>specs/SPEC-0007-loop-guard-timeout.md</code></td><td data-label="Use">Declarative loop bound and timeout primitives.</td></tr><tr><td data-label="Source"><code>decisions/ADR-0003-workflow-vs-loop-goal-skill.md</code></td><td data-label="Use">Boundary between generic workflow modeling and the loop/goal skill.</td></tr><tr><td data-label="Source"><code>decisions/ADR-0004-dynamic-workflow-control-plane.md</code></td><td data-label="Use">Control-plane/data-plane doctrine for Dynamic Workflows.</td></tr></tbody></table></div>
+<h2 id="related-links">Related Links <a class="heading-anchor" href="#related-links" aria-label="Copy link to Related Links">#</a></h2>
+<ul><li><a href="skills-and-prompts.html">skills-and-prompts</a></li><li><a href="current-specs.html">current-specs</a></li><li><a href="experiments-and-extension.html">experiments-and-extension</a></li></ul>
+        <nav class="page-pager" aria-label="Previous and next pages">
+    <a class="pager-prev" href="current-specs.html" title="Current POM Specs"><span>Previous</span>Current POM Specs</a>
+    <span></span>
+  </nav>
+      </article>
+    </main>
+
+    <aside class="outline" aria-label="Page outline">
+      <p class="outline-title">On This Page</p>
+      <nav><a class="level-2" href="#summary">Summary</a>
+<a class="level-2" href="#current-state">Current State</a>
+<a class="level-2" href="#working-taxonomy">Working Taxonomy</a>
+<a class="level-2" href="#how-to-choose">How To Choose</a>
+<a class="level-2" href="#operating-sequence">Operating Sequence</a>
+<a class="level-2" href="#defining-the-measurement-contract">Defining The Measurement Contract</a>
+<a class="level-2" href="#boundaries">Boundaries</a>
+<a class="level-2" href="#sources">Sources</a>
+<a class="level-2" href="#related-links">Related Links</a></nav>
+    </aside>
+  </div>
+
+  <script src="search-index.js"></script>
+  <script src="reader.js"></script>
+  
+</body>
+</html>

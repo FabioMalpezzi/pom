@@ -35,6 +35,7 @@ The reader-oriented guides under `docs/` remain introductory public guides. They
 | Agent procedures | Skill cards, canonical prompts, and how agents find the right workflow | [[skills-and-prompts]] |
 | Governance | Templates, lint, artifact policy, completion verification, and document discipline | [[templates-and-governance]] |
 | Evolution | Experiments, extension, pruning, reader capabilities, and current specs | [[experiments-and-extension]], [[reader-capabilities]], [[current-specs]] |
+| Workflow patterns | Human guides for choosing and reading reusable workflow pattern examples | [[loop-goal-workflow-tutorial]] |
 
 ## Sources And Legend
 
