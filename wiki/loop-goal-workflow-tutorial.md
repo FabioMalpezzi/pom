@@ -35,6 +35,20 @@ case the workflow is operating memory for the application's improvement
 control plane. The target project still owns execution, permissions,
 deployment, rollback, safety checks, and persistence.
 
+To realize such a system, the method must connect to two concrete
+layers. First, the loop/goal shape is integrated with the generic POM
+workflow model: the YAML names the states, events, terminal states,
+guards, context, invocations, loop bounds, timeouts, and any Dynamic
+Workflow handle lifecycle. Second, the target project implements that
+contract in real code. POM provides implementation guidance and verified
+reference evidence, but the executable system lives in the target stack.
+The repository contains two kinds of practical evidence: the
+`agent-loop-fsm` TypeScript runtime candidate, which proves that a
+modeled agent loop can run end-to-end, and the Dynamic Workflow
+TypeScript/Python reference executors, which prove the control-plane and
+data-plane split with launched handles, await, detach, cancel, and
+compensation.
+
 The current verified examples cover five shapes:
 
 | Example | Use It When |
