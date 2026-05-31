@@ -18,7 +18,8 @@ The specs are living documents, but they are not a diary. Minor changes are trac
 | `SPEC-0003-structured-reconciliation.md` | Complete | Adds divergence classification and resolution flow for source-memory mismatches. |
 | `SPEC-0004-external-project-overlay.md` | Draft | Defines overlay mode for repositories the operator does not own. |
 | `SPEC-0005-web-wiki-agent-extension.md` | Draft | Defines the first boundary for a web wiki that extends an active coding agent session, produces reviewed proposals, and classifies whether notes belong in Open Discussion, specs, ADRs, task plans, or wiki synthesis. |
-| `SPEC-0006-workflow-modeling.md` | Complete | Adds opt-in workflow modeling. YAML schema, four synchronous composition primitives (linear pipeline, state-invoke, event-invoke, context injection), validator with 50 Error + 4 Warning rules, Mermaid generator integrated in the validator, XState v5 mapping for stately.ai visualization, TypeScript + Python implementation guidance, suspend/restore convention, integration & extension guide. Opt-in per target via `workflows.enabled` in `pom.config.json`. Four pillars: no async / no shared state / no inheritance / no runtime in POM. |
+| `SPEC-0006-workflow-modeling.md` | Complete | Adds opt-in workflow modeling. YAML schema, four synchronous composition primitives (linear pipeline, state-invoke, event-invoke, context injection), validator with Error + Warning rules, Mermaid generator integrated in the validator, XState v5 mapping for stately.ai visualization, TypeScript + Python implementation guidance, suspend/restore convention, integration & extension guide. Opt-in per target via `workflows.enabled` in `pom.config.json`. Four pillars: no async / no shared state / no inheritance / no runtime in POM. Dynamic Workflow support is recorded as backlog doctrine: POM is the control plane, target infrastructure is the data plane; handle lifecycle checks E080-E089 now validate `fan_out_launch.handle`, `await.handles`, explicit cancel/detach, and terminal states without implicit active handles. |
+| `SPEC-0007-loop-guard-timeout.md` | Complete | Adds two bounded-time workflow primitives: `loop_guard` for loop-level visit/duration bounds and `timeout` for non-loop state residence. Validator rules E060-E073 and W060 are implemented and covered by integration tests; POM validates static shape and target projects own timers, counters, scheduling, and event emission. |
 
 The wiki reader relates mainly to `SPEC-0000`, `SPEC-0004`, and `SPEC-0005`: it touches Operating Memory consultation, cognitive cost, reversibility, possible local-only wiki use, and agent-assisted proposal workflows. `SPEC-0005` keeps proposal promotion explicit: Open Discussion holds unresolved material, specs hold expected behavior, ADRs hold explicit decisions, task plans hold executable work, and wiki pages summarize consolidated knowledge. `ADR-0001` records the earlier direction toward a persistent connection to an active AI coding agent session; the promoted POM Project Reader is deliberately lighter and uses file-based annotations for agent handoff. If the reader or web wiki becomes more central, the specs must reconcile that choice explicitly and describe the authority of generated output clearly enough that HTML or UI state never competes with Markdown.
 
@@ -33,7 +34,9 @@ The wiki reader relates mainly to `SPEC-0000`, `SPEC-0004`, and `SPEC-0005`: it 
 | `specs/SPEC-0004-external-project-overlay.md` | Local understanding wiki for external repositories. |
 | `specs/SPEC-0005-web-wiki-agent-extension.md` | Web wiki as an active agent extension, proposal contract, and Codex-first adapter boundary. |
 | `specs/SPEC-0006-workflow-modeling.md` | Workflow modeling capability: schema, composition primitives, validator rules, transformers, language profiles. |
+| `specs/SPEC-0007-loop-guard-timeout.md` | Draft bounded-time primitive extension for workflow schema. |
 | `decisions/ADR-0002-workflow-context-injection.md` | Closed decision behind the Result<Terminal, Output> model for parent/child data exchange in workflow composition (referenced by SPEC-0006). |
+| `decisions/ADR-0004-dynamic-workflow-control-plane.md` | Closed decision accepting the Dynamic Workflow control-plane/data-plane doctrine as SPEC-0006 backlog. |
 
 ## Linked Decisions
 
@@ -45,6 +48,7 @@ The wiki reader relates mainly to `SPEC-0000`, `SPEC-0004`, and `SPEC-0005`: it 
 | SPEC-0005 R2 | Web wiki output and UI state stay derived; Markdown remains durable memory. |
 | ADR-0001 | The web wiki must avoid repeated cold agent runs by using a persistent active coding agent session as the primary path. |
 | ADR-0002 | Workflow composition uses injection + Result<Terminal, Output> for parent/child data exchange; shared context visibility between machines is rejected as a violation of FSM autonomy. |
+| ADR-0004 | Dynamic Workflows are handled through a control-plane/data-plane split: POM records the deterministic workflow contract and target projects own concurrent execution. Handle lifecycle validation makes selective waits explicit: non-awaited handles remain active until awaited, cancelled, or detached. |
 | SPEC-0006 four pillars | Workflow capability stays inside "no async / no shared state / no inheritance / no runtime in POM" — the diagonal that distinguishes it from a YAML dialect of XState. |
 
 ## Open Questions

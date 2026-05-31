@@ -1,0 +1,17 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: agent_retry_bounded
+  %% Minimal model of an agent performing a fallible action with bounded retry.
+
+  state "Idle" as idle
+  state "Acting" as acting
+  state "Observing" as observing
+
+  [*] --> idle
+
+  idle --> acting : start
+  acting --> acting : retry_after_error\n[has_attempts_left]
+  acting --> [*] : retries_exhausted\n[no_attempts_left]
+  acting --> observing : success
+  observing --> [*] : goal_met

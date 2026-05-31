@@ -1,0 +1,34 @@
+workflow: dyn_nested_top
+version: 1
+description: |
+  Giro 4 — fan-out ANNIDATO, livello top. Lancia M istanze del workflow
+  intermedio (12-nested-mid.yaml); ciascuna a sua volta lancia N task. Il
+  fan-out totale è M×N, ma la FSM top resta una macchina di pochi stati
+  sincroni: il nesting è tutto delegato. Verifica che launch/await componga
+  ricorsivamente, come già fa lo state-invoke (composizione sincrona).
+
+initial_state: top_launching
+
+states:
+  - name: top_launching
+    is_final: false
+    fan_out_launch: { workflow: 12-nested-mid.yaml, over: groups, handle: top_batch }
+  - name: top_awaiting
+    is_final: false
+    await: { handles: [top_batch], join: all }
+  - name: top_done
+    is_final: true
+
+events:
+  - name: top_launched
+  - name: top_ready
+
+transitions:
+  - { from: top_launching, to: top_awaiting, event: top_launched }
+  - { from: top_awaiting, to: top_done, event: top_ready }
+
+metadata:
+  experiment: dynamic-workflows
+  round: 4
+  theme: nested fan-out (top level)
+  pattern: "launch/await ricorsivo: M gruppi × N task, FSM top minimale"

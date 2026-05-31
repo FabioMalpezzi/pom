@@ -1,0 +1,56 @@
+workflow: dyn_task_pipeline
+version: 1
+description: |
+  Struttura 1 di 4 del Dynamic Workflow: la pipeline di UN singolo task —
+  implementer → verifier → fixer → done. Lineare e sequenziale. È il
+  sotto-pattern più semplice e serve da baseline: ci si aspetta clean fit,
+  perché è esattamente la catena di stati per cui lo schema POM è nato.
+
+  Nota: qui c'è UN solo verifier (la versione lineare). Il fork/join dei
+  due verifier paralleli è la Struttura 2, separata.
+
+initial_state: implementing
+
+states:
+  - name: implementing
+    description: L'implementer produce un primo tentativo di soluzione del task.
+    is_final: false
+  - name: verifying
+    description: Il verifier controlla l'output dell'implementer.
+    is_final: false
+  - name: fixing
+    description: Il fixer corregge sulla base del verdetto del verifier.
+    is_final: false
+  - name: task_done
+    description: Il task è completato e il risultato è pronto per il fan-in.
+    is_final: true
+
+events:
+  - name: implemented
+    description: L'implementer ha prodotto la soluzione.
+  - name: verified
+    description: Il verifier ha emesso il suo verdetto.
+  - name: fixed
+    description: Il fixer ha applicato le correzioni.
+
+transitions:
+  - from: implementing
+    to: verifying
+    event: implemented
+  - from: verifying
+    to: fixing
+    event: verified
+  - from: fixing
+    to: task_done
+    event: fixed
+
+invariants:
+  - description: |
+      Ogni task attraversa le tre fasi in ordine; non c'è ritorno indietro
+      in questa versione minimale (il replan su fallimento è fuori scope qui).
+
+metadata:
+  experiment: dynamic-workflows
+  structure: 1-task-pipeline
+  iteration: 1
+  expected_fit: clean

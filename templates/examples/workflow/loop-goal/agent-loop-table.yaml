@@ -1,0 +1,115 @@
+workflow: agent_loop_table
+version: 1
+description: |
+  The classic agent decision loop perception → planning → action →
+  observation expressed as a flat POM transition table. No invoke, no
+  sub-workflow, no composition primitive: the entire control flow is
+  six state nodes plus eight transitions, readable end-to-end as a
+  table. This iteration tests whether the POM workflow schema is
+  expressive enough to keep agent loops on a single flat surface
+  without forcing decomposition.
+
+initial_state: perception
+
+states:
+  - name: perception
+    description: |
+      The agent senses the environment / receives input from the user
+      or upstream system. Produces an observation of the current
+      world state.
+    is_final: false
+
+  - name: planning
+    description: |
+      The agent reasons about the perceived state and decides the
+      next action towards its goal.
+    is_final: false
+
+  - name: action
+    description: |
+      The agent executes the planned action against the environment.
+    is_final: false
+
+  - name: observation
+    description: |
+      The agent inspects the result of the action. Either the goal
+      is met (exit) or the loop continues with a fresh perception.
+    is_final: false
+
+  - name: done
+    description: |
+      Terminal success: the agent decided the goal is met.
+    is_final: true
+
+  - name: failed
+    description: |
+      Terminal failure: perception or action raised an unrecoverable
+      error.
+    is_final: true
+
+events:
+  - name: sensed
+    description: |
+      Perception produced a usable world state; planning can begin.
+  - name: perception_failed
+    description: |
+      Perception could not produce a usable world state; the agent
+      gives up.
+  - name: plan_ready
+    description: |
+      Planning produced an actionable next step.
+  - name: action_done
+    description: |
+      Action completed and produced a result to observe.
+  - name: action_failed
+    description: |
+      Action raised an unrecoverable error; the agent gives up.
+  - name: observed
+    description: |
+      Observation completed; the agent decides to loop back to
+      perception for the next cycle.
+  - name: goal_met
+    description: |
+      Observation satisfies the goal; the agent terminates as done.
+
+transitions:
+  - from: perception
+    to: planning
+    event: sensed
+  - from: perception
+    to: failed
+    event: perception_failed
+  - from: planning
+    to: action
+    event: plan_ready
+  - from: action
+    to: observation
+    event: action_done
+  - from: action
+    to: failed
+    event: action_failed
+  - from: observation
+    to: perception
+    event: observed
+  - from: observation
+    to: done
+    event: goal_met
+
+invariants:
+  - description: |
+      The agent cannot transition out of done or failed.
+  - description: |
+      The observation → perception edge is the only loop edge; no
+      other state forms a cycle.
+  - description: |
+      action has exactly two outcomes (action_done, action_failed)
+      mapped to two distinct successors.
+
+metadata:
+  experiment: agent-loop-fsm
+  hypothesis: H2
+  pattern: "Perception-Planning-Action-Observation (flat transition table)"
+  notes: |
+    No invoke primitive is used. The entire control flow is
+    expressible as a single transition table of 8 rows. Readable
+    end-to-end at one glance.

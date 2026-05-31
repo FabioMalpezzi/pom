@@ -1,0 +1,19 @@
+# Expected: E065 because a cause-specific exhaustion target must reference a declared state.
+workflow: loop_guard_bad_cause_target
+version: 1
+initial_state: planning
+states:
+  - name: planning
+    is_final: false
+    loop_guard:
+      max_visits: 3
+      on_exhaustion: failed
+      on_visits_exhausted: missing_state
+  - name: failed
+    is_final: true
+events:
+  - name: retry
+transitions:
+  - from: planning
+    to: planning
+    event: retry

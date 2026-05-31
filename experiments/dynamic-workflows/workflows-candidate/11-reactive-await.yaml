@@ -1,0 +1,64 @@
+workflow: dyn_reactive_await
+version: 1
+description: |
+  Giro 4, creativo — ATTESA REATTIVA (on_each). Invece di bloccare finché
+  tutti sono pronti, la FSM reagisce a OGNI completamento e può uscire in
+  anticipo: per esempio appena un task trova la risposta cercata (found),
+  senza aspettare gli altri.
+
+  È il caso "a flusso" che avevamo accantonato come ostile. L'ipotesi:
+  è esprimibile come il counted-join (Struttura 3) PIÙ una via di uscita
+  anticipata guardata. Lo stato `collecting` reagisce allo stream di
+  one_done: continua (self), esce presto (found), o si esaurisce
+  (exhausted). Le decisioni restano deterministiche (guard); asincrono è
+  solo il timing degli eventi — e POM è già una FSM a eventi.
+
+  Campo `react` additivo: il validator lo ignora → PASS.
+
+initial_state: launching
+
+states:
+  - name: launching
+    is_final: false
+    fan_out_launch: { workflow: 01-task-pipeline.yaml, over: tasks, handle: batch }
+  - name: collecting
+    description: |
+      Reagisce a ogni completamento. on_each per continuare, found per
+      l'uscita anticipata, exhausted quando li ha visti tutti.
+    is_final: false
+    react: { on_each: one_done, on_early: found, on_done: exhausted }
+  - name: using_result
+    description: Uscita anticipata perché un task ha trovato la risposta, basta così.
+    is_final: false
+  - name: aggregating
+    description: Raccolta esaurita senza uscita anticipata, quindi aggrega tutto.
+    is_final: false
+  - name: done
+    is_final: true
+
+events:
+  - name: launched
+  - name: one_done
+  - name: found
+  - name: exhausted
+  - name: used
+  - name: aggregated
+
+transitions:
+  - { from: launching, to: collecting, event: launched }
+  - { from: collecting, to: collecting, event: one_done }
+  - { from: collecting, to: using_result, event: found }
+  - { from: collecting, to: aggregating, event: exhausted }
+  - { from: using_result, to: done, event: used }
+  - { from: aggregating, to: done, event: aggregated }
+
+invariants:
+  - description: |
+      collecting ha tre vie: continuare (one_done, self), uscire presto
+      (found), esaurire (exhausted). La FSM decide a ogni completamento.
+
+metadata:
+  experiment: dynamic-workflows
+  round: 4
+  theme: reactive await (on_each) + early-exit
+  pattern: "counted-join con uscita anticipata: reagisce allo stream di completamenti"

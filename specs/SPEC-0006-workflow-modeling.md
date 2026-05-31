@@ -28,6 +28,7 @@ This spec describes the target shape of the capability. Not every part is implem
 | Implementation guide for coding agents | **Implemented (draft)** | `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` |
 | Integration & extension guide for adopters | **Implemented (draft)** | `templates/WORKFLOW_INTEGRATION_GUIDE.md` |
 | TypeScript guided-implementation evidence (Hypothesis H4) | **Implemented** | `evidence/typescript/spec-evolution/` — 15 tests, all passing, Pattern A (transition table), zero added dependencies |
+| Dynamic Workflow control-plane/data-plane contract | **Backlog extension, partially validated** | Accepted doctrine in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; evidence and runnable stubs in `experiments/dynamic-workflows/`; handle lifecycle rules E080-E089 are implemented in `scripts/lint-workflows.mjs` |
 | Promotion decision and consolidation | **Target for promotion** | Section in `EXPERIMENT.md` to be filled at end of experiment |
 
 The rest of this document describes the *target* shape. Read each section together with the row above before assuming a feature exists.
@@ -52,8 +53,14 @@ POM must not become a runtime, must not execute workflows, must not impose a lib
 - POM-side tracking of live workflow instances;
 - automatic code generation in the target project (POM produces guidance, not finished code);
 - export to formal verification tools (TLA+, NuSMV, SPIN) in the first release;
-- support for concurrency, time, distributed semantics, or hierarchical sub-machines in the first release;
+- native support for concurrency, time, distributed semantics, or hierarchical sub-machines in the first release;
 - adapter or bundled support for a specific FSM library (xstate, robot3, etc.) in POM core.
+
+Dynamic Workflow modeling remains outside the implemented v1 schema, but
+ADR-0004 accepts a future backlog contract where the POM workflow is a
+control plane and target-owned infrastructure is the data plane. That
+contract does not make POM a runtime and does not add native parallel
+regions to the current schema.
 
 ## Model Format
 
@@ -214,6 +221,135 @@ These are deliberately left undecided until the experiment provides evidence:
 - **Context injection (`Result<Terminal, Output>` model)** is the chosen mechanism for a parent and child to exchange structured data. Each workflow has a **private context**. The parent extracts an `input` object and hands it to the child at invocation; the child elaborates on its own private context; on terminal, the child returns the terminal name (tag) and an `output` object (payload). The parent reads the output and integrates it via `assign:`. Shared context visibility between parent and child is rejected as a violation of FSM autonomy and is treated as Pattern C territory. The validator implements the documental level only (nominal coherence, no type-checking, no path evaluation). Full rationale in `CONTEXT-INJECTION.md` (closed design decision).
 
 - **Four invariants of the composition model** (the pillars that distinguish POM-workflow from a YAML dialect of XState): (1) no asynchronous composition; (2) no shared global state; (3) no inheritance / override between workflows; (4) no runtime in POM itself.
+
+- **Dynamic Workflow doctrine**: Dynamic Workflows are not modeled by
+  adding native parallel regions to SPEC-0006. The accepted direction is
+  a control-plane/data-plane split: the POM FSM records launch, await,
+  join, timeout, reaction, lifecycle propagation, and compensation
+  boundaries; the target project owns concurrent execution. See
+  `decisions/ADR-0004-dynamic-workflow-control-plane.md`.
+
+## Backlog: Dynamic Workflow Contract
+
+This backlog is accepted as direction, not implemented validator
+behavior. It records the additive contract proven in
+`experiments/dynamic-workflows/` and should be promoted through a future
+SPEC-0007-style pass before target use.
+
+### Control Plane And Data Plane
+
+The POM workflow is the **control plane**: deterministic state, explicit
+launch and wait states, named timeout exits, lifecycle signals, and
+compensation rules. The target project supplies the **data plane**:
+workers, queues, durable scheduling, cancellation mechanics, persistence
+for long waits, and execution of software or human tasks.
+
+### Candidate Fields
+
+`fan_out_launch` on a state starts a batch externally and returns a
+handle without blocking the FSM:
+
+```yaml
+states:
+  - name: launching
+    fan_out_launch:
+      workflow: task-worker.yaml
+      over: task_ids
+      handle: task_batch
+```
+
+`await` on a state blocks the FSM on one or more handles until a join
+policy succeeds or a timeout wakes the machine:
+
+```yaml
+states:
+  - name: awaiting_tasks
+    await:
+      handles: [task_batch]
+      join: quorum
+      k: 80
+      timeout: 30m
+      on_timeout: tasks_timed_out
+```
+
+`await.handles` is selective. A workflow may launch four handles and
+await only two of them in a given wait state. Handles not named by that
+`await` remain active. Before any terminal state is reached, every active
+handle must be resolved by one of three explicit choices:
+
+- await it with `await.handles`;
+- cancel it with `cancel_handles`;
+- detach it with `detach_handles`.
+
+```yaml
+states:
+  - name: awaiting_primary
+    await:
+      handles: [primary_batch]
+      join: all
+  - name: detaching_audit
+    detach_handles: [audit_batch]
+```
+
+Handles are workflow-local names declared by `fan_out_launch.handle`.
+They must be snake_case identifiers and unique within the workflow. The
+name is the durable reference used by later `await`, `cancel_handles`,
+and `detach_handles` blocks; it is not inferred from the child workflow
+name or the launched collection.
+
+`react` on a state supports stream-like collection:
+
+```yaml
+states:
+  - name: collecting
+    react:
+      on_each: task_completed
+      on_early: enough_results_collected
+      on_done: all_results_collected
+```
+
+`compensation` at workflow level defines the undo saga used when a
+`cancel` lifecycle signal is propagated:
+
+```yaml
+compensation:
+  - undo: release_reserved_capacity
+  - undo: mark_launched_tasks_cancelled
+```
+
+### Backlog Rules To Specify
+
+Future validator and implementation-guidance work should define the
+remaining Dynamic Workflow contract:
+
+- shape checks for `fan_out_launch.workflow`, `over`, and `handle`;
+- shape checks for `await.handles`, `join`, `k`, `timeout`, and
+  `on_timeout`;
+- shape checks for `react.on_each`, `on_early`, and `on_done`;
+- how `cancel`, `suspend`, and `resume` propagate through active
+  invokes and launched batches;
+- how `compensation` order is declared and when it is considered
+  complete;
+- how timeout syntax aligns with the future H7 `timeout` primitive;
+- how retry after timeout aligns with the future H6 `loop_guard`
+  primitive;
+- which generated scenarios prove launch, wait, timeout, cancellation,
+  suspend, resume, and compensation behavior.
+
+Implemented handle-lifecycle validator rules:
+
+| Code | Check |
+|---|---|
+| E080 | `fan_out_launch` is a mapping when declared on a state. |
+| E081 | `fan_out_launch.workflow` is a non-empty string. |
+| E082 | `fan_out_launch.handle` is a snake_case identifier. |
+| E083 | `fan_out_launch.handle` is unique within the workflow. |
+| E084 | `await` is a mapping when declared on a state. |
+| E085 | `await.handles` is a non-empty list of snake_case handle identifiers. |
+| E086 | `await.handles[]` references handles declared by an earlier `fan_out_launch`. |
+| E087 | `cancel_handles` is a non-empty list of declared active handles. |
+| E088 | `detach_handles` is a non-empty list of declared active handles. |
+| E089 | A final state is not reachable with active handles that were not awaited, cancelled, or detached. |
 
 ## Composition: Linear Pipeline (synchronous)
 

@@ -168,6 +168,62 @@ Independent of the target language, the guide discourages:
 - Hard-coding the transition table in code instead of deriving it from the YAML — the YAML is the source of authority. Whenever the YAML changes, the table is regenerated, not patched.
 - Mixing Pattern A with Pattern C in the same machine. Pick one consistently per workflow.
 
+## Loop Guards And Timeouts
+
+`loop_guard` and `timeout` are schema contracts, not POM-owned runtime
+services. The validator checks shape, duration grammar, declared target
+states, and documented coherence. Target code owns counters, timers,
+scheduling, persistence, and event emission.
+
+### `loop_guard`
+
+`loop_guard` bounds a loop as a whole. Target code enforces it by
+tracking visits and/or elapsed wall-clock duration for the current loop
+entry.
+
+Pattern A and B implementation shape:
+
+```
+if entering loop from a different state:
+  reset _loop_guard_<state>__visit_count
+  reset _loop_guard_<state>__started_at
+
+if taking a self-transition inside the loop:
+  increment visit count
+  compare visit count and elapsed wall-clock duration
+  route to on_visits_exhausted, on_duration_exhausted, or on_exhaustion
+```
+
+Pattern C implementation shape:
+
+- use the target FSM library's guard/action hooks for visit counters;
+- use the target runtime's timer/scheduler for elapsed wall-clock checks;
+- keep POM YAML as the structural source of authority and map library
+  actions back to the named exit states.
+
+### `timeout`
+
+`timeout` bounds residence in a single non-loop state. Target code emits
+the event or performs the transition to `on_timeout` when the declared
+duration elapses.
+
+Pattern A and B implementation shape:
+
+- persist `entered_at` for the state in the target entity or snapshot;
+- on wake-up, polling, or command handling, compare wall-clock elapsed
+  time with `timeout.duration`;
+- when expired, dispatch the target-owned timeout event or jump through
+  the implementation's normal transition mechanism.
+
+Pattern C implementation shape:
+
+- map `timeout.duration` to the library's delayed transition or timer
+  primitive when available;
+- keep persistence decisions in target infrastructure, especially for
+  waits longer than process lifetime.
+
+Do not implement an in-POM scheduler to satisfy either primitive.
+
 ## Suspend and Restore
 
 Long-running workflows (orders waiting for shipment, approvals waiting for signature, agent orchestrators waiting for user input) must survive process restarts, container redeploys, and across-time pauses. POM workflow does not own a persistence layer (that violates the "no runtime" pillar), but the Pattern A code POM produces is **naturally suspend-friendly**: the machine is a pure function and the caller owns the state.

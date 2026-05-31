@@ -79,6 +79,7 @@ Existing project structures should be mapped first, not moved by default.
 | `reconcile` | classify and resolve a divergence between a source and project memory | `prompts/19-reconcile-memory.md` |
 | `validate` | audit POM governance after significant actions | `prompts/18-post-action-validator.md` |
 | `workflow` | design, validate, diagram, scenarios, and implement domain workflows declared as YAML state models | `prompts/27-workflow-modeling.md` |
+| `loop-goal` | define-criteria, model, audit, scenarios, conclude for agent loop/goal workflows and experiments (the four-agent cycle); when to use vs `workflow` → `ADR-0003` | `prompts/28-loop-goal-define-criteria.md`, `prompts/29-loop-goal-audit.md`, `prompts/30-loop-goal-scenarios.md`, `prompts/31-loop-goal-conclude.md` |
 
 ## Rule
 

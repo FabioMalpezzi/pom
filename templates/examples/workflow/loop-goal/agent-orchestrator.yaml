@@ -1,0 +1,138 @@
+workflow: agent_orchestrator
+version: 1
+description: |
+  Minimal ReAct-style control flow for a generic AI agent. The agent
+  receives a goal, reasons about it producing a thought and a next
+  action, performs the action, observes its result, and either loops
+  back to reason again or declares the goal met. Action errors lead
+  to a failed terminal. The agent has no internal sub-steps beyond
+  reason / act / observe; this is the smallest loop that still
+  captures the agent paradigm Reason → Act → Observe (Yao et al.,
+  2022) and lets us check whether the POM workflow schema accommodates
+  agentic loop/goal control flow without structural extensions outside
+  the agent-loop-fsm backlog (H6 loop_guard, H7 timeout).
+
+initial_state: idle
+
+states:
+  - name: idle
+    description: |
+      The agent is waiting for a goal. No reasoning or action is in
+      progress. This is the entry point of every agent session.
+    is_final: false
+
+  - name: reasoning
+    description: |
+      The agent is producing a thought and selecting the next action
+      towards the goal. May conclude that the goal is already met
+      based on current context, in which case it exits directly to
+      done without further action.
+    is_final: false
+
+  - name: acting
+    description: |
+      The agent is executing the action selected by the previous
+      reasoning step. Outcome can be a successful result (proceed to
+      observing) or an action error (terminate as failed).
+    is_final: false
+
+  - name: observing
+    description: |
+      The agent inspects the result of the action and decides
+      whether the goal is met. If met, exits to done; otherwise loops
+      back to reasoning with the updated history.
+    is_final: false
+
+  - name: done
+    description: |
+      Terminal success state. The agent has decided the goal is met.
+    is_final: true
+
+  - name: failed
+    description: |
+      Terminal failure state. The agent has encountered an action
+      error and cannot continue.
+    is_final: true
+
+events:
+  - name: goal_received
+    description: |
+      A new goal arrives. Triggers the first reasoning step.
+  - name: plan_ready
+    description: |
+      Reasoning has produced a thought and selected an action to
+      execute.
+  - name: goal_already_met
+    description: |
+      Reasoning concludes the goal is already met from the current
+      context, without needing to act.
+  - name: action_done
+    description: |
+      The action completed successfully and its result is available
+      for observation.
+  - name: action_error
+    description: |
+      The action raised an error and cannot produce a usable result.
+  - name: loop_continue
+    description: |
+      The observation does not yet satisfy the goal; the agent loops
+      back to reasoning to decide the next step.
+  - name: goal_met
+    description: |
+      The observation satisfies the goal; the agent terminates as
+      done.
+
+transitions:
+  - from: idle
+    to: reasoning
+    event: goal_received
+  - from: reasoning
+    to: acting
+    event: plan_ready
+  - from: reasoning
+    to: done
+    event: goal_already_met
+  - from: acting
+    to: observing
+    event: action_done
+  - from: acting
+    to: failed
+    event: action_error
+  - from: observing
+    to: reasoning
+    event: loop_continue
+  - from: observing
+    to: done
+    event: goal_met
+
+context_schema:
+  goal:
+    description: |
+      The user-supplied objective the agent is pursuing this session.
+    type: string
+  history:
+    description: |
+      Ordered list of past (thought, action, observation) triples.
+      Grows by one entry per loop_continue.
+    type: array
+  last_observation:
+    description: |
+      The most recent observation; reset to null at idle.
+    type: any
+
+invariants:
+  - description: |
+      The agent cannot transition out of done or failed.
+  - description: |
+      Every entry into reasoning beyond the first must come from
+      observing (loop_continue), so the history grows monotonically
+      across iterations.
+  - description: |
+      acting has exactly one successor per event: action_done →
+      observing, action_error → failed.
+
+metadata:
+  experiment: agent-loop-fsm
+  hypothesis: H1
+  pattern: "ReAct (Reason, Act, Observe)"
+  reference: 'Yao et al., "ReAct: Synergizing Reasoning and Acting in Language Models", 2022.'

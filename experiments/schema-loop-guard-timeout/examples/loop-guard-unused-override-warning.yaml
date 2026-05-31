@@ -1,0 +1,27 @@
+workflow: loop_guard_unused_override_warning
+version: 1
+description: |
+  Valid workflow that intentionally declares an unused cause-specific
+  exhaustion target, proving W060 remains a warning rather than an error.
+
+initial_state: planning
+
+states:
+  - name: planning
+    is_final: false
+    loop_guard:
+      max_visits: 3
+      on_exhaustion: failed
+      on_duration_exhausted: timed_out
+  - name: failed
+    is_final: true
+  - name: timed_out
+    is_final: true
+
+events:
+  - name: retry
+
+transitions:
+  - from: planning
+    to: planning
+    event: retry

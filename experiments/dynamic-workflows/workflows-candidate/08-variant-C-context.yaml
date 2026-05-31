@@ -1,0 +1,74 @@
+workflow: dyn_launch_await_C_context
+version: 1
+description: |
+  Giro 2, Variante C — gli handle dei batch lanciati vivono nel
+  context_schema (integrazione col meccanismo di context injection
+  esistente), invece che inline nei campi launch/await (come in A).
+
+  Idea: il lancio ASSEGNA un handle a una variabile di context; l'attesa
+  lo CONSUMA dal context. Così il "future" del batch è un dato tipizzato e
+  tracciato del workflow, coerente con come POM già passa dati fra parent
+  e child via invoke.input / on_completion.assign.
+
+  Limite incontrato: il context_schema attuale ha solo `input` e
+  `output_by_terminal` (validator E050–E058). NON ha un concetto di
+  variabili di LAVORO interne, che è ciò che gli handle sono (né input né
+  output finale). Qui le dichiaro in una sezione `working:` — additiva, il
+  validator la ignora, ma NON la type-checka. Per avere il vantaggio di C
+  (handle tipizzati) servirebbe quindi estendere il context_schema con le
+  working vars: un'estensione IN PIÙ rispetto ad A. Da qui il confronto.
+
+initial_state: launching_a
+
+context_schema:
+  input: []
+  working:                      # estensione ipotizzata: variabili di lavoro
+    - { name: batch_a_handle, type: batch_handle }
+    - { name: batch_b_handle, type: batch_handle }
+  output_by_terminal:
+    done:
+      - { name: results, type: array }
+
+states:
+  - name: launching_a
+    description: Lancia A e assegna l'handle alla working var batch_a_handle.
+    is_final: false
+    fan_out_launch: { workflow: 01-task-pipeline.yaml, over: tasks_a, handle: batch_a, assign_to: batch_a_handle }
+  - name: preparing
+    is_final: false
+  - name: launching_b
+    description: Lancia B e assegna l'handle a batch_b_handle.
+    is_final: false
+    fan_out_launch: { workflow: 01-task-pipeline.yaml, over: tasks_b, handle: batch_b, assign_to: batch_b_handle }
+  - name: monitoring
+    is_final: false
+  - name: awaiting_all
+    description: Attende i batch riferiti dagli handle nel context.
+    is_final: false
+    await: { from_context: [batch_a_handle, batch_b_handle], handles: [batch_a, batch_b], join: all }
+  - name: aggregating
+    is_final: false
+  - name: done
+    is_final: true
+
+events:
+  - name: launched_a
+  - name: prepared
+  - name: launched_b
+  - name: monitored
+  - name: all_ready
+  - name: aggregated
+
+transitions:
+  - { from: launching_a, to: preparing, event: launched_a }
+  - { from: preparing, to: launching_b, event: prepared }
+  - { from: launching_b, to: monitoring, event: launched_b }
+  - { from: monitoring, to: awaiting_all, event: monitored }
+  - { from: awaiting_all, to: aggregating, event: all_ready }
+  - { from: aggregating, to: done, event: aggregated }
+
+metadata:
+  experiment: dynamic-workflows
+  round: 2
+  variant: C-context-handles
+  extra_extension_vs_A: "context_schema needs a 'working vars' section to type the handles"

@@ -1,0 +1,37 @@
+workflow: dyn_parallel_probe
+version: 1
+description: |
+  Probe (non un modello da promuovere): tenta di esprimere il modo
+  "giusto" del fan-out — un invoke PARALLELO — per documentare in modo
+  verificabile che lo schema lo rifiuta. Atteso: errore E036
+  (mode: parallel vietato negli state-invoke). È l'evidenza dura che il
+  parallelismo non è esprimibile come primitiva.
+initial_state: dispatching
+states:
+  - name: dispatching
+    description: Vorrebbe lanciare il task in parallelo (uno di N).
+    is_final: false
+    invoke:
+      workflow: 01-task-pipeline.yaml
+      mode: parallel
+      on_completion:
+        - terminal_state: task_done
+          next_event: task_returned
+  - name: aggregating
+    is_final: false
+  - name: all_done
+    is_final: true
+events:
+  - name: task_returned
+  - name: done_all
+transitions:
+  - from: dispatching
+    to: aggregating
+    event: task_returned
+  - from: aggregating
+    to: all_done
+    event: done_all
+metadata:
+  experiment: dynamic-workflows
+  structure: probe
+  note: "expected E036 — parallel forbidden"

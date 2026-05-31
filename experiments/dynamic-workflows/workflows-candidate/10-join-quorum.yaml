@@ -1,0 +1,60 @@
+workflow: dyn_await_quorum
+version: 1
+description: |
+  Giro 3, creativo — politica di join a QUORUM (k di n) con timeout.
+  Lancia tre batch; l'attesa si soddisfa appena DUE su tre sono pronti
+  (quorum k=2), ignorando il terzo se è lento. La FSM si risveglia via
+  on_timeout SOLO se non raggiunge il quorum.
+
+  È il pattern resiliente reale di un Dynamic Workflow: "non aspettare il
+  più lento, basta che la maggioranza torni". join: all (rigido), first
+  (race speculativa, k=1), quorum (k di n) sono tre punti dello stesso
+  campo additivo `join`. Tutti ignorati dal validator → PASS.
+
+initial_state: launching_a
+
+states:
+  - name: launching_a
+    is_final: false
+    fan_out_launch: { workflow: 01-task-pipeline.yaml, over: t_a, handle: batch_a }
+  - name: launching_b
+    is_final: false
+    fan_out_launch: { workflow: 01-task-pipeline.yaml, over: t_b, handle: batch_b }
+  - name: launching_c
+    is_final: false
+    fan_out_launch: { workflow: 01-task-pipeline.yaml, over: t_c, handle: batch_c }
+  - name: awaiting
+    description: |
+      Quorum 2 di 3 con timeout. enough_ready se almeno 2 batch tornano;
+      not_enough se ne tornano meno di 2 entro il timeout.
+    is_final: false
+    await: { handles: [batch_a, batch_b, batch_c], join: quorum, k: 2, timeout: 30s, on_timeout: not_enough }
+  - name: aggregating
+    is_final: false
+  - name: degraded
+    description: Terminale degradato perché il quorum non è stato raggiunto.
+    is_final: true
+  - name: done
+    is_final: true
+
+events:
+  - name: launched_a
+  - name: launched_b
+  - name: launched_c
+  - name: enough_ready
+  - name: not_enough
+  - name: aggregated
+
+transitions:
+  - { from: launching_a, to: launching_b, event: launched_a }
+  - { from: launching_b, to: launching_c, event: launched_b }
+  - { from: launching_c, to: awaiting, event: launched_c }
+  - { from: awaiting, to: aggregating, event: enough_ready }
+  - { from: awaiting, to: degraded, event: not_enough }
+  - { from: aggregating, to: done, event: aggregated }
+
+metadata:
+  experiment: dynamic-workflows
+  round: 3
+  theme: join policy (quorum) + timeout (H7)
+  pattern: "await quorum k-of-n: il batch lento non blocca se il quorum è raggiunto"

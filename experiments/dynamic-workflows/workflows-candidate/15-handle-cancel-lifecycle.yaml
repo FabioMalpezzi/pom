@@ -1,0 +1,44 @@
+workflow: dynamic_handle_cancel_lifecycle
+version: 1
+description: |
+  Dynamic Workflow handle-lifecycle example for explicit child cancel.
+  The parent launches a compensating child batch and cancels it through
+  cancel_handles before reaching the terminal state.
+
+initial_state: launch_child
+
+states:
+  - name: launch_child
+    description: Launch a child workflow with a compensation saga.
+    is_final: false
+    fan_out_launch:
+      workflow: 13-child-compensation.yaml
+      over: cancellable_items
+      handle: cancellable_batch
+  - name: cancel_child
+    description: Propagate cancel to the active child batch.
+    is_final: false
+    cancel_handles: [cancellable_batch]
+  - name: done
+    description: Parent workflow is complete after cancelling the child batch.
+    is_final: true
+
+events:
+  - name: child_launched
+    description: Child batch launched.
+  - name: child_cancelled
+    description: Child batch cancelled.
+
+transitions:
+  - from: launch_child
+    to: cancel_child
+    event: child_launched
+  - from: cancel_child
+    to: done
+    event: child_cancelled
+
+invariants:
+  - description: |
+      cancel_handles is a control-plane signal to the active child batch.
+      The child receives cancel and runs its compensation saga before the
+      parent can reach done.

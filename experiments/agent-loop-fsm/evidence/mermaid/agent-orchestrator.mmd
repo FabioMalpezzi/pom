@@ -1,0 +1,20 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: agent_orchestrator
+  %% Minimal ReAct-style control flow for a generic AI agent.
+
+  state "Idle" as idle
+  state "Reasoning" as reasoning
+  state "Acting" as acting
+  state "Observing" as observing
+
+  [*] --> idle
+
+  idle --> reasoning : goal_received
+  reasoning --> acting : plan_ready
+  reasoning --> [*] : goal_already_met
+  acting --> observing : action_done
+  acting --> [*] : action_error
+  observing --> reasoning : loop_continue
+  observing --> [*] : goal_met

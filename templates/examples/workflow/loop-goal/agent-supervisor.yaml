@@ -1,0 +1,114 @@
+workflow: agent_supervisor
+version: 1
+description: |
+  Supervisor workflow that serves user goals by invoking the goal-
+  lifecycle workflow synchronously, one goal at a time. The supervisor
+  is autonomous: it has its own pre/post stages around the invoked
+  goal lifecycle, dispatches on its terminal state (done vs failed),
+  and either returns to idle (ready for the next goal) or escalates
+  on irrecoverable failure.
+
+  This iteration tests whether the goal lifecycle modeled for H1
+  iter 2 (agent-orchestrator-goal-lifecycle.yaml) is autonomous in
+  the POM sense: a standalone, reusable workflow that other workflows
+  can invoke via the state-invoke primitive validated in
+  workflow-modeling.
+
+initial_state: idle
+
+states:
+  - name: idle
+    description: |
+      Supervisor is waiting for a new user goal. No goal is being
+      processed.
+    is_final: false
+
+  - name: handling_goal
+    description: |
+      Supervisor invokes the goal-lifecycle workflow synchronously.
+      When the child terminates, dispatch happens on the child's
+      terminal state (done → ack, failed → escalate).
+    is_final: false
+    invoke:
+      workflow: agent-orchestrator-goal-lifecycle.yaml
+      on_completion:
+        - terminal_state: done
+          next_event: goal_completed
+        - terminal_state: failed
+          next_event: goal_failed
+
+  - name: acknowledging
+    description: |
+      Supervisor acknowledges the user that the goal was met and
+      returns to idle.
+    is_final: false
+
+  - name: escalating
+    description: |
+      Supervisor escalates the failure (logs, alerts, returns control
+      to the user) and returns to idle.
+    is_final: false
+
+  - name: stopped
+    description: |
+      Terminal state if the supervisor is asked to stop accepting
+      goals (out of scope for this experiment, used only as the
+      reachable terminal of the workflow).
+    is_final: true
+
+events:
+  - name: new_goal
+    description: |
+      A user posted a new goal; the supervisor begins handling it.
+  - name: goal_completed
+    description: |
+      The invoked goal lifecycle terminated as done.
+  - name: goal_failed
+    description: |
+      The invoked goal lifecycle terminated as failed.
+  - name: ack_sent
+    description: |
+      Acknowledgment delivered; supervisor returns to idle.
+  - name: escalation_sent
+    description: |
+      Escalation delivered; supervisor returns to idle.
+  - name: stop
+    description: |
+      External signal to stop accepting goals.
+
+transitions:
+  - from: idle
+    to: handling_goal
+    event: new_goal
+  - from: handling_goal
+    to: acknowledging
+    event: goal_completed
+  - from: handling_goal
+    to: escalating
+    event: goal_failed
+  - from: acknowledging
+    to: idle
+    event: ack_sent
+  - from: escalating
+    to: idle
+    event: escalation_sent
+  - from: idle
+    to: stopped
+    event: stop
+
+invariants:
+  - description: |
+      The supervisor cannot transition out of stopped.
+  - description: |
+      Every entry into acknowledging or escalating must be preceded
+      by a successful invoke completion (goal_completed or
+      goal_failed); the invoke contract enforces this.
+  - description: |
+      handling_goal blocks the supervisor for the duration of the
+      child goal-lifecycle workflow (synchronous invoke).
+
+metadata:
+  experiment: agent-loop-fsm
+  hypothesis: H4
+  pattern: Supervisor with goal-lifecycle as autonomous sub-workflow
+  invoke_target: agent-orchestrator-goal-lifecycle.yaml (sibling file)

@@ -1,0 +1,20 @@
+stateDiagram-v2
+  direction LR
+
+  %% Workflow: agent_loop_table
+  %% The classic agent decision loop perception → planning → action → observation expressed as a flat…
+
+  state "Perception" as perception
+  state "Planning" as planning
+  state "Action" as action
+  state "Observation" as observation
+
+  [*] --> perception
+
+  perception --> planning : sensed
+  perception --> [*] : perception_failed
+  planning --> action : plan_ready
+  action --> observation : action_done
+  action --> [*] : action_failed
+  observation --> perception : observed
+  observation --> [*] : goal_met
