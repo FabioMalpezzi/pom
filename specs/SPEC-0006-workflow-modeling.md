@@ -28,7 +28,7 @@ This spec describes the target shape of the capability. Not every part is implem
 | Implementation guide for coding agents | **Implemented (draft)** | `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` |
 | Integration & extension guide for adopters | **Implemented (draft)** | `templates/WORKFLOW_INTEGRATION_GUIDE.md` |
 | TypeScript guided-implementation evidence (Hypothesis H4) | **Implemented** | `evidence/typescript/spec-evolution/` — 15 tests, all passing, Pattern A (transition table), zero added dependencies |
-| Dynamic Workflow control-plane/data-plane contract | **Backlog extension** | Accepted doctrine in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; evidence and runnable stubs in `experiments/dynamic-workflows/` |
+| Dynamic Workflow control-plane/data-plane contract | **Backlog extension, partially validated** | Accepted doctrine in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; evidence and runnable stubs in `experiments/dynamic-workflows/`; handle lifecycle rules E080-E089 are implemented in `scripts/lint-workflows.mjs` |
 | Promotion decision and consolidation | **Target for promotion** | Section in `EXPERIMENT.md` to be filled at end of experiment |
 
 The rest of this document describes the *target* shape. Read each section together with the row above before assuming a feature exists.
@@ -272,6 +272,31 @@ states:
       on_timeout: tasks_timed_out
 ```
 
+`await.handles` is selective. A workflow may launch four handles and
+await only two of them in a given wait state. Handles not named by that
+`await` remain active. Before any terminal state is reached, every active
+handle must be resolved by one of three explicit choices:
+
+- await it with `await.handles`;
+- cancel it with `cancel_handles`;
+- detach it with `detach_handles`.
+
+```yaml
+states:
+  - name: awaiting_primary
+    await:
+      handles: [primary_batch]
+      join: all
+  - name: detaching_audit
+    detach_handles: [audit_batch]
+```
+
+Handles are workflow-local names declared by `fan_out_launch.handle`.
+They must be snake_case identifiers and unique within the workflow. The
+name is the durable reference used by later `await`, `cancel_handles`,
+and `detach_handles` blocks; it is not inferred from the child workflow
+name or the launched collection.
+
 `react` on a state supports stream-like collection:
 
 ```yaml
@@ -294,21 +319,15 @@ compensation:
 
 ### Backlog Rules To Specify
 
-Future validator and implementation-guidance work should define:
+Future validator and implementation-guidance work should define the
+remaining Dynamic Workflow contract:
 
 - shape checks for `fan_out_launch.workflow`, `over`, and `handle`;
-- uniqueness and lexical rules for `fan_out_launch.handle`;
 - shape checks for `await.handles`, `join`, `k`, `timeout`, and
   `on_timeout`;
-- resolution rules requiring `await.handles[]` to reference previously
-  declared handles;
-- lifecycle rules for active handles that are not included in a given
-  `await`;
 - shape checks for `react.on_each`, `on_early`, and `on_done`;
 - how `cancel`, `suspend`, and `resume` propagate through active
   invokes and launched batches;
-- whether terminal states require all active handles to be awaited,
-  cancelled, or explicitly detached;
 - how `compensation` order is declared and when it is considered
   complete;
 - how timeout syntax aligns with the future H7 `timeout` primitive;
@@ -316,6 +335,21 @@ Future validator and implementation-guidance work should define:
   primitive;
 - which generated scenarios prove launch, wait, timeout, cancellation,
   suspend, resume, and compensation behavior.
+
+Implemented handle-lifecycle validator rules:
+
+| Code | Check |
+|---|---|
+| E080 | `fan_out_launch` is a mapping when declared on a state. |
+| E081 | `fan_out_launch.workflow` is a non-empty string. |
+| E082 | `fan_out_launch.handle` is a snake_case identifier. |
+| E083 | `fan_out_launch.handle` is unique within the workflow. |
+| E084 | `await` is a mapping when declared on a state. |
+| E085 | `await.handles` is a non-empty list of snake_case handle identifiers. |
+| E086 | `await.handles[]` references handles declared by an earlier `fan_out_launch`. |
+| E087 | `cancel_handles` is a non-empty list of declared active handles. |
+| E088 | `detach_handles` is a non-empty list of declared active handles. |
+| E089 | A final state is not reachable with active handles that were not awaited, cancelled, or detached. |
 
 ## Composition: Linear Pipeline (synchronous)
 

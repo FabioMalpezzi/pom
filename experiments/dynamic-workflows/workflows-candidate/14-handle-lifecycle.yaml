@@ -1,0 +1,68 @@
+workflow: dynamic_handle_lifecycle
+version: 1
+description: |
+  Dynamic Workflow handle-lifecycle example. The parent launches two
+  batches, waits for the one it needs for the local decision, and
+  explicitly detaches the still-active batch before it can reach a
+  terminal state.
+
+initial_state: launch_primary
+
+states:
+  - name: launch_primary
+    description: Launch the primary batch and keep its handle.
+    is_final: false
+    fan_out_launch:
+      workflow: 01-task-pipeline.yaml
+      over: primary_items
+      handle: primary_batch
+  - name: launch_audit
+    description: Launch an audit batch that may outlive the parent decision.
+    is_final: false
+    fan_out_launch:
+      workflow: 01-task-pipeline.yaml
+      over: audit_items
+      handle: audit_batch
+  - name: wait_primary
+    description: Wait only for the primary batch; audit_batch remains active.
+    is_final: false
+    await:
+      handles: [primary_batch]
+      join: all
+  - name: detach_audit
+    description: Explicitly detach the still-active audit batch before exit.
+    is_final: false
+    detach_handles: [audit_batch]
+  - name: done
+    description: Parent workflow is complete; no active handle is implicit.
+    is_final: true
+
+events:
+  - name: primary_launched
+    description: Primary batch launched.
+  - name: audit_launched
+    description: Audit batch launched.
+  - name: primary_ready
+    description: Primary batch completed.
+  - name: audit_detached
+    description: Audit batch intentionally left to the data plane.
+
+transitions:
+  - from: launch_primary
+    to: launch_audit
+    event: primary_launched
+  - from: launch_audit
+    to: wait_primary
+    event: audit_launched
+  - from: wait_primary
+    to: detach_audit
+    event: primary_ready
+  - from: detach_audit
+    to: done
+    event: audit_detached
+
+invariants:
+  - description: |
+      Await is selective: waiting for primary_batch does not close
+      audit_batch. A terminal state is valid only because audit_batch is
+      explicitly detached first.

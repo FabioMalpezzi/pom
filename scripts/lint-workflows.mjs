@@ -18,6 +18,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, dirname, join, isAbsolute, basename } from 'node:path';
 import yaml from 'js-yaml';
 import { renderModelMermaid } from './mermaid.mjs';
+import { validateDynamicWorkflowHandles } from './workflow-dynamic-handles.mjs';
 
 const ERROR_RULES = {
   E000: 'YAML parse error or root is not a mapping.',
@@ -81,6 +82,16 @@ const ERROR_RULES = {
   E071: 'timeout.duration is required and must use an unambiguous duration: <N>s, <N>min, <N>h, <N>d, or ISO 8601.',
   E072: 'timeout.on_timeout is required and must reference a declared state.',
   E073: 'A state cannot declare both loop_guard and timeout; loop_guard bounds a loop, timeout bounds non-loop residence.',
+  E080: 'fan_out_launch must be a mapping when declared on a state.',
+  E081: 'fan_out_launch.workflow is required and must be a non-empty string.',
+  E082: 'fan_out_launch.handle is required and must be a snake_case identifier.',
+  E083: 'fan_out_launch.handle must be unique within the workflow.',
+  E084: 'await must be a mapping when declared on a state.',
+  E085: 'await.handles must be a non-empty list of snake_case handle identifiers.',
+  E086: 'await.handles must reference handles declared by an earlier fan_out_launch.',
+  E087: 'cancel_handles must be a non-empty list of declared active handles.',
+  E088: 'detach_handles must be a non-empty list of declared active handles.',
+  E089: 'A final state is reachable with active handles that were not awaited, cancelled, or detached.',
 };
 
 const WARNING_RULES = {
@@ -478,7 +489,8 @@ function validate(model, sourceDir = '.') {
   const stateInvokeErrors = validateStateInvokes(model, sourceDir);
   const transitionInvokeErrors = validateTransitionInvokes(model, sourceDir);
   const temporal = validateTemporalPrimitives(model, stateNames);
-  errors.push(...ctxSchemaErrors, ...stateInvokeErrors, ...transitionInvokeErrors, ...temporal.errors);
+  const dynamicHandles = validateDynamicWorkflowHandles(model);
+  errors.push(...ctxSchemaErrors, ...stateInvokeErrors, ...transitionInvokeErrors, ...temporal.errors, ...dynamicHandles.errors);
   const warnings = errors.some((e) => ['E004', 'E005'].includes(e.code))
     ? []
     : [...validateWarnings(model, stateNames), ...temporal.warnings];

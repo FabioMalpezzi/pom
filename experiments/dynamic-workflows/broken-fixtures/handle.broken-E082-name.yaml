@@ -1,0 +1,21 @@
+workflow: dynamic_handle_bad_name
+version: 1
+initial_state: launch
+
+states:
+  - name: launch
+    is_final: false
+    fan_out_launch:
+      workflow: 01-task-pipeline.yaml
+      over: items
+      handle: BatchA
+  - name: done
+    is_final: true
+
+events:
+  - name: launched
+
+transitions:
+  - from: launch
+    to: done
+    event: launched

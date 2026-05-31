@@ -1,0 +1,20 @@
+workflow: dynamic_handle_unknown_await
+version: 1
+initial_state: wait
+
+states:
+  - name: wait
+    is_final: false
+    await:
+      handles: [missing_batch]
+      join: all
+  - name: done
+    is_final: true
+
+events:
+  - name: ready
+
+transitions:
+  - from: wait
+    to: done
+    event: ready

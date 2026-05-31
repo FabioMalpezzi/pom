@@ -26,6 +26,10 @@ The accepted backlog shape is additive:
 - `await` on a state blocks the FSM on one or more handles with
   `join: all | quorum | first`, optional `k`, optional `timeout`, and an
   `on_timeout` wake-up event.
+- Handles are workflow-local names. `await.handles` is selective:
+  handles not named by an `await` remain active until they are awaited,
+  cancelled with `cancel_handles`, or intentionally detached with
+  `detach_handles`.
 - `react` on a state lets the FSM react to each completion, early exit,
   or completion of the observed batch.
 - `cancel`, `suspend`, and `resume` are standard lifecycle signals
@@ -84,7 +88,7 @@ rules, documentation, and target-driven implementation evidence.
 | Specs | SPEC-0006 records the Dynamic Workflow contract as backlog, not as implemented schema. |
 | Decisions | This ADR closes the control-plane/data-plane doctrine. |
 | Templates | No immediate template changes; future SPEC-0007 work may extend workflow templates. |
-| Tooling | No immediate validator change; future work should add explicit rules instead of relying on ignored fields. |
+| Tooling | Handle lifecycle rules E080-E089 are implemented. Remaining Dynamic Workflow fields should add explicit validator rules instead of relying on ignored fields. |
 
 ## Links
 

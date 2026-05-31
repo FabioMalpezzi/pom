@@ -33,6 +33,25 @@ La FSM affida N istanze del leaf all'esecutore e **prosegue subito** (può lanci
 ```
 `all` = tutti; `quorum(k)` = basta k (il lento non blocca); `first` = race. Allo scadere del timeout la FSM **si risveglia** via `on_timeout` invece di restare sospesa.
 
+`await.handles` è selettivo: se sono stati aperti quattro handle, la FSM
+può attenderne due e lasciare gli altri attivi. Gli handle non citati
+dall'`await` non vengono chiusi implicitamente. Prima di raggiungere uno
+stato terminale, ogni handle attivo deve essere risolto con una scelta
+esplicita: `await.handles`, `cancel_handles` o `detach_handles`.
+
+```yaml
+  - name: awaiting_primary
+    await:
+      handles: [primary_batch]
+      join: all
+  - name: detaching_audit
+    detach_handles: [audit_batch]
+```
+
+Il nome dell'handle si dichiara in `fan_out_launch.handle`, è locale al
+workflow, deve essere unico e deve essere ricordabile nel modello perché
+è il riferimento usato da `await`, `cancel_handles` e `detach_handles`.
+
 ### `react` — attesa reattiva (a flusso)
 ```yaml
   - name: collecting

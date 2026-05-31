@@ -91,8 +91,8 @@ Stato a fine sessione 2026-05-30: il **lato metodo è completo** (agent-loop-fsm
 - [x] **Runtime agent-loop-fsm**: snapshot/restore reale aggiunto al runtime dimostrativo con `--snapshot` e `--restore`.
 - [x] **Auditor v2**: l'istruzione di seguire `state-invoke`/`event-invoke` è già presente nel prompt canonico `prompts/29-loop-goal-audit.md`; nessuna modifica duplicativa necessaria.
 - [x] **Esperimento H6/H7** (priorità 1): adottato. SPEC-0007 è completa; validator E060-E073/W060, esempi, fixture, test automatico e guida Pattern A/B/C sono presenti.
+- [x] **Dynamic Workflow follow-up — handle lifecycle**: regole statiche E080-E089 aggiunte al validator per `fan_out_launch.handle`, `await.handles`, `cancel_handles`, `detach_handles` e terminali senza handle attivi impliciti; esempio e fixture in `experiments/dynamic-workflows/`; test automatico in `tests/workflow-validator/integration/test-dynamic-handles.mjs`.
 - [ ] **Integrare i rami verso `main`** (priorità 8): `exp/agent-loop-fsm`, `exp/dynamic-workflows` e le modifiche H6/H7 si sovrappongono; merge con cura.
-- [ ] **Dynamic Workflow follow-up — handle lifecycle**: specificare e testare dichiarazione/uso degli handle di `fan_out_launch` (`handle` unico, `await.handles` risolti, handle non awaited, cancel/detach/terminal con handle attivi, suspend/restore di tutti gli handle). Questo è fuori da H6/H7 e appartiene al prossimo giro Dynamic Workflow.
 
 (Spunto non azionabile, registrato a parte: Prolog è un fit naturale per *validare/verificare* i workflow — non per eseguirli; valutazione esplorativa, non una cosa da fare.)
 
@@ -109,7 +109,8 @@ Stato a fine sessione 2026-05-30: il **lato metodo è completo** (agent-loop-fsm
 
 ### To Clarify
 
-- Whether the next Dynamic Workflow pass should introduce an explicit
-  `detach` construct for active handles that are intentionally left to
-  complete outside the parent FSM lifecycle. Current bias: require an
-  explicit choice before terminal state: await, cancel, or detach.
+- Dynamic Workflow still needs full validator coverage for `join`, `k`,
+  `react`, compensation ordering, and lifecycle propagation into a real
+  data plane. The handle lifecycle itself is no longer open: terminal
+  states require every active handle to be awaited, cancelled, or
+  explicitly detached.
