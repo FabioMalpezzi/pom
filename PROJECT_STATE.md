@@ -81,7 +81,7 @@ active experiment branches toward `main`.
 | 6 | Promote `skills-candidate/loop-goal.md` → `skills/loop-goal.md` + the 4 prompts to `prompts/28..31-loop-goal-*.md` | **done (2026-05-30)** — skill canonical, prompts numbered, registries updated; candidates kept in the closed experiment as history | — |
 | 6a | Short **ADR**: relationship between generic `workflow` skill and the `loop-goal` sub-type | **done** — `decisions/ADR-0003-workflow-vs-loop-goal-skill.md` | — |
 | 7 | TypeScript guided code for pipeline orchestrator (inherited from workflow-modeling) | pending (#45) | deferred until POM deploy on a target project |
-| 8 | **Integrate branches** `exp/agent-loop-fsm` + `exp/dynamic-workflows` + H6/H7 changes toward `main` | pending | non-urgent; they overlap, so merge with care |
+| 8 | **Integrate branches** `exp/agent-loop-fsm` + `exp/dynamic-workflows` + H6/H7 changes toward `main` | **done (2026-06-01)** — merged `exp/dynamic-workflows` into `main`; `exp/agent-loop-fsm` was already an ancestor; post-merge test/lint passed | — |
 
 ### Next Actions
 
@@ -92,7 +92,7 @@ Stato a fine sessione 2026-05-30: il **lato metodo è completo** (agent-loop-fsm
 - [x] **Auditor v2**: l'istruzione di seguire `state-invoke`/`event-invoke` è già presente nel prompt canonico `prompts/29-loop-goal-audit.md`; nessuna modifica duplicativa necessaria.
 - [x] **Esperimento H6/H7** (priorità 1): adottato. SPEC-0007 è completa; validator E060-E073/W060, esempi, fixture, test automatico e guida Pattern A/B/C sono presenti.
 - [x] **Dynamic Workflow follow-up — handle lifecycle**: regole statiche E080-E089 aggiunte al validator per `fan_out_launch.handle`, `await.handles`, `cancel_handles`, `detach_handles` e terminali senza handle attivi impliciti; esempi e fixture in `experiments/dynamic-workflows/`; test automatici in `tests/workflow-validator/integration/test-dynamic-handles.mjs` e `tests/dynamic-workflows/integration/test-reference-executors.mjs`. I reference executor TypeScript e Python rimuovono gli handle attesi, propagano `detach`/`cancel` alle FSM figlie e rifiutano terminali con handle ancora attivi.
-- [ ] **Integrare i rami verso `main`** (priorità 8): `exp/agent-loop-fsm`, `exp/dynamic-workflows` e le modifiche H6/H7 si sovrappongono; merge con cura.
+- [x] **Integrare i rami verso `main`** (priorità 8): `exp/dynamic-workflows` è stato mergiato in `main`; il ramo includeva già `exp/agent-loop-fsm` e le modifiche H6/H7. Verifica post-merge: `npm run pom:test` e `npm run pom:lint` passati.
 
 (Spunto non azionabile, registrato a parte: Prolog è un fit naturale per *validare/verificare* i workflow — non per eseguirli; valutazione esplorativa, non una cosa da fare.)
 
