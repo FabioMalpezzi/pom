@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-2026-05-30
+2026-05-31
 
 ---
 
@@ -63,37 +63,41 @@ The four-agent lifecycle had its **first real dialog-mode run** on the `exp/dyna
 
 ### Current Objective
 
-Close the loop on `agent-loop-fsm` by addressing the remaining open methodological items (H6/H7 in a separate experiment, runtime snapshot, plus the dialog-mode first-use of prompt v3 — itself now written), then promote skill `loop-goal` to `skills/` canonical with numbered prompts.
+Close the remaining post-experiment work by opening the H6/H7
+`loop_guard` + `timeout` experiment toward SPEC-0007, then integrate the
+active experiment branches toward `main`.
 
 ### Priorities
 
 | Priority | Activity | Status | Dependencies |
 |---|---|---|---|
-| 1 | Open parallel experiment `exp/schema-loop-guard-timeout` for H6 `loop_guard` + H7 `timeout` → SPEC-0007 | pending (#63) | — |
+| 1 | Open parallel experiment `exp/schema-loop-guard-timeout` for H6 `loop_guard` + H7 `timeout` → SPEC-0007 | **done (2026-05-31)** — adopted; SPEC-0007 complete; validator/tests/spec/guidance implemented | — |
 | 2 | Write prompt v3 of `define-loop-goal-criteria` with Consistency Check (D4) + dialog-mode hint (D5) | **done (#66, 2026-05-30)** — resolves D1–D5; adds section 7 Consistency Check and a 4th promotion criterion | — |
 | 3 | First real **dialog-mode** run of the full four-agent lifecycle | **done (2026-05-30)** via `exp/dynamic-workflows`; feedback in `agent-loop-fsm` §4-septies (4 limits to fold into prompt v4 + skill promotion) | — |
-| 3b | Promote the **Dynamic Workflow contract** to the workflow filone: an ADR (control-plane/data-plane doctrine) + SPEC-0006 backlog entries for `fan_out_launch`/`await`/`compensation`; real validator+executor at target deploy | pending (#new) — user-approved direction (Adopt) | depends on workflow-domain decision |
+| 3b | Promote the **Dynamic Workflow contract** to the workflow filone: an ADR (control-plane/data-plane doctrine) + SPEC-0006 backlog entries for `fan_out_launch`/`await`/`compensation`; real validator+executor at target deploy | **done (2026-05-31)** — `decisions/ADR-0004-dynamic-workflow-control-plane.md` + SPEC-0006 backlog | — |
 | 3c | Two **reference executors** of the contract (TypeScript, Python), simple in structure but functionally complete | **done (2026-05-30)** — both verified on the scenarios; in `experiments/dynamic-workflows/runtime/` | — |
-| 4 | Auditor v2: add explicit "follow `state-invoke`/`event-invoke`" instruction to the audit prompt | pending | minor, ~5 lines |
-| 5 | Runtime: implement actual snapshot write/restore (the runtime today shows state+context are alive but doesn't serialize them) | pending | ~20 LOC |
+| 4 | Auditor v2: add explicit "follow `state-invoke`/`event-invoke`" instruction to the audit prompt | **done (2026-05-31)** — already present in `prompts/29-loop-goal-audit.md`; confirmed by current-turn read | — |
+| 5 | Runtime: implement actual snapshot write/restore (the runtime today shows state+context are alive but doesn't serialize them) | **done (2026-05-31)** — `agent-runtime.ts` supports `--snapshot` and `--restore`; README updated | — |
 | 6 | Promote `skills-candidate/loop-goal.md` → `skills/loop-goal.md` + the 4 prompts to `prompts/28..31-loop-goal-*.md` | **done (2026-05-30)** — skill canonical, prompts numbered, registries updated; candidates kept in the closed experiment as history | — |
 | 6a | Short **ADR**: relationship between generic `workflow` skill and the `loop-goal` sub-type | **done** — `decisions/ADR-0003-workflow-vs-loop-goal-skill.md` | — |
 | 7 | TypeScript guided code for pipeline orchestrator (inherited from workflow-modeling) | pending (#45) | deferred until POM deploy on a target project |
-| 8 | **Integrate branches** `exp/agent-loop-fsm` + `exp/dynamic-workflows` toward `main` | pending | non-urgent; they overlap (dynamic-workflows branched from agent-loop-fsm and edits its files), so merge with care |
+| 8 | **Integrate branches** `exp/agent-loop-fsm` + `exp/dynamic-workflows` + H6/H7 changes toward `main` | pending | non-urgent; they overlap, so merge with care |
 
 ### Next Actions
 
 Stato a fine sessione 2026-05-30: il **lato metodo è completo** (agent-loop-fsm chiuso; prompt v4; ADR-0003; skill `loop-goal` + 4 prompt promossi a canonici; tutto pushato). Restano tre fronti aperti, registrati come da fare:
 
-- [ ] **Lato workflow — promuovere il contratto Dynamic Workflow** (priorità 3b): un ADR sulla dottrina control-plane/data-plane + voci di backlog su SPEC-0006 per `fan_out_launch`/`await`/`join`/`timeout`/`compensation`. Direzione Adopt approvata; implementazione vera del validator+esecutori rimandata al deploy su un target. Contratto e prove in `experiments/dynamic-workflows/`.
-- [ ] **Esperimento H6/H7** (priorità 1): aprire `exp/schema-loop-guard-timeout` per `loop_guard` + `timeout` → SPEC-0007.
-- [ ] **Integrare i rami verso `main`** (priorità 8): `exp/agent-loop-fsm` + `exp/dynamic-workflows` si sovrappongono; merge con cura.
+- [x] **Lato workflow — promuovere il contratto Dynamic Workflow** (priorità 3b): dottrina control-plane/data-plane registrata in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; backlog SPEC-0006 aggiornato con `fan_out_launch`/`await`/`join`/`timeout`/`react`/`compensation`. Implementazione vera del validator+esecutori rimandata al deploy su un target.
+- [x] **Runtime agent-loop-fsm**: snapshot/restore reale aggiunto al runtime dimostrativo con `--snapshot` e `--restore`.
+- [x] **Auditor v2**: l'istruzione di seguire `state-invoke`/`event-invoke` è già presente nel prompt canonico `prompts/29-loop-goal-audit.md`; nessuna modifica duplicativa necessaria.
+- [x] **Esperimento H6/H7** (priorità 1): adottato. SPEC-0007 è completa; validator E060-E073/W060, esempi, fixture, test automatico e guida Pattern A/B/C sono presenti.
+- [ ] **Integrare i rami verso `main`** (priorità 8): `exp/agent-loop-fsm`, `exp/dynamic-workflows` e le modifiche H6/H7 si sovrappongono; merge con cura.
+- [ ] **Dynamic Workflow follow-up — handle lifecycle**: specificare e testare dichiarazione/uso degli handle di `fan_out_launch` (`handle` unico, `await.handles` risolti, handle non awaited, cancel/detach/terminal con handle attivi, suspend/restore di tutti gli handle). Questo è fuori da H6/H7 e appartiene al prossimo giro Dynamic Workflow.
 
 (Spunto non azionabile, registrato a parte: Prolog è un fit naturale per *validare/verificare* i workflow — non per eseguirli; valutazione esplorativa, non una cosa da fare.)
 
 ### Open Decisions
 
-- Whether to extend the `workflow` canonical skill with a `loop-goal` mode or keep `loop-goal` as a separate canonical skill once it's promoted. Current direction: separate skill (loop/goal has distinct discipline: criteria → model → audit → scenarios order, fit vs conformity distinction, expected extensions from backlog).
 - Whether to promote the workflow examples already moved to `templates/examples/workflow/loop-goal/` further (e.g. into a worked tutorial in `docs/`) or leave them as examples-only.
 - Whether the `runtime-candidate/` should ever become a "reference runtime" documented in `templates/`, or whether it remains in the experiment folder as historical evidence (current direction: the latter, consistent with "no runtime in POM").
 - **Whether to generalize the criterion-definition method beyond loop/goal to all POM experiments** (idea raised by the user 2026-05-30). The structure is already mostly generic — `define-criteria` covers ten POM scopes, of which loop/goal is only a sub-type; the generic layer (reasoned confronto, coherence auditor, trace, independent adversarial evaluator, advice loop) is separable from the loop/goal-specific layer (FSM modeling, fit classification, backlog primitives, terminal-coverage scenarios, runtime). It would relate to the existing lighter `prompts/09-run-temporary-experiment.md` / `skills/spike.md` via a rigor threshold (light exploration below, measurable-hypothesis experiment above), not replace them. **Agreed direction: experiment and bring the loop/goal criterion to regime first, then evaluate if and how to extend** — generalizing an as-yet-unproven method would violate POM's "no promotion before evidence". A clean way to do both at once: treat "generalize the criterion" as itself a POM experiment (scope 1) and use it as the first dialog-mode exercise of the criterion.
@@ -105,4 +109,7 @@ Stato a fine sessione 2026-05-30: il **lato metodo è completo** (agent-loop-fsm
 
 ### To Clarify
 
-- Whether `H6 loop_guard` and `H7 timeout` should be opened as a **single** experiment producing **one** SPEC-0007 (covering both primitives), or **two parallel** experiments producing two SPECs. Current direction (from the backlog notes): one experiment `exp/schema-loop-guard-timeout` producing SPEC-0007 that covers both, because they share validator and code-generation infrastructure.
+- Whether the next Dynamic Workflow pass should introduce an explicit
+  `detach` construct for active handles that are intentionally left to
+  complete outside the parent FSM lifecycle. Current bias: require an
+  explicit choice before terminal state: await, cancel, or detach.

@@ -1,0 +1,18 @@
+# Expected: E071 because timeout.duration is required and must be unambiguous.
+workflow: timeout_bad_duration
+version: 1
+initial_state: waiting
+states:
+  - name: waiting
+    is_final: false
+    timeout:
+      duration: 15m
+      on_timeout: expired
+  - name: expired
+    is_final: true
+events:
+  - name: timeout
+transitions:
+  - from: waiting
+    to: expired
+    event: timeout

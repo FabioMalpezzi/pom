@@ -7,6 +7,7 @@
 // analogo.
 
 import 'dotenv/config';
+import { readFileSync, writeFileSync } from 'node:fs';
 import {
   loadWorkflow,
   buildTransitionTable,
@@ -33,6 +34,13 @@ interface AgentContext {
   // (parallel tool calls): vanno tutte risolte prima del prossimo turno
   // LLM, altrimenti l'API rifiuta la conversazione come incoerente.
   pendingToolCalls: ChatToolCall[];
+}
+
+interface AgentSnapshot {
+  workflow: string;
+  version: number;
+  state: StateName;
+  context: AgentContext;
 }
 
 function makeDefaultSystemPrompt(workflow: Workflow, tools: ChatTool[]): string {
@@ -137,6 +145,8 @@ export interface RunAgentOptions {
   workflowPath?: string;
   maxIterations?: number;
   maxDurationMs?: number;
+  snapshotPath?: string;
+  restorePath?: string;
 }
 
 export async function runAgent(opts: RunAgentOptions): Promise<{
@@ -154,7 +164,8 @@ export async function runAgent(opts: RunAgentOptions): Promise<{
   const maxIter = opts.maxIterations ?? MAX_ITERATIONS;
   const maxDur = opts.maxDurationMs ?? MAX_DURATION_MS;
 
-  const ctx: AgentContext = {
+  const restored = opts.restorePath ? loadSnapshot(opts.restorePath, workflow) : null;
+  const ctx: AgentContext = restored?.context ?? {
     goal: opts.goal,
     history: [],
     last_observation: null,
@@ -165,10 +176,21 @@ export async function runAgent(opts: RunAgentOptions): Promise<{
     pendingToolCalls: [],
   };
 
-  let state: StateName = workflow.initial_state;
+  let state: StateName = restored?.state ?? workflow.initial_state;
   let event: string = 'goal_received';
-  let iter = 0;
+  let iter = restored ? 1 : 0;
+  let needsTransition = !restored;
   const startedAt = Date.now();
+  const writeSnapshot = () => {
+    if (!opts.snapshotPath) return;
+    const snapshot: AgentSnapshot = {
+      workflow: workflow.workflow,
+      version: workflow.version,
+      state,
+      context: ctx,
+    };
+    writeFileSync(opts.snapshotPath, JSON.stringify(snapshot, null, 2) + '\n');
+  };
 
   // Bound del loop (analoghi a H6 loop_guard, qui implementati a mano).
   const checkBounds = (): boolean => {
@@ -184,14 +206,18 @@ export async function runAgent(opts: RunAgentOptions): Promise<{
   };
 
   while (!isFinal(workflow, state) && checkBounds()) {
-    // Applico la transizione dall'evento corrente.
-    const target = next(table, state, event);
-    if (!target) {
-      throw new Error(`Nessuna transizione da ${state} su evento ${event}`);
+    if (needsTransition) {
+      // Applico la transizione dall'evento corrente.
+      const target = next(table, state, event);
+      if (!target) {
+        throw new Error(`Nessuna transizione da ${state} su evento ${event}`);
+      }
+      console.log(`[FSM] ${state} --${event}--> ${target}  (iter ${iter})`);
+      state = target;
+      iter++;
+      writeSnapshot();
     }
-    console.log(`[FSM] ${state} --${event}--> ${target}  (iter ${iter})`);
-    state = target;
-    iter++;
+    needsTransition = true;
 
     if (isFinal(workflow, state)) break;
 
@@ -217,15 +243,33 @@ export async function runAgent(opts: RunAgentOptions): Promise<{
   return { finalState: state, context: ctx, iterations: iter };
 }
 
+function loadSnapshot(path: string, workflow: Workflow): AgentSnapshot {
+  const parsed = JSON.parse(readFileSync(path, 'utf8')) as AgentSnapshot;
+  if (parsed.workflow !== workflow.workflow || parsed.version !== workflow.version) {
+    throw new Error(
+      `Snapshot incompatibile: ${parsed.workflow} v${parsed.version}; ` +
+        `workflow corrente: ${workflow.workflow} v${workflow.version}`
+    );
+  }
+  if (!workflow.states.some((s) => s.name === parsed.state)) {
+    throw new Error(`Snapshot incompatibile: stato sconosciuto ${parsed.state}`);
+  }
+  return parsed;
+}
+
 async function main() {
   const args = process.argv.slice(2);
+  const snapshotFlag = args.indexOf('--snapshot');
+  const snapshotPath = snapshotFlag >= 0 ? args.splice(snapshotFlag, 2)[1] : undefined;
+  const restoreFlag = args.indexOf('--restore');
+  const restorePath = restoreFlag >= 0 ? args.splice(restoreFlag, 2)[1] : undefined;
   const goal = args.length > 0 ? args.join(' ') : 'Calcola (12 + 5) * 3 e dimmi il risultato finale.';
 
   console.log(`Provider: ${describeProvider()}`);
   console.log(`Goal: ${goal}\n`);
 
   try {
-    const { finalState, context, iterations } = await runAgent({ goal });
+    const { finalState, context, iterations } = await runAgent({ goal, snapshotPath, restorePath });
     console.log(`\n=== Esito ===`);
     console.log(`Stato finale: ${finalState}`);
     console.log(`Iterazioni: ${iterations}`);

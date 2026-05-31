@@ -71,6 +71,16 @@ const ERROR_RULES = {
   E056: 'on_completion[].assign value references a "child.<field>" path whose <field> is not declared in the child workflow context_schema.output_by_terminal[terminal_state].',
   E057: 'invoke.input or on_completion[].assign value is not a non-empty string (must be a documental path).',
   E058: 'invoke.input or on_completion[].assign is declared but child workflow has no context_schema (cannot validate nominal coherence).',
+  E060: 'loop_guard must be a mapping when declared on a state.',
+  E061: 'loop_guard must declare at least one bound: max_visits or max_duration.',
+  E062: 'loop_guard.max_visits must be an integer greater than or equal to 1.',
+  E063: 'loop_guard.max_duration must use an unambiguous duration: <N>s, <N>min, <N>h, <N>d, or ISO 8601.',
+  E064: 'loop_guard.on_exhaustion is required and must reference a declared state.',
+  E065: 'loop_guard cause-specific exhaustion target must reference a declared state.',
+  E070: 'timeout must be a mapping when declared on a state.',
+  E071: 'timeout.duration is required and must use an unambiguous duration: <N>s, <N>min, <N>h, <N>d, or ISO 8601.',
+  E072: 'timeout.on_timeout is required and must reference a declared state.',
+  E073: 'A state cannot declare both loop_guard and timeout; loop_guard bounds a loop, timeout bounds non-loop residence.',
 };
 
 const WARNING_RULES = {
@@ -78,6 +88,7 @@ const WARNING_RULES = {
   W002: 'Silent dead-end: non-final state with no outgoing transitions.',
   W003: 'Final state has at least one outgoing transition (re-entry from terminal). Suppressed when the state declares re_entry_allowed: true.',
   W004: 'Non-deterministic transition: same (from, event) declared more than once with ambiguous guard coverage.',
+  W060: 'loop_guard declares a cause-specific exhaustion target for a bound dimension that is not present.',
 };
 
 function err(code, where, extra) {
@@ -92,12 +103,48 @@ function isNonEmptyString(v) {
   return typeof v === 'string' && v.trim().length > 0;
 }
 
-function findReachableStates(initialState, transitions, stateNames) {
+function isPlainObject(v) {
+  return v != null && typeof v === 'object' && !Array.isArray(v);
+}
+
+function isValidDuration(v) {
+  if (!isNonEmptyString(v)) return false;
+  if (/^[1-9]\d*(s|min|h|d)$/.test(v)) return true;
+  return /^P(?=\d|T)(?:(?:[1-9]\d*)D)?(?:T(?:(?:[1-9]\d*)H)?(?:(?:[1-9]\d*)M)?(?:(?:[1-9]\d*)S)?)?$/.test(v);
+}
+
+function implicitTargetsForState(state) {
+  const targets = [];
+  if (isPlainObject(state?.loop_guard)) {
+    for (const field of ['on_exhaustion', 'on_visits_exhausted', 'on_duration_exhausted']) {
+      if (isNonEmptyString(state.loop_guard[field])) targets.push(state.loop_guard[field]);
+    }
+  }
+  if (isPlainObject(state?.timeout) && isNonEmptyString(state.timeout.on_timeout)) {
+    targets.push(state.timeout.on_timeout);
+  }
+  return targets;
+}
+
+function findReachableStates(initialState, states, transitions, stateNames) {
   if (!stateNames.has(initialState)) return new Set();
+  const stateByName = new Map(
+    states
+      .filter((s) => isNonEmptyString(s?.name))
+      .map((s) => [s.name, s]),
+  );
   const reachable = new Set([initialState]);
   const queue = [initialState];
   while (queue.length > 0) {
     const current = queue.shift();
+    const state = stateByName.get(current);
+    const implicitTargets = implicitTargetsForState(state);
+    for (const tgt of implicitTargets) {
+      if (stateNames.has(tgt) && !reachable.has(tgt)) {
+        reachable.add(tgt);
+        queue.push(tgt);
+      }
+    }
     for (const t of transitions) {
       if (t?.from !== current) continue;
       const targets = [];
@@ -228,7 +275,7 @@ function validateWarnings(model, stateNames) {
   const states = Array.isArray(model?.states) ? model.states : [];
 
   if (isNonEmptyString(model?.initial_state) && stateNames.has(model.initial_state)) {
-    const reachable = findReachableStates(model.initial_state, transitions, stateNames);
+    const reachable = findReachableStates(model.initial_state, states, transitions, stateNames);
     for (let i = 0; i < states.length; i++) {
       const s = states[i];
       if (!isNonEmptyString(s?.name) || !stateNames.has(s.name)) continue;
@@ -430,11 +477,90 @@ function validate(model, sourceDir = '.') {
   const ctxSchemaErrors = validateContextSchemaSelf(model);
   const stateInvokeErrors = validateStateInvokes(model, sourceDir);
   const transitionInvokeErrors = validateTransitionInvokes(model, sourceDir);
-  errors.push(...ctxSchemaErrors, ...stateInvokeErrors, ...transitionInvokeErrors);
+  const temporal = validateTemporalPrimitives(model, stateNames);
+  errors.push(...ctxSchemaErrors, ...stateInvokeErrors, ...transitionInvokeErrors, ...temporal.errors);
   const warnings = errors.some((e) => ['E004', 'E005'].includes(e.code))
     ? []
-    : validateWarnings(model, stateNames);
+    : [...validateWarnings(model, stateNames), ...temporal.warnings];
   return { errors, warnings };
+}
+
+function validateTemporalPrimitives(model, stateNames) {
+  const errors = [];
+  const warnings = [];
+  const states = Array.isArray(model?.states) ? model.states : [];
+
+  for (let i = 0; i < states.length; i++) {
+    const s = states[i];
+    if (!isNonEmptyString(s?.name)) continue;
+    const where = `states[${i}]`;
+
+    if (s.loop_guard != null && s.timeout != null) {
+      errors.push(err('E073', where, `name=${s.name}`));
+    }
+
+    if (s.loop_guard != null) {
+      const lgWhere = `${where}.loop_guard`;
+      if (!isPlainObject(s.loop_guard)) {
+        errors.push(err('E060', lgWhere, `name=${s.name}`));
+      } else {
+        validateLoopGuard(s.loop_guard, lgWhere, stateNames, errors, warnings);
+      }
+    }
+
+    if (s.timeout != null) {
+      const timeoutWhere = `${where}.timeout`;
+      if (!isPlainObject(s.timeout)) {
+        errors.push(err('E070', timeoutWhere, `name=${s.name}`));
+      } else {
+        validateTimeout(s.timeout, timeoutWhere, stateNames, errors);
+      }
+    }
+  }
+
+  return { errors, warnings };
+}
+
+function validateLoopGuard(loopGuard, where, stateNames, errors, warnings) {
+  const hasMaxVisits = loopGuard.max_visits != null;
+  const hasMaxDuration = loopGuard.max_duration != null;
+
+  if (!hasMaxVisits && !hasMaxDuration) {
+    errors.push(err('E061', where));
+  }
+
+  if (hasMaxVisits && (!Number.isInteger(loopGuard.max_visits) || loopGuard.max_visits < 1)) {
+    errors.push(err('E062', `${where}.max_visits`, `value=${loopGuard.max_visits}`));
+  }
+
+  if (hasMaxDuration && !isValidDuration(loopGuard.max_duration)) {
+    errors.push(err('E063', `${where}.max_duration`, `value=${loopGuard.max_duration}`));
+  }
+
+  if (!isNonEmptyString(loopGuard.on_exhaustion) || !stateNames.has(loopGuard.on_exhaustion)) {
+    errors.push(err('E064', `${where}.on_exhaustion`, `value=${loopGuard.on_exhaustion ?? ''}`));
+  }
+
+  for (const [field, hasBound] of [
+    ['on_visits_exhausted', hasMaxVisits],
+    ['on_duration_exhausted', hasMaxDuration],
+  ]) {
+    if (loopGuard[field] == null) continue;
+    if (!isNonEmptyString(loopGuard[field]) || !stateNames.has(loopGuard[field])) {
+      errors.push(err('E065', `${where}.${field}`, `value=${loopGuard[field]}`));
+    } else if (!hasBound) {
+      warnings.push(warn('W060', `${where}.${field}`, `${field} has no corresponding bound`));
+    }
+  }
+}
+
+function validateTimeout(timeout, where, stateNames, errors) {
+  if (!isValidDuration(timeout.duration)) {
+    errors.push(err('E071', `${where}.duration`, `value=${timeout.duration ?? ''}`));
+  }
+  if (!isNonEmptyString(timeout.on_timeout) || !stateNames.has(timeout.on_timeout)) {
+    errors.push(err('E072', `${where}.on_timeout`, `value=${timeout.on_timeout ?? ''}`));
+  }
 }
 
 function loadWorkflowSafe(absPath) {

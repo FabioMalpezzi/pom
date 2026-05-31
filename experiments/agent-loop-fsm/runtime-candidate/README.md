@@ -28,6 +28,8 @@ cp .env.example .env
 ```sh
 npm start                                    # goal di default (calcolo aritmetico)
 npm start "Qual è la capitale della Francia?"   # custom goal
+npm start -- --snapshot /tmp/agent.snapshot.json "Calcola (12 + 5) * 3"
+npm start -- --restore /tmp/agent.snapshot.json --snapshot /tmp/agent.snapshot.json
 ```
 
 Output tipico (DeepSeek):
@@ -71,11 +73,30 @@ Il runtime applica due bound a mano, in attesa di H6 `loop_guard`:
 
 Quando H6 diventerà primitiva schema, questi due valori migreranno dentro al YAML del workflow e il runtime li leggerà dalla `loop_guard` invece che dall'environment.
 
+## Snapshot e restore
+
+Il runtime può scrivere e riprendere uno snapshot JSON compatibile con il
+contratto H5:
+
+```json
+{
+  "workflow": "agent_orchestrator",
+  "version": 1,
+  "state": "reasoning",
+  "context": {}
+}
+```
+
+`--snapshot <path>` aggiorna il file dopo ogni transizione verso uno
+stato eseguibile. `--restore <path>` valida `workflow`, `version` e
+`state`, poi riprende eseguendo lo stato salvato con il context
+serializzato.
+
 ## Limiti noti
 
-- **Un solo tool per turno.** Il runtime esegue solo `tool_calls[0]`. Parallel tool calls non supportate (volutamente — coerente con il pattern POM "no async").
+- **Tool calls parallele solo come batch locale.** Il runtime gestisce `tool_calls[]` multiple nello stesso turno LLM ed esegue una risposta `tool` per ogni `tool_call_id`; non introduce però esecuzione asincrona o fork nella FSM.
 - **Niente retry esplicito.** Su `action_error` la FSM va in `failed` (come da modellazione di H1). Per il retry bounded vedi H3 (`agent-retry-bounded.yaml`) — andrà implementato come variante del runtime.
-- **Snapshot/restore non implementato qui.** Il runtime non scrive automaticamente lo snapshot a 4-tupla `{workflow, version, state, context}` (validato in H5). Aggiungerlo costa ~20 righe in `agent-runtime.ts`; sarà un'iterazione successiva.
+- **Restore senza migrazione.** Il runtime valida `workflow`, `version` e `state`, ma non migra snapshot fra versioni diverse del workflow.
 - **Tool mock.** I tool inclusi (`calculator`, `echo`, `fake_search`) sono volutamente piccoli. Per usi reali, aggiungi tool nel registro `TOOL_SCHEMAS` + `TOOL_IMPLS` di `tools.ts`.
 
 ## Workflow Fit Auditor — agente POM eseguibile

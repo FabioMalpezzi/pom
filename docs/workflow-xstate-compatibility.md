@@ -1,8 +1,18 @@
 # POM Workflow ↔ XState Compatibility
 
+## Purpose
+
 External verification: does the POM workflow YAML map cleanly onto the XState model, so that the same business workflow can be expressed in either format without information loss on the parts both formats support?
 
 This document is *not* an endorsement of XState as a target. The user has stated they may or may not adopt XState for their own projects. The compatibility check serves two purposes: (1) sanity-check that POM is not inventing a private formalism with no precedent, and (2) give projects that *do* use XState a path to share a single source of authority.
+
+## Audience
+
+Technical maintainers and coding agents working with POM workflow models,
+workflow validation, or target projects that may implement a POM workflow
+with XState.
+
+## Content
 
 ## XState's JSON definition: where it lives
 
@@ -203,3 +213,21 @@ The implementation guide already lists Pattern C (library-based) as an option fo
 When this path is chosen, POM YAML stays the source of authority for the structural model; XState supplies the runtime. The POM workflow validator continues to enforce structural invariants on the YAML, and the transformer is the bridge.
 
 Output JSON for each compiled example is saved under `experiments/workflow-modeling/evidence/xstate/` (round-1 examples) and `evidence/xstate/round2/` (round-2 toys + real examples + internal-agent validation files). The three-level chain (operational → analyzer → clean-family-repair) is fully round-trippable to JSON, including the synthetic intermediate states for the event-invokes that occur in the loan-application example.
+
+## Gaps And Open Decisions
+
+- Runtime validation against XState is still a follow-up because the
+  transformer does not install or call XState.
+- Strict TypeScript `setup({ types: ... })` generation is not part of
+  this JSON compatibility document; it belongs in target code or future
+  implementation guidance.
+- Dynamic Workflow constructs accepted by ADR-0004 are backlog doctrine,
+  not part of the current XState compatibility transformer contract.
+
+## Sources And Decisions
+
+- Spec: `specs/SPEC-0006-workflow-modeling.md`
+- ADR: `decisions/ADR-0002-workflow-context-injection.md`
+- ADR: `decisions/ADR-0004-dynamic-workflow-control-plane.md`
+- Tooling: `scripts/to-xstate.mjs`
+- Experiment evidence: `experiments/workflow-modeling/evidence/xstate/`
