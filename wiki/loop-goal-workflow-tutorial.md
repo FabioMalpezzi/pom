@@ -19,6 +19,22 @@ modeling, auditing, deriving scenarios, guiding implementation, and
 concluding loop/goal experiments. This page is a human reading guide: it
 helps a reader choose a starting pattern before using the skill.
 
+Coding agents already have their own loop/goal behavior: they receive a
+goal, inspect context, decide on actions, run tools, observe results, and
+continue until they stop. POM does not replace that native agent loop and
+does not become the agent runtime. POM provides the support layer for
+realizing such loops in a controlled way: named states, declared
+transitions, explicit terminal conditions, measurable criteria, scenario
+coverage, and implementation guidance in the target project's own stack.
+
+When a target application uses the same pattern internally, `loop-goal`
+can describe a software self-improvement system: the application
+observes its own behavior, proposes or applies changes, verifies the
+result, and decides whether to continue, stop, or roll back. In that
+case the workflow is operating memory for the application's improvement
+control plane. The target project still owns execution, permissions,
+deployment, rollback, safety checks, and persistence.
+
 The current verified examples cover five shapes:
 
 | Example | Use It When |
