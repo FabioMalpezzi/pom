@@ -131,6 +131,57 @@ Do not skip criteria when the work is experimental. The criteria file is
 the measurement contract; without it, the audit can say the YAML is well
 formed but cannot say whether the experiment succeeded.
 
+## Using Agent Goal Tracking
+
+Some coding agents expose an explicit goal tracker, while others only
+provide the ordinary conversation plus tools. Use any native goal tracker
+as the session-level state container for a loop/goal trial. It can record
+the active objective, whether the session is still active, complete, or
+blocked, and any consumed time or token budget. It does not replace the
+POM loop/goal contract.
+
+The useful split is:
+
+| Layer | Responsibility |
+|---|---|
+| Agent goal tracker, when available | Tracks the active session objective, status, elapsed time, token use, or other agent-native budget data. |
+| POM loop/goal | Defines the SUT, Experimenter, Iteration, SUT Goal, gate metrics, signal metrics, falsification event, stall exit, and budget exit. |
+| POM workflow or explicit state note, when no tracker exists | Carries the current loop state, next event, and evidence pointer so the agent does not rely on chat memory alone. |
+
+For a small trial, start the agent's native goal tracker after the POM
+loop/goal contract is clear enough to measure. If the agent has no native
+tracker, write the same state explicitly in a small note, task plan, or
+workflow instance state: objective, current state, current iteration,
+gate evidence, signal evidence, and next exit decision. Then run one
+bounded iteration: read the SUT, execute the declared measurement, check
+the gate and signal, decide whether the result is reached, stalled,
+falsified, or still active, and only then close the native tracker or
+update the explicit POM state.
+
+This integration is optional and agent-specific. It is useful because
+native tracking keeps session progress visible, while POM keeps the
+meaning of progress verifiable. Do not treat agent-reported completion
+as proof by itself; the POM gate and signal evidence still carry the
+verdict.
+
+A good invocation is explicit about both layers:
+
+> Run this as a POM loop/goal trial. If your agent environment has a
+> native goal tracker, use it to track the session objective; otherwise
+> keep the loop state explicitly in a POM note, task plan, or workflow
+> state. Define the SUT, Experimenter, Iteration, SUT Goal, gate, signal,
+> falsification, stall exit, and budget exit before acting. Run one
+> bounded iteration, then close the tracker or update the explicit state
+> only after reporting the measured evidence.
+
+Shell commands usually cannot create or close an agent-native goal
+tracker. They still matter inside the loop because they measure the POM
+contract: lint, tests, audits, benchmark scripts, scenario counters,
+source reads, or other declared measurement tools. When no tracker
+exists, a POM workflow YAML can model the loop and a small state record
+can carry the active state, iteration count, evidence links, and terminal
+decision.
+
 ## Defining The Measurement Contract
 
 Before choosing the YAML shape, define the experiment contract. This is
@@ -143,9 +194,9 @@ Start with four context rows. They remove the most common ambiguity:
 | Row | Question It Answers | Good Shape |
 |---|---|---|
 | SUT | What exact artifact is under test? | A workflow YAML, schema primitive, validator rule, runtime pattern, or decision. |
-| Sperimentatore | Who or what runs the loop? | User plus coding agent, autonomous agent, CI pipeline, or another explicit executor. |
+| Experimenter | Who or what runs the loop? | User plus coding agent, autonomous agent, CI pipeline, or another explicit executor. |
 | Iteration | What counts as one loop step for measurement? | One YAML revision, one lint-and-diff pass, one benchmark run, or one modeled workflow. |
-| Goal del SUT | What goal does the artifact pursue, if any? | Executed goal, modeled-only goal, or `n/a` for artifacts without a lifecycle. |
+| SUT Goal | What goal does the artifact pursue, if any? | Executed goal, modeled-only goal, or `n/a` for artifacts without a lifecycle. |
 
 Then write one objective. It should name the artifact and the class of
 cases it must cover. Avoid vague verbs such as "explore" or "understand".
@@ -161,23 +212,23 @@ safe conditions.
 
 | Column | Meaning |
 |---|---|
-| Nome | Short name for the control. |
-| Strumento | The command, script, review rule, or artifact read that measures it. |
-| Soglia | The pass/fail threshold. |
+| Name | Short name for the control. |
+| Measurement tool | The command, script, review rule, or artifact read that measures it. |
+| Threshold | The pass/fail threshold. |
 | Baseline | Current value, or an explicit calibration note if no value exists yet. |
-| Legame con obiettivo | Why this control protects the stated objective. |
+| Link to objective | Why this control protects the stated objective. |
 
 Signal metrics measure progress. A signal should be able to move between
 iterations. If it cannot move, it is probably a gate, not a signal.
 
 | Column | Meaning |
 |---|---|
-| Nome | Short name for the progress measure. |
-| Strumento | The command, script, review rule, or artifact read that measures it. |
-| Direzione | Expected direction: up, down, or stable. |
+| Name | Short name for the progress measure. |
+| Measurement tool | The command, script, review rule, or artifact read that measures it. |
+| Direction | Expected direction: up, down, or stable. |
 | Trend | One of `assoluto`, `relativo`, or `statistico`, with a justified threshold. |
 | Baseline | Current value, or `TBD calibrata al run 1` when the first run must establish it. |
-| Legame con obiettivo | Why movement in this number means movement toward the objective. |
+| Link to objective | Why movement in this number means movement toward the objective. |
 
 Budget is also part of the contract. It should answer three separate
 questions:
@@ -193,10 +244,10 @@ because changing it after seeing the result moves the goalposts.
 
 | Exit | Required Definition |
 |---|---|
-| Raggiunto | The exact condition under which the experiment succeeds. |
-| Forfait per stallo | The visit or duration bound that stops a loop whose signal is not moving. |
-| Forfait per budget | The budget condition that stops even if no technical falsification occurred. |
-| Falsificazione | One concrete observation that falsifies the hypothesis, plus one similar observation that does not. |
+| Reached | The exact condition under which the experiment succeeds. |
+| Stall exit | The visit or duration bound that stops a loop whose signal is not moving. |
+| Budget exit | The budget condition that stops even if no technical falsification occurred. |
+| Falsification | One concrete observation that falsifies the hypothesis, plus one similar observation that does not. |
 
 Finally, run the consistency check. Four checks catch most bad
 contracts:

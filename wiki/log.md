@@ -129,3 +129,15 @@ Sources used: `prompts/25-self-improvement-loop.md`, `skills/improve.md`, `promp
 Recorded the agent-instruction simplification rule: global target-project instructions describe identity, communication posture, Source Authority, Artifact Policy, safety, commands, adoption profile semantics, and skill routing; workflow-specific rules live in skills, prompts, templates, or active profile modules.
 
 Sources used: `specs/SPEC-0001-modular-agents-template.md`, `templates/agents/`, `templates/AGENTS_POM_SECTION_TEMPLATE.md`, `scripts/install-pom.ts`, `wiki/skills-and-prompts.md`, and `wiki/templates-and-governance.md`.
+
+## [2026-06-01] update | add loop-goal scope examples guide
+
+Added a non-normative wiki guide with possible objectives, gates, signals, baselines, falsification events, and stall exits for the ten loop/goal criteria scopes.
+
+Sources used: `prompts/28-loop-goal-define-criteria.md`, `skills/loop-goal.md`, `wiki/loop-goal-workflow-tutorial.md`, and `experiments/agent-loop-fsm/notes/2026-05-30-prompt-criteria-critical-review.md`.
+
+## [2026-06-01] update | document agent goal tracking with loop-goal
+
+Updated the loop/goal tutorial with the optional integration pattern: an agent-native goal tracker can track session status and budget, while POM loop/goal defines the measurable contract, gate, signal, falsification, and exits. Agents without native goal tracking should carry the active loop state through a POM note, task plan, or workflow state.
+
+Sources used: `wiki/loop-goal-workflow-tutorial.md`, `skills/loop-goal.md`, and the 2026-06-01 loop/goal trial in this repository session.
