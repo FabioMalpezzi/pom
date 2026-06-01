@@ -15,11 +15,10 @@ description: |
      segnala che i batch sono pronti, poi raccoglie l'aggregato.
 
   Le DECISIONI restano nella FSM, sincrona e deterministica. Il
-  parallelismo vive nell'esecutore esterno (Pattern C), coerente con
-  "POM è metodo, non runtime". I campi fan_out_launch/await sono additivi:
-  il validator attuale li ignora (non sono mode:async/parallel), quindi il
-  modello VALIDA già oggi — l'estensione è formalizzarli, non stravolgere
-  lo schema.
+  parallelismo vive nell'esecutore esterno: POM modella il control plane,
+  non il runtime concorrente. I campi `fan_out_launch` e `await` sono parte
+  del contratto Dynamic Workflow e devono restare coerenti con gli handle
+  validati ed eseguiti dai reference executor.
 
 initial_state: launching_a
 

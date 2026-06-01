@@ -9,27 +9,32 @@
 
 ## Implementation Status
 
-This spec describes the target shape of the capability. Not every part is implemented yet inside the experiment; some pieces are aspirational and will be built before promotion. The table below is authoritative on what currently exists vs. what is planned.
+This spec describes the target shape of the capability and the current
+canonical implementation in POM Source. The table below is authoritative
+on what currently exists, what remains prompt-driven, and where validator
+coverage is still partial.
 
 | Area | Status | Where it lives today |
 |---|---|---|
-| YAML model schema (states, events, guards, transitions, invariants) | **Implemented** | `templates/WORKFLOW_TEMPLATE.yaml` and three example workflows under `examples/` |
+| YAML model schema (states, events, guards, transitions, invariants) | **Implemented** | `templates/WORKFLOW_TEMPLATE.yaml` and examples under `templates/examples/workflow/` |
 | `re_entry_allowed` attribute on terminal states | **Implemented** | Schema + validator + applied to `spec-evolution.complete` and `ticket-lifecycle.closed` |
 | Validator Error rules (E000–E017) | **Implemented** | `scripts/lint-workflows.mjs` |
 | Validator Warning rules (W001–W004) | **Implemented** | `scripts/lint-workflows.mjs` |
 | Validation report (`<name>.validation.md`) | **Implemented** | Markdown output of `lint-workflows.mjs` |
-| Broken-fixture coverage (one per E and W rule, plus positive `re_entry_allowed`) | **Implemented** | `evidence/broken-fixtures/` |
+| Broken-fixture coverage (one per E and W rule, plus positive `re_entry_allowed`) | **Implemented** | `tests/workflow-validator/` fixtures and integration tests |
 | Skill card with five modes | **Implemented** | `skills/workflow.md` |
-| Canonical prompt for the skill | **Implemented (draft)** | `prompts/27-workflow-modeling.md`. On promotion: `prompts/27-workflow-modeling.md` |
-| Validator Info rules (cycles, naming conventions) | **Target for promotion** | Not implemented; explicitly out of scope of the current validator pass |
+| Canonical prompt for the skill | **Implemented** | `prompts/27-workflow-modeling.md` |
+| Validator Info rules (cycles, naming conventions) | **Target for promotion** | Not implemented; explicitly out of scope of the stable validator pass |
 | Mermaid diagram generator (`<name>.mmd`) | **Implemented** | `scripts/mermaid.mjs` shared renderer + `scripts/to-mermaid.mjs` CLI + integrated into the validator via `--mermaid-dir` so every `pom:workflow:lint` run also refreshes the diagrams. |
-| Scenario generator (`<name>.scenarios.md`) | **Target for promotion** | Not implemented |
-| `pom:workflow:lint` npm wrapper | **Target for promotion** | Not implemented; experiment runs the script directly under `scripts-candidate/` |
-| Implementation guide for coding agents | **Implemented (draft)** | `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` |
-| Integration & extension guide for adopters | **Implemented (draft)** | `templates/WORKFLOW_INTEGRATION_GUIDE.md` |
+| Scenario derivation (`<name>.scenarios.md`) | **Prompt-driven** | `skills/workflow.md` + `prompts/27-workflow-modeling.md`; no stable script generator is shipped. |
+| `pom:workflow:lint` npm wrapper | **Implemented** | `package.json` invokes `node scripts/lint-workflows.mjs` |
+| Implementation guide for coding agents | **Implemented** | `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` |
+| Integration & extension guide for adopters | **Implemented** | `templates/WORKFLOW_INTEGRATION_GUIDE.md` |
 | TypeScript guided-implementation evidence (Hypothesis H4) | **Implemented** | `evidence/typescript/spec-evolution/` — 15 tests, all passing, Pattern A (transition table), zero added dependencies |
-| Dynamic Workflow control-plane/data-plane contract | **Backlog extension, partially validated** | Accepted doctrine in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; evidence and runnable stubs in `experiments/dynamic-workflows/`; handle lifecycle rules E080-E089 are implemented in `scripts/lint-workflows.mjs` |
-| Promotion decision and consolidation | **Target for promotion** | Section in `EXPERIMENT.md` to be filled at end of experiment |
+| `loop_guard` and `timeout` temporal primitives | **Implemented** | SPEC-0007; validator rules E060-E073 and W060 in `scripts/lint-workflows.mjs` |
+| Dynamic Workflow control-plane/data-plane contract | **Accepted control-plane extension, partial validator coverage** | Accepted doctrine in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; `fan_out_launch`, `await` with `join`/`k`/timeout, `react`, lifecycle propagation, cancel/detach, and compensation are part of the workflow contract. Validator coverage is currently strongest for handle lifecycle rules E080-E089; target projects own real data-plane execution. |
+| Dynamic Workflow reference executors | **Implemented as examples** | Complete TypeScript and Python executors live under `experiments/dynamic-workflows/runtime/`. They prove the contract can run and guide adopters, but they are not a canonical POM runtime. |
+| Promotion decision and consolidation | **Complete** | Canonical skill, prompt, templates, scripts, examples, and docs are under stable paths. |
 
 The rest of this document describes the *target* shape. Read each section together with the row above before assuming a feature exists.
 
@@ -47,20 +52,26 @@ POM should help teams:
 
 POM must not become a runtime, must not execute workflows, must not impose a library, and must not track live instances on behalf of the target.
 
+For Dynamic Workflow, POM Source still keeps two complete reference
+executors in `experiments/dynamic-workflows/runtime/`: TypeScript and
+Python. They are examples and verification evidence for target projects,
+not a runtime dependency or execution service provided by POM.
+
 ## Non-goals
 
 - runtime engine for workflows;
 - POM-side tracking of live workflow instances;
 - automatic code generation in the target project (POM produces guidance, not finished code);
 - export to formal verification tools (TLA+, NuSMV, SPIN) in the first release;
-- native support for concurrency, time, distributed semantics, or hierarchical sub-machines in the first release;
+- native parallel regions, distributed execution semantics, or hierarchical sub-machines in the first release;
 - adapter or bundled support for a specific FSM library (xstate, robot3, etc.) in POM core.
 
-Dynamic Workflow modeling remains outside the implemented v1 schema, but
-ADR-0004 accepts a future backlog contract where the POM workflow is a
-control plane and target-owned infrastructure is the data plane. That
-contract does not make POM a runtime and does not add native parallel
-regions to the current schema.
+Dynamic Workflow modeling is accepted as a control-plane extension to the
+workflow model. It records launch, await, join, timeout, reaction,
+lifecycle propagation, and compensation boundaries while leaving real
+concurrent execution to target-owned infrastructure. That contract does
+not make POM a runtime and does not add native parallel regions to the
+FSM.
 
 ## Model Format
 
@@ -137,7 +148,7 @@ For each `workflows/<name>.yaml` the toolchain produces, on demand:
 
 - `workflows/generated/<name>.mmd` — Mermaid `stateDiagram-v2` rendering.
 - `workflows/generated/<name>.validation.md` — validation report.
-- `workflows/generated/<name>.scenarios.md` — verification scenarios in language-agnostic form (e.g., "from `draft` on `accept` with `has_verification_gate=true`, expect transition to `accepted`"; "from `complete` on `accept`, expect transition refused").
+- `workflows/generated/<name>.scenarios.md` — prompt-derived verification scenarios in language-agnostic form (e.g., "from `draft` on `accept` with `has_verification_gate=true`, expect transition to `accepted`"; "from `complete` on `accept`, expect transition refused"). POM ships the scenario procedure, not a stable scenario generator script.
 
 All generated files declare in the header that they are derived from the YAML and must not be hand-edited.
 
@@ -186,14 +197,20 @@ When `enabled` is `false` or missing, POM skills and lint ignore the section. Fo
 
 ## Tooling
 
-A single script: `scripts/lint-workflows.ts`, invoked via `npm run pom:workflow:lint`. The script:
+A single script: `scripts/lint-workflows.mjs`, invoked via `npm run pom:workflow:lint`. The script:
 
 - parses every `workflows/*.yaml`;
 - runs the validation rules;
-- generates the three artifacts under `workflows/generated/`;
+- emits validation reports and, when requested with `--mermaid-dir`,
+  Mermaid diagrams under `workflows/generated/`;
 - exits non-zero on Error-level findings and zero on Warning/Info.
 
-Dependencies: minimal. Prefer no new runtime dependency in POM; if a YAML parser is needed, evaluate whether a tiny hand-rolled one suffices for the documented schema, or whether one small library is justified. Decision deferred to the experiment.
+Scenario files are derived by the `workflow` skill's `scenarios` mode
+using `prompts/27-workflow-modeling.md`. They are still generated
+artifacts and must not be hand-edited, but they are prompt-driven rather
+than produced by `lint-workflows.mjs`.
+
+Dependencies are minimal. The stable parser dependency is `js-yaml`.
 
 ## Risks
 
@@ -216,7 +233,7 @@ These are deliberately left undecided until the experiment provides evidence:
 
 - **`re_entry_allowed: true` on a final state** suppresses W003. The attribute is opt-in, defaults to `false`, and was added after both compiled examples (`spec-evolution`, `ticket-lifecycle`) independently produced the same W003 on terminal states with a documented exception (`supersede`, `reopen`). See `EXPERIMENT.md` "Decisione: re_entry_allowed" for the evidence trail.
 
-- **Synchronous composition primitives (linear pipeline; invoke from state; invoke from event)** are in scope. **Asynchronous composition is permanently out of scope.** The decision rests on the invariant that a child workflow communicates with the parent only at the boundary (entry from a trigger, exit by terminal state name). Asynchronous fire-and-forget composition requires parallel-region semantics that POM has declared off-limits since the v1 spec; teams that need it should adopt Pattern C (XState `invoke`/`spawn`). Declaring `mode: async` or `mode: parallel` in a pipeline or invoke block is an Error (E029).
+- **Synchronous composition primitives (linear pipeline; invoke from state; invoke from event)** are in scope. **Native asynchronous composition inside the FSM is permanently out of scope.** The decision rests on the invariant that a child workflow communicates with the parent only at the boundary (entry from a trigger, exit by terminal state name). Fire-and-forget composition implemented as internal parallel regions requires scheduler semantics that POM has declared off-limits since the v1 spec; teams that need native parallel states should adopt Pattern C (XState `invoke`/`spawn`). Dynamic Workflow fan-out is the separate accepted control-plane contract below: POM records launch, handle, await, timeout, reaction, lifecycle, and compensation boundaries while the target project owns real concurrent execution. Declaring `mode: async` or `mode: parallel` in a pipeline or invoke block is an Error (E029).
 
 - **Context injection (`Result<Terminal, Output>` model)** is the chosen mechanism for a parent and child to exchange structured data. Each workflow has a **private context**. The parent extracts an `input` object and hands it to the child at invocation; the child elaborates on its own private context; on terminal, the child returns the terminal name (tag) and an `output` object (payload). The parent reads the output and integrates it via `assign:`. Shared context visibility between parent and child is rejected as a violation of FSM autonomy and is treated as Pattern C territory. The validator implements the documental level only (nominal coherence, no type-checking, no path evaluation). Full rationale in `CONTEXT-INJECTION.md` (closed design decision).
 
@@ -229,12 +246,14 @@ These are deliberately left undecided until the experiment provides evidence:
   boundaries; the target project owns concurrent execution. See
   `decisions/ADR-0004-dynamic-workflow-control-plane.md`.
 
-## Backlog: Dynamic Workflow Contract
+## Dynamic Workflow Contract
 
-This backlog is accepted as direction, not implemented validator
-behavior. It records the additive contract proven in
-`experiments/dynamic-workflows/` and should be promoted through a future
-SPEC-0007-style pass before target use.
+This section records the additive control-plane contract proven in
+`experiments/dynamic-workflows/`. The contract is part of the workflow
+modeling direction accepted by ADR-0004. POM Source currently validates
+the handle lifecycle subset explicitly; additional validator rules and
+implementation guidance can be added as target projects need stricter
+automation.
 
 ### Control Plane And Data Plane
 
@@ -244,7 +263,13 @@ compensation rules. The target project supplies the **data plane**:
 workers, queues, durable scheduling, cancellation mechanics, persistence
 for long waits, and execution of software or human tasks.
 
-### Candidate Fields
+The reference executors under `experiments/dynamic-workflows/runtime/`
+show one TypeScript and one Python way to implement that split. They are
+complete enough to execute the experiment scenarios, but they remain
+examples: a target project may copy, adapt, replace, or ignore them
+according to its own stack.
+
+### Contract Fields
 
 `fan_out_launch` on a state starts a batch externally and returns a
 handle without blocking the FSM:
@@ -317,10 +342,10 @@ compensation:
   - undo: mark_launched_tasks_cancelled
 ```
 
-### Backlog Rules To Specify
+### Validator Coverage To Complete
 
-Future validator and implementation-guidance work should define the
-remaining Dynamic Workflow contract:
+Future validator and implementation-guidance work should add explicit
+checks for the rest of the already-accepted Dynamic Workflow contract:
 
 - shape checks for `fan_out_launch.workflow`, `over`, and `handle`;
 - shape checks for `await.handles`, `join`, `k`, `timeout`, and
@@ -330,9 +355,10 @@ remaining Dynamic Workflow contract:
   invokes and launched batches;
 - how `compensation` order is declared and when it is considered
   complete;
-- how timeout syntax aligns with the future H7 `timeout` primitive;
-- how retry after timeout aligns with the future H6 `loop_guard`
-  primitive;
+- how Dynamic Workflow timeout syntax aligns with the accepted SPEC-0007
+  `timeout` primitive;
+- how retry after timeout aligns with the accepted SPEC-0007
+  `loop_guard` primitive;
 - which generated scenarios prove launch, wait, timeout, cancellation,
   suspend, resume, and compensation behavior.
 
@@ -429,7 +455,7 @@ Invariants of the invoke-from-state primitive:
 - a child workflow must validate as a standalone POM workflow on its own;
 - the schema admits no async mode; E036 rejects it.
 
-Use case in mind: an orchestrator parent whose lifecycle includes a state like `validating_payment`, `running_kyc_check`, `awaiting_sub_agent_decision`. The child runs a self-contained mini-workflow and reports its outcome only via terminal state name. This is the building block for an "orchestrator that calls one sub-agent synchronously per state" pattern; orchestrators that need to fan out to N sub-agents in parallel are Pattern C, not POM.
+Use case in mind: an orchestrator parent whose lifecycle includes a state like `validating_payment`, `running_kyc_check`, `awaiting_sub_agent_decision`. The child runs a self-contained mini-workflow and reports its outcome only via terminal state name. This is the building block for an "orchestrator that calls one sub-agent synchronously per state" pattern. Orchestrators that need to fan out to N sub-agents use the Dynamic Workflow control-plane contract: POM records handles, wait policy, lifecycle, and compensation boundaries, while the target project supplies the real concurrent executor.
 
 ## Composition: Invoke from Event (synchronous)
 

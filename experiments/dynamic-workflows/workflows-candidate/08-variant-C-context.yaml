@@ -13,10 +13,10 @@ description: |
   Limite incontrato: il context_schema attuale ha solo `input` e
   `output_by_terminal` (validator E050–E058). NON ha un concetto di
   variabili di LAVORO interne, che è ciò che gli handle sono (né input né
-  output finale). Qui le dichiaro in una sezione `working:` — additiva, il
-  validator la ignora, ma NON la type-checka. Per avere il vantaggio di C
-  (handle tipizzati) servirebbe quindi estendere il context_schema con le
-  working vars: un'estensione IN PIÙ rispetto ad A. Da qui il confronto.
+  output finale). Qui le dichiaro in una sezione `working:` per mostrare
+  il trade-off: gli handle tipizzati richiederebbero una regola dedicata
+  sul context, mentre la variante A resta più diretta per il contratto
+  attuale.
 
 initial_state: launching_a
 

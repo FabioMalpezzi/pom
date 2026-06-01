@@ -1,15 +1,15 @@
 workflow: dyn_await_timeout
 version: 1
 description: |
-  Giro 3 — il timeout sull'attesa (primitiva H7 del backlog POM, qui in
-  contesto concreto). La FSM si sospende in awaiting; se i batch non
+  Giro 3 — il timeout sull'attesa in contesto concreto. La FSM si sospende
+  in awaiting; se i batch non
   tornano entro il timeout, NON resta sospesa per sempre: si risveglia via
-  on_timeout e prende il percorso di gestione (qui: escalate → failed).
+  on_timeout, cancella l'handle rimasto attivo, e prende il percorso di
+  gestione (qui: escalate → failed).
 
   Coerente col punto chiave: è la macchina stessa (stato persistente +
   suspend/restore) a coordinare; il timeout è ciò che la risveglia se il
-  processo lanciato non segnala. Campi timeout/on_timeout additivi: il
-  validator li ignora → PASS.
+  processo lanciato non segnala.
 
 initial_state: launching
 
@@ -28,6 +28,10 @@ states:
   - name: escalating
     description: Gestione del timeout (log, alert, eventuale retry/cancel).
     is_final: false
+  - name: cancelling_after_timeout
+    description: Il timeout lascia l'handle attivo; il padre lo cancella prima del terminale.
+    is_final: false
+    cancel_handles: [batch]
   - name: done
     is_final: true
   - name: failed
@@ -40,18 +44,21 @@ events:
   - name: timed_out
   - name: aggregated
   - name: escalated
+  - name: cancelled_after_timeout
 
 transitions:
   - { from: launching, to: awaiting, event: launched }
   - { from: awaiting, to: aggregating, event: all_ready }
   - { from: awaiting, to: escalating, event: timed_out }
   - { from: aggregating, to: done, event: aggregated }
-  - { from: escalating, to: failed, event: escalated }
+  - { from: escalating, to: cancelling_after_timeout, event: escalated }
+  - { from: cancelling_after_timeout, to: failed, event: cancelled_after_timeout }
 
 invariants:
   - description: |
       awaiting ha sempre due vie d'uscita: completamento (all_ready) o
-      timeout (timed_out). La FSM non resta mai sospesa per sempre.
+      timeout (timed_out). La FSM non resta mai sospesa per sempre e
+      risolve esplicitamente l'handle attivo prima del terminale.
 
 metadata:
   experiment: dynamic-workflows

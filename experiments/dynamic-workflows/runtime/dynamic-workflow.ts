@@ -22,17 +22,37 @@ interface React { on_each: string; on_early: string; on_done: string; }
 interface State { name: string; is_final?: boolean; invoke?: Json; fan_out_launch?: FanOut; await?: Await; react?: React; cancel_handles?: string[]; detach_handles?: string[]; }
 interface Transition { from: string; to: string; event: string; guard?: string; launch?: FanOut; }
 interface Workflow { workflow: string; initial_state: string; states: State[]; transitions: Transition[]; compensation?: { undo: string }[]; }
+interface BatchHandle { handle: string; workflow: string; n: number; suspended?: boolean; }
+interface Snapshot { state: string; context: Json; inFlight: BatchHandle[]; }
 
 // ---------- Segnali di controllo (un host reale li collega a eventi) ----------
 export interface Signals { n?: number; timedOut?: string[]; cancelAt?: string; suspendAt?: string; earlyAt?: number; }
 
 export interface RunResult { terminal: string; trace: string[]; leaves: number; }
 
+export interface Persistence {
+  saveSnapshot(key: string, snapshot: Snapshot): void;
+  loadSnapshot(key: string): Snapshot | undefined;
+}
+
+export class MemoryPersistence implements Persistence {
+  private snapshots = new Map<string, Snapshot>();
+  saveSnapshot(key: string, snapshot: Snapshot) { this.snapshots.set(key, structuredClone(snapshot)); }
+  loadSnapshot(key: string) {
+    const snap = this.snapshots.get(key);
+    return snap ? structuredClone(snap) : undefined;
+  }
+}
+
 // ---------- Esecutore esterno = data plane (PLUGGABLE) ----------
 export interface Executor {
-  // Esegue `n` istanze del workflow-foglia e ne restituisce i terminali.
-  // Stub: sequenziale e deterministico. Reale: parallelo.
-  runBatch(leafPath: string, baseDir: string, n: number, sig: Signals): { terminal: string; leaves: number }[];
+  // Stub: sequenziale e deterministico. Reale: parallelo / code / processi.
+  launchBatch(batch: BatchHandle, baseDir: string, sig: Signals): void;
+  awaitBatch(batch: BatchHandle, baseDir: string, sig: Signals): { terminal: string; leaves: number }[];
+  cancelBatch(batch: BatchHandle, baseDir: string, sig: Signals): void;
+  detachBatch(batch: BatchHandle, baseDir: string, sig: Signals): void;
+  suspendBatch(batch: BatchHandle, baseDir: string, sig: Signals): BatchHandle;
+  resumeBatch(batch: BatchHandle, baseDir: string, sig: Signals): void;
 }
 
 function loadWorkflow(pathSpec: string, baseDir: string): { wf: Workflow; dir: string } {
@@ -45,44 +65,84 @@ function loadWorkflow(pathSpec: string, baseDir: string): { wf: Workflow; dir: s
 const isFinal = (wf: Workflow, s: string) => !!wf.states.find((x) => x.name === s)?.is_final;
 const outgoing = (wf: Workflow, s: string) => (wf.transitions ?? []).filter((t) => t.from === s);
 
+function chooseTransition(candidates: Transition[], visits: number, n: number): Transition | undefined {
+  if (candidates.length === 0) return undefined;
+  const morePending = candidates.find((t) => t.guard === 'more_pending');
+  const allDispatched = candidates.find((t) => t.guard === 'all_dispatched');
+  if (morePending && allDispatched) return visits < n ? morePending : allDispatched;
+  const self = candidates.find((o) => o.to === candidates[0].from);
+  const exit = candidates.find((o) => o.to !== candidates[0].from);
+  if (self && exit) return visits < n ? self : exit;
+  return candidates[0];
+}
+
 // ---------- Engine = control plane (FSM sincrona, deterministica) ----------
 export class Engine {
   private executor: Executor;
+  private persistence: Persistence;
   public log: (s: string) => void;
 
-  constructor(executor: Executor, log: (s: string) => void = () => {}) {
+  constructor(executor: Executor, log: (s: string) => void = () => {}, persistence: Persistence = new MemoryPersistence()) {
     this.executor = executor;
+    this.persistence = persistence;
     this.log = log;
   }
 
-  // Lo stub di default usa lo stesso Engine per eseguire le foglie (gestisce il nesting).
+  // Lo stub di default lancia le foglie subito e conserva i risultati per handle.
   static withStub(log: (s: string) => void = () => {}): Engine {
-    const engine = new Engine({ runBatch: (leaf, dir, n, sig) => {
-      const out: { terminal: string; leaves: number }[] = [];
-      for (let i = 0; i < n; i++) { const r = engine.run(leaf, dir, { ...sig, cancelAt: undefined, suspendAt: undefined }, true); out.push({ terminal: r.terminal, leaves: r.leaves || 1 }); }
-      return out;
-    } }, log);
+    const launched = new Map<string, { terminal: string; leaves: number }[]>();
+    const executor: Executor = {
+      launchBatch: (batch, dir, sig) => {
+        const out: { terminal: string; leaves: number }[] = [];
+        for (let i = 0; i < batch.n; i++) {
+          const childEngine = Engine.withStub(() => {});
+          const r = childEngine.run(batch.workflow, dir, { ...sig, cancelAt: undefined, suspendAt: undefined }, true);
+          out.push({ terminal: r.terminal, leaves: r.leaves || 1 });
+        }
+        launched.set(batch.handle, out);
+        log(`  · data-plane launch '${batch.handle}': ${batch.n}× '${batch.workflow}'`);
+      },
+      awaitBatch: (batch) => {
+        const out = launched.get(batch.handle);
+        if (!out) throw new Error(`batch non lanciato: ${batch.handle}`);
+        launched.delete(batch.handle);
+        return out;
+      },
+      cancelBatch: (batch, dir) => {
+        log(`  ↓ propago cancel a '${batch.handle}' (${batch.workflow})`);
+        launched.delete(batch.handle);
+        try {
+          const { wf: child } = loadWorkflow(batch.workflow, dir);
+          for (const u of [...(child.compensation ?? [])].reverse()) log(`    · figlia compensa: ${u.undo}`);
+        } catch {}
+      },
+      detachBatch: (batch) => {
+        log(`  ↓ propago detach a '${batch.handle}' (${batch.workflow})`);
+        launched.delete(batch.handle);
+      },
+      suspendBatch: (batch) => {
+        log(`  ↓ propago suspend a '${batch.handle}' (${batch.workflow})`);
+        log(`    · figlia sospesa: ${batch.handle}`);
+        return { ...batch, suspended: true };
+      },
+      resumeBatch: (batch) => {
+        log(`  ↓ propago resume a '${batch.handle}' (${batch.workflow})`);
+        log(`    · figlia ripresa: ${batch.handle}`);
+      },
+    };
+    const engine = new Engine(executor, log);
     return engine;
   }
 
-  private inFlight: { handle: string; workflow: string; n: number }[] = [];
+  private inFlight: BatchHandle[] = [];
 
-  snapshot(state: string, context: Json) { return { state, context, inFlight: [...this.inFlight] }; }
-  restore(snap: { state: string; context: Json; inFlight: any[] }) { this.inFlight = [...snap.inFlight]; return snap.state; }
+  snapshot(state: string, context: Json): Snapshot { return { state, context, inFlight: [...this.inFlight] }; }
+  restore(snap: Snapshot) { this.inFlight = [...snap.inFlight]; return snap.state; }
 
-  private resolveHandle(inFlight: { handle: string; workflow: string; n: number }[], handle: string) {
+  private resolveHandle(inFlight: BatchHandle[], handle: string) {
     const idx = inFlight.findIndex((x) => x.handle === handle);
     if (idx < 0) throw new Error(`handle attivo non trovato: ${handle}`);
     return inFlight.splice(idx, 1)[0];
-  }
-
-  private propagateHandleSignal(signal: 'cancel' | 'detach', batch: { handle: string; workflow: string; n: number }, dir: string, log: (s: string) => void) {
-    log(`  ↓ propago ${signal} a '${batch.handle}' (${batch.workflow})`);
-    if (signal !== 'cancel') return;
-    try {
-      const { wf: child } = loadWorkflow(batch.workflow, dir);
-      for (const u of [...(child.compensation ?? [])].reverse()) log(`    · figlia compensa: ${u.undo}`);
-    } catch {}
   }
 
   run(path: string, baseDir = process.cwd(), sig: Signals = {}, silent = false): RunResult {
@@ -90,7 +150,7 @@ export class Engine {
     const log = silent ? () => {} : this.log;
     const trace: string[] = [];
     const visits = new Map<string, number>();
-    const inFlight = this.inFlight = [];
+    let inFlight = this.inFlight = [];
     const n = sig.n ?? 1;
     let leaves = 0;
     let state = wf.initial_state;
@@ -105,15 +165,31 @@ export class Engine {
       if (sig.cancelAt === state) {
         log(`» cancel in '${state}'`);
         for (const u of [...(wf.compensation ?? [])].reverse()) log(`  · compenso: ${u.undo}`);
-        while (inFlight.length > 0) this.propagateHandleSignal('cancel', inFlight.shift()!, dir, log);
+        while (inFlight.length > 0) this.executor.cancelBatch(inFlight.shift()!, dir, sig);
         return { terminal: 'cancelled', trace: [...trace, 'cancelled'], leaves };
       }
-      if (sig.suspendAt === state) { log(`» suspend '${state}': snapshot+congela, propago; resume: restore e riprendo (reversibile)`); }
+      if (sig.suspendAt === state) {
+        log(`» suspend '${state}': snapshot+congela, propago; resume: restore e riprendo (reversibile)`);
+        const key = `${wf.workflow}:${state}`;
+        inFlight = inFlight.map((b) => this.executor.suspendBatch(b, dir, sig));
+        this.inFlight = inFlight;
+        this.persistence.saveSnapshot(key, this.snapshot(state, {}));
+        log(`  · snapshot salvato dopo suspend figlie: ${key}`);
+        const restored = this.persistence.loadSnapshot(key);
+        if (restored) {
+          state = this.restore(restored);
+          inFlight = this.inFlight;
+          log(`  · snapshot ripristinato: ${key}`);
+        }
+        for (const b of inFlight) this.executor.resumeBatch(b, dir, sig);
+      }
 
       // --- fan_out_launch: lancio non bloccante ---
       if (so.fan_out_launch) {
         const fl = so.fan_out_launch;
-        inFlight.push({ handle: fl.handle, workflow: fl.workflow, n });
+        const batch = { handle: fl.handle, workflow: fl.workflow, n };
+        inFlight.push(batch);
+        this.executor.launchBatch(batch, dir, sig);
         log(`» LANCIO non bloccante: '${fl.handle}' = ${n}× '${fl.workflow}', proseguo`);
         const o = outgoing(wf, state); if (!o.length) break; state = o[0].to; continue;
       }
@@ -127,28 +203,28 @@ export class Engine {
         const need = join === 'all' ? want.length : join === 'first' ? 1 : (a.k ?? want.length);
         if (ready.length < need && a.on_timeout) {
           log(`» TIMEOUT (join ${join}, ${ready.length}/${need}) → on_timeout='${a.on_timeout}'`);
-          const t = outgoing(wf, state).find((x) => x.event === a.on_timeout); if (!t) break; state = t.to; continue;
+          const t = chooseTransition(outgoing(wf, state).filter((x) => x.event === a.on_timeout), visits.get(state)!, n); if (!t) break; state = t.to; continue;
         }
         for (const h of (join === 'all' ? ready : ready.slice(0, need))) {
           const b = this.resolveHandle(inFlight, h);
-          const res = this.executor.runBatch(b.workflow, dir, b.n, sig);
+          const res = this.executor.awaitBatch(b, dir, sig);
           leaves += res.reduce((s, r) => s + r.leaves, 0);
           log(`» ATTESA (join ${join}${join === 'quorum' ? ` ${need}/${want.length}` : ''}) → '${h}': ${b.n}× '${b.workflow}'`);
         }
-        const o = outgoing(wf, state).find((x) => x.event !== a.on_timeout) ?? outgoing(wf, state)[0]; if (!o) break; state = o.to; continue;
+        const o = chooseTransition(outgoing(wf, state).filter((x) => x.event !== a.on_timeout), visits.get(state)!, n); if (!o) break; state = o.to; continue;
       }
 
       if (so.cancel_handles) {
         for (const h of so.cancel_handles) {
           const b = this.resolveHandle(inFlight, h);
-          this.propagateHandleSignal('cancel', b, dir, log);
+          this.executor.cancelBatch(b, dir, sig);
         }
       }
 
       if (so.detach_handles) {
         for (const h of so.detach_handles) {
           const b = this.resolveHandle(inFlight, h);
-          this.propagateHandleSignal('detach', b, dir, log);
+          this.executor.detachBatch(b, dir, sig);
         }
       }
 
@@ -157,7 +233,7 @@ export class Engine {
         const r = so.react; const c = visits.get(state)!;
         const ev = (sig.earlyAt && c >= sig.earlyAt) ? r.on_early : c < n ? r.on_each : r.on_done;
         log(`» REATTIVO: completamento ${c}${ev === r.on_early ? ' → uscita anticipata' : ev === r.on_done ? ' → esaurito' : ''}`);
-        const t = outgoing(wf, state).find((x) => x.event === ev); if (!t) break; state = t.to; continue;
+        const t = chooseTransition(outgoing(wf, state).filter((x) => x.event === ev), visits.get(state)!, n); if (!t) break; state = t.to; continue;
       }
 
       // --- state-invoke: sub-workflow sincrono singolo ---
@@ -166,15 +242,17 @@ export class Engine {
         leaves += child.leaves || 1;
         const disp = (so.invoke.on_completion ?? []).find((c: Json) => c.terminal_state === child.terminal);
         if (!disp) break;
-        const t = outgoing(wf, state).find((x) => x.event === disp.next_event); if (!t) break; state = t.to; continue;
+        const t = chooseTransition(outgoing(wf, state).filter((x) => x.event === disp.next_event), visits.get(state)!, n); if (!t) break; state = t.to; continue;
       }
 
       // --- transizione normale (con lancio su transizione opzionale) ---
-      const outs = outgoing(wf, state); if (!outs.length) break;
-      let chosen = outs[0];
-      const self = outs.find((o) => o.to === state); const exit = outs.find((o) => o.to !== state);
-      if (self && exit) chosen = (visits.get(state)! < n) ? self : exit; // counted loop / join
-      if (chosen.launch) { inFlight.push({ handle: chosen.launch.handle, workflow: chosen.launch.workflow, n }); log(`» LANCIO su transizione: '${chosen.launch.handle}'`); }
+      const chosen = chooseTransition(outgoing(wf, state), visits.get(state)!, n); if (!chosen) break;
+      if (chosen.launch) {
+        const batch = { handle: chosen.launch.handle, workflow: chosen.launch.workflow, n };
+        inFlight.push(batch);
+        this.executor.launchBatch(batch, dir, sig);
+        log(`» LANCIO su transizione: '${chosen.launch.handle}'`);
+      }
       state = chosen.to;
     }
     if (isFinal(wf, state) && inFlight.length > 0) {
@@ -199,4 +277,4 @@ function main() {
   const r = engine.run(file, process.cwd(), sig);
   console.log(`# terminal: ${r.terminal}\n# foglie eseguite (data plane): ${r.leaves}`);
 }
-main();
+if (process.argv[1]?.endsWith('dynamic-workflow.ts')) main();

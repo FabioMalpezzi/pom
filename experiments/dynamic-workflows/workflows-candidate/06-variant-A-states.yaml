@@ -4,7 +4,8 @@ description: |
   Giro 2, Variante A — lancio e attesa come STATI dedicati.
   Scenario ricco richiesto: lancia batch A, fai lavoro intermedio, lancia
   batch B, fai altro lavoro, e SOLO alla fine attendi il termine di tutte.
-  fan_out_launch / await sono campi additivi su stato (validator li ignora).
+  `fan_out_launch` e `await` sono campi del contratto Dynamic Workflow e
+  vengono esercitati dai reference executor.
 
 initial_state: launching_a
 

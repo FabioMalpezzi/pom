@@ -1,18 +1,16 @@
 workflow: dyn_parallel_probe
 version: 1
 description: |
-  Probe (non un modello da promuovere): tenta di esprimere il modo
-  "giusto" del fan-out — un invoke PARALLELO — per documentare in modo
-  verificabile che lo schema lo rifiuta. Atteso: errore E036
-  (mode: parallel vietato negli state-invoke). È l'evidenza dura che il
-  parallelismo non è esprimibile come primitiva.
+  Broken fixture: native parallel mode inside a state invoke is rejected.
+  Dynamic Workflow fan-out is modeled through the control-plane contract,
+  not through `mode: parallel` inside the FSM.
 initial_state: dispatching
 states:
   - name: dispatching
-    description: Vorrebbe lanciare il task in parallelo (uno di N).
+    description: Attempts to launch a task through native parallel invoke.
     is_final: false
     invoke:
-      workflow: 01-task-pipeline.yaml
+      workflow: ../workflows-candidate/01-task-pipeline.yaml
       mode: parallel
       on_completion:
         - terminal_state: task_done
@@ -32,6 +30,4 @@ transitions:
     to: all_done
     event: done_all
 metadata:
-  experiment: dynamic-workflows
-  structure: probe
-  note: "expected E036 — parallel forbidden"
+  expected_error: E036

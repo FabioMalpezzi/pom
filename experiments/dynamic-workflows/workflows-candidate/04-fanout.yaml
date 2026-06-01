@@ -13,7 +13,8 @@ description: |
   tempo di modellazione) oppure un loop sequenziale (ma allora i task non
   sono paralleli e l'ordine è imposto). Il fan-out DINAMICO e PARALLELO a
   N non è rappresentabile, e nessun design pattern sulle primitive attuali
-  lo evita (mode: parallel è vietato, E036 — vedi probe-parallel.yaml).
+  lo evita (`mode: parallel` è vietato da E036; il caso negativo vive nelle
+  broken fixture).
 
   Classificazione attesa: forced lossy IRRIDUCIBILE → falsifica l'ipotesi.
 

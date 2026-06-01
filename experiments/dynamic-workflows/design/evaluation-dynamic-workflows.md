@@ -15,7 +15,7 @@ Nota di indipendenza: in questo primo collaudo del metodo il valutatore NON è s
 - criteria congelato: `design/criteria.md` (accepted 2026-05-30).
 - fit: `design/fit.md` (4 strutture) + i 5 modelli in `workflows-candidate/`.
 - runtime: esecuzioni con `runtime/run-stub.mjs` (stub deterministici, N parametrico).
-- probe: `workflows-candidate/probe-parallel.yaml` → E036.
+- negative fixture: `broken-fixtures/state-invoke-parallel-E036.yaml` → E036.
 
 ## Verifica contro i criteri congelati
 
@@ -39,12 +39,12 @@ Dove invece l'ipotesi cade, in modo irriducibile: la **concorrenza a N** — i d
 
 Serve una primitiva di **parallelismo / fan-out concorrente** (un `parallel` su uno stato, o un `fan-out`/`spawn` di K rami con un join di sincronizzazione). È l'unica estensione realmente necessaria; tutto il resto del Dynamic Workflow è già esprimibile.
 
-Costo: **alto, non incrementale.** Non è un'aggiunta sintattica come `loop_guard`/`timeout` (H6/H7, già in backlog). Tocca:
+Costo: **alto, non incrementale.** Non è un'aggiunta sintattica come `loop_guard`/`timeout`. Tocca:
 - il **validator**: ribaltare E029/E036/E046, che oggi vietano `parallel` esplicitamente;
 - lo **schema/SPEC-0006**: rimuovere "no async" dai pilastri, o introdurre un costrutto parallelo con semantica di join definita;
-- il **runtime**: serve uno scheduler concorrente con sincronizzazione — è il "Pattern C / XState invoke-spawn" che lo schema stesso già indica come la via per l'asincronia.
+- il **runtime**: serve uno scheduler concorrente con sincronizzazione, cioè una responsabilità del data plane target.
 
-In altre parole: il parallelismo non è un'estensione di POM-as-FSM, è un cambio di paradigma che POM ha deliberatamente lasciato fuori. La via meno invasiva non è estendere lo schema FSM ma **delegare** il livello concorrente al Pattern C (un orchestratore XState/codice nel progetto target) che invoca workflow POM sequenziali come foglie — coerente con "POM è metodo, non runtime".
+In altre parole: il parallelismo non è un'estensione interna di POM-as-FSM. La via meno invasiva è il contratto Dynamic Workflow: POM governa launch, await, timeout, lifecycle e compensation come control plane; il progetto target realizza il data plane concorrente.
 
 ## Budget
 
@@ -55,12 +55,12 @@ In altre parole: il parallelismo non è un'estensione di POM-as-FSM, è un cambi
 ## Consigli per il Coordinatore (prossimo giro)
 
 Nessun consiglio da budget residuo (verdetto refuted, vedi sopra). Però due note utili a un eventuale giro futuro, da vagliare col Coordinatore se l'utente vorrà aprirlo:
-- valutare il **Pattern C (delega XState)** come risposta al parallelismo, invece di estendere lo schema FSM — verificherebbe l'ipotesi "POM modella le foglie sequenziali, l'orchestrazione concorrente vive nel target".
+- mantenere il confine control-plane/data-plane: POM modella la struttura e il target realizza l'orchestrazione concorrente.
 - il counted invoke loop e il counted join sono due **design pattern riusabili** emersi qui: candidabili a esempi canonici se promossi.
 
 ## Confine
 
-Questa è una raccomandazione tecnica. La decisione — promuovere il deliverable (motivare una SPEC sul parallelismo o adottare il Pattern C come dottrina), Refine o Reject — resta dell'utente, via `prompts/09-run-temporary-experiment.md`. Dove ho dovuto interpretare: ho pesato la concorrenza come *essenziale* all'oggetto "Dynamic Workflow" (il diagramma Anthropic dice "N in the 100s" lanciati insieme); se la si considerasse accessoria, il verdetto si attenuerebbe a "adapted con serializzazione" invece che refuted. L'ho dichiarato perché è il punto su cui la mia lettura ha pesato di più sul verdetto.
+Questa è una raccomandazione tecnica. Dove ho dovuto interpretare: ho pesato la concorrenza come *essenziale* all'oggetto "Dynamic Workflow" (il diagramma Anthropic dice "N in the 100s" lanciati insieme); se la si considerasse accessoria, il verdetto si attenuerebbe a "adapted con serializzazione" invece che refuted. L'ho dichiarato perché è il punto su cui la mia lettura ha pesato di più sul verdetto.
 
 ## Verdetto integrato (dopo i giri 2-5)
 
@@ -68,6 +68,6 @@ Il giro 1 ha falsificato l'ipotesi "lo schema basta senza primitive nuove". I gi
 
 Cosa ho continuato a provare a refutare, e dove ho fallito a falsificare (cioè dove il contratto ha retto, eseguendo): launch/await (A) esprime lancio + lavoro + attesa; il join `quorum`/`first` regge un batch lento; il `timeout` risveglia la macchina; `react` cattura il caso a flusso; il nesting compone ricorsivamente; `cancel`+`compensation`/`suspend`/`resume` coprono il canale di controllo, propagati, con un solo costrutto nuovo. Tutti additivi (13/13 modelli passano il validator).
 
-**Confine di responsabilità (correzione di rotta del giro 5)**: questo deliverable appartiene al dominio **workflow** (estensione SPEC-0006), non al metodo loop/goal. La sua promozione va verso `specs/`/`templates/workflow` + un ADR sulla dottrina control-plane/data-plane. Ciò che l'esperimento restituisce al metodo `loop-goal` è solo il **feedback** (primo collaudo riuscito del ciclo a quattro agenti in dialog-mode), registrato in `experiments/agent-loop-fsm/`.
+**Confine di responsabilità**: questo deliverable appartiene al dominio **workflow** (estensione SPEC-0006), non al metodo loop/goal. La dottrina control-plane/data-plane è registrata in ADR-0004 e SPEC-0006. Ciò che l'esperimento restituisce al metodo `loop-goal` è solo il **feedback** sul ciclo a quattro agenti in dialog-mode.
 
-**Raccomandazione di promozione** (decisione dell'utente): Adopt come **dottrina (ADR workflow) + backlog di SPEC-0006** per i campi del contratto; l'implementazione vera del validator e degli esecutori al deploy su un target reale. Le due implementazioni di riferimento (TS, Python) restano come evidenza di eseguibilità, non come runtime canonico di POM.
+**Stato corrente**: il contratto è adottato come dottrina workflow control-plane. Il validator copre il lifecycle degli handle; le due implementazioni di riferimento TypeScript e Python restano come evidenza di eseguibilità e guida per i target, non come runtime canonico di POM.

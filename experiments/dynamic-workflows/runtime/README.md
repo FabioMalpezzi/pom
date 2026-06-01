@@ -17,16 +17,27 @@ Control plane FSM sincrona + tutti i costrutti del contratto: `fan_out_launch` (
 Le implementazioni separano nettamente il **control plane** (la FSM, deterministica, sincrona — il file Engine) dal **data plane** (l'esecuzione concorrente delle istanze — l'interfaccia `Executor`).
 
 ```
-interface Executor { runBatch(leafPath, baseDir, n, sig): {terminal, leaves}[] }
+interface Executor {
+  launchBatch(batch, baseDir, sig)
+  awaitBatch(batch, baseDir, sig): {terminal, leaves}[]
+  cancelBatch(batch, baseDir, sig)
+  detachBatch(batch, baseDir, sig)
+  suspendBatch(batch, baseDir, sig)
+  resumeBatch(batch, baseDir, sig)
+}
 ```
 
-Lo stub di default (`Engine.withStub` / `Engine.with_stub`) esegue le `n` istanze **in sequenza**, in modo deterministico e riproducibile — perfetto per testare la *struttura*. Per un uso reale si sostituisce l'`Executor` con un'implementazione che:
+Lo stub di default (`Engine.withStub` / `Engine.with_stub`) lancia le `n` istanze al `fan_out_launch`, ne conserva i risultati per handle, e li consegna solo quando la FSM esegue `await`. L'esecuzione è **sequenziale**, deterministica e riproducibile — perfetta per testare la *struttura*. Per un uso reale si sostituisce l'`Executor` con un'implementazione che:
 
 - **parallelizza** le istanze (thread pool, async/await, processi, o una coda distribuita);
 - onora il **timeout** con un timer reale e i **control signal** (`cancel`/`suspend`/`resume`) con cancellazione/persistenza effettiva;
 - per attese a **giorni** (processi con attività umane) persiste lo stato su un durable store (`snapshot`/`restore`) invece di tenere il processo vivo.
 
-La FSM (control plane) non cambia: cambia solo l'`Executor`. È la dottrina "control plane FSM + data plane esterno" del contratto.
+La FSM (control plane) non cambia: cambiano l'`Executor` e, per attese lunghe, la `Persistence`. È la dottrina "control plane FSM + data plane esterno" del contratto.
+
+## Persistenza
+
+Entrambe le implementazioni espongono una `MemoryPersistence` minima. Al `suspend` l'engine coordina prima le FSM figlie attive tramite `suspendBatch`, registra negli handle la conferma di sospensione, poi salva stato corrente, context e handle attivi. Al `resume` ricarica lo snapshot e propaga il segnale agli handle ancora aperti. In un target reale lo stesso punto va sostituito con storage durabile, lock/lease e recovery dopo riavvio.
 
 ## Segnali di controllo nel CLI (simulazione)
 

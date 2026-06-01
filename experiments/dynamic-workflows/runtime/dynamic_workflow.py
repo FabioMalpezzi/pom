@@ -14,6 +14,7 @@ Uso: python dynamic_workflow.py <workflow.yaml> [--n N] [--timeout h1,h2]
 from __future__ import annotations
 import os
 import sys
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Protocol
 import yaml
@@ -36,6 +37,20 @@ def outgoing(wf, name):
     return [t for t in wf.get("transitions", []) if t.get("from") == name]
 
 
+def choose_transition(candidates, visits, n):
+    if not candidates:
+        return None
+    more_pending = next((t for t in candidates if t.get("guard") == "more_pending"), None)
+    all_dispatched = next((t for t in candidates if t.get("guard") == "all_dispatched"), None)
+    if more_pending and all_dispatched:
+        return more_pending if visits < n else all_dispatched
+    self_t = next((t for t in candidates if t.get("to") == candidates[0].get("from")), None)
+    exit_t = next((t for t in candidates if t.get("to") != candidates[0].get("from")), None)
+    if self_t and exit_t:
+        return self_t if visits < n else exit_t
+    return candidates[0]
+
+
 @dataclass
 class Signals:
     n: int = 1
@@ -52,31 +67,85 @@ class RunResult:
     leaves: int
 
 
+class Persistence(Protocol):
+    def save_snapshot(self, key: str, snapshot: dict) -> None: ...
+    def load_snapshot(self, key: str) -> dict | None: ...
+
+
+class MemoryPersistence:
+    def __init__(self):
+        self.snapshots: dict[str, dict] = {}
+
+    def save_snapshot(self, key: str, snapshot: dict) -> None:
+        self.snapshots[key] = deepcopy(snapshot)
+
+    def load_snapshot(self, key: str) -> dict | None:
+        snap = self.snapshots.get(key)
+        return deepcopy(snap) if snap is not None else None
+
+
 class Executor(Protocol):
-    """Data plane PLUGGABLE: esegue n istanze del leaf, ritorna i terminali."""
-    def run_batch(self, leaf_path: str, base_dir: str, n: int, sig: Signals) -> list[dict]: ...
+    """Data plane PLUGGABLE: launch/await/control su batch esterni."""
+    def launch_batch(self, batch: dict, base_dir: str, sig: Signals) -> None: ...
+    def await_batch(self, batch: dict, base_dir: str, sig: Signals) -> list[dict]: ...
+    def cancel_batch(self, batch: dict, base_dir: str, sig: Signals) -> None: ...
+    def detach_batch(self, batch: dict, base_dir: str, sig: Signals) -> None: ...
+    def suspend_batch(self, batch: dict, base_dir: str, sig: Signals) -> dict: ...
+    def resume_batch(self, batch: dict, base_dir: str, sig: Signals) -> None: ...
 
 
 class Engine:
     """Control plane: FSM sincrona e deterministica."""
 
-    def __init__(self, executor: Executor, log=lambda s: None):
+    def __init__(self, executor: Executor, log=lambda s: None, persistence: Persistence | None = None):
         self.executor = executor
         self.log = log
+        self.persistence = persistence or MemoryPersistence()
         self.in_flight: list[dict] = []
 
     @staticmethod
     def with_stub(log=lambda s: None) -> "Engine":
+        launched: dict[str, list[dict]] = {}
         engine = Engine(None, log)  # type: ignore
 
         class _Stub:
-            def run_batch(self, leaf, base_dir, n, sig):
+            def launch_batch(self, batch, base_dir, sig):
                 out = []
                 child_sig = Signals(n=sig.n, timed_out=sig.timed_out)  # i segnali del padre non scendono qui
-                for _ in range(n):
-                    r = engine.run(leaf, base_dir, child_sig, silent=True)
+                for _ in range(batch["n"]):
+                    child_engine = Engine.with_stub()
+                    r = child_engine.run(batch["workflow"], base_dir, child_sig, silent=True)
                     out.append({"terminal": r.terminal, "leaves": r.leaves or 1})
-                return out
+                launched[batch["handle"]] = out
+                log(f"  · data-plane launch '{batch['handle']}': {batch['n']}× '{batch['workflow']}'")
+
+            def await_batch(self, batch, base_dir, sig):
+                if batch["handle"] not in launched:
+                    raise RuntimeError(f"batch non lanciato: {batch['handle']}")
+                return launched.pop(batch["handle"])
+
+            def cancel_batch(self, batch, base_dir, sig):
+                log(f"  ↓ propago cancel a '{batch['handle']}' ({batch['workflow']})")
+                launched.pop(batch["handle"], None)
+                try:
+                    child, _ = load_workflow(batch["workflow"], base_dir)
+                    for u in reversed(child.get("compensation", [])):
+                        log(f"    · figlia compensa: {u['undo']}")
+                except Exception:
+                    pass
+
+            def detach_batch(self, batch, base_dir, sig):
+                log(f"  ↓ propago detach a '{batch['handle']}' ({batch['workflow']})")
+                launched.pop(batch["handle"], None)
+
+            def suspend_batch(self, batch, base_dir, sig):
+                log(f"  ↓ propago suspend a '{batch['handle']}' ({batch['workflow']})")
+                log(f"    · figlia sospesa: {batch['handle']}")
+                return {**batch, "suspended": True}
+
+            def resume_batch(self, batch, base_dir, sig):
+                log(f"  ↓ propago resume a '{batch['handle']}' ({batch['workflow']})")
+                log(f"    · figlia ripresa: {batch['handle']}")
 
         engine.executor = _Stub()
         return engine
@@ -114,15 +183,29 @@ class Engine:
                 for u in reversed(wf.get("compensation", [])):
                     log(f"  · compenso: {u['undo']}")
                 while in_flight:
-                    self._propagate_handle_signal("cancel", in_flight.pop(0), wf_dir, log)
+                    self.executor.cancel_batch(in_flight.pop(0), wf_dir, sig)
                 return RunResult("cancelled", trace + ["cancelled"], leaves)
             if sig.suspend_at == state:
                 log(f"» suspend '{state}': snapshot+congela, propago; resume: restore e riprendo (reversibile)")
+                key = f"{wf['workflow']}:{state}"
+                in_flight = [self.executor.suspend_batch(b, wf_dir, sig) for b in in_flight]
+                self.in_flight = in_flight
+                self.persistence.save_snapshot(key, self.snapshot(state, {}))
+                log(f"  · snapshot salvato dopo suspend figlie: {key}")
+                restored = self.persistence.load_snapshot(key)
+                if restored:
+                    state = self.restore(restored)
+                    in_flight = self.in_flight
+                    log(f"  · snapshot ripristinato: {key}")
+                for b in in_flight:
+                    self.executor.resume_batch(b, wf_dir, sig)
 
             # --- fan_out_launch: lancio non bloccante ---
             if "fan_out_launch" in so:
                 fl = so["fan_out_launch"]
-                in_flight.append({"handle": fl["handle"], "workflow": fl["workflow"], "n": n})
+                batch = {"handle": fl["handle"], "workflow": fl["workflow"], "n": n}
+                in_flight.append(batch)
+                self.executor.launch_batch(batch, wf_dir, sig)
                 log(f"» LANCIO non bloccante: '{fl['handle']}' = {n}× '{fl['workflow']}', proseguo")
                 outs = outgoing(wf, state)
                 if not outs:
@@ -139,7 +222,7 @@ class Engine:
                 need = len(want) if join == "all" else 1 if join == "first" else a.get("k", len(want))
                 if len(ready) < need and a.get("on_timeout"):
                     log(f"» TIMEOUT (join {join}, {len(ready)}/{need}) → on_timeout='{a['on_timeout']}'")
-                    t = next((x for x in outgoing(wf, state) if x["event"] == a["on_timeout"]), None)
+                    t = choose_transition([x for x in outgoing(wf, state) if x["event"] == a["on_timeout"]], visits[state], n)
                     if not t:
                         break
                     state = t["to"]
@@ -147,23 +230,23 @@ class Engine:
                 to_run = ready if join == "all" else ready[:need]
                 for h in to_run:
                     b = self._resolve_handle(in_flight, h)
-                    res = self.executor.run_batch(b["workflow"], wf_dir, b["n"], sig)
+                    res = self.executor.await_batch(b, wf_dir, sig)
                     leaves += sum(r["leaves"] for r in res)
                     extra = f" {need}/{len(want)}" if join == "quorum" else ""
                     log(f"» ATTESA (join {join}{extra}) → '{h}': {b['n']}× '{b['workflow']}'")
-                outs = [x for x in outgoing(wf, state) if x["event"] != a.get("on_timeout")] or outgoing(wf, state)
-                if not outs:
+                t = choose_transition([x for x in outgoing(wf, state) if x["event"] != a.get("on_timeout")], visits[state], n)
+                if not t:
                     break
-                state = outs[0]["to"]
+                state = t["to"]
                 continue
 
             if "cancel_handles" in so:
                 for h in so["cancel_handles"]:
-                    self._propagate_handle_signal("cancel", self._resolve_handle(in_flight, h), wf_dir, log)
+                    self.executor.cancel_batch(self._resolve_handle(in_flight, h), wf_dir, sig)
 
             if "detach_handles" in so:
                 for h in so["detach_handles"]:
-                    self._propagate_handle_signal("detach", self._resolve_handle(in_flight, h), wf_dir, log)
+                    self.executor.detach_batch(self._resolve_handle(in_flight, h), wf_dir, sig)
 
             # --- react: attesa reattiva con early-exit ---
             if "react" in so:
@@ -172,7 +255,7 @@ class Engine:
                 ev = r["on_early"] if (sig.early_at and c >= sig.early_at) else r["on_each"] if c < n else r["on_done"]
                 tag = " → uscita anticipata" if ev == r["on_early"] else " → esaurito" if ev == r["on_done"] else ""
                 log(f"» REATTIVO: completamento {c}{tag}")
-                t = next((x for x in outgoing(wf, state) if x["event"] == ev), None)
+                t = choose_transition([x for x in outgoing(wf, state) if x["event"] == ev], visits[state], n)
                 if not t:
                     break
                 state = t["to"]
@@ -186,24 +269,21 @@ class Engine:
                 disp = next((c for c in inv.get("on_completion", []) if c["terminal_state"] == child.terminal), None)
                 if not disp:
                     break
-                t = next((x for x in outgoing(wf, state) if x["event"] == disp["next_event"]), None)
+                t = choose_transition([x for x in outgoing(wf, state) if x["event"] == disp["next_event"]], visits[state], n)
                 if not t:
                     break
                 state = t["to"]
                 continue
 
             # --- transizione normale (con lancio su transizione opzionale) ---
-            outs = outgoing(wf, state)
-            if not outs:
+            chosen = choose_transition(outgoing(wf, state), visits[state], n)
+            if not chosen:
                 break
-            chosen = outs[0]
-            self_t = next((o for o in outs if o["to"] == state), None)
-            exit_t = next((o for o in outs if o["to"] != state), None)
-            if self_t and exit_t:
-                chosen = self_t if visits[state] < n else exit_t  # counted loop / join
             if "launch" in chosen:
                 lc = chosen["launch"]
-                in_flight.append({"handle": lc["handle"], "workflow": lc["workflow"], "n": n})
+                batch = {"handle": lc["handle"], "workflow": lc["workflow"], "n": n}
+                in_flight.append(batch)
+                self.executor.launch_batch(batch, wf_dir, sig)
                 log(f"» LANCIO su transizione: '{lc['handle']}'")
             state = chosen["to"]
 
@@ -217,18 +297,6 @@ class Engine:
             if batch["handle"] == handle:
                 return in_flight.pop(i)
         raise RuntimeError(f"handle attivo non trovato: {handle}")
-
-    def _propagate_handle_signal(self, signal, batch, wf_dir, log):
-        log(f"  ↓ propago {signal} a '{batch['handle']}' ({batch['workflow']})")
-        if signal != "cancel":
-            return
-        try:
-            child, _ = load_workflow(batch["workflow"], wf_dir)
-            for u in reversed(child.get("compensation", [])):
-                log(f"    · figlia compensa: {u['undo']}")
-        except Exception:
-            pass
-
 
 def main():
     argv = sys.argv[1:]

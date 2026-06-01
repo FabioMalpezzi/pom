@@ -3,7 +3,7 @@
 Versione: v1 (2026-05-30).
 Stato: **canonico** (promosso da `agent-loop-fsm` il 2026-05-30).
 
-Scopo: guidare un agente di codifica ad enumerare i path significativi attraverso un workflow POM di tipo loop/goal e produrre il file `<name>.scenarios.md` con uno scenario per path. È materiale che un runtime POM consuma come fixture di test (path tracciabili end-to-end con setup, sequenza di eventi, terminale atteso, assertioni di context).
+Scopo: guidare un agente di codifica ad enumerare i path significativi attraverso un workflow POM di tipo loop/goal e produrre il file `<name>.scenarios.md` con uno scenario per path. È materiale che il runtime del progetto target può consumare come fixture di test (path tracciabili end-to-end con setup, sequenza di eventi, terminale atteso, assertioni di context).
 
 Esegue lo stesso lavoro del modo `scenarios` della skill generica `workflow`, ma con due specializzazioni per il dominio loop/goal: (1) traversa le composizioni (`state-invoke`, `event-invoke`) per generare scenari end-to-end della catena; (2) collega gli scenari ai criteri se esistono, garantendo copertura di ogni condizione di uscita dichiarata nel `criteria.md`.
 
@@ -14,10 +14,10 @@ Genera gli scenari di test per il workflow POM al path <WORKFLOW_PATH>.
 
 Prima di iniziare:
 1. leggi `pom.config.json` e conferma che `workflows.enabled: true`.
-2. leggi questo prompt + `experiments/agent-loop-fsm/skills-candidate/loop-goal.md`.
+2. leggi questo prompt + `skills/loop-goal.md`.
 3. leggi il file workflow indicato (`Read`).
 4. se il workflow contiene `state-invoke` o `event-invoke`, leggi ANCHE ogni sub-workflow referenziato. Questo è indispensabile: senza i terminal_state del sub-workflow non puoi enumerare i path della composizione.
-5. cerca il file di criteri associato (convenzione: `design/criteria-experiment-<N>-<HID>.md`). Se esiste, leggilo: la copertura degli scenari deve includere ogni condizione di uscita dichiarata.
+5. cerca il file di criteri associato. Il nome canonico corrente del contratto è `criteria.md`. In POM Source vive di solito in `experiments/<topic>/design/criteria.md`; in un progetto target usa la convenzione dichiarata dal progetto, oppure cerca vicino al workflow in `design/`, `workflows/generated/`, o nella cartella di esperimento equivalente. I vecchi file `criteria-experiment-<N>-<HID>.md`, se presenti, sono artefatti storici o run-specifici: usali solo se non esiste `criteria.md` o se l'utente indica esplicitamente quel run. Se esiste, leggilo: la copertura degli scenari deve includere ogni condizione di uscita dichiarata.
 
 Procedi con l'enumerazione.
 
@@ -41,7 +41,7 @@ Punta alla **copertura**, non all'esaustività combinatoria. Generare in ordine:
 3. **Loop path** se il workflow contiene cicli (loop edge o self-transition):
    - uno scenario che attraversa il loop almeno una volta e poi esce per successo;
    - uno scenario che attraversa il loop almeno una volta e poi esce per fallimento;
-   - se H6 `loop_guard` è dichiarato (sia come primitiva schema-level sia come pattern context-counter), uno scenario di esaurimento del bound.
+   - se `loop_guard` è dichiarato (o se il target usa ancora un pattern context-counter equivalente), uno scenario di esaurimento del bound.
 4. **Edge case** dichiarati nelle descrizioni degli stati o negli `invariants` (es. "an agent can be stopped while idle"): uno scenario per ognuno se non già coperto sopra.
 
 Numero target: 4-10 scenari. Meno di 4 = copertura insufficiente. Più di 10 = stai esaurendo combinazioni invece di coprire path.
@@ -112,11 +112,11 @@ Numero target: 4-10 scenari. Meno di 4 = copertura insufficiente. Più di 10 = s
 
 ## Path di output
 
-Per default scrivi il file a fianco del workflow, cambiando estensione:
-- input  `experiments/<topic>/workflows-candidate/foo.yaml`
-- output `experiments/<topic>/design/foo.scenarios.md`
+Per default scrivi il file vicino agli artefatti derivati del workflow:
+- in POM Source: input `experiments/<topic>/workflows-candidate/foo.yaml`, output `experiments/<topic>/design/foo.scenarios.md`;
+- in un progetto target: se il workflow vive in `workflows/`, usa `workflows/generated/foo.scenarios.md` oppure la cartella `design/` dichiarata dal progetto.
 
-(se il workflow vive in `workflows/`, l'output va in `design/` o `workflows/generated/` allo stesso livello, secondo convenzione del progetto).
+Se il progetto ha una convenzione propria per gli artefatti derivati, seguila e dichiarala nel riepilogo.
 
 ## Termine
 

@@ -9,7 +9,7 @@
 
 ## Decision
 
-Adopt the Dynamic Workflow contract as a **workflow-domain backlog
+Adopt the Dynamic Workflow contract as a **workflow-domain control-plane
 extension** to SPEC-0006, not as a runtime commitment in POM Source.
 
 The POM workflow model remains the **control plane**: it records the
@@ -19,7 +19,7 @@ belongs to the target project's **data plane**: the target owns workers,
 queues, schedulers, durable execution, thread/process cancellation, and
 human-task execution.
 
-The accepted backlog shape is additive:
+The accepted contract shape is additive:
 
 - `fan_out_launch` on a state starts a batch externally and returns a
   handle without blocking the FSM.
@@ -37,9 +37,15 @@ The accepted backlog shape is additive:
 - `compensation` is the one new workflow-level construct: an ordered
   undo saga run on cancellation.
 
-Validator and executor implementation is deferred until a target project
-needs the contract. The current canonical action is to keep the contract
-visible in SPEC-0006 as backlog for a future SPEC-0007-style extension.
+Validator coverage is partial and grows as target projects need stricter
+automation. POM Source currently validates the handle lifecycle subset;
+the rest of the Dynamic Workflow contract is still a contract, not an
+implicit runtime feature.
+
+POM Source includes two complete reference executors for the contract,
+one in TypeScript and one in Python, under
+`experiments/dynamic-workflows/runtime/`. They are executable examples and
+test evidence for adopters, not a canonical runtime owned by POM.
 
 ## Context
 
@@ -62,21 +68,22 @@ must be true at the state-machine boundary; the target project decides
 how to execute the concurrent work.
 
 Adding native parallel regions to POM would reverse the accepted
-no-async pillar, require scheduler semantics, and move POM toward a
-runtime engine. The control-plane/data-plane split captures the useful
-modeling contract without taking ownership of execution.
+no-native-async-inside-the-FSM pillar, require scheduler semantics, and
+move POM toward a runtime engine. The control-plane/data-plane split
+captures the useful modeling contract without taking ownership of
+execution.
 
-The experiment also showed that the contract is additive: current
-workflow validation accepts the candidate YAML files because unknown
-fields are ignored, and the deterministic stub runner exercised the
-contract scenarios. Formal promotion still requires explicit validator
-rules, documentation, and target-driven implementation evidence.
+The experiment also showed that the contract is additive: the
+deterministic stub runner exercised the contract scenarios without
+requiring native parallel regions inside the FSM. Tooling promotion is
+incremental: each contract field should gain explicit validator rules
+instead of relying on ignored fields.
 
 ## Alternatives Considered
 
 | Alternative | Rejection reason |
 |---|---|
-| Add native parallel states to SPEC-0006 | Breaks the no-async pillar and requires runtime scheduling semantics. |
+| Add native parallel states to SPEC-0006 | Breaks the no-native-async-inside-the-FSM pillar and requires runtime scheduling semantics. |
 | Model N-way fan-out as a counted invoke loop only | Preserves function but serializes work, losing the core Dynamic Workflow property. |
 | Treat Dynamic Workflows as entirely out of scope | Too weak: the experiment produced a coherent additive contract that is useful to target projects. |
 | Ship a POM reference runtime now | Violates the current "no runtime in POM" constraint and is premature without target deployment pressure. |
@@ -85,10 +92,10 @@ rules, documentation, and target-driven implementation evidence.
 
 | Area | Impact |
 |---|---|
-| Specs | SPEC-0006 records the Dynamic Workflow contract as backlog, not as implemented schema. |
+| Specs | SPEC-0006 records the Dynamic Workflow contract as an accepted control-plane extension with partial validator coverage. |
 | Decisions | This ADR closes the control-plane/data-plane doctrine. |
-| Templates | No immediate template changes; future SPEC-0007 work may extend workflow templates. |
-| Tooling | Handle lifecycle rules E080-E089 are implemented. Remaining Dynamic Workflow fields should add explicit validator rules instead of relying on ignored fields. |
+| Templates | No immediate template changes; future workflow work may extend workflow templates. |
+| Tooling | Handle lifecycle rules E080-E089 are implemented. Remaining Dynamic Workflow fields should add explicit validator rules instead of relying on ignored fields. TypeScript and Python reference executors remain in `experiments/dynamic-workflows/runtime/` as examples, not as POM runtime. |
 
 ## Links
 
@@ -103,10 +110,10 @@ rules, documentation, and target-driven implementation evidence.
 ### Step 0 — Goal-backward check
 
 - [x] The decision keeps POM from owning runtime concurrency.
-- [x] The Dynamic Workflow contract is still visible as future workflow
-  work.
+- [x] The Dynamic Workflow contract is visible as accepted workflow
+  control-plane doctrine.
 - [x] The accepted path does not weaken the existing SPEC-0006
-  no-async pillar before validator work exists.
+  no-native-async pillar while validator coverage grows incrementally.
 
 ### Thesis
 
@@ -119,7 +126,7 @@ compensation boundaries that target executors need.
 
 | Antithesis | Confutation |
 |---|---|
-| POM should add native parallel states directly. | That would reverse the accepted no-async pillar and force POM to define runtime scheduling, which SPEC-0006 explicitly excludes. |
+| POM should add native parallel states directly. | That would reverse the accepted no-native-async-inside-the-FSM pillar and force POM to define runtime scheduling, which SPEC-0006 explicitly excludes. |
 | POM should ignore Dynamic Workflows entirely. | The experiment produced a small additive contract with runnable evidence; ignoring it would lose useful operating memory for a known target need. |
 
 ### Exception

@@ -461,14 +461,15 @@
         <li>Flussi di subscription, application, KYC, finanziamento.</li>
         <li>Processi POM-style interni (lifecycle delle spec, lifecycle degli ADR).</li>
         <li>Orchestratori di pipeline che invocano una sub-FSM sincrona per fase (analyzer, repair, validator).</li>
+        <li>Control plane per Dynamic Workflow che lanciano batch esterni, attendono handle nominati e cancellano o staccano esplicitamente il lavoro che non deve bloccare la chiusura.</li>
       </ul>
 
-      <p>Evitalo quando il workflow è essenzialmente un rule engine concorrente su molte macchine candidate, quando la complessità dominante è il real-time o il coordinamento distribuito, oppure quando un tool più potente (XState, motore di workflow dedicato) è già in uso. La modellazione workflow di POM è volutamente un sottoinsieme della superficie espressiva di XState; i quattro pilastri sono: niente async / niente shared state tra macchine / niente ereditarietà / niente runtime di POM.</p>
+      <p>Evitalo quando il workflow è essenzialmente un rule engine concorrente su molte macchine candidate, quando la complessità dominante è il real-time o il coordinamento distribuito, oppure quando un tool più potente (XState, motore di workflow dedicato) è già in uso. La modellazione workflow di POM è volutamente un sottoinsieme della superficie espressiva di XState; stati paralleli nativi, transizioni asincrone e fork/join dentro la FSM restano fuori modello. Dynamic Workflow è diverso: POM può registrare primitive deterministiche di control plane come <code>fan_out_launch</code>, <code>await</code>, <code>cancel_handles</code> e <code>detach_handles</code>, mentre il progetto target possiede il vero data plane concorrente.</p>
 
       <h3>Cosa ottieni sul lato documentazione e specifiche</h3>
       <ul>
         <li><strong>Il modello YAML diventa la specifica</strong> di quel workflow: stati, eventi, guard, transizioni, <code>context_schema</code> opzionale per input tipato e output per ogni terminale, e invarianti esplicite. Versionato, revisionato in PR, archiviato in Git.</li>
-        <li><strong>Il validatore</strong> (<code>npm run pom:workflow:lint</code>) controlla 50 regole Error e 4 Warning: stati irraggiungibili, dead-end silenziosi, terminali con un'uscita non documentata, transizioni ambigue, riferimenti mancanti tra padre e figlio, composizione asincrona illegale, e così via. Gli Error fermano la build in CI; i Warning viaggiano come giudizio del reviewer.</li>
+        <li><strong>Il validatore</strong> (<code>npm run pom:workflow:lint</code>) controlla 71 regole Error e 5 Warning: stati irraggiungibili, dead-end silenziosi, terminali con un'uscita non documentata, transizioni ambigue, riferimenti mancanti tra padre e figlio, composizione asincrona nativa illegale, loop guard, timeout e regole di lifecycle degli handle Dynamic Workflow. I report di errore includono codice stabile, posizione, dettagli contestuali e una correzione suggerita, così un agente di codifica può agire senza indovinare. Gli Error fermano la build in CI; i Warning viaggiano come giudizio del reviewer.</li>
         <li><strong>Un diagramma Mermaid</strong> viene rigenerato automaticamente ogni volta che il validatore gira con <code>--mermaid-dir</code>. Il drift tra modello e rappresentazione visiva è impossibile per costruzione. Si renderizza nativamente su GitHub, è incorporabile ovunque si renderizzi Markdown, esportabile in PNG/SVG.</li>
         <li><strong>Un JSON XState v5 MachineConfig</strong> (<code>npm run pom:workflow:xstate</code>) può essere importato in <a href="https://stately.ai">stately.ai</a> per simulazione interattiva online, layout grafico ed export. Il team rivede il modello graficamente prima di scrivere una riga di codice.</li>
         <li><strong>Un ADR può registrare le decisioni di schema consequenziali</strong> (ad esempio: rientro da un terminale, payload di output per terminale) con la stessa tracciabilità usata per ogni altra scelta POM.</li>
@@ -481,6 +482,7 @@
         <li><strong>Pattern C (libreria FSM)</strong>: quando il progetto usa già XState (TypeScript), <code>transitions</code> / <code>python-statemachine</code> (Python) o simili. Il transformer verso XState JSON è il ponte.</li>
         <li><strong>Suspend e restore</strong> sono documentati come un'unica forma di snapshot (<code>workflow</code> + <code>version</code> + <code>state</code> + <code>context</code> per macchine singole; uno stack di frame per workflow composti). Il codice Pattern A è stateless e lo stato è del chiamante, quindi persistere tra processi è due write su file e una read.</li>
         <li><strong>I contatori di retry bounded</strong> (max attempts) vivono in <code>context</code>, quindi sopravvivono automaticamente a snapshot e restore.</li>
+        <li><strong>Gli executor Dynamic Workflow di riferimento</strong> sotto <code>experiments/dynamic-workflows/runtime/</code> mostrano esempi completi in TypeScript e Python per launch, await, cancel, detach, suspend, resume, compensation e persistenza dello snapshot. Sono esempi eseguibili, non un runtime posseduto da POM.</li>
       </ul>
 
       <h3>Come un team lo usa tipicamente</h3>
@@ -496,8 +498,9 @@
       <h3>Dove vive la disciplina</h3>
       <p>La capacità arriva con quattro artefatti che esplicitano i limiti, così l'adozione resta onesta:</p>
       <ul>
-        <li><code>specs/SPEC-0006-workflow-modeling.md</code>: schema, regole del validatore, i quattro pilastri (niente async / niente shared state / niente ereditarietà / niente runtime in POM).</li>
+        <li><code>specs/SPEC-0006-workflow-modeling.md</code>: schema, regole del validatore, i quattro pilastri (niente async nativo dentro la FSM / niente shared state / niente ereditarietà / niente runtime in POM), più il contratto Dynamic Workflow accettato come control plane.</li>
         <li><code>decisions/ADR-0002-workflow-context-injection.md</code>: decisione chiusa sullo scambio dati padre/figlio (<code>Result&lt;Terminal, Output&gt;</code>, niente visibilità condivisa).</li>
+        <li><code>decisions/ADR-0004-dynamic-workflow-control-plane.md</code>: decisione accettata che mantiene POM come control plane deterministico e lascia l'esecuzione concorrente reale al progetto target.</li>
         <li><code>templates/WORKFLOW_IMPLEMENTATION_GUIDE.md</code>: catalogo Pattern A/B/C, profili linguaggio (TypeScript, Python), sezione suspend/restore, anti-pattern.</li>
         <li><code>templates/WORKFLOW_INTEGRATION_GUIDE.md</code>: manuale di adozione + estensione per i team (layout file, configurazione, lifecycle, pattern di migrazione per progetti esistenti, come estendere un workflow senza rompere le istanze in volo, versioning, ritiro).</li>
         <li><code>docs/workflow-xstate-compatibility.md</code>: tabella di mapping e workflow operativo con stately.ai.</li>

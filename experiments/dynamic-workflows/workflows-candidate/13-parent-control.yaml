@@ -5,9 +5,9 @@ description: |
   Lancia la figlia (13-child-compensation), attende con un timeout a scala
   di GIORNI (caso processo umano: un'approvazione che può tardare). Sul
   canale di controllo può ricevere cancel (→ compensa, propaga, cancelled)
-  o suspend/resume (lifecycle, propagati). Il timeout a giorni rende il
-  suspend/restore (H5) non opzionale: la macchina vive su storage, non in
-  RAM.
+  o suspend/resume (lifecycle, propagati). Sul timeout cancella l'handle
+  ancora attivo prima dell'escalation. Il timeout a giorni rende il
+  suspend/restore non opzionale: la macchina vive su storage, non in RAM.
 
 initial_state: launching
 
@@ -25,6 +25,10 @@ states:
     is_final: false
   - name: done
     is_final: true
+  - name: cancelling_for_escalation
+    description: Il timeout lascia la figlia attiva; il padre la cancella prima dell'escalation.
+    is_final: false
+    cancel_handles: [work]
   - name: escalated
     description: Terminale di escalation per timeout (avviso a un umano).
     is_final: true
@@ -37,12 +41,14 @@ events:
   - name: ready
   - name: escalate_to_human
   - name: aggregated
+  - name: child_cancelled_for_escalation
 
 transitions:
   - { from: launching, to: awaiting, event: launched }
   - { from: awaiting, to: aggregating, event: ready }
-  - { from: awaiting, to: escalated, event: escalate_to_human }
+  - { from: awaiting, to: cancelling_for_escalation, event: escalate_to_human }
   - { from: aggregating, to: done, event: aggregated }
+  - { from: cancelling_for_escalation, to: escalated, event: child_cancelled_for_escalation }
 
 metadata:
   experiment: dynamic-workflows

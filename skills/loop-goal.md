@@ -5,7 +5,7 @@ description: Use this skill to define measurable criteria for, design, audit, ge
 
 # Skill - loop-goal
 
-**Status**: canonical (promoted from `agent-loop-fsm` on 2026-05-30, after the four-agent cycle's first real dialog-mode run on `dynamic-workflows`). When to use this vs the generic `workflow` skill: `decisions/ADR-0003-workflow-vs-loop-goal-skill.md`. H6 `loop_guard` and H7 `timeout` remain expected schema extensions, tracked in `exp/schema-loop-guard-timeout` → SPEC-0007.
+**Status**: canonical (promoted from `agent-loop-fsm` on 2026-05-30, after the four-agent cycle's first real dialog-mode run on `dynamic-workflows`). When to use this vs the generic `workflow` skill: `decisions/ADR-0003-workflow-vs-loop-goal-skill.md`. H6 `loop_guard` and H7 `timeout` were promoted by `specs/SPEC-0007-loop-guard-timeout.md`; loop/goal workflows may now use them as schema primitives while target code still owns counters, timers, scheduling, and event emission.
 
 ## When To Use
 
@@ -15,13 +15,15 @@ description: Use this skill to define measurable criteria for, design, audit, ge
 
 **Not for**:
 - Generic domain workflows (ticket lifecycle, document approval) — use `skills/workflow.md` instead.
+- Ordinary feature work, bug fixes, or implementation tasks where there is no measurable loop experiment — use the project's normal coding workflow or `skills/spike.md` for lightweight exploration.
+- Static workflow modeling where the controller does not decide, retry, replan, suspend, or pursue a goal — use `skills/workflow.md` and stop before the criteria/audit/conclude lifecycle.
 - Multi-agent orchestration with concurrent autonomous agents (no current POM primitive).
 - Real-time control loops with hard timing (POM has no runtime semantics for deadlines beyond `loop_guard` H6).
 
 ## Relationship to other POM artifacts
 
 - Generalises the `workflow` skill for the agentic case: a loop/goal workflow is still a POM workflow, validated by the same `pom:workflow:lint`. The `audit` and `scenarios` modes here produce *additional* artifacts (`.fit.md`, `.scenarios.md`) that the generic skill does not.
-- Depends on the `agent-loop-fsm` experiment for its primitives' backlog: H6 `loop_guard` and H7 `timeout` are expected schema extensions; treating them as already-in-backlog (rather than as falsifications) is part of this skill's discipline.
+- Depends on the `agent-loop-fsm` experiment for its pattern evidence and on SPEC-0007 for bounded-loop and timeout primitives. In historical experiment criteria, primitives already accepted into backlog were not falsifications; in current workflows, `loop_guard` and `timeout` are normal validated schema fields.
 - Composes with `skills/workflow.md`: `design`/`validate`/`diagram`/`implement` modes there work unchanged on loop/goal workflows; this skill adds `define-criteria`, `audit`, `scenarios`, and `conclude` modes that the generic skill does not have.
 
 The four named agents of the loop/goal method form the experiment lifecycle: **Coordinator+Auditor** (`define-criteria`) opens it with the user in the loop; the **Fit Auditor** (`audit`) and **Scenarios Generator** (`scenarios`) run during it on each modeled workflow, automatable without the user; the **Independent Adversarial Evaluator** (`conclude`) closes it. The evaluator is deliberately *not* the same agent that opened the experiment — independence (it reads only the artifacts, never the criteria-definition dialog) plus adversariality (it tries to falsify) guard against confirmation bias, on top of the frozen-criteria safeguard.
@@ -36,7 +38,7 @@ Pass the mode as the first instruction.
 |---|---|---|
 | `define-criteria` | Fix the experiment's objective and measurement (gate + signal metrics) before any modeling. First step of any loop/goal experiment. | `prompts/28-loop-goal-define-criteria.md` |
 | `model` | Translate an informal agent description into a POM workflow YAML (ReAct minimal, Goal Lifecycle, SPAO, bounded retry, supervisor + sub-workflow, etc.). | Use `prompts/27-workflow-modeling.md` `design` mode. |
-| `audit` | Classify every state and transition as `clean fit` / `adapted fit` / `forced lossy`, produce `<name>.fit.md`. Verify backlog primitives (H6, H7) are admitted as expected extensions, not falsifications. | `prompts/29-loop-goal-audit.md` |
+| `audit` | Classify every state and transition as `clean fit` / `adapted fit` / `forced lossy`, produce `<name>.fit.md`. Verify conformance to the frozen criteria as well as structural fit. | `prompts/29-loop-goal-audit.md` |
 | `scenarios` | Enumerate happy path / failure paths / loop paths / edge cases, produce `<name>.scenarios.md` with a sequence table per scenario. For composed workflows, traverse `state-invoke` / `event-invoke` references. | `prompts/30-loop-goal-scenarios.md` |
 | `runtime-guide` | Guide the coding agent to implement the modeled workflow as runtime code in target language. Pattern A / B / C selection from `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md`. | Use `prompts/27-workflow-modeling.md` `implement` mode. |
 | `conclude` | Independently and adversarially evaluate whether the experiment met its objective, measuring the gathered evidence (`.fit.md`, scenarios, runtime output) against the **frozen** `criteria.md`. Tries to falsify, not confirm. If budget remains, may propose improvements to the definition for a *next* round (never retroactive). Last step. | `prompts/31-loop-goal-conclude.md` |
@@ -48,10 +50,10 @@ Pass the mode as the first instruction.
 - The YAML model is the source of authority. `.fit.md`, `.scenarios.md`, diagrams, and runtime code are derived.
 - `audit` mode never modifies the YAML. It only produces the classification file.
 - `audit` and `scenarios` modes use only the coding agent's native tools (Read for the workflow YAML, Bash to run `pom:workflow:lint`, Write for the output). **No external LLM runtime required.** A reference TypeScript runtime exists in `experiments/agent-loop-fsm/runtime-candidate/` as proof of executability, but the operational pattern is the one in this skill — the coding agent uses its own connection.
-- Backlog primitives (`H6 loop_guard`, `H7 timeout`) are treated as **expected extensions**, not falsifications. A loop/goal workflow that needs `loop_guard` is *not* outside POM; it is awaiting promotion of the primitive.
+- SPEC-0007 primitives (`loop_guard`, `timeout`) are validated schema fields. A historical experiment may still mention them as "expected extensions" when reading old criteria, but new loop/goal work should treat them as available contracts whose enforcement remains target-owned.
 - Composed workflows (with `state-invoke` or `event-invoke`) require following the chain: in `audit` and `scenarios` modes, read also the referenced sub-workflow before producing the output.
 - **Conclude discipline** (the closing agent): the verdict is measured against the criteria *as frozen* at acceptance — no softening a gate, moving a threshold, or reinterpreting the falsification event to make the result fit. The evaluator runs as a fresh session: it reads the artifacts (frozen `criteria.md`, `.fit.md`, scenarios, runtime output), never the criteria-definition dialog, and it tries to falsify rather than confirm. Budget-residual improvement advice is **never retroactive** and is addressed **to the Coordinator, not the user**: it opens a *next* round with new criteria to be frozen before re-measuring, and does not alter the verdict just issued. The evaluator recommends the verdict; the promotion decision (Adopt/Refine/Reject) stays with the user via `prompts/09-run-temporary-experiment.md`.
-- **The confronto leaves a trace** (anti-shortcut + improvement fuel): `define-criteria` writes, beside the frozen `criteria.md`, a `*.dialog.md` recording the essential parts of the confronto — consequences signalled, off-grid questions, user calibrations. Two reasons. First, the continuous auditing of the Coordinator is conversational and otherwise leaves no trace in the artifact, so it is the part most easily shortcut when the same agent "changes hat" (the failure observed in D5, and again mid-session when the agent ran ahead on its own); the trace makes that shortcut detectable after the fact. Second, the essential parts of a confronto are themselves operating memory and the raw material for improving the method later — exactly how the prompt's own D1–D5 weaknesses were discovered from the confronto on H1.
+- **The confronto leaves a trace** (anti-shortcut + improvement fuel): `define-criteria` writes, beside the frozen `criteria.md`, a `criteria.dialog.md` recording the essential parts of the confronto — consequences signalled, off-grid questions, user calibrations. Two reasons. First, the continuous auditing of the Coordinator is conversational and otherwise leaves no trace in the artifact, so it is the part most easily shortcut when the same agent "changes hat" (the failure observed in D5, and again mid-session when the agent ran ahead on its own); the trace makes that shortcut detectable after the fact. Second, the essential parts of a confronto are themselves operating memory and the raw material for improving the method later — exactly how the prompt's own D1–D5 weaknesses were discovered from the confronto on H1.
 
 ## Worked examples
 
@@ -73,7 +75,7 @@ The `auto` files were produced by the external TypeScript runtime as proof that 
 
 ## Output
 
-- `define-criteria`: `design/criteria-experiment-<N>-<HID>.md` (short frozen contract, see prompt for format) **plus** `design/criteria-experiment-<N>-<HID>.dialog.md` (the trace of the confronto — consequences signalled, off-grid questions, user calibrations; kept separate so the contract stays lean and freezable).
+- `define-criteria`: `design/criteria.md` (short frozen contract, see prompt for format) **plus** `design/criteria.dialog.md` (the trace of the confronto — consequences signalled, off-grid questions, user calibrations; kept separate so the contract stays lean and freezable). Historical experiments may still use numbered `criteria-experiment-<N>-<HID>.md` files.
 - `model`: a new or updated `workflows-candidate/<name>.yaml` (during experiment) or `workflows/<name>.yaml` (after promotion).
 - `audit`: `design/<name>.fit.md` with two tables (states, transitions), counts, gate results, verdict.
 - `scenarios`: `design/<name>.scenarios.md` with one scenario per significant path + coverage table.
@@ -94,5 +96,5 @@ The `auto` files were produced by the external TypeScript runtime as proof that 
 - Implementation patterns A/B/C: `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md`
 - Schema: `specs/SPEC-0006-workflow-modeling.md`
 - Context injection ADR: `decisions/ADR-0002-workflow-context-injection.md`
-- Open backlog primitives motivated here: H6 `loop_guard`, H7 `timeout` (in `EXPERIMENT.md`).
+- Bounded loop and timeout primitives: `specs/SPEC-0007-loop-guard-timeout.md`.
 - External runtime as proof of executability (not the operational path): `experiments/agent-loop-fsm/runtime-candidate/`.

@@ -14,6 +14,12 @@ Scopo: guidare la prima parte di un esperimento POM che abbia dinamica loop/goal
 
 Senza questa prima parte il loop non sa contare le iterazioni, non distingue il sistema studiato dal metodo che lo studia, e finisce per misurare cose scollegate dall'obiettivo (rischio Goodhart).
 
+Non usare questo prompt per lavoro ordinario senza ipotesi misurabile:
+feature semplici, bug fix, workflow di dominio statici, o esplorazioni
+aperte senza gate/signal. In quei casi usa il normale workflow di
+codifica, `skills/workflow.md`, `skills/spike.md`, o
+`prompts/09-run-temporary-experiment.md` secondo il caso.
+
 ```text
 Sto aprendo un esperimento POM con dinamica loop/goal. Prima di
 modellare qualunque workflow, scrivere codice o produrre evidence,
@@ -74,8 +80,10 @@ una formulazione: queste sono parti essenziali dell'esperimento e la base
 del suo miglioramento futuro (le debolezze del prompt stesso sono nate
 così, da un confronto su un esperimento passato). Mentre procediamo
 annotale, e a fine confronto scrivile in un file di traccia separato
-`design/criteria-experiment-<N>-<HID>.dialog.md` — separato dal
-`criteria.md`, che resta il metro snello e congelato. La traccia non è la
+`criteria.dialog.md` — separato dal `criteria.md`, che resta il metro
+snello e congelato. Se stai preservando un vecchio run numerato puoi
+usare `criteria-experiment-<N>-<HID>.dialog.md`, ma il nome canonico
+corrente è `criteria.dialog.md`. La traccia non è la
 trascrizione integrale: è il registro delle conseguenze segnalate e delle
 decisioni di calibrazione, una riga ciascuna. Serve anche a rendere
 verificabile a posteriori che questo confronto è davvero avvenuto e non è
@@ -88,10 +96,12 @@ riconciliazione della sezione 7 — con i controlli OK o i warning
 esplicitamente accettati — scrivi il file `criteria.md`.
 
 L'output finale di questa conversazione è il file
-`experiments/<topic>/design/criteria.md` con il formato definito in
-fondo, dove `<topic>` è il nome della cartella dell'esperimento sotto
-`experiments/`. Se il file esiste già, rifiuta di sovrascrivere e
-chiedi perché stiamo ridefinendo i criteri.
+`criteria.md` con il formato definito in fondo. In POM Source vive per
+convenzione sotto `experiments/<topic>/design/criteria.md`, dove
+`<topic>` è il nome della cartella dell'esperimento sotto `experiments/`.
+In un progetto target usa la cartella di esperimento o design dichiarata
+dal progetto e annota il path scelto. Se il file esiste già, rifiuta di
+sovrascrivere e chiedi perché stiamo ridefinendo i criteri.
 
 Se stiamo aprendo un nuovo giro su un esperimento che ha già una
 valutazione precedente — cerca `design/evaluation-experiment-*.md` — e
@@ -397,7 +407,7 @@ check, OK oppure "warning accettato: <conseguenza>".
 
 ## Output
 
-Scrivi `experiments/<topic>/design/criteria.md` con questa struttura:
+Scrivi il file `criteria.md` nel path concordato (`experiments/<topic>/design/criteria.md` in POM Source; nel progetto target, la cartella di esperimento o design dichiarata dal progetto) con questa struttura:
 
     ---
     experiment: <topic>
@@ -450,15 +460,15 @@ Alla conferma cambia in `status: accepted` e aggiungi in fondo:
     - Accettato da: <nome o ruolo>
     - Congelato fino a: chiusura esperimento o supersedere esplicito.
 
-Scrivi inoltre il file di traccia del confronto
-`experiments/<topic>/design/criteria-experiment-<N>-<HID>.dialog.md`,
-separato dal `criteria.md` (che resta il metro snello e congelato). È il
-registro essenziale del confronto, non la trascrizione integrale:
+Scrivi inoltre il file di traccia del confronto `criteria.dialog.md`
+nella stessa cartella del `criteria.md`, separato dal contratto
+congelato (che resta il metro snello). È il registro essenziale del
+confronto, non la trascrizione integrale:
 
     ---
     experiment: <topic>
     hypothesis: <Hx>
-    traces: criteria-experiment-<N>-<HID>.md
+    traces: criteria.md
     date: <YYYY-MM-DD>
     ---
 
@@ -512,7 +522,7 @@ Differenze rispetto a v2 (consolidate in v3, dal feedback di primo uso su H1):
 
 Aggiunte di metodo della stessa sessione (oltre D1–D5):
 
-- **Traccia del confronto**: le parti essenziali del dialogo (conseguenze segnalate, domande emerse fuori griglia, calibrazioni e correzioni dell'utente) vanno scritte in un file separato `design/criteria-experiment-<N>-<HID>.dialog.md`, distinto dal `criteria.md` congelato. Doppio scopo: (1) rendere verificabile a posteriori che il confronto è davvero avvenuto e non è stato accorciato in una compilazione (la modalità di fallimento osservata in D5 e ricorrente quando lo stesso agente cambia "cappello"); (2) costituire materia prima per il miglioramento futuro dell'esperimento e del metodo — come D1–D5 sono nate dal confronto su H1.
+- **Traccia del confronto**: le parti essenziali del dialogo (conseguenze segnalate, domande emerse fuori griglia, calibrazioni e correzioni dell'utente) vanno scritte in un file separato `criteria.dialog.md`, distinto dal `criteria.md` congelato. Doppio scopo: (1) rendere verificabile a posteriori che il confronto è davvero avvenuto e non è stato accorciato in una compilazione (la modalità di fallimento osservata in D5 e ricorrente quando lo stesso agente cambia "cappello"); (2) costituire materia prima per il miglioramento futuro dell'esperimento e del metodo — come D1–D5 sono nate dal confronto su H1.
 - **Handoff dal valutatore (quarto agente)**: quando si apre un nuovo giro su un esperimento che ha già un `design/evaluation-experiment-*.md`, il Coordinatore legge i consigli che il valutatore indipendente vi ha lasciato (Compito 2 di `conclude-loop-goal-experiment.md`) e li porta nel confronto con l'utente. I consigli non sono vincolanti né sono criteri: l'idea di miglioria parte dal valutatore ma viene "lavata" da questo confronto prima di diventare, eventualmente, un nuovo metro da congelare — così il valutatore non ha mai mano diretta sul metro.
 
 Differenze rispetto a v1 (consolidate in v2):

@@ -5,7 +5,8 @@ description: |
   `launch` sulla transizione), non uno stato dedicato. Stesso scenario
   ricco della Variante A, ma più compatto: gli stati sono solo gli stati
   di lavoro; il lancio avviene "passando di lì". L'attesa resta uno stato
-  (await). Campi additivi: il validator ignora `launch`.
+  (`await`). Questa variante resta eseguibile nei reference executor, ma il
+  lancio su transizione è meno leggibile del lancio su stato.
 
   Trade-off da valutare: meno stati, ma il lancio diventa un effetto
   laterale nascosto sulla transizione — meno visibile leggendo gli stati,

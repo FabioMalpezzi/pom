@@ -9,7 +9,8 @@ description: |
   È il pattern resiliente reale di un Dynamic Workflow: "non aspettare il
   più lento, basta che la maggioranza torni". join: all (rigido), first
   (race speculativa, k=1), quorum (k di n) sono tre punti dello stesso
-  campo additivo `join`. Tutti ignorati dal validator → PASS.
+  campo `join`. Il quorum lascia esplicitamente aperti gli handle non
+  consumati: prima del terminale il workflow li distacca o li cancella.
 
 initial_state: launching_a
 
@@ -31,6 +32,14 @@ states:
     await: { handles: [batch_a, batch_b, batch_c], join: quorum, k: 2, timeout: 30s, on_timeout: not_enough }
   - name: aggregating
     is_final: false
+  - name: detaching_slow
+    description: Il quorum è raggiunto; il batch lento resta al data plane.
+    is_final: false
+    detach_handles: [batch_c]
+  - name: cancelling_after_timeout
+    description: Il quorum non è raggiunto; tutti gli handle ancora attivi vengono cancellati.
+    is_final: false
+    cancel_handles: [batch_a, batch_b, batch_c]
   - name: degraded
     description: Terminale degradato perché il quorum non è stato raggiunto.
     is_final: true
@@ -43,6 +52,8 @@ events:
   - name: launched_c
   - name: enough_ready
   - name: not_enough
+  - name: slow_detached
+  - name: remaining_cancelled
   - name: aggregated
 
 transitions:
@@ -50,8 +61,10 @@ transitions:
   - { from: launching_b, to: launching_c, event: launched_b }
   - { from: launching_c, to: awaiting, event: launched_c }
   - { from: awaiting, to: aggregating, event: enough_ready }
-  - { from: awaiting, to: degraded, event: not_enough }
-  - { from: aggregating, to: done, event: aggregated }
+  - { from: awaiting, to: cancelling_after_timeout, event: not_enough }
+  - { from: aggregating, to: detaching_slow, event: aggregated }
+  - { from: detaching_slow, to: done, event: slow_detached }
+  - { from: cancelling_after_timeout, to: degraded, event: remaining_cancelled }
 
 metadata:
   experiment: dynamic-workflows

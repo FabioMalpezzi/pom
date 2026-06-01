@@ -1,6 +1,6 @@
 # Il contratto Dynamic Workflow per POM (deliverable)
 
-Estensione **additiva** del formalismo FSM di POM (SPEC-0006) per descrivere i Dynamic Workflow. Tutti i campi qui sotto sono già accettati dal validator attuale (li ignora); "promuovere" significa formalizzarli (farli validare) più un esecutore di riferimento. La concorrenza resta **fuori** dalla FSM, per scelta.
+Estensione **additiva** del formalismo FSM di POM (SPEC-0006) per descrivere i Dynamic Workflow. Il contratto è parte del control plane workflow: `fan_out_launch`, `await`, `react`, lifecycle degli handle e `compensation` descrivono confini deterministici governati dalla FSM. La concorrenza reale resta **fuori** dalla FSM, per scelta.
 
 ## Principio
 
@@ -76,7 +76,7 @@ compensation:          # a livello di workflow; saga di undo, ordine inverso
   - undo: <azione di annullamento>
 ```
 
-## Si appoggia a (primitive di backlog motivate)
+## Si appoggia a primitive già motivate
 
 - **H5** suspend/restore — il coordinamento senza orchestratore esterno; obbligatorio per le attese a giorni.
 - **H6** loop_guard — il retry: `timeout → re-launch` contato.
@@ -88,4 +88,4 @@ L'esecuzione concorrente reale, la cancellazione fisica dei thread, la persisten
 
 ## Stato di dimostrazione
 
-Tutti i costrutti sono stati modellati ed **eseguiti** su `runtime/run-stub.mjs` (stub deterministici, N parametrico): vedi `workflows-candidate/01..13` e `design/fit.md`. Il verdetto avversariale è in `design/evaluation-dynamic-workflows.md`.
+Tutti i workflow candidate sono modellati ed **eseguiti** dai reference executor TypeScript e Python sotto `runtime/`, con stub deterministici e N parametrico. Le fixture negative, come il parallelismo nativo nello state-invoke, vivono in `broken-fixtures/`.

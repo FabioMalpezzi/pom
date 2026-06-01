@@ -461,14 +461,15 @@
         <li>Subscription, application, KYC, or loan flows.</li>
         <li>Internal POM-style processes (spec lifecycle, ADR lifecycle).</li>
         <li>Pipeline orchestrators that call one synchronous sub-FSM per phase (analyzer, repair, validator).</li>
+        <li>Dynamic Workflow control planes that launch external batches, wait on named handles, and explicitly cancel or detach work that should not block closure.</li>
       </ul>
 
-      <p>Avoid it when the workflow is essentially a concurrent rule engine across many candidate machines, when the dominant complexity is real-time or distributed coordination, or when a stronger tool (XState, dedicated workflow engine) is already in use. POM workflow modeling is intentionally a subset of XState's expressive surface; the four pillars are: no async / no shared state between machines / no inheritance / no runtime owned by POM.</p>
+      <p>Avoid it when the workflow is essentially a concurrent rule engine across many candidate machines, when the dominant complexity is real-time or distributed coordination, or when a stronger tool (XState, dedicated workflow engine) is already in use. POM workflow modeling is intentionally a subset of XState's expressive surface; native parallel states, async transitions, and fork/join inside the FSM stay outside the model. Dynamic Workflow is different: POM may record deterministic control-plane primitives such as <code>fan_out_launch</code>, <code>await</code>, <code>cancel_handles</code>, and <code>detach_handles</code>, while the target project owns the real concurrent data plane.</p>
 
       <h3>What you get on the documentation and specification side</h3>
       <ul>
         <li><strong>The YAML model becomes the spec</strong> for that workflow: states, events, guards, transitions, optional <code>context_schema</code> for typed input and per-terminal output, and explicit invariants. Versioned, reviewed in PRs, archived in Git.</li>
-        <li><strong>The validator</strong> (<code>npm run pom:workflow:lint</code>) checks 50 Error rules and 4 Warning rules: unreachable states, silent dead-ends, terminal states with an undocumented exit, ambiguous transitions, missing references between parent and child, illegal asynchronous composition, and so on. Errors fail the build in CI; warnings travel as reviewer judgment.</li>
+        <li><strong>The validator</strong> (<code>npm run pom:workflow:lint</code>) checks 71 Error rules and 5 Warning rules: unreachable states, silent dead-ends, terminal states with an undocumented exit, ambiguous transitions, missing references between parent and child, illegal native asynchronous composition, loop guards, timeouts, and Dynamic Workflow handle lifecycle rules. Error reports include a stable code, location, contextual details, and a suggested fix so a coding agent can act without guessing. Errors fail the build in CI; warnings travel as reviewer judgment.</li>
         <li><strong>A Mermaid diagram</strong> is regenerated automatically every time the validator runs with <code>--mermaid-dir</code>. Drift between the model and its visual representation is impossible by construction. Renders natively on GitHub, embeddable anywhere Markdown is rendered, exportable to PNG/SVG.</li>
         <li><strong>An XState v5 MachineConfig JSON</strong> (<code>npm run pom:workflow:xstate</code>) can be imported into <a href="https://stately.ai">stately.ai</a> for an online interactive simulation, layout, and export. The team reviews the model graphically before any code is touched.</li>
         <li><strong>An ADR can record consequential schema decisions</strong> (for example: re-entry from a terminal, per-terminal output payload) with the same trail used for any other POM choice.</li>
@@ -481,6 +482,7 @@
         <li><strong>Pattern C (FSM library)</strong>: when the project already uses XState (TypeScript), <code>transitions</code> / <code>python-statemachine</code> (Python), or similar. The transformer to XState JSON is the bridge.</li>
         <li><strong>Suspend and restore</strong> are documented as a single snapshot shape (<code>workflow</code> + <code>version</code> + <code>state</code> + <code>context</code> for single machines; a stack of frames for composed workflows). The Pattern A code is stateless and the caller owns the state, so persisting between processes is two file writes and a load.</li>
         <li><strong>Bounded retry counters</strong> (max attempts) live in <code>context</code>, which means they survive snapshot + restore automatically.</li>
+        <li><strong>Dynamic Workflow reference executors</strong> under <code>experiments/dynamic-workflows/runtime/</code> show complete TypeScript and Python examples for launch, await, cancel, detach, suspend, resume, compensation, and snapshot persistence. They are executable examples, not a POM-owned runtime.</li>
       </ul>
 
       <h3>How a team typically uses it</h3>
@@ -496,8 +498,9 @@
       <h3>Where the discipline lives</h3>
       <p>The capability ships four artifacts that explain the limits explicitly so adoption stays honest:</p>
       <ul>
-        <li><code>specs/SPEC-0006-workflow-modeling.md</code>: schema, validator rules, the four pillars (no async / no shared state / no inheritance / no runtime in POM).</li>
+        <li><code>specs/SPEC-0006-workflow-modeling.md</code>: schema, validator rules, the four pillars (no native async inside the FSM / no shared state / no inheritance / no runtime in POM), plus the accepted Dynamic Workflow control-plane contract.</li>
         <li><code>decisions/ADR-0002-workflow-context-injection.md</code>: closed decision on parent/child data exchange (<code>Result&lt;Terminal, Output&gt;</code>, no shared visibility).</li>
+        <li><code>decisions/ADR-0004-dynamic-workflow-control-plane.md</code>: accepted decision that keeps POM as deterministic control plane and leaves real concurrent execution to the target project.</li>
         <li><code>templates/WORKFLOW_IMPLEMENTATION_GUIDE.md</code>: Pattern A/B/C catalogue, language profiles (TypeScript, Python), suspend/restore section, anti-patterns.</li>
         <li><code>templates/WORKFLOW_INTEGRATION_GUIDE.md</code>: adoption + extension manual for teams (file layout, configuration, lifecycle, migration patterns for existing projects, how to extend a workflow without breaking in-flight instances, versioning, retirement).</li>
         <li><code>docs/workflow-xstate-compatibility.md</code>: mapping table and the stately.ai workflow.</li>

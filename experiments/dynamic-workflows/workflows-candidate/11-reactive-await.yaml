@@ -13,7 +13,8 @@ description: |
   (exhausted). Le decisioni restano deterministiche (guard); asincrono è
   solo il timing degli eventi — e POM è già una FSM a eventi.
 
-  Campo `react` additivo: il validator lo ignora → PASS.
+  `react` governa il flusso di completamenti; prima del terminale
+  l'handle aperto viene chiuso esplicitamente.
 
 initial_state: launching
 
@@ -30,9 +31,17 @@ states:
   - name: using_result
     description: Uscita anticipata perché un task ha trovato la risposta, basta così.
     is_final: false
+  - name: detaching_after_early_exit
+    description: Uscita anticipata; il batch residuo resta al data plane.
+    is_final: false
+    detach_handles: [batch]
   - name: aggregating
     description: Raccolta esaurita senza uscita anticipata, quindi aggrega tutto.
     is_final: false
+  - name: detaching_after_exhaustion
+    description: La raccolta è chiusa; l'handle viene risolto esplicitamente.
+    is_final: false
+    detach_handles: [batch]
   - name: done
     is_final: true
 
@@ -43,19 +52,24 @@ events:
   - name: exhausted
   - name: used
   - name: aggregated
+  - name: residual_detached
+  - name: collection_closed
 
 transitions:
   - { from: launching, to: collecting, event: launched }
   - { from: collecting, to: collecting, event: one_done }
   - { from: collecting, to: using_result, event: found }
   - { from: collecting, to: aggregating, event: exhausted }
-  - { from: using_result, to: done, event: used }
-  - { from: aggregating, to: done, event: aggregated }
+  - { from: using_result, to: detaching_after_early_exit, event: used }
+  - { from: detaching_after_early_exit, to: done, event: residual_detached }
+  - { from: aggregating, to: detaching_after_exhaustion, event: aggregated }
+  - { from: detaching_after_exhaustion, to: done, event: collection_closed }
 
 invariants:
   - description: |
       collecting ha tre vie: continuare (one_done, self), uscire presto
-      (found), esaurire (exhausted). La FSM decide a ogni completamento.
+      (found), esaurire (exhausted). La FSM decide a ogni completamento
+      e chiude esplicitamente l'handle prima del terminale.
 
 metadata:
   experiment: dynamic-workflows

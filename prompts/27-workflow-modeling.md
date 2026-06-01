@@ -24,7 +24,7 @@ Steps:
 3. for every state, ask whether it is terminal (is_final) and whether it admits a documented exception out-transition (re_entry_allowed);
 4. for every guard, capture a textual description; do not encode the predicate logic in the YAML;
 5. surface ambiguities and unspecified rules as open points in the metadata.open_points list — do NOT invent business rules to fill gaps;
-6. write or update the workflow YAML following the schema in `templates-candidate/WORKFLOW_TEMPLATE.yaml`;
+6. write or update the workflow YAML following the schema in `templates/WORKFLOW_TEMPLATE.yaml`;
 7. immediately run the validator on the produced file and include the verdict in the response;
 8. report what was modeled, what was deferred to open points, and what the validator said.
 
@@ -35,7 +35,7 @@ Do not invent business rules to fill gaps. If the user has not decided, the gap 
 Goal: report the structural health of an existing workflow YAML.
 
 Steps:
-1. run `node scripts-candidate/lint-workflows.mjs <file> --out <report.md>`;
+1. run `node scripts/lint-workflows.mjs <file> --out <report.md>`;
 2. read the resulting report;
 3. summarize the verdict (PASS / PASS WITH WARNINGS / FAIL) and the count of errors and warnings;
 4. for each finding, restate the rule code, the location, and a one-sentence interpretation;
@@ -55,7 +55,9 @@ Steps:
 
 This mode never modifies the YAML.
 
-NOTE: the diagram generator is currently target-for-promotion, not implemented inside the experiment. When invoked during the experiment, output the Mermaid block in the response and ask the user where to save it.
+NOTE: the stable Mermaid tooling lives in `scripts/to-mermaid.mjs` and
+`scripts/mermaid.mjs`; `pom:workflow:lint -- --mermaid-dir <dir>` can
+also refresh diagrams while validating.
 
 ## Mode: scenarios
 
@@ -69,7 +71,10 @@ For each transition in the model, produce:
 
 Write the result to `workflows/generated/<name>.scenarios.md`.
 
-NOTE: the scenario generator is currently target-for-promotion, not implemented inside the experiment. When invoked during the experiment, produce the scenario list in the response and ask the user where to save it.
+NOTE: POM does not ship a stable scenario generator script. Scenario
+derivation is this prompt-driven mode: the coding agent reads the YAML,
+derives the scenarios, writes the generated Markdown file, and reports
+what coverage it produced.
 
 ## Mode: implement
 

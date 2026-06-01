@@ -220,7 +220,7 @@ function run(wf, dir, opts, depth = 0) {
       if (want) chosen = outs.find((o) => o.event === want);
     }
     // Variante B: il lancio è un effetto della transizione (campo `launch`),
-    // non uno stato dedicato. Additivo: il validator ignora `launch`.
+    // non uno stato dedicato.
     if (chosen.launch) {
       inFlight.push({ handle: chosen.launch.handle, workflow: chosen.launch.workflow, over: chosen.launch.over, n: opts.n });
       opts.log(`${indent}» LANCIO (su transizione, non bloccante): batch '${chosen.launch.handle}' = ${opts.n}× '${chosen.launch.workflow}'`);

@@ -28,12 +28,13 @@ transitions, explicit terminal conditions, measurable criteria, scenario
 coverage, and implementation guidance in the target project's own stack.
 
 When a target application uses the same pattern internally, `loop-goal`
-can describe a software self-improvement system: the application
-observes its own behavior, proposes or applies changes, verifies the
-result, and decides whether to continue, stop, or roll back. In that
-case the workflow is operating memory for the application's improvement
-control plane. The target project still owns execution, permissions,
-deployment, rollback, safety checks, and persistence.
+can model the control plane of a software self-improvement system: the
+application or its agents observe behavior, propose or stage changes,
+verify the result, and decide whether to continue, stop, or roll back.
+This is an application pattern, not a POM-owned runtime. The workflow is
+operating memory for the application's improvement control plane, while
+the target project still owns execution, permissions, deployment,
+rollback, safety checks, and persistence.
 
 To realize such a system, the method must connect to two concrete
 layers. First, the loop/goal shape is integrated with the generic POM
@@ -42,11 +43,11 @@ guards, context, invocations, loop bounds, timeouts, and any Dynamic
 Workflow handle lifecycle. Second, the target project implements that
 contract in real code. POM provides implementation guidance and verified
 reference evidence, but the executable system lives in the target stack.
-The repository contains two kinds of practical evidence: the
+The repository contains two practical evidence lines: the
 `agent-loop-fsm` TypeScript runtime candidate, which proves that a
 modeled agent loop can run end-to-end, and the Dynamic Workflow
-TypeScript/Python reference executors, which prove the control-plane and
-data-plane split with launched handles, await, detach, cancel, and
+TypeScript and Python reference executors, which prove the control-plane
+and data-plane split with launched handles, await, detach, cancel, and
 compensation.
 
 The current verified examples cover five shapes:
@@ -119,11 +120,11 @@ state and output, not the child's private internal context.
 For an experiment or target adoption, the order matters:
 
 1. Define criteria with `loop-goal define-criteria`.
-2. Model the workflow YAML from the closest verified example.
+2. Model the workflow YAML from the accepted criteria and the closest verified example.
 3. Run `pom:workflow:lint`.
 4. Audit fit and conformance with `loop-goal audit`.
 5. Generate scenarios with `loop-goal scenarios`.
-6. Guide implementation with the workflow implementation guide.
+6. Guide implementation with `loop-goal runtime-guide` and the workflow implementation guide.
 7. Conclude the experiment against the frozen criteria.
 
 Do not skip criteria when the work is experimental. The criteria file is
@@ -210,6 +211,16 @@ contracts:
 If a warning remains, record the consequence explicitly and get user
 acceptance. Silent "OK" is not enough when the contract is logically
 weak.
+
+Keep the frozen contract lean, but also keep the dialogue trace. The
+`define-criteria` mode writes a separate
+`experiments/<topic>/design/criteria.dialog.md` file for the
+consequences signalled during the discussion, off-grid questions, and
+user calibrations. Historical experiments may still use numbered
+`criteria-experiment-<N>-<HID>.dialog.md` traces. The evaluator reads the
+frozen criteria and evidence, not this dialogue trace; the trace exists
+so the reasoned confrontation is inspectable later and can improve the
+method.
 
 ## Boundaries
 

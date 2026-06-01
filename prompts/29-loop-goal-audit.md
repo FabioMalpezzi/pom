@@ -12,11 +12,11 @@ Esegui l'audit fit del workflow POM al path <WORKFLOW_PATH>.
 
 Prima di iniziare:
 1. leggi `pom.config.json` e conferma che `workflows.enabled: true`. Se non lo è, ferma e instrada a `skills/config.md`.
-2. leggi questo prompt + `experiments/agent-loop-fsm/skills-candidate/loop-goal.md`.
+2. leggi questo prompt + `skills/loop-goal.md`.
 3. leggi il file workflow indicato (`Read` tool).
 4. esegui il validator con `Bash`: `node scripts/lint-workflows.mjs <WORKFLOW_PATH>` — registra il verdetto (PASS/FAIL) e le eventuali entry Error/Warning.
 5. se il workflow contiene `state-invoke` o `event-invoke`, leggi ANCHE ogni sub-workflow referenziato (il path nell'`invoke.workflow` è relativo al file caller). Questo è il passo che distingue un audit di forma da un audit di integrità della composizione.
-6. **cerca il file di criteri** associato. Per convenzione vive in `design/criteria-experiment-<N>-<HID>.md` nella stessa cartella dell'esperimento; in alternativa cerca con `Bash`: `find <experiment-dir>/design -name "criteria-*.md"`. Se esiste un solo file di criteri o uno che cita esplicitamente questo workflow, leggilo. Se ne esistono più, chiedi all'utente quale è quello rilevante per questo workflow. Se non esiste alcun file di criteri, segnala chiaramente nell'output che l'audit di conformità non può essere eseguito e procedi solo con la classificazione fit.
+6. **cerca il file di criteri** associato. Il nome canonico corrente del contratto è `criteria.md`. In POM Source vive di solito in `experiments/<topic>/design/criteria.md`; in un progetto target usa la convenzione dichiarata dal progetto, oppure cerca vicino al workflow in `design/`, `workflows/generated/`, o nella cartella di esperimento equivalente. I vecchi file `criteria-experiment-<N>-<HID>.md`, se presenti, sono artefatti storici o run-specifici: usali solo se non esiste `criteria.md` o se l'utente indica esplicitamente quel run. Se esiste un solo file di criteri o uno che cita esplicitamente questo workflow, leggilo. Se ne esistono più, chiedi all'utente quale è quello rilevante per questo workflow. Se non esiste alcun file di criteri, segnala chiaramente nell'output che l'audit di conformità non può essere eseguito e procedi solo con la classificazione fit.
 
 Procedi con la classificazione:
 
@@ -33,18 +33,29 @@ Procedi con la classificazione:
 - **pipeline**: sequenza lineare di workflow autonomi.
 - **self-transition**: `from == to`, tipicamente con un guard (retry, loop locale).
 
-Backlog primitive dell'esperimento `agent-loop-fsm` (ammesse come **estensioni attese**, NON falsificazioni):
-- **H6 `loop_guard`**: bound a un loop per numero di visite (`max_visits`) e/o durata (`max_duration`).
-- **H7 `timeout`**: bound di permanenza in uno stato non-loop.
+Primitive temporali promosse da SPEC-0007:
+- **`loop_guard`**: bound a un loop per numero di visite (`max_visits`) e/o durata (`max_duration`).
+- **`timeout`**: bound di permanenza in uno stato non-loop.
 
-Un workflow che richiede H6 o H7 NON è "outside POM" — è in attesa che la primitiva sia promossa. Va classificato come `adapted fit` (con context counter + guard) e annotato che H6/H7 lo renderebbero dichiarativo.
+Un workflow che usa `loop_guard` o `timeout` non è "outside POM": queste primitive sono normali campi validati dallo schema. Se stai auditando un vecchio esperimento che le descrive come "estensioni attese", trattalo come linguaggio storico, non come stato corrente.
 
-Una primitiva strutturale **non in backlog** (es. parallel-states, async transitions, fork/join) richiesta dal workflow rende il fit `forced lossy` o `adapted con grossa nota` — segnala chiaramente.
+Parallelismo nativo dentro la FSM POM resta fuori modello: parallel
+states, transizioni async e fork/join interni alla state machine rendono
+il fit `forced lossy` o `adapted con grossa nota`. Il contratto Dynamic
+Workflow accettato da ADR-0004 è invece **dentro il workflow come control
+plane deterministico**: `fan_out_launch`, `await` con `join`/`k`/timeout,
+`react`, `cancel_handles`, `detach_handles`, lifecycle propagation e
+`compensation` descrivono i confini che la FSM governa. Non classificarli
+come fork/join nativo. Valuta invece se il modello dichiara esplicitamente
+launch, wait/join, timeout, reaction, cancel/detach, compensation e
+handle lifecycle; la sola parte che resta al target è l'esecuzione
+concorrente reale del data plane (workers, queue, scheduler, thread/process
+cancel, persistenza durevole).
 
 ## Definizioni di fit
 
 - **clean fit**: mappa direttamente a una primitiva POM, senza riformulazione.
-- **adapted fit**: usa la primitiva con una piccola riformulazione documentata (split, merge, rename, context counter al posto di una primitiva attesa nel backlog).
+- **adapted fit**: usa la primitiva con una piccola riformulazione documentata (split, merge, rename, context counter quando il target non ha ancora adottato una primitiva schema disponibile).
 - **forced lossy**: la primitiva distorce il significato di dominio. Il modello tradisce il workflow.
 
 ## Struttura del file `<name>.fit.md` da produrre
@@ -80,7 +91,7 @@ Una primitiva strutturale **non in backlog** (es. parallel-states, async transit
     |---|---|
     | Validator (`pom:workflow:lint`) | PASS / FAIL — <count> errors, <count> warnings |
     | Sub-workflow valido (se composizione) | PASS / FAIL — uno per ogni sub |
-    | Estensioni backlog dichiarate | lista (H6 loop_guard, H7 timeout, ...) o "nessuna" |
+    | Primitive speciali dichiarate | lista (`loop_guard`, `timeout`, Dynamic Workflow handle lifecycle, ...) o "nessuna" |
 
     ## Conformity check (vs criteria)
 
@@ -121,11 +132,11 @@ Una primitiva strutturale **non in backlog** (es. parallel-states, async transit
 
 ## Path di output
 
-Per default scrivi il file a fianco del workflow, cambiando estensione:
-- input  `experiments/<topic>/workflows-candidate/foo.yaml`
-- output `experiments/<topic>/design/foo.fit.md`
+Per default scrivi il file vicino agli artefatti di design del workflow:
+- in POM Source: input `experiments/<topic>/workflows-candidate/foo.yaml`, output `experiments/<topic>/design/foo.fit.md`;
+- in un progetto target: se il workflow vive in `workflows/`, usa `workflows/generated/foo.fit.md` oppure la cartella `design/` dichiarata dal progetto.
 
-(se il workflow vive in `workflows/`, l'output va in `design/` allo stesso livello).
+Se il progetto ha una convenzione propria per gli artefatti derivati, seguila e dichiarala nel riepilogo.
 
 ## Termine
 

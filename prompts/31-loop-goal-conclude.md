@@ -20,8 +20,11 @@ La sicurezza di farlo valutare allo stesso "famiglia" di agenti che ha aperto l'
 
 ```text
 Valuta in modo indipendente e avversariale l'esperimento loop/goal il
-cui file di criteri è <CRITERIA_PATH> (per convenzione
-`experiments/<topic>/design/criteria-experiment-<N>-<HID>.md`).
+cui file di criteri è <CRITERIA_PATH>. Il nome canonico corrente del
+contratto è `criteria.md` (`experiments/<topic>/design/criteria.md` in
+POM Source, o la cartella dichiarata dal progetto target). I vecchi file
+`criteria-experiment-<N>-<HID>.md`, se presenti, sono artefatti storici o
+run-specifici: usali solo se l'utente indica esplicitamente quel run.
 
 ## Postura
 
@@ -40,8 +43,10 @@ indipendenza.
    sezione `## Acceptance` con data: se è ancora `draft`, ferma — non si
    conclude un esperimento i cui criteri non sono mai stati congelati.
 2. leggi `EXPERIMENT.md` (contesto e backlog) e `RESULTS.md` (cosa è
-   stato fatto), ma trattali come dichiarazioni di parte: la verità sono
-   le evidenze, non il racconto.
+   stato fatto) quando esistono. In POM Source sono la convenzione
+   storica; in un progetto target possono chiamarsi diversamente o non
+   esistere. Trattali comunque come dichiarazioni di parte: la verità
+   sono le evidenze, non il racconto.
 3. raccogli le evidenze prodotte dagli altri agenti e dal runtime, con
    `Bash`/`Read`:
    - i `.fit.md` (output del Workflow Fit Auditor) sotto `design/`;
@@ -138,7 +143,11 @@ non è affar tuo. Se in qualche punto hai dovuto colmare un'ambiguità con
 un'interpretazione tua, dichiaralo: l'utente deve sapere dove la tua
 lettura ha pesato sul verdetto.
 
-## Output — `design/evaluation-experiment-<N>-<HID>.md`
+## Output — `evaluation-experiment-<N>-<HID>.md`
+
+Scrivi il file nella stessa cartella di design/evidence del
+`criteria.md` (`design/evaluation-experiment-<N>-<HID>.md` in POM
+Source; nel progetto target, la convenzione dichiarata dal progetto).
 
     ---
     experiment: <topic>

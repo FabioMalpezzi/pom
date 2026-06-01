@@ -50,8 +50,8 @@ L'esperimento cerca iterativamente, per ciascuna delle quattro strutture, la mod
 
 - **C-a budget vs loop_guard**: 32 iterazioni × ~2 min per giro (stima rivista con l'utente, ritmo agente non umano) ≈ 64 min ≈ 60 min (un'ora) → coerente; i due tetti sono allineati, lo stallo a 3 fa da rete.
 - **C-b signal vs gate**: il signal (forced lossy residui) parte alto e scende; la baseline NON è al pavimento → misura progresso reale, non è un gate travestito.
-- **C-c falsificazione vs backlog**: le primitive che potrebbero emergere (fan-out dinamico, fork/join, parallel-states) **non** sono nel backlog POM esistente (che contiene solo `loop_guard` H6 e `timeout` H7) → la loro necessità è una falsificazione legittima e il deliverable atteso, non un cortocircuito. Se invece emergesse il bisogno di `loop_guard`/`timeout` (già in backlog), quello sarebbe `adapted`, non falsificazione.
-- **C-d obiettivo vs backlog originale**: esperimento nuovo, nessuna formulazione precedente da confrontare → niente irrigidimento silenzioso da segnalare.
+- **C-c falsificazione vs primitive esistenti**: le primitive che potrebbero emergere (fan-out dinamico, fork/join, parallel-states) non sono primitive native della FSM POM. La loro necessità è una falsificazione legittima se richiede parallelismo interno; resta `adapted` se è rappresentabile come control plane con data plane target.
+- **C-d obiettivo vs formulazione originale**: esperimento nuovo, nessuna formulazione precedente da confrontare → niente irrigidimento silenzioso da segnalare.
 
 ## Acceptance
 

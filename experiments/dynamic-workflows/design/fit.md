@@ -18,7 +18,7 @@ Signal = `forced lossy` residui per struttura. Tutte passano i gate (validator P
 
 ## Evidenza dura del muro
 
-- `probe-parallel.yaml`: `mode: parallel` su uno state-invoke → **E036** (FAIL). Il parallelismo non è una modalità dichiarabile: è vietato per costruzione dallo schema (E029/E036/E046 — "asynchronous composition is out of scope; use Pattern C / XState").
+- `broken-fixtures/state-invoke-parallel-E036.yaml`: `mode: parallel` su uno state-invoke → **E036** (FAIL). Il parallelismo nativo non è una modalità dichiarabile dentro la FSM.
 - Una transizione ha esattamente un `to` (E012/E015): da uno stato non si dirama a due stati insieme → nessun fork nativo.
 
 ## Lettura del signal
@@ -33,10 +33,10 @@ Iterando, il forced residuo si è ridotto su tre delle quattro strutture: la pip
 | 2 | `06-variant-A-states` | scenario ricco: lancia→lavoro→lancia→lavoro→attendi | **A scelta** |
 | 2 | `07-variant-B-transition` | lancio come effetto di transizione | scartata (rompe purezza transizioni) |
 | 2 | `08-variant-C-context` | handle nel context_schema | evoluzione opzionale (costa working vars) |
-| 3 | `09-timeout-escalate` | timeout (H7) → risveglio su on_timeout | additivo (PASS), 2 scenari |
-| 3 | `10-join-quorum` | quorum k-of-n: il lento non blocca | additivo (PASS), 2 scenari |
-| 4 | `11-reactive-await` | react/on_each + early-exit (caso a flusso) | additivo (PASS), 2 scenari |
-| 4 | `12-nested-top/mid` | fan-out annidato, composizione ricorsiva | additivo (PASS), 16 foglie |
-| 5 | `13-child-compensation` + `13-parent-control` | cancel+compensation propagati, suspend/resume, timeout a giorni | additivo (PASS), 4 scenari |
+| 3 | `09-timeout-escalate` | timeout → risveglio su on_timeout | contratto eseguibile |
+| 3 | `10-join-quorum` | quorum k-of-n: il lento non blocca e viene chiuso esplicitamente | contratto eseguibile |
+| 4 | `11-reactive-await` | react/on_each + early-exit con chiusura handle | contratto eseguibile |
+| 4 | `12-nested-top/mid` | fan-out annidato, composizione ricorsiva | contratto eseguibile |
+| 5 | `13-child-compensation` + `13-parent-control` | cancel+compensation propagati, suspend/resume, timeout a giorni | contratto eseguibile |
 
-Tutti i 13 modelli passano il validator: i campi del contratto sono **additivi** (il validator attuale li ignora). Il contratto completo è in `design/CONTRACT.md`. Esecutore: `runtime/run-stub.mjs`.
+Tutti i workflow candidate sono eseguibili con i reference executor TypeScript e Python. Il contratto completo è in `design/CONTRACT.md`; le fixture negative vivono in `broken-fixtures/`.

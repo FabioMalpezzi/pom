@@ -21,7 +21,7 @@ Esecuzione **autonoma** dopo la definizione dei criteri in confronto con l'utent
 
 ## I cinque giri
 
-1. **Le quattro strutture base.** Pipeline per-task = clean; fork/join dei verifier = adapted (sequenzializzato); fan-in di N = adapted (counted join via context counter); fan-out di N = **forced**. Verdetto giro 1: ipotesi falsificata — il fan-out a N e il parallelismo non sono esprimibili (E036 vieta `mode: parallel`; una transizione = un solo `to`). Evidenza dura: `probe-parallel.yaml` → E036; `04-fanout` con `--n 100` lancia 1 task reale.
+1. **Le quattro strutture base.** Pipeline per-task = clean; fork/join dei verifier = adapted (sequenzializzato); fan-in di N = adapted (counted join via context counter); fan-out di N = **forced**. Verdetto giro 1: ipotesi falsificata — il fan-out a N e il parallelismo non sono esprimibili come parallelismo nativo dentro la FSM (E036 vieta `mode: parallel`; una transizione = un solo `to`). Il caso negativo vive in `broken-fixtures/state-invoke-parallel-E036.yaml`; `04-fanout` con `--n 100` lancia 1 task reale.
 
 2. **Refutazione e launch/await.** Il counted invoke loop (`04b`) esprime N task dinamici ma **sequenziali**: l'irriducibile non è la funzione fan-out, è il **parallelismo**. Su proposta dell'utente nasce il pattern **control plane interno / data plane esterno**: la FSM decide e delega; un `fan_out_launch` non bloccante + un `await` bloccante. Confronto fra tre varianti — A (stati dedicati), B (effetto su transizione, **scartata**), C (handle nel context). Scelta: **A**, come decomposizione naturale dello `state-invoke`.
 
@@ -35,7 +35,7 @@ Esecuzione **autonoma** dopo la definizione dei criteri in confronto con l'utent
 
 **Verdetto**: l'ipotesi originale (lo schema attuale basta, senza primitive nuove) è **refuted** in modo localizzato — l'unico forced irriducibile è la concorrenza *dentro* la FSM, vietata per scelta (E036). Ma il **deliverable** è un contratto **additivo** che elude quel limite delegando la concorrenza all'esterno, non un cambio di paradigma. Il contratto completo è in `design/CONTRACT.md`.
 
-**Costo**: basso. Tutti i campi del contratto sono additivi — il validator attuale li accetta già (tutti i 13 modelli passano). "Promuovere" = formalizzarli (farli capire al validator) + un esecutore di riferimento. Dà un caso d'uso concreto a tre primitive di backlog: H5 (suspend/restore), H6 (loop_guard, retry), H7 (timeout).
+**Costo**: basso. Tutti i campi del contratto sono additivi rispetto alla FSM: il validator implementa il lifecycle degli handle e i reference executor TypeScript/Python eseguono tutti i workflow candidate. Dà un caso d'uso concreto a suspend/restore, loop_guard/retry e timeout.
 
 **Per il metodo `loop-goal`**: primo collaudo riuscito del ciclo a quattro agenti in modalità confronto. Il confronto ha prodotto un obiettivo migliore di quello iniziale (separazione ipotesi/deliverable, definizione di "irriducibile"); il signal si è **mosso davvero** (i forced lossy sono scesi iterando — cosa mai accaduta in H1–H5); la valutazione avversariale, co-condotta con l'utente, ha trovato il pattern launch/await e poi il contratto di controllo. Limite onesto: il valutatore non è stato eseguito come sessione separata dal modellatore.
 
@@ -44,5 +44,5 @@ Esecuzione **autonoma** dopo la definizione dei criteri in confronto con l'utent
 - Contratto (deliverable): `design/CONTRACT.md`
 - Criteri congelati: `design/criteria.md` · traccia del confronto: `design/criteria.dialog.md`
 - Decisioni: `decisions-log.md` · fit: `design/fit.md` · verdetto: `design/evaluation-dynamic-workflows.md`
-- 13 modelli eseguibili: `workflows-candidate/` · runner deterministico: `runtime/run-stub.mjs`
+- modelli eseguibili: `workflows-candidate/` · reference executor deterministici: `runtime/dynamic-workflow.ts` e `runtime/dynamic_workflow.py`
 - Implementazioni di riferimento (TS, Python): `runtime/` (minimali ed estensibili)
