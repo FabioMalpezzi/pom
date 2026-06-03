@@ -114,6 +114,12 @@
     "triggerPaths": [],
     "forbiddenHeadings": ["## Log", "## Timeline", "## Changelog", "## History"]
   },
+  "workflows": {
+    "enabled": false,
+    "root": "workflows/",
+    "generatedRoot": "workflows/generated/",
+    "namingConvention": "snake_case"
+  },
   "skillUsage": {},
   "promptUsage": {}
 }

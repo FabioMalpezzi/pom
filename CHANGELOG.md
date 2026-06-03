@@ -2,6 +2,20 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## Unreleased
+
+Lowers the friction of activating workflow modeling in a target project. Before this change, enabling workflows was discoverable only by reading SPEC-0006, and a missing `js-yaml` install made the scripts fail with a raw `ERR_MODULE_NOT_FOUND` stack trace.
+
+### Added
+
+- **`workflows` section in `POM_CONFIG_TEMPLATE.json`**: shipped pre-filled with `enabled: false`, so new projects already have the shape to copy instead of reconstructing it from the spec.
+- **"Enabling Workflows" section in the `config` skill** (`skills/config.md`): documents the `workflows` config shape, the activation steps, and the `js-yaml` prerequisite. Closes the referral loop — the `workflow` skill routes to `config.md` when workflows are off, which previously said nothing about how to enable them.
+- **`scripts/require-yaml.mjs`**: guarded loader for `js-yaml` (the only external dependency of the workflow scripts). On a missing install it prints an actionable message (`npm install` + pointer to `config.md`) and exits 2 instead of throwing a raw module-resolution stack trace.
+
+### Changed
+
+- **Workflow scripts** (`lint-workflows.mjs`, `to-mermaid.mjs`, `to-xstate.mjs`): import `js-yaml` through `require-yaml.mjs` so all three fail gracefully when the dependency is absent.
+
 ## 0.2.0 - 2026-05-30
 
 Adds the workflow modeling capability (SPEC-0006) to POM. Opt-in per target project via `workflows.enabled` in `pom.config.json`. Coherent with the four POM-workflow pillars: no async / no shared state / no inheritance / no runtime in POM.

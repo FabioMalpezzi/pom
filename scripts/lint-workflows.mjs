@@ -16,7 +16,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, dirname, join, isAbsolute, basename } from 'node:path';
-import yaml from 'js-yaml';
+import yaml from './require-yaml.mjs';
 import { renderModelMermaid } from './mermaid.mjs';
 import { validateDynamicWorkflowHandles } from './workflow-dynamic-handles.mjs';
 import { ERROR_HELP } from './workflow-error-help.mjs';

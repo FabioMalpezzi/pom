@@ -50,6 +50,34 @@ Map existing project conventions first. Do not migrate existing analysis, task, 
 
 The config may include `skillUsage` and `promptUsage` sections when the project intentionally tracks workflow usage. Do not reset these counters unless explicitly requested.
 
+## Enabling Workflows
+
+Workflow modeling (skill `workflow`, SPEC-0006) is **opt-in and off by default**. The `workflow` skill stops and routes here when it is not enabled, so this is the canonical place to turn it on.
+
+To enable it, add a top-level `workflows` section to `pom.config.json` (it is **not** an `adoption` key — it is its own section, alongside `handoff`):
+
+```json
+"workflows": {
+  "enabled": true,
+  "root": "workflows/",
+  "generatedRoot": "workflows/generated/",
+  "namingConvention": "snake_case"
+}
+```
+
+- `enabled`: `true` activates the skill and the `pom:workflow:*` scripts; when `false` or absent, POM ignores the section entirely.
+- `root`: directory holding the hand-authored workflow YAML models.
+- `generatedRoot`: directory for derived artifacts (validation reports, Mermaid diagrams, scenarios) — never hand-edit files here.
+- `namingConvention`: naming convention enforced for workflow and state names.
+
+Then complete activation:
+
+1. Create the `root` and `generatedRoot` directories if they do not exist.
+2. **Install the `js-yaml` dependency.** The validator and transformers (`pom:workflow:lint`, `:mermaid`, `:xstate`) need `js-yaml`. It is declared as a POM dependency but installed on demand, so run `npm install` in the POM root (`pom/`) or in the project root. Without it the scripts exit with an actionable error instead of a raw stack trace.
+3. Verify the chain with `npm run pom:workflow:lint <a-workflow>.yaml` (a complete model should report `PASS`).
+
+`POM_CONFIG_TEMPLATE.json` ships this section pre-filled with `enabled: false`, so new projects already have the shape to copy.
+
 ## Template Localization
 
 Use project-owned templates when the project needs documents in a language other than English or a different local document shape.
