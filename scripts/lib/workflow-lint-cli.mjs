@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { resolve, dirname, basename } from 'node:path';
-import yaml from 'js-yaml';
+import yaml from '../require-yaml.mjs';
 import { renderModelMermaid } from '../mermaid.mjs';
 import { err, isPipelineModel, validatePipelineModel, validateWorkflowModel } from './workflow-lint-core.mjs';
 import { formatWorkflowReport } from './workflow-lint-report.mjs';

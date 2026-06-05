@@ -50,6 +50,44 @@ Map existing project conventions first. Do not migrate existing analysis, task, 
 
 The config may include `skillUsage` and `promptUsage` sections when the project intentionally tracks workflow usage. Do not reset these counters unless explicitly requested.
 
+## Enabling Workflows
+
+Workflow modeling through `skills/workflow.md` and SPEC-0006 is opt-in
+and disabled by default. The workflow skill routes here when workflow
+support is not enabled, so this is the canonical place to turn it on.
+
+Add or update a top-level `workflows` section in `pom.config.json`. It is
+not an `adoption` key; it sits alongside sections such as `handoff`:
+
+```json
+"workflows": {
+  "enabled": true,
+  "root": "workflows/",
+  "generatedRoot": "workflows/generated/",
+  "namingConvention": "snake_case"
+}
+```
+
+- `enabled`: `true` activates the workflow skill and `pom:workflow:*`
+  scripts. `false` or an absent section leaves workflow support off.
+- `root`: directory for hand-authored workflow YAML models.
+- `generatedRoot`: directory for derived reports, diagrams, and
+  scenarios. Do not hand-edit generated files there.
+- `namingConvention`: naming convention for workflow and state names.
+
+Then complete activation:
+
+1. Create `root` and `generatedRoot` if they do not exist.
+2. Install the `js-yaml` dependency with `npm install` in the POM root
+   or project root. Workflow scripts use `js-yaml`; if it is missing,
+   they exit with an actionable `[pom:workflow]` message instead of a raw
+   module-resolution stack trace.
+3. Verify the chain with
+   `npm run pom:workflow:lint <workflow-or-pipeline>.yaml`.
+
+`POM_CONFIG_TEMPLATE.json` ships this section with `enabled: false`, so
+new projects have the shape available without reading SPEC-0006 first.
+
 ## Template Localization
 
 Use project-owned templates when the project needs documents in a language other than English or a different local document shape.

@@ -7,7 +7,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import yaml from 'js-yaml';
+import yaml from './require-yaml.mjs';
 
 import { renderModelMermaid } from './mermaid.mjs';
 

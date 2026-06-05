@@ -35,4 +35,4 @@ import { resolve, dirname, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-import yaml from "js-yaml";
+import yaml from "./require-yaml.mjs";

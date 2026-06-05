@@ -1,6 +1,6 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
-import yaml from 'js-yaml';
+import yaml from '../require-yaml.mjs';
 import { validateDynamicWorkflowHandles } from '../workflow-dynamic-handles.mjs';
 
 export function err(code, where, extra) {
