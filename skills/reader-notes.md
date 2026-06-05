@@ -1,6 +1,6 @@
 ---
 name: reader-notes
-description: Use this skill to process human notes created in the POM Project Reader, from claim through source-backed edits, outcome recording, and verification.
+description: Use when processing notes created in the POM Project Reader.
 ---
 
 # Skill - reader-notes

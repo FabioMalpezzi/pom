@@ -1,5 +1,5 @@
 {
-  "pomVersion": "0.1.0",
+  "pomVersion": "0.2.0",
   "installation": {
     "pomRoot": "pom",
     "note": "Template paths assume POM is installed in the target project as pom/. Adapt paths if using a different installation layout."

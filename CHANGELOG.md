@@ -2,6 +2,28 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## Unreleased
+
+### Added
+
+- **`using-pom` bootstrap skill** (`skills/using-pom.md`, `prompts/32-using-pom.md`): routes POM-aware work before acting, maps common harness tool names across Codex, Claude Code, Gemini CLI, Cursor, OpenCode, and GitHub Copilot, and guards against creating artifacts for disabled adoption modules.
+- **Agent harness reference** (`prompts/references/agent-harnesses.md`): documents the session-start contract, instruction targets, tool mapping, and clean-session smoke prompts for POM integrations.
+- **Skill bootstrap tests** (`tests/skill-bootstrap/`): deterministic checks for the new bootstrap, concise skill frontmatter descriptions, bilingual English/Italian routing smoke fixtures, disabled-module negative cases, and Git/experiment routing through `spike` and `sync`.
+- **`finish-branch` delivery skill** (`skills/finish-branch.md`, `prompts/33-finish-branch.md`): guides verified branch closure through merge, PR, keep, discard, and worktree cleanup options.
+- **`root-cause` debugging skill** (`skills/root-cause.md`, `prompts/34-root-cause-debugging.md`): optional Target Project procedure for bugs, test failures, build failures, performance issues, and unexpected behavior; requires evidence-first root-cause investigation before fixes.
+- **POM Source file-size lint** (`source-size-*`): enforces the 1000-line hard cap and warns at the 800-line working target for operational POM Source code files, without applying those limits to Target Project application files.
+
+### Changed
+
+- Reworked skill frontmatter descriptions to be trigger-oriented rather than miniature workflows, reducing the chance that an agent follows the description without reading the skill body.
+- Updated installed agent instruction templates so POM-aware sessions start from `pom/skills/using-pom.md` when the correct skill is unclear.
+- Extended `spike` with Git isolation rules for existing worktrees, submodules, harness-native workspaces, baseline verification, and handoff to `finish-branch`.
+- Clarified `check` routing so Target Project failures go to `root-cause`, while POM method/tooling defects stay on `diagnose`.
+- Aligned README and config template version references with package version `0.2.0`.
+- Aligned README, public guides, and wiki skill maps with the current installed skill index.
+- Split large POM Source implementation files below the 800-line working target.
+- Removed stale candidate-status prose from the canonical loop/goal criteria prompt.
+
 ## 0.2.0 - 2026-05-30
 
 Adds the workflow modeling capability (SPEC-0006) to POM. Opt-in per target project via `workflows.enabled` in `pom.config.json`. Coherent with the four POM-workflow pillars: no async / no shared state / no inheritance / no runtime in POM.

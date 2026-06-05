@@ -1,6 +1,6 @@
 ---
 name: status
-description: Use this helper skill when a document type or status field is ambiguous, then route to the proper POM workflow after classification.
+description: Use when a document type or status is ambiguous before routing to another POM workflow.
 ---
 
 # Skill - status

@@ -1,6 +1,6 @@
 ---
 name: config
-description: Use this skill to create or update pom.config.json — configuring lint, adoption profile, and mappings for decisions, docs, source, tests, task plans, wiki, analysis, and mockups.
+description: Use when creating or updating pom.config.json for adoption, roots, lint, wiki, decisions, tasks, tests, docs, analysis, or mockups.
 ---
 
 # Skill - config

@@ -12,6 +12,8 @@ Skills do not replace prompts. Each skill points to the canonical prompt and rel
 
 Each skill file includes a YAML frontmatter block with `name` and `description` fields. Agents that support skill discovery can use this to invoke skills automatically when the user's request matches the description. Agents that do not support frontmatter continue to read the `## When To Use` section as before.
 
+`using-pom` is the bootstrap/router skill. It uses this file as the catalog and `prompts/references/agent-harnesses.md` for session-start behavior, instruction targets, and tool mapping when POM is integrated with Codex, Claude Code, Gemini CLI, Cursor, OpenCode, GitHub Copilot, or another harness.
+
 ## Configuration
 
 Before applying a skill, read `pom.config.json` when present.
@@ -54,6 +56,7 @@ Existing project structures should be mapped first, not moved by default.
 
 | Skill | Use | Prompt |
 |---|---|---|
+| `using-pom` | bootstrap a POM-aware session and route to the right skill | `prompts/32-using-pom.md` |
 | `help` | choose and explain POM skills | `skills/README.md` |
 | `clarify` | clarify ambiguous work before creating memory or changing method | `prompts/20-clarify-pom-work.md` |
 | `seed` | start POM on a new project | `prompts/01-bootstrap-new-project.md` |
@@ -65,6 +68,7 @@ Existing project structures should be mapped first, not moved by default.
 | `handoff` | close a session by updating memory and status | `prompts/07-update-project-after-work.md` |
 | `reader-notes` | process human Project Reader notes through source-backed edits and outcome recording | `prompts/26-process-reader-notes.md` |
 | `diagnose` | debug failing or confusing POM workflows with a focused feedback loop | `prompts/22-diagnose-pom-problem.md` |
+| `root-cause` | investigate Target Project bugs, test failures, build failures, and unexpected behavior before fixes | `prompts/34-root-cause-debugging.md` |
 | `zero-tech-debt` | reshape a scoped change around the intended product and architecture end state | `prompts/23-zero-tech-debt.md` |
 | `challenge` | run adversarial thesis/antithesis review before accepting or completing non-code work | `prompts/24-challenge-antithesis.md` |
 | `config` | create or update `pom.config.json` | `prompts/08-create-pom-config.md` |
@@ -76,10 +80,11 @@ Existing project structures should be mapped first, not moved by default.
 | `status` | classify document type and choose the least misleading status | `prompts/15-classify-document-status.md` |
 | `defer` | park important work without implementing it | `prompts/16-defer-work.md` |
 | `sync` | refresh an existing POM installation or align source POM changes with a target project's `pom/` | `prompts/17-sync-pom-framework.md` |
+| `finish-branch` | finish branch, PR, merge, keep, discard, or cleanup decisions | `prompts/33-finish-branch.md` |
 | `reconcile` | classify and resolve a divergence between a source and project memory | `prompts/19-reconcile-memory.md` |
 | `validate` | audit POM governance after significant actions | `prompts/18-post-action-validator.md` |
 | `workflow` | design, validate, diagram, scenarios, and implement domain workflows declared as YAML state models | `prompts/27-workflow-modeling.md` |
-| `loop-goal` | define-criteria, model, audit, scenarios, conclude for agent loop/goal workflows and experiments (the four-agent cycle); when to use vs `workflow` → `ADR-0003` | `prompts/28-loop-goal-define-criteria.md`, `prompts/29-loop-goal-audit.md`, `prompts/30-loop-goal-scenarios.md`, `prompts/31-loop-goal-conclude.md` |
+| `loop-goal` | define-criteria, model, audit, scenarios, conclude for agent loop/goal workflows and experiments (the four-agent cycle); when to use vs `workflow` -> `ADR-0003` | `prompts/28-loop-goal-define-criteria.md`, `prompts/29-loop-goal-audit.md`, `prompts/30-loop-goal-scenarios.md`, `prompts/31-loop-goal-conclude.md` |
 
 ## Rule
 

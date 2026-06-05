@@ -1,6 +1,6 @@
 ---
 name: guard
-description: Use this skill to set or update project operating guardrails beyond the installer, including governance rules, decision records, mock manifests, lint configuration, and agent rules.
+description: Use when setting or revising project operating guardrails beyond the installer.
 ---
 
 # Skill - guard

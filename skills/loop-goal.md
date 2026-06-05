@@ -1,6 +1,6 @@
 ---
 name: loop-goal
-description: Use this skill to define measurable criteria for, design, audit, generate test scenarios for, guide the implementation of, and independently conclude POM workflows and experiments that model agent loop/goal patterns — agents that iterate (perceive → reason → act → observe) toward a stated goal, with bounded retry, suspendable state, and replan loops. Distinct from the generic `workflow` skill: this one is specialized for the loop/goal subtype where the agent makes decisions and may iterate.
+description: Use when modeling or evaluating an agent-shaped controller that iterates toward a measurable goal.
 ---
 
 # Skill - loop-goal

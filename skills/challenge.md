@@ -1,6 +1,6 @@
 ---
 name: challenge
-description: Use this skill to run an adversarial thesis/antithesis review of an ADR, non-code spec, task plan, or normative document before accepting or completing it.
+description: Use when an ADR, non-code spec, task plan, or normative document needs adversarial review.
 ---
 
 # Skill - challenge

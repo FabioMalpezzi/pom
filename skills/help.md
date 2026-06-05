@@ -1,6 +1,6 @@
 ---
 name: help
-description: Use this skill when the user asks which POM skill, prompt, or template exists or should be used.
+description: Use when the user asks which POM skill, prompt, template, or command exists or fits a situation.
 ---
 
 # Skill - help

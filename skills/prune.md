@@ -1,6 +1,6 @@
 ---
 name: prune
-description: Use this skill to reduce POM bloat by simplifying, merging, demoting, deleting, or config-gating rules, prompts, skills, templates, and lint checks that no longer protect operating memory.
+description: Use when POM rules, prompts, skills, templates, or checks feel duplicated, heavy, or no longer useful.
 ---
 
 # Skill - prune

@@ -1,6 +1,6 @@
 ---
 name: check
-description: Use this skill to verify that a completed phase, workstream, or task actually meets its declared goal, including scenario tests, thesis/antithesis validation, and consistency with specs, ADRs, and wiki.
+description: Use when a phase, workstream, task, spec, or ADR is claimed complete and needs verification.
 ---
 
 # Skill - check
@@ -28,7 +28,8 @@ description: Use this skill to verify that a completed phase, workstream, or tas
 ## Related Skills
 
 - Use `skills/validate.md` after significant closures or governance-changing work, not after every small local check.
-- Use `skills/diagnose.md` if verification fails and the cause is unclear.
+- Use `skills/root-cause.md` if a Target Project test, build, runtime, or performance failure needs debugging before a fix.
+- Use `skills/diagnose.md` if a POM workflow, installer, prompt, template, lint, or memory mechanism fails and the cause is unclear.
 
 Read `pom.config.json` to know approved analysis/task/test/docs/source roots and which warnings should be treated as errors.
 

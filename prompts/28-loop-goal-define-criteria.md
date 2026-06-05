@@ -505,40 +505,11 @@ Senza criteri accettati, rifiuta di scrivere YAML, codice o evidence
 per questo esperimento.
 ```
 
-## Note di consolidazione
+## Stato canonico
 
-Differenze rispetto a v3 (consolidate in v4, dal primo uso reale su `dynamic-workflows` — vedi `notes/2026-05-30-lessons-learned.md`):
+Questo prompt è la procedura canonica POM per definire criteri misurabili
+prima di modellare, eseguire o valutare un esperimento loop/goal.
 
-- **Lezione 1 (confine rinforzato)**: oltre a "proponi ma non decidere", la nota operativa ora impone esplicitamente di **fermarsi e aspettare** quando l'utente sta ragionando o si è assentato (il silenzio non è assenso) e di **non sovraccaricare** il confronto con molte proposte simultanee. È la risposta diretta alle due violazioni osservate nella sessione: l'agente è andato avanti da solo, e ha riempito lo spazio mentre l'utente pensava.
-- **Lezione 6 (stime di tempo)**: la sezione 6 avverte di partire da stime basse quando si calibra il budget, perché il lavoro d'agente è molto più rapido del tempo umano e la tendenza è sovrastimarlo (4h → 40min reali su `dynamic-workflows`).
-
-Differenze rispetto a v2 (consolidate in v3, dal feedback di primo uso su H1):
-
-- **D1 (sezione 0, Goal del SUT)**: tre valori espliciti — `(eseguito)`, `(solo modellato in questo esperimento)`, `n/a`. Risolve l'attrito del SUT modellato ma non eseguito (caso tipico: un workflow YAML validato ma non lanciato).
-- **D2 (sezione 4 + sezione 6)**: guida alla calibrazione delle soglie (percentuale del totale > calibrazione al run 1 > assoluto giustificato; mai un magic number nudo) e budget riformulato come domanda all'utente invece che default dedotto.
-- **D3 (sezione 6, falsificazione)**: non più un campo singolo ma una conversazione che chiude solo quando esistono due esempi concreti — uno che falsifica e uno che no.
-- **D4 (auditing della coerenza, sezione 7 + nota operativa)**: i quattro controlli incrociati restano (budget×visite≈durata; signal degeneri→gate; falsificazione esclude il backlog; obiettivo confrontato col backlog originale), ciascuno con feedback sulla conseguenza concreta, non un OK silenzioso. Ma l'auditing non è più solo un collaudo finale: è **acceso per tutto il confronto**. Le verifiche *locali* (conseguenza di una singola risposta sull'obiettivo, coerenza con quanto già detto, risposta che apre una nuova domanda) avvengono in linea, a ogni passo; gli *incroci* — che richiedono il quadro quasi completo — si raccolgono nel giro finale di riconciliazione della sezione 7. Continuo per le conseguenze locali, finale per gli incroci. È la risposta diretta al principio dell'utente: "le opzioni di configurazione devono essere logicamente correlate e dare feedback sulle conseguenze".
-- **D5 (nota operativa in testa) — rivista nella sessione stessa**: il prompt non è solo "una guida di dialogo invece di un template", è un **confronto logico** invece di un'intervista a senso unico. L'agente non si limita a chiedere-registrare-riformulare-confermare (estrazione): propone formulazioni motivate, ne mostra le conseguenze sull'obiettivo, sfida le scelte deboli, accoglie le domande che emergono fuori griglia. Con un **confine esplicito**: l'agente propone e sfida ma non decide al posto dell'utente, e quando si accorge di aver guidato troppo lo dichiara e restituisce la scelta. Il test reale del prompt va fatto in questa modalità (confronto, non template) su un nuovo esperimento.
-
-Aggiunte di metodo della stessa sessione (oltre D1–D5):
-
-- **Traccia del confronto**: le parti essenziali del dialogo (conseguenze segnalate, domande emerse fuori griglia, calibrazioni e correzioni dell'utente) vanno scritte in un file separato `criteria.dialog.md`, distinto dal `criteria.md` congelato. Doppio scopo: (1) rendere verificabile a posteriori che il confronto è davvero avvenuto e non è stato accorciato in una compilazione (la modalità di fallimento osservata in D5 e ricorrente quando lo stesso agente cambia "cappello"); (2) costituire materia prima per il miglioramento futuro dell'esperimento e del metodo — come D1–D5 sono nate dal confronto su H1.
-- **Handoff dal valutatore (quarto agente)**: quando si apre un nuovo giro su un esperimento che ha già un `design/evaluation-experiment-*.md`, il Coordinatore legge i consigli che il valutatore indipendente vi ha lasciato (Compito 2 di `conclude-loop-goal-experiment.md`) e li porta nel confronto con l'utente. I consigli non sono vincolanti né sono criteri: l'idea di miglioria parte dal valutatore ma viene "lavata" da questo confronto prima di diventare, eventualmente, un nuovo metro da congelare — così il valutatore non ha mai mano diretta sul metro.
-
-Differenze rispetto a v1 (consolidate in v2):
-
-- **P1 (sezione 0)**: aggiunta esplicita di SUT / Sperimentatore / Iterazione / Goal del SUT. Risolve la confusione tra loop del sistema studiato e loop dello sperimentatore, e fissa l'unità di conteggio del loop.
-- **P2 (colonna `legame_con_obiettivo`)**: ogni metrica deve dichiarare per iscritto perché testimonia il progresso verso l'obiettivo. Deterrente concreto contro Goodhart: ottimizzare la metrica giusta, non un numero qualsiasi.
-- **P3 (formato del trend obbligatorio)**: assoluto / relativo / statistico, con linee guida su quando usare quale. Risolve l'ambiguità del confronto numerico, soprattutto per metriche rumorose.
-- **Sotto-miglioramenti raccolti gratis**: out-of-scope spostato prima delle metriche (M4); ammissione esplicita di baseline calibrativa al run 1 (C7); falsificazione richiesta esplicitamente come evento osservabile (M3); mini-esempio di mapping `loop_guard` reale (A1); definizione di `<topic>` (M2); ambito 10 spostato a esplorazione con redirect a prompt 09 (C4); vincolo "una frase" rilassato a due per composizioni (M5).
-
-Restano aperti per giri futuri (rimando alla nota di review): catalogo dei dieci ambiti come file dedicato (A3), esempio worked end-to-end completo (M1), sezione "rischi metodologici" del singolo esperimento (A4).
-
-## Stato
-
-Candidato v3. Vive in `experiments/agent-loop-fsm/prompts-candidate/` durante l'esperimento. La promozione a `prompts/` canonico è subordinata a:
-
-1. usabilità senza customizzazione sui cinque esperimenti pianificati di `agent-loop-fsm` (H1–H5) — verificata su H1 con v2 (template-mode); ancora da verificare in dialog-mode con v3 (D5);
-2. almeno un esperimento rigettato per condizione di forfait, gate fallito o evento di falsificazione — il prompt deve dimostrare che può chiudere un'ipotesi sbagliata, non solo accompagnare quelle giuste;
-3. il file `criteria.md` prodotto resta sotto ~80 righe per esperimento (la sezione Consistency Check di v3 aggiunge ~6 righe compatte all'output: H1 a 60 righe → stima ~66, margine ancora ampio); oltre, il formato è troppo pesante per l'adozione su altri progetti POM-managed;
-4. (nuovo in v3) almeno un Consistency Check che produce un warning reale e cambia il `criteria.md`, a riprova che la sezione 7 non è decorativa — H1 lo dimostrerebbe a posteriori (le quattro incoerenze D4 erano esattamente i quattro check), ma serve una conferma su un esperimento condotto da subito in dialog-mode con v3.
+Usalo come workflow operativo corrente. Note storiche, varianti candidate e
+lesson learned appartengono a evidence o note dell'esperimento che le ha
+prodotte, non al corpo della procedura canonica.

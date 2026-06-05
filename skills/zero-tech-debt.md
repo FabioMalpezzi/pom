@@ -1,6 +1,6 @@
 ---
 name: zero-tech-debt
-description: Use this skill to reshape a scoped change around the intended product and architecture end state, deleting accidental compatibility only after checking real callers and protected public contracts.
+description: Use when a scoped change accumulated accidental compatibility, historical paths, or architecture debt before closure.
 ---
 
 # Skill - zero-tech-debt

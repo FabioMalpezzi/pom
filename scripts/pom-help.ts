@@ -125,13 +125,16 @@ function printHelp(): void {
   console.log("Direct skill usage:");
   console.log("");
   console.log("  Ask the coding agent to use a POM skill, for example:");
+  console.log("  - Use `pom/skills/using-pom.md` to start or route POM-aware work.");
   console.log("  - Use `pom/skills/wiki.md` to query or maintain the wiki.");
   console.log("  - Use `pom/skills/sync.md` when pom:update stops on local pom/ changes.");
   console.log("  - Use `pom/skills/defer.md` to park future work.");
   console.log("  - Use `pom/skills/zero-tech-debt.md` to reshape a patch around the intended final shape.");
   console.log("  - Use `pom/skills/challenge.md` to run adversarial thesis/antithesis review.");
+  console.log("  - Use `pom/skills/root-cause.md` to debug Target Project bugs and failures before fixes.");
   console.log("  - Use `pom/skills/validate.md` to audit governance after significant work.");
   console.log("  - Use `pom/skills/reconcile.md` to resolve a divergence between a source and memory.");
+  console.log("  - Use `pom/skills/finish-branch.md` to close branch, PR, merge, keep, discard, or cleanup decisions.");
   console.log("");
 
   const skillsPath = pathExists("pom/skills/README.md") ? "pom/skills/README.md" : "skills/README.md";
@@ -206,11 +209,14 @@ function printHelpIt(): void {
   console.log("");
   console.log("Uso diretto delle skill:");
   console.log("");
+  console.log("  - Usa `pom/skills/using-pom.md` per iniziare o instradare lavoro POM-aware.");
   console.log("  - Usa `pom/skills/sync.md` quando pom:update si ferma su modifiche locali in pom/.");
   console.log("  - Usa `pom/skills/config.md` quando la modalita o la configurazione non sono chiare.");
   console.log("  - Usa `pom/skills/zero-tech-debt.md` per rimodellare una patch intorno alla forma finale prevista.");
   console.log("  - Usa `pom/skills/challenge.md` per una verifica avversaria di tesi e antitesi.");
+  console.log("  - Usa `pom/skills/root-cause.md` per diagnosticare bug e failure del progetto prima dei fix.");
   console.log("  - Usa `pom/skills/validate.md` dopo lavoro significativo, prima di handoff o commit.");
+  console.log("  - Usa `pom/skills/finish-branch.md` per chiudere decisioni di branch, PR, merge, keep, discard o cleanup.");
   console.log("");
 
   const skillsPath = pathExists("pom/skills/README.md") ? "pom/skills/README.md" : "skills/README.md";

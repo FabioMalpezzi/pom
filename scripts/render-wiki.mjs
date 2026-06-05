@@ -738,7 +738,9 @@ function isRemoteUrl(value) {
 }
 
 function renderCss(config) {
-  return readFileSync(config.theme, "utf8");
+  const base = readFileSync(config.theme, "utf8");
+  const responsive = join(dirname(config.theme), "wiki-reader-responsive.css");
+  return existsSync(responsive) ? `${base.trimEnd()}\n\n${readFileSync(responsive, "utf8").trimEnd()}\n` : base;
 }
 
 function renderJs() {

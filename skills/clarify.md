@@ -1,6 +1,6 @@
 ---
 name: clarify
-description: Use this skill to clarify ambiguous POM work before creating memory or changing method, including whether the next artifact should be nothing, wiki, ADR, spec, task, spike, config, prompt, skill, template, or lint.
+description: Use when POM work is ambiguous and the next artifact or authority is unclear.
 ---
 
 # Skill - clarify

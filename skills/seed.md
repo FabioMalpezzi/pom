@@ -1,6 +1,6 @@
 ---
 name: seed
-description: Use this skill to set up POM from scratch on a new or empty project — creating the minimal structure, agent rules, and optional wiki and config.
+description: Use when setting up POM from scratch in a new or empty project.
 ---
 
 # Skill - seed

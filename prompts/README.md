@@ -39,6 +39,15 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `29-loop-goal-audit.md` | classify a loop/goal workflow's states/transitions as clean/adapted/forced and check conformity to the criteria |
 | `30-loop-goal-scenarios.md` | enumerate happy/failure/loop/edge test scenarios for a loop/goal workflow, with terminal coverage |
 | `31-loop-goal-conclude.md` | independently and adversarially conclude a loop/goal experiment against the frozen criteria |
+| `32-using-pom.md` | bootstrap POM-aware work, route to the right skill, and map common harness tools |
+| `33-finish-branch.md` | finish branch, PR, merge, keep, discard, or cleanup decisions |
+| `34-root-cause-debugging.md` | investigate Target Project bugs, test failures, build failures, and unexpected behavior before fixes |
+
+## References
+
+| Reference | Use |
+|---|---|
+| `references/agent-harnesses.md` | session-start contract, instruction targets, tool mapping, and smoke prompts for agent harness integrations |
 
 ## Work Planning Hierarchy
 

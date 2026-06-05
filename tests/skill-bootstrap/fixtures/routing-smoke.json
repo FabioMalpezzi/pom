@@ -1,0 +1,182 @@
+[
+  {
+    "id": "adopt-en",
+    "language": "en",
+    "prompt": "We have an existing repository. Adopt POM without moving files or changing the current structure.",
+    "expectedSkill": "adopt"
+  },
+  {
+    "id": "adopt-it",
+    "language": "it",
+    "prompt": "Ho un progetto esistente. Adotta POM senza spostare file e senza cambiare la struttura attuale.",
+    "expectedSkill": "adopt"
+  },
+  {
+    "id": "wiki-en",
+    "language": "en",
+    "prompt": "Build the project wiki from the current docs and source files.",
+    "expectedSkill": "wiki"
+  },
+  {
+    "id": "wiki-it",
+    "language": "it",
+    "prompt": "Costruisci la wiki del progetto partendo dai documenti e dal codice attuali.",
+    "expectedSkill": "wiki"
+  },
+  {
+    "id": "pulse-en",
+    "language": "en",
+    "prompt": "We are resuming after a pause. Update the project restart state.",
+    "expectedSkill": "pulse"
+  },
+  {
+    "id": "pulse-it",
+    "language": "it",
+    "prompt": "Riprendiamo dopo una pausa. Aggiorna lo stato di ripartenza del progetto.",
+    "expectedSkill": "pulse"
+  },
+  {
+    "id": "validate-en",
+    "language": "en",
+    "prompt": "Before we close this work, audit POM governance and tell me what is missing.",
+    "expectedSkill": "validate"
+  },
+  {
+    "id": "validate-it",
+    "language": "it",
+    "prompt": "Prima di chiudere questo lavoro, verifica la governance POM e dimmi cosa manca.",
+    "expectedSkill": "validate"
+  },
+  {
+    "id": "plan-en",
+    "language": "en",
+    "prompt": "Turn this accepted spec into a verifiable implementation plan.",
+    "expectedSkill": "plan"
+  },
+  {
+    "id": "plan-it",
+    "language": "it",
+    "prompt": "Trasforma questa spec approvata in un piano di implementazione verificabile.",
+    "expectedSkill": "plan"
+  },
+  {
+    "id": "spike-en",
+    "language": "en",
+    "prompt": "Try a risky experiment with a new library in a separate branch or worktree before deciding whether to adopt it.",
+    "expectedSkill": "spike"
+  },
+  {
+    "id": "spike-it",
+    "language": "it",
+    "prompt": "Prova un esperimento rischioso con una nuova libreria in un branch o worktree separato prima di decidere se adottarla.",
+    "expectedSkill": "spike"
+  },
+  {
+    "id": "sync-en",
+    "language": "en",
+    "prompt": "This project already has pom/. Refresh it to the current POM source commit without overwriting local changes.",
+    "expectedSkill": "sync"
+  },
+  {
+    "id": "sync-it",
+    "language": "it",
+    "prompt": "Questo progetto ha gia pom/. Aggiornalo al commit corrente del POM sorgente senza sovrascrivere modifiche locali.",
+    "expectedSkill": "sync"
+  },
+  {
+    "id": "finish-branch-en",
+    "language": "en",
+    "prompt": "The feature branch is implemented and tests pass. Help me decide whether to merge, create a PR, keep it, or discard it.",
+    "expectedSkill": "finish-branch"
+  },
+  {
+    "id": "finish-branch-it",
+    "language": "it",
+    "prompt": "Il branch della feature e implementato e i test passano. Aiutami a decidere se fare merge, aprire una PR, tenerlo o scartarlo.",
+    "expectedSkill": "finish-branch"
+  },
+  {
+    "id": "root-cause-en",
+    "language": "en",
+    "prompt": "A test is failing after the last change. Find the root cause before proposing a fix.",
+    "expectedSkill": "root-cause"
+  },
+  {
+    "id": "root-cause-it",
+    "language": "it",
+    "prompt": "Un test fallisce dopo l'ultima modifica. Trova la causa radice prima di proporre un fix.",
+    "expectedSkill": "root-cause"
+  },
+  {
+    "id": "build-failure-en",
+    "language": "en",
+    "prompt": "The build fails in CI with a confusing error. Reproduce it and investigate before changing implementation.",
+    "expectedSkill": "root-cause"
+  },
+  {
+    "id": "unexpected-behavior-it",
+    "language": "it",
+    "prompt": "Il comportamento dell'app e diverso da quello atteso. Non indovinare il fix: raccogli evidenza e dimmi la causa.",
+    "expectedSkill": "root-cause"
+  },
+  {
+    "id": "experiment-promotion-en",
+    "language": "en",
+    "prompt": "The experiment under experiments/search-index worked. Decide what can be promoted and what must stay experimental.",
+    "expectedSkill": "spike",
+    "negative": {
+      "disabledModule": "stable-source",
+      "forbiddenArtifacts": ["direct promotion without approval"]
+    }
+  },
+  {
+    "id": "experiment-promotion-it",
+    "language": "it",
+    "prompt": "L'esperimento in experiments/search-index ha funzionato. Decidi cosa puo essere promosso e cosa deve restare sperimentale.",
+    "expectedSkill": "spike",
+    "negative": {
+      "disabledModule": "stable-source",
+      "forbiddenArtifacts": ["promozione diretta senza approvazione"]
+    }
+  },
+  {
+    "id": "discard-branch-en",
+    "language": "en",
+    "prompt": "Discard this experiment branch and clean up the worktree, but show me what would be deleted first.",
+    "expectedSkill": "finish-branch",
+    "negative": {
+      "disabledModule": "unsafe-discard",
+      "forbiddenArtifacts": ["delete without exact confirmation"]
+    }
+  },
+  {
+    "id": "discard-branch-it",
+    "language": "it",
+    "prompt": "Scarta questo branch sperimentale e pulisci il worktree, ma prima mostrami cosa verrebbe eliminato.",
+    "expectedSkill": "finish-branch",
+    "negative": {
+      "disabledModule": "unsafe-discard",
+      "forbiddenArtifacts": ["eliminazione senza conferma esatta"]
+    }
+  },
+  {
+    "id": "wiki-disabled-en",
+    "language": "en",
+    "prompt": "The adoption profile says wiki is disabled. Summarize the source without creating wiki pages.",
+    "expectedSkill": "using-pom",
+    "negative": {
+      "disabledModule": "wiki",
+      "forbiddenArtifacts": ["wiki/"]
+    }
+  },
+  {
+    "id": "decisions-disabled-it",
+    "language": "it",
+    "prompt": "Il profilo dice che le decisioni sono disabilitate. Non creare ADR; dimmi dove parcheggiare la discussione.",
+    "expectedSkill": "using-pom",
+    "negative": {
+      "disabledModule": "decisions",
+      "forbiddenArtifacts": ["decisions/", "ADR"]
+    }
+  }
+]

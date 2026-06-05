@@ -7,6 +7,7 @@ import { checkGitWorkflow, checkProjectStateShape } from "./lib/lint-handoff.ts"
 import { checkMockReconciliation } from "./lib/lint-mockups.ts";
 import { checkReaderNotes } from "./lib/lint-reader-notes.ts";
 import { printResults } from "./lib/lint-reporter.ts";
+import { checkSourceFileSizes } from "./lib/lint-source-size.ts";
 import {
   checkAnalysisLayout,
   checkIndexNamingConvention,
@@ -37,6 +38,7 @@ checkWikiIndexCoverage(context);
 checkTestsLayout(context);
 checkProjectStateShape(context);
 checkGitWorkflow(context);
+checkSourceFileSizes(context);
 printResults(context.findings);
 
 if (context.findings.some((finding) => finding.severity === "error")) {

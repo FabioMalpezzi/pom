@@ -1,6 +1,6 @@
 ---
 name: pulse
-description: Use this skill to create or update PROJECT_STATE.md — resuming after a pause or recording a change in governance, priorities, risks, or next actions.
+description: Use when resuming a project or when governance, priorities, risks, decisions, or next actions changed.
 ---
 
 # Skill - pulse

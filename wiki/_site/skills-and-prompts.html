@@ -47,7 +47,7 @@
           <p class="dek">POM skills are short operational cards, while prompts are the canonical procedures behind them. Skills help the agent recognize the situation; prompts carry the full workflow.</p>
           <div class="meta">
             <span>Source: skills-and-prompts.md</span>
-            <span>Generated: 2026-06-01</span>
+            <span>Generated: 2026-06-05</span>
           </div>
         </header>
         <aside class="generated-notice">
@@ -60,9 +60,66 @@
 <p>Prompts remain intentionally generic and reusable. They define what to read, what to propose, when to ask for approval, what to verify, and what output is expected.</p>
 <p>Agent instruction files should stay global: identity, communication posture, source authority, safety, and always-on operating rules. Workflow-specific rules belong in skills and their canonical prompts. If a rule applies only to wiki work, handoff, experiments, template creation, status classification, planning, or verification, the agent should route to the matching skill instead of carrying the full procedure in the global instruction block.</p>
 <h2 id="details">Details <a class="heading-anchor" href="#details" aria-label="Copy link to Details">#</a></h2>
-<p>Important skill families:</p>
-<div class="table-wrap"><table><thead><tr><th>Skill</th><th>Use</th></tr></thead><tbody><tr><td data-label="Skill"><code>wiki</code></td><td data-label="Use">Build, query, check, or maintain the Persistent Wiki.</td></tr><tr><td data-label="Skill"><code>reader-notes</code></td><td data-label="Use">Process human Project Reader notes through source-backed edits, outcome recording, and verification.</td></tr><tr><td data-label="Skill"><code>extend</code></td><td data-label="Use">Extend POM at the smallest fitting level.</td></tr><tr><td data-label="Skill"><code>spike</code></td><td data-label="Use">Run isolated temporary experiments.</td></tr><tr><td data-label="Skill"><code>reconcile</code></td><td data-label="Use">Classify and resolve a divergence between source and memory.</td></tr><tr><td data-label="Skill"><code>validate</code></td><td data-label="Use">Audit governance after significant POM actions.</td></tr><tr><td data-label="Skill"><code>challenge</code></td><td data-label="Use">Run adversarial thesis/antithesis review before accepting or completing non-code work.</td></tr><tr><td data-label="Skill"><code>config</code></td><td data-label="Use">Create or update project-specific POM configuration.</td></tr><tr><td data-label="Skill"><code>sync</code></td><td data-label="Use">Refresh an existing POM installation or align source and target POM.</td></tr><tr><td data-label="Skill"><code>workflow</code></td><td data-label="Use">Design, validate, diagram, derive scenarios for, and guide the implementation of a domain workflow declared as a YAML state model. Opt-in per target via <code>workflows.enabled</code> in <code>pom.config.json</code>; relies on <code>scripts/lint-workflows.mjs</code> for validation and Mermaid generation, and on <code>scripts/to-xstate.mjs</code> for stately.ai visualization.</td></tr><tr><td data-label="Skill"><code>loop-goal</code></td><td data-label="Use">Model, audit, derive scenarios for, and conclude agent-shaped loop/goal workflows. The wiki tutorial <code>[[loop-goal-workflow-tutorial]]</code> explains how to choose between the verified examples and broader loop/goal dimensions.</td></tr></tbody></table></div>
-<p>The prompt set covers bootstrap, adoption, state, governance, planning, review, handoff, Project Reader note processing, config, experiments, wiki operations, extension, classification, deferral, sync, validation, reconciliation, clarification, pruning, diagnosis, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.</p>
+<p>Complete skill catalog:</p>
+<h3 id="using-pom"><code>using-pom</code> <a class="heading-anchor" href="#using-pom" aria-label="Copy link to `using-pom`">#</a></h3>
+<ul><li><strong>Illustration</strong>: bootstrap and router for POM-aware work; it reads the skill index, config, and harness mapping before choosing a specific workflow.</li><li><strong>Real use cases</strong>: start a fresh session in a POM-managed project; resume after compaction; decide whether a request should use <code>adopt</code>, <code>wiki</code>, <code>plan</code>, <code>validate</code>, <code>spike</code>, <code>root-cause</code>, or <code>finish-branch</code>.</li><li><strong>Why it exists / importance</strong>: prevents agents from acting from memory or frontmatter summaries, and makes POM integration more reliable across Codex, Claude Code, Gemini CLI, Cursor, OpenCode, GitHub Copilot, and instruction-file-only harnesses.</li></ul>
+<h3 id="help"><code>help</code> <a class="heading-anchor" href="#help" aria-label="Copy link to `help`">#</a></h3>
+<ul><li><strong>Illustration</strong>: skill-selection help and command orientation for humans and agents.</li><li><strong>Real use cases</strong>: list available POM workflows; explain which skill fits a request; recover when a user asks &quot;what can POM do here?&quot;</li><li><strong>Why it exists / importance</strong>: keeps the method discoverable without forcing users or agents to scan every prompt manually.</li></ul>
+<h3 id="clarify"><code>clarify</code> <a class="heading-anchor" href="#clarify" aria-label="Copy link to `clarify`">#</a></h3>
+<ul><li><strong>Illustration</strong>: ambiguity reducer before memory creation, governance changes, or file edits.</li><li><strong>Real use cases</strong>: distinguish a wiki question from a request to update the wiki; clarify whether a note should become a Decision Record, a Task Plan, an Open Discussion, or no artifact.</li><li><strong>Why it exists / importance</strong>: protects Operating Memory from premature structure and avoids creating durable artifacts from unclear intent.</li></ul>
+<h3 id="seed"><code>seed</code> <a class="heading-anchor" href="#seed" aria-label="Copy link to `seed`">#</a></h3>
+<ul><li><strong>Illustration</strong>: starts POM in a new project.</li><li><strong>Real use cases</strong>: create first project memory, initial instructions, config, wiki skeleton, and governance defaults for a repository that does not yet use POM.</li><li><strong>Why it exists / importance</strong>: gives new projects a safe initial Operating Memory without assuming a large process from day one.</li></ul>
+<h3 id="adopt"><code>adopt</code> <a class="heading-anchor" href="#adopt" aria-label="Copy link to `adopt`">#</a></h3>
+<ul><li><strong>Illustration</strong>: introduces POM into an existing or external repository without moving current project structure first.</li><li><strong>Real use cases</strong>: map existing docs, source, tests, decisions, and wiki roots into <code>pom.config.json</code>; install POM in overlay mode for a repository the operator does not own.</li><li><strong>Why it exists / importance</strong>: makes POM respectful of existing conventions and avoids turning adoption into an accidental migration.</li></ul>
+<h3 id="pulse"><code>pulse</code> <a class="heading-anchor" href="#pulse" aria-label="Copy link to `pulse`">#</a></h3>
+<ul><li><strong>Illustration</strong>: creates or refreshes <code>PROJECT_STATE.md</code>.</li><li><strong>Real use cases</strong>: summarize current objective, blockers, risks, next actions, and files to read before another session resumes.</li><li><strong>Why it exists / importance</strong>: keeps restart-critical context small, current, and separate from the full project history.</li></ul>
+<h3 id="guard"><code>guard</code> <a class="heading-anchor" href="#guard" aria-label="Copy link to `guard`">#</a></h3>
+<ul><li><strong>Illustration</strong>: establishes governance, lint posture, and Decision Record discipline.</li><li><strong>Real use cases</strong>: define which document types are governed; configure completion verification; decide when ADRs are required.</li><li><strong>Why it exists / importance</strong>: turns POM from a loose folder set into verifiable Operating Memory with explicit closure rules.</li></ul>
+<h3 id="plan"><code>plan</code> <a class="heading-anchor" href="#plan" aria-label="Copy link to `plan`">#</a></h3>
+<ul><li><strong>Illustration</strong>: converts approved specifications, decisions, or current objectives into verifiable Task Plans.</li><li><strong>Real use cases</strong>: break an accepted spec into ordered phases; define done criteria and Scenario Tests before implementation.</li><li><strong>Why it exists / importance</strong>: prevents plans from becoming vague checklists and links execution back to source authority.</li></ul>
+<h3 id="check"><code>check</code> <a class="heading-anchor" href="#check" aria-label="Copy link to `check`">#</a></h3>
+<ul><li><strong>Illustration</strong>: verifies a phase, workstream, Task Plan, or completed change against its declared goal.</li><li><strong>Real use cases</strong>: review whether a task is actually done; distinguish a Target Project failure from a POM process defect; decide whether <code>root-cause</code> or <code>diagnose</code> is the right next step.</li><li><strong>Why it exists / importance</strong>: makes completion claims evidence-based instead of narrative-based.</li></ul>
+<h3 id="handoff"><code>handoff</code> <a class="heading-anchor" href="#handoff" aria-label="Copy link to `handoff`">#</a></h3>
+<ul><li><strong>Illustration</strong>: closes a significant session by updating restart memory and status.</li><li><strong>Real use cases</strong>: record the next safe action after a branch of work; update <code>PROJECT_STATE.md</code> after meaningful scope, risk, or decision changes.</li><li><strong>Why it exists / importance</strong>: keeps the next agent or human from reconstructing context from chat history or Git diff alone.</li></ul>
+<h3 id="reader-notes"><code>reader-notes</code> <a class="heading-anchor" href="#reader-notes" aria-label="Copy link to `reader-notes`">#</a></h3>
+<ul><li><strong>Illustration</strong>: processes human notes created through the local POM Project Reader.</li><li><strong>Real use cases</strong>: claim an annotation, decide whether it is valid, apply source-backed edits, record the outcome, and avoid reprocessing closed notes.</li><li><strong>Why it exists / importance</strong>: turns reader feedback into governed project changes without losing attribution or verification.</li></ul>
+<h3 id="diagnose"><code>diagnose</code> <a class="heading-anchor" href="#diagnose" aria-label="Copy link to `diagnose`">#</a></h3>
+<ul><li><strong>Illustration</strong>: focused troubleshooting for confusing or failing POM workflows.</li><li><strong>Real use cases</strong>: debug an installer issue, a lint false positive, a bad generated agent section, or a wiki-reader problem.</li><li><strong>Why it exists / importance</strong>: separates defects in POM itself from defects in the Target Project.</li></ul>
+<h3 id="root-cause"><code>root-cause</code> <a class="heading-anchor" href="#root-cause" aria-label="Copy link to `root-cause`">#</a></h3>
+<ul><li><strong>Illustration</strong>: evidence-first debugging for Target Project bugs, test failures, build failures, performance issues, and unexpected behavior.</li><li><strong>Real use cases</strong>: reproduce a failing test; isolate a build failure; add a regression test before fixing a bug; stop after repeated failed fix attempts and return to investigation.</li><li><strong>Why it exists / importance</strong>: enforces &quot;root cause before fix&quot; so agents do not patch symptoms or stack speculative changes.</li></ul>
+<h3 id="zero-tech-debt"><code>zero-tech-debt</code> <a class="heading-anchor" href="#zero-tech-debt" aria-label="Copy link to `zero-tech-debt`">#</a></h3>
+<ul><li><strong>Illustration</strong>: reshapes a scoped change around the intended product and architecture end state.</li><li><strong>Real use cases</strong>: replace a temporary implementation with the target design; reduce duplication introduced during a quick patch; align code with an accepted architecture before closure.</li><li><strong>Why it exists / importance</strong>: prevents &quot;working&quot; changes from becoming permanent accidental design.</li></ul>
+<h3 id="challenge"><code>challenge</code> <a class="heading-anchor" href="#challenge" aria-label="Copy link to `challenge`">#</a></h3>
+<ul><li><strong>Illustration</strong>: adversarial thesis/antithesis review before accepting or completing non-code work.</li><li><strong>Real use cases</strong>: test an ADR against serious counterarguments; challenge a spec before declaring it ready; look for material missing evidence.</li><li><strong>Why it exists / importance</strong>: gives semantic validation a concrete shape and prevents agreement from replacing proof.</li></ul>
+<h3 id="config"><code>config</code> <a class="heading-anchor" href="#config" aria-label="Copy link to `config`">#</a></h3>
+<ul><li><strong>Illustration</strong>: creates or updates <code>pom.config.json</code>.</li><li><strong>Real use cases</strong>: map nonstandard documentation roots; set ownership mode; configure wiki, decisions, tests, task plans, templates, and lint severities.</li><li><strong>Why it exists / importance</strong>: lets POM adapt to a Target Project instead of forcing every repository into one folder layout.</li></ul>
+<h3 id="spike"><code>spike</code> <a class="heading-anchor" href="#spike" aria-label="Copy link to `spike`">#</a></h3>
+<ul><li><strong>Illustration</strong>: manages temporary experiments and consolidation.</li><li><strong>Real use cases</strong>: explore a library fit; test a risky refactor in an isolated worktree; keep candidate files under <code>experiments/</code> until evidence supports promotion.</li><li><strong>Why it exists / importance</strong>: keeps experiments useful without letting them leak into canonical method or project structure too early.</li></ul>
+<h3 id="wiki"><code>wiki</code> <a class="heading-anchor" href="#wiki" aria-label="Copy link to `wiki`">#</a></h3>
+<ul><li><strong>Illustration</strong>: builds, queries, checks, and maintains the Persistent Wiki.</li><li><strong>Real use cases</strong>: create the initial wiki; identify stale wiki pages after source changes; answer a question from wiki memory; run lightweight wiki health checks.</li><li><strong>Why it exists / importance</strong>: keeps reusable knowledge synthesized and linked to sources rather than scattered across notes and generated views.</li></ul>
+<h3 id="extend"><code>extend</code> <a class="heading-anchor" href="#extend" aria-label="Copy link to `extend`">#</a></h3>
+<ul><li><strong>Illustration</strong>: controlled extension workflow for POM itself.</li><li><strong>Real use cases</strong>: add a skill, prompt, template, lint rule, config option, or source-target alignment workflow.</li><li><strong>Why it exists / importance</strong>: keeps POM extensible without letting every local preference become a general rule.</li></ul>
+<h3 id="improve"><code>improve</code> <a class="heading-anchor" href="#improve" aria-label="Copy link to `improve`">#</a></h3>
+<ul><li><strong>Illustration</strong>: controlled self-improvement loop for method and governance changes.</li><li><strong>Real use cases</strong>: evaluate whether repeated agent failures imply a new skill; measure whether a governance change improves outcomes; fold lessons back into prompts after evidence.</li><li><strong>Why it exists / importance</strong>: lets POM learn from use while keeping improvements falsifiable and bounded.</li></ul>
+<h3 id="prune"><code>prune</code> <a class="heading-anchor" href="#prune" aria-label="Copy link to `prune`">#</a></h3>
+<ul><li><strong>Illustration</strong>: reduces unnecessary method weight by simplifying, merging, demoting, deleting, or config-gating POM elements.</li><li><strong>Real use cases</strong>: remove overlapping skills; demote a rule that only belongs to one Target Project; simplify an overgrown prompt.</li><li><strong>Why it exists / importance</strong>: protects POM from process creep and keeps the method reusable.</li></ul>
+<h3 id="status"><code>status</code> <a class="heading-anchor" href="#status" aria-label="Copy link to `status`">#</a></h3>
+<ul><li><strong>Illustration</strong>: classifies document type and chooses the least misleading status.</li><li><strong>Real use cases</strong>: decide whether a file is draft, accepted, historical, generated, active, or superseded; avoid marking a document complete when evidence is missing.</li><li><strong>Why it exists / importance</strong>: makes document state explicit so agents do not treat provisional memory as authority.</li></ul>
+<h3 id="defer"><code>defer</code> <a class="heading-anchor" href="#defer" aria-label="Copy link to `defer`">#</a></h3>
+<ul><li><strong>Illustration</strong>: parks important work without implementing it.</li><li><strong>Real use cases</strong>: record a valuable idea that is not in scope; preserve a rejected option for later; create a bounded follow-up without changing files now.</li><li><strong>Why it exists / importance</strong>: prevents good ideas from either disappearing or hijacking the current task.</li></ul>
+<h3 id="sync"><code>sync</code> <a class="heading-anchor" href="#sync" aria-label="Copy link to `sync`">#</a></h3>
+<ul><li><strong>Illustration</strong>: refreshes an installed POM copy or aligns POM Source changes with a Target Project's <code>pom/</code>.</li><li><strong>Real use cases</strong>: update a vendored <code>pom/</code>; reconcile source POM changes after a method release; avoid confusing source-repo work with target installation.</li><li><strong>Why it exists / importance</strong>: keeps reusable POM and installed POM copies aligned without unsafe cloning or overwrite behavior.</li></ul>
+<h3 id="finish-branch"><code>finish-branch</code> <a class="heading-anchor" href="#finish-branch" aria-label="Copy link to `finish-branch`">#</a></h3>
+<ul><li><strong>Illustration</strong>: closes branch, PR, merge, keep, discard, or cleanup decisions after code or experiment work.</li><li><strong>Real use cases</strong>: decide whether to merge locally, push a PR, keep a worktree, discard a branch, or prune stale local work after verification.</li><li><strong>Why it exists / importance</strong>: makes delivery explicit and protects Git state from premature cleanup or unverified success claims.</li></ul>
+<h3 id="reconcile"><code>reconcile</code> <a class="heading-anchor" href="#reconcile" aria-label="Copy link to `reconcile`">#</a></h3>
+<ul><li><strong>Illustration</strong>: classifies and resolves Divergence between source and project memory.</li><li><strong>Real use cases</strong>: update a wiki page that contradicts current code; decide whether an ADR or a task plan is stale; identify which Source Authority wins.</li><li><strong>Why it exists / importance</strong>: prevents silent mismatch between code, decisions, wiki, and project state.</li></ul>
+<h3 id="validate"><code>validate</code> <a class="heading-anchor" href="#validate" aria-label="Copy link to `validate`">#</a></h3>
+<ul><li><strong>Illustration</strong>: read-only governance audit after significant actions.</li><li><strong>Real use cases</strong>: check whether new docs, ADRs, wiki updates, config changes, or task plans obey POM rules before handoff.</li><li><strong>Why it exists / importance</strong>: catches process regressions without making additional changes during the audit itself.</li></ul>
+<h3 id="workflow"><code>workflow</code> <a class="heading-anchor" href="#workflow" aria-label="Copy link to `workflow`">#</a></h3>
+<ul><li><strong>Illustration</strong>: designs, validates, diagrams, derives scenarios for, and guides implementation of domain workflows declared as YAML state models.</li><li><strong>Real use cases</strong>: model a ticket lifecycle; validate a pipeline; generate Mermaid; map a YAML workflow to implementation guidance for a Target Project.</li><li><strong>Why it exists / importance</strong>: gives workflow-heavy domains a precise, testable model while keeping execution runtime-owned by the Target Project.</li></ul>
+<h3 id="loop-goal"><code>loop-goal</code> <a class="heading-anchor" href="#loop-goal" aria-label="Copy link to `loop-goal`">#</a></h3>
+<ul><li><strong>Illustration</strong>: models, audits, tests, and concludes agent-shaped loop/goal workflows and experiments.</li><li><strong>Real use cases</strong>: define measurable criteria for an agent loop; audit controller fit; derive terminal-coverage scenarios; conclude whether an experiment actually met its objective.</li><li><strong>Why it exists / importance</strong>: handles agentic feedback loops that are too specific for the generic <code>workflow</code> skill and need criteria, falsification, and independent evaluation.</li></ul>
+<p>The prompt set covers session bootstrap, adoption, state, governance, planning, review, handoff, Project Reader note processing, config, experiments, wiki operations, extension, self-improvement, classification, deferral, sync, branch delivery, validation, reconciliation, clarification, pruning, POM diagnosis, Target Project root-cause debugging, workflow modeling, loop/goal workflow work, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.</p>
 <p>The installed agent section now keeps the minimal profile to global posture plus a skill router. Profile modules add active workflow entry points, while detailed procedures stay in skills and prompts.</p>
 <p>Reader generation is currently a script command, not a separate skill. Use <code>npm run pom:wiki:render</code> to regenerate the static HTML view from the root wiki.</p>
 <h2 id="sources">Sources <a class="heading-anchor" href="#sources" aria-label="Copy link to Sources">#</a></h2>
@@ -84,7 +141,40 @@
       <p class="outline-title">On This Page</p>
       <nav><a class="level-2" href="#summary">Summary</a>
 <a class="level-2" href="#current-state">Current State</a>
-<a class="level-2" href="#details">Details</a>
+<details class="outline-section" open>
+    <summary><a class="level-2" href="#details">Details</a></summary>
+    <div class="outline-children">
+      <a class="level-3" href="#using-pom">`using-pom`</a>
+<a class="level-3" href="#help">`help`</a>
+<a class="level-3" href="#clarify">`clarify`</a>
+<a class="level-3" href="#seed">`seed`</a>
+<a class="level-3" href="#adopt">`adopt`</a>
+<a class="level-3" href="#pulse">`pulse`</a>
+<a class="level-3" href="#guard">`guard`</a>
+<a class="level-3" href="#plan">`plan`</a>
+<a class="level-3" href="#check">`check`</a>
+<a class="level-3" href="#handoff">`handoff`</a>
+<a class="level-3" href="#reader-notes">`reader-notes`</a>
+<a class="level-3" href="#diagnose">`diagnose`</a>
+<a class="level-3" href="#root-cause">`root-cause`</a>
+<a class="level-3" href="#zero-tech-debt">`zero-tech-debt`</a>
+<a class="level-3" href="#challenge">`challenge`</a>
+<a class="level-3" href="#config">`config`</a>
+<a class="level-3" href="#spike">`spike`</a>
+<a class="level-3" href="#wiki">`wiki`</a>
+<a class="level-3" href="#extend">`extend`</a>
+<a class="level-3" href="#improve">`improve`</a>
+<a class="level-3" href="#prune">`prune`</a>
+<a class="level-3" href="#status">`status`</a>
+<a class="level-3" href="#defer">`defer`</a>
+<a class="level-3" href="#sync">`sync`</a>
+<a class="level-3" href="#finish-branch">`finish-branch`</a>
+<a class="level-3" href="#reconcile">`reconcile`</a>
+<a class="level-3" href="#validate">`validate`</a>
+<a class="level-3" href="#workflow">`workflow`</a>
+<a class="level-3" href="#loop-goal">`loop-goal`</a>
+    </div>
+  </details>
 <a class="level-2" href="#sources">Sources</a>
 <a class="level-2" href="#linked-decisions">Linked Decisions</a>
 <a class="level-2" href="#open-questions">Open Questions</a>

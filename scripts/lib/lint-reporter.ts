@@ -41,6 +41,8 @@ function printSuggestedWorkflows(findings: Finding[]): void {
       suggestions.add("Test findings: update pom.config.json test settings or align tests with the approved project convention.");
     } else if (finding.rule.startsWith("project-state-")) {
       suggestions.add("Handoff findings: update PROJECT_STATE.md from pom/templates/PROJECT_STATE_TEMPLATE.md.");
+    } else if (finding.rule.startsWith("source-size-")) {
+      suggestions.add("Source size findings: split the file along an existing responsibility boundary, then rerun pom:lint.");
     } else if (finding.rule.includes("root") || finding.rule.startsWith("source-") || finding.rule.startsWith("docs-")) {
       suggestions.add("Structure findings: read pom/skills/config.md before moving files or changing folder conventions.");
     }

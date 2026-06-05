@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Use this skill at the end of a significant session to leave a clear restart point, updating project state only when operating context changed.
+description: Use when ending a significant session or leaving restart context for another agent or person.
 ---
 
 # Skill - handoff

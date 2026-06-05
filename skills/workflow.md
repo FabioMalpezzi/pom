@@ -1,6 +1,6 @@
 ---
 name: workflow
-description: Use this skill to design, validate, diagram, derive scenarios for, and guide the implementation of a domain workflow declared as a YAML state model — without runtime, without live instances, and without imposing an FSM library.
+description: Use when a domain process should be represented as a YAML state workflow.
 ---
 
 # Skill - workflow

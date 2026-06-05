@@ -6,7 +6,7 @@ This README is POM's canonical entry point and operating overview. Detailed proc
 
 POM is designed to be reused on new or existing projects. It does not impose a single application structure and does not assume that every project has mockups, source code, tests, or official docs. For existing projects, POM should first map the current structure in `pom.config.json`; migration to canonical folders is a later explicit decision, not a prerequisite.
 
-Version: `0.1.0`
+Version: `0.2.0`
 
 Release notes: see `CHANGELOG.md`.
 
@@ -34,6 +34,7 @@ Use the smallest workflow that matches your situation:
 
 | Situation | Start Here |
 |---|---|
+| Start or route POM-aware work | `skills/using-pom.md` |
 | Ambiguous request or artifact | `skills/clarify.md` |
 | New project | `skills/seed.md` |
 | Existing project | `skills/adopt.md` |
@@ -46,10 +47,12 @@ Use the smallest workflow that matches your situation:
 | Extend POM | `skills/extend.md` |
 | Reduce method bloat | `skills/prune.md` |
 | Diagnose a POM problem | `skills/diagnose.md` |
+| Debug a Target Project problem | `skills/root-cause.md` |
 | Rework a patch around the intended final shape | `skills/zero-tech-debt.md` |
 | Challenge a spec or decision before closure | `skills/challenge.md` |
 | Defer work without implementing | `skills/defer.md` |
 | Refresh or sync POM in a project | `skills/sync.md` |
+| Finish branch, PR, merge, or cleanup work | `skills/finish-branch.md` |
 | Model, validate, diagram, and implement domain workflows | `skills/workflow.md` (opt-in via `workflows.enabled` in `pom.config.json`) |
 | See available commands | `npm run pom:help` |
 
@@ -58,6 +61,9 @@ Use the smallest workflow that matches your situation:
 Once POM is installed, tell the agent what you need. The agent reads the skill card, then the linked prompt, then the relevant templates.
 
 ```text
+# Start a POM-aware session or choose the right POM workflow
+Read pom/skills/using-pom.md and route this request before acting.
+
 # Bootstrap a new project
 Read pom/skills/seed.md and set up POM for this project.
 
@@ -85,11 +91,17 @@ Read pom/skills/defer.md and park this topic without implementing it.
 # Rework a patch around the intended final shape
 Read pom/skills/zero-tech-debt.md and reshape the current change before closure.
 
+# Debug a project bug or failing test
+Read pom/skills/root-cause.md and identify the root cause before proposing fixes.
+
 # Challenge a non-code spec or decision
 Read pom/skills/challenge.md and run an adversarial thesis/antithesis review of specs/my-feature.md.
 
 # End-of-session handoff
 Read pom/skills/handoff.md and update the project state.
+
+# Finish a branch, PR, merge, or cleanup decision
+Read pom/skills/finish-branch.md and present the safe delivery options.
 ```
 
 See `examples/agent-conversations.md` for more detailed interaction examples.
@@ -337,6 +349,8 @@ For Claude Code, `.claude/agents/pom-post-action-validator.md` is optional. The 
 
 For OpenAI Codex, `AGENTS.md` is the project instruction target. The equivalent post-action audit is the generic `pom/skills/validate.md` skill and its canonical prompt `pom/prompts/18-post-action-validator.md`; no Claude-specific wrapper is required.
 
+POM includes a bootstrap/router skill at `pom/skills/using-pom.md`. Harnesses with native skill or hook support should load it at session start when possible. Instruction-file-only integrations should read it before the first POM-related action, especially after compaction, handoff, or when choosing between POM skills. See `pom/prompts/references/agent-harnesses.md` for instruction targets, tool mapping, and session-start smoke prompts. The harness table is a mapping and test protocol, not a live support claim; mark a harness as verified only after a clean-session transcript proves the route.
+
 ### External project overlay
 
 Use overlay mode when the repository is cloned from an upstream you do not own and POM is needed to understand, audit, or prepare a limited contribution.
@@ -453,6 +467,8 @@ If the project does not use npm, copy the POM section manually into every agent 
 ### Start working
 
 Use the skill that matches your situation (see Quickstart table above). The agent will read the skill card, then the linked prompt, then the relevant templates.
+
+If the correct skill is not obvious, start with `pom/skills/using-pom.md`. It routes the request, checks adoption constraints in `pom.config.json`, maps common tool names across Codex, Claude Code, Gemini, Cursor, OpenCode, and GitHub Copilot, and prevents disabled modules from being created by accident. For integration details, read `pom/prompts/references/agent-harnesses.md`.
 
 ### Pre-commit hook
 
@@ -583,6 +599,8 @@ Create a feature branch (`feat/<topic>`) only when the first task plan step modi
 | Source code, runtime config, prompts, test fixtures | Yes — feature branch |
 | Experiment or spike | Yes — `exp/<topic>` or temporary branch |
 
+When code or experiment branch work is ready to close, use `skills/finish-branch.md`. It verifies current state before any success claim, then guides the choice to merge locally, push and create a Pull Request, keep the branch, or discard it with explicit confirmation.
+
 ## ADR And Spec Changes
 
 Specs are living documents: edit them directly and let Git keep fine-grained history.
@@ -604,9 +622,9 @@ Rules:
 
 Experiments must remain separate from the stable codebase until evaluated. Use branch `exp/<topic>`, `/tmp`, or `experiments/<topic>/` depending on the case. Consolidate only after evaluation.
 
-For risky or broad experiments, prefer a Git worktree on an `exp/<topic>` branch so the main working tree stays clean. Keep trial dependencies, environment files, service config, generated output, and external repositories isolated from stable source unless adoption is approved. Stable source must not import from `experiments/`; use lint/type/build guardrails where the project already has them.
+For risky or broad experiments, prefer a Git worktree on an `exp/<topic>` branch so the main working tree stays clean. Detect existing linked worktrees and submodules before creating another worktree, and prefer a harness-native workspace/worktree feature when one is available. Keep trial dependencies, environment files, service config, generated output, and external repositories isolated from stable source unless adoption is approved. Stable source must not import from `experiments/`; use lint/type/build guardrails where the project already has them.
 
-See `prompts/09-run-temporary-experiment.md` for the full workflow.
+See `prompts/09-run-temporary-experiment.md` for the full workflow. Use `skills/finish-branch.md` after evaluation when the experiment branch or worktree needs merge, PR, keep, discard, or cleanup handling.
 
 ## Persistent Wiki
 
@@ -757,6 +775,7 @@ POM skills are short operational aliases for the main prompts. They do not repla
 
 | Skill | Prompt |
 |---|---|
+| `using-pom` | bootstrap and route POM-aware work |
 | `help` | skill selection and explanation |
 | `clarify` | clarify ambiguous work |
 | `seed` | bootstrap a new project |
@@ -768,18 +787,23 @@ POM skills are short operational aliases for the main prompts. They do not repla
 | `handoff` | session closeout |
 | `reader-notes` | process Project Reader notes |
 | `diagnose` | focused POM troubleshooting |
+| `root-cause` | Target Project bug and failure investigation |
 | `zero-tech-debt` | scoped end-state refactor |
 | `challenge` | adversarial thesis/antithesis review |
 | `config` | lint configuration |
 | `spike` | temporary experiments |
 | `wiki` | build, query, lightweight lint, and stale wiki maintenance |
 | `extend` | controlled POM extension |
+| `improve` | controlled POM self-improvement loop |
 | `prune` | reduce POM method bloat |
 | `status` | document type and status classification |
 | `defer` | park work without implementation |
 | `sync` | refresh or align POM in a target project |
+| `finish-branch` | finish branch, PR, merge, keep, discard, or cleanup decisions |
 | `reconcile` | resolve source/project memory divergence |
 | `validate` | read-only governance audit |
+| `workflow` | design, validate, diagram, and implement domain workflows |
+| `loop-goal` | model, audit, test, and conclude agent-shaped loop/goal workflows |
 
 ### Skill Usage Tracking
 

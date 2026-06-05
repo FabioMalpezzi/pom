@@ -9,12 +9,16 @@ Before modifying files:
 1. clarify the experiment objective;
 2. identify what must be tested and what would count as a useful outcome;
 3. check Git status with `git status`;
-4. propose where to work:
+4. detect whether the current checkout is already isolated:
+   - compare `git rev-parse --git-dir` with `git rev-parse --git-common-dir`;
+   - if they differ, check `git rev-parse --show-superproject-working-tree` so a submodule is not mistaken for a disposable worktree;
+5. propose where to work:
    - Git branch `exp/<topic>` if the experiment touches project files;
-   - Git worktree `../<project>-exp-<topic>` on branch `exp/<topic>` if the experiment is risky, broad, or likely to leave many file changes;
+   - harness-native worktree/workspace feature, when available, if the experiment is risky, broad, dependency-heavy, or likely to leave many file changes;
+   - Git worktree on branch `exp/<topic>` only if no native worktree feature is available and the user approves the location;
    - `/tmp` if it is only temporary exploration;
    - `experiments/<topic>/` only if artifacts must remain in the repository during evaluation;
-5. wait for my approval.
+6. wait for my approval.
 
 If the request concerns one-shot work, for example a focused refactor, test of a new LLM model, library/API trial, comparison script, quick benchmark, or temporary technical analysis:
 - if it is lightweight and already decided, propose direct work on the current branch with a clear task/commit;
@@ -23,6 +27,14 @@ If the request concerns one-shot work, for example a focused refactor, test of a
 - if notes, proofs, reports, or temporary scripts must be kept during evaluation, propose `experiments/<topic>/`; for refactoring, prefer `experiments/refactor-<topic>/`;
 - if only disposable scripts are needed, use `/tmp`;
 - do not leave approved final code inside `experiments/`: it must be moved into the real codebase.
+
+Git isolation rules:
+- do not create a nested worktree when the current checkout is already a linked worktree;
+- do not treat a Git submodule as a disposable linked worktree;
+- prefer a harness-native worktree/workspace feature over manual `git worktree` commands when the environment provides one;
+- for project-local worktrees, prefer `.worktrees/<topic>` or an existing configured worktree root, and verify the root is ignored before adding a worktree;
+- if the project-local worktree root is not ignored, ask before changing ignore rules;
+- run the shortest useful baseline verification before experimenting when the project has tests or lint. If the baseline already fails, record the failure as pre-existing before continuing.
 
 Rules:
 - do not mix experiments with stable code/documentation without approval;
@@ -59,6 +71,8 @@ At the end, propose a consolidation decision:
 - create a new ADR if a structural decision changes;
 - generate a task plan if implementation work emerges;
 - leave only a Git/branch reference if artifacts should not be promoted into the project.
+
+If the experiment branch or worktree needs merge, PR, keep, discard, or cleanup handling after evaluation, use `skills/finish-branch.md`.
 
 Before consolidation:
 1. summarize results, costs, risks, licenses, privacy, and impacts;

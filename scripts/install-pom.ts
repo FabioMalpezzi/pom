@@ -3,6 +3,12 @@
 import { execFileSync } from "node:child_process";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import {
+  CLAUDE_AGENT_TEMPLATES,
+  DIRECTORY_AGENT_INSTRUCTION_TARGETS,
+  EXISTING_AGENT_INSTRUCTION_FILES,
+  FALLBACK_AGENT_INSTRUCTION_FILE,
+} from "./lib/install-agent-targets.ts";
 import { chooseProfile, customizeAdoption, readOwnershipArg, readPresetArg, readProfileArg } from "./lib/install-cli.ts";
 import { pullPomIfGitRepo } from "./lib/install-git.ts";
 import {
@@ -26,73 +32,6 @@ const END_MARKER = "<!-- POM:END -->";
 const HOOK_START_MARKER = "# POM:START pre-commit";
 const HOOK_END_MARKER = "# POM:END pre-commit";
 const TODAY = new Date().toISOString().slice(0, 10);
-const FALLBACK_AGENT_INSTRUCTION_FILE = "AGENTS.md";
-
-const EXISTING_AGENT_INSTRUCTION_FILES = [
-  "AGENTS.md",
-  "AGENTS.MD",
-  "agents.md",
-  "CLAUDE.md",
-  "GEMINI.md",
-  "CONVENTIONS.md",
-  ".cursorrules",
-  ".clinerules",
-  ".windsurfrules",
-  ".github/copilot-instructions.md",
-  ".junie/guidelines.md",
-  ".junie/instructions.md",
-  ".junie/AGENTS.md",
-];
-
-const DIRECTORY_AGENT_INSTRUCTION_TARGETS = [
-  {
-    directory: ".claude/rules",
-    file: ".claude/rules/pom.md",
-    header: "",
-  },
-  {
-    directory: ".github/instructions",
-    file: ".github/instructions/pom.instructions.md",
-    header: "---\napplyTo: \"**\"\n---\n\n",
-  },
-  {
-    directory: ".cursor/rules",
-    file: ".cursor/rules/pom.mdc",
-    header: "---\ndescription: Project Operating Memory rules\nalwaysApply: true\n---\n\n",
-  },
-  {
-    directory: ".windsurf/rules",
-    file: ".windsurf/rules/pom.md",
-    header: "",
-  },
-  {
-    directory: ".kiro/steering",
-    file: ".kiro/steering/pom.md",
-    header: "",
-  },
-  {
-    directory: ".continue/rules",
-    file: ".continue/rules/pom.md",
-    header: "",
-  },
-  {
-    directory: ".roo/rules",
-    file: ".roo/rules/pom.md",
-    header: "",
-  },
-  {
-    directory: ".clinerules",
-    file: ".clinerules/pom.md",
-    header: "",
-  },
-];
-
-const CLAUDE_AGENT_TEMPLATES = [
-  {
-    source: "agents/claude/pom-post-action-validator.md",
-    target: ".claude/agents/pom-post-action-validator.md",
-  },
-];
 
 function pathExists(path: string): boolean {
   return existsSync(join(ROOT, path));

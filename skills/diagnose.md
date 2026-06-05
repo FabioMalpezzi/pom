@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: Use this skill to debug a failing or confusing POM workflow, lint check, installer run, template, skill, prompt, or memory update using a focused feedback loop.
+description: Use when a POM workflow, lint check, installer run, template, skill, prompt, or memory update behaves unexpectedly.
 ---
 
 # Skill - diagnose

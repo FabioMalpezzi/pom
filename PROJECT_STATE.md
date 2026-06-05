@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-2026-06-01
+2026-06-05
 
 ---
 
@@ -65,6 +65,43 @@ work has been integrated into `main`:
   `experiments/agent-loop-fsm/runtime-candidate/` remains evidence of
   executability, not a POM runtime.
 
+On 2026-06-05 POM gained a source-level bootstrap/router skill inspired
+by the comparison with Superpowers, without adding a POM runtime:
+`skills/using-pom.md`, `prompts/32-using-pom.md`, and
+`prompts/references/agent-harnesses.md` now route POM-aware work before
+action, require skill bodies rather than frontmatter descriptions as the
+procedure, map common tool names across Codex, Claude Code, Gemini CLI,
+Cursor, OpenCode, and GitHub Copilot, and explicitly guard disabled
+adoption modules. The installed agent instruction templates now point
+agents to `pom/skills/using-pom.md` before the first POM-related action
+when the route is unclear, and to the harness reference when
+session-start behavior or tool mapping matters.
+
+The same change added deterministic skill-bootstrap checks under
+`tests/skill-bootstrap/`: English and Italian smoke fixtures for
+`adopt`, `wiki`, `pulse`, `validate`, `plan`, plus Git/experiment
+routing through `spike` and POM refresh routing through `sync`. These are
+offline structural evals, not yet live harness transcripts.
+
+POM now also has a small branch-delivery procedure: `skills/spike.md`
+contains explicit Git isolation rules for risky experiments and
+worktrees, while `skills/finish-branch.md` and
+`prompts/33-finish-branch.md` guide verified merge, PR, keep, discard,
+and cleanup decisions after branch or experiment work.
+
+POM also has a Target Project debugging procedure:
+`skills/root-cause.md` and `prompts/34-root-cause-debugging.md` route
+bugs, test failures, build failures, performance issues, and unexpected
+behavior through evidence-first root-cause investigation before fixes.
+`skills/diagnose.md` remains scoped to POM method/tooling defects.
+
+The 2026-06-05 critical review cleanup aligned the public skill maps
+with the installed skill index, removed stale candidate-status prose from
+the canonical loop/goal criteria prompt, split large POM Source files
+below the 800-line working target, and added `source-size-*` lint checks
+for operational POM Source code files. The source-size guard does not
+apply to Target Project application files.
+
 On 2026-05-30 the method gained a **fourth named agent and a full experiment lifecycle**, designed in confronto with the user:
 - `define-criteria` was re-framed from an extractive interview into a **reasoned confronto** (the agent proposes, motivates, shows consequences on the objective, accepts off-grid questions), with an explicit boundary (the agent proposes and challenges but does not decide for the user, and must declare when it has over-steered) and **continuous + final auditing** (local consequences shown inline at every answer; cross-checks reconciled in section 7).
 - the confronto now **leaves a trace** in a separate `*.dialog.md` file (consequences signalled, off-grid questions, user calibrations) — both an anti-shortcut safeguard (the conversational auditing otherwise leaves no trace and is the part most easily skipped when the same agent "changes hat") and raw material for future improvement.
@@ -75,7 +112,8 @@ The four-agent lifecycle had its **first real dialog-mode run** on the `exp/dyna
 ### Current Objective
 
 Keep the integrated loop/goal and workflow documentation aligned with
-the canonical implementation, without expanding POM into a runtime.
+the canonical implementation, and harden POM skill routing without
+expanding POM into a runtime.
 
 ### Priorities
 
@@ -103,6 +141,10 @@ Current post-integration state:
 - [x] **Esperimento H6/H7** (priorità 1): adottato. SPEC-0007 è completa; validator E060-E073/W060, esempi, fixture, test automatico e guida Pattern A/B/C sono presenti.
 - [x] **Dynamic Workflow follow-up — handle lifecycle**: regole statiche E080-E089 aggiunte al validator per `fan_out_launch.handle`, `await.handles`, `cancel_handles`, `detach_handles` e terminali senza handle attivi impliciti; esempi e fixture in `experiments/dynamic-workflows/`; test automatici in `tests/workflow-validator/integration/test-dynamic-handles.mjs` e `tests/dynamic-workflows/integration/test-reference-executors.mjs`. I reference executor TypeScript e Python rimuovono gli handle attesi, propagano `detach`/`cancel` alle FSM figlie e rifiutano terminali con handle ancora attivi.
 - [x] **Integrare i rami verso `main`** (priorità 8): `exp/dynamic-workflows` è stato mergiato in `main`; il ramo includeva già `exp/agent-loop-fsm` e le modifiche H6/H7. Verifica post-merge: `npm run pom:test` e `npm run pom:lint` passati.
+- [x] **Bootstrap POM per agenti e eval bilingui**: `using-pom` aggiunto come router canonico; descrizioni frontmatter rese trigger-oriented; fixture inglesi/italiane e casi negativi per moduli disabilitati, Git, esperimenti e sync aggiunti. Verifica: `npm run pom:test` e `npm run pom:lint` passati il 2026-06-05.
+- [x] **Git isolation e chiusura branch**: `spike` esteso con rilevamento worktree/submodule e preferenza per workspace nativi; `finish-branch` aggiunto per chiudere branch con opzioni merge, PR, keep, discard e cleanup.
+- [x] **Debug Target Project a radice causa**: `root-cause` aggiunto come skill opzionale per bug, test failure, build failure, performance issue e comportamenti inattesi; `diagnose` resta riservato a difetti del metodo POM.
+- [x] **Pulizia revisione critica POM**: prompt `loop-goal` ripulito da note candidate, README/guide/wiki allineati alle skill correnti, file sorgente sopra target splittati, lint dimensionale aggiunto e testato.
 
 (Spunto non azionabile, registrato a parte: Prolog è un fit naturale per *validare/verificare* i workflow — non per eseguirli; valutazione esplorativa, non una cosa da fare.)
 
@@ -118,6 +160,10 @@ Current post-integration state:
 
 - **None blocking**. The main risk is confusing contract ownership with runtime ownership: the Dynamic Workflow contract belongs to the workflow control plane, while real concurrent execution belongs to the target data plane. Validator coverage is partial, not the contract itself.
 - Secondary risk: the loop/goal lifecycle is powerful but heavy. Use `workflow` by default for ordinary domain workflows; use `loop-goal` only when the controller is agent-shaped and measured criteria matter.
+- Branch delivery guidance is procedural, not a project release policy. Target projects still own branch naming, PR templates, protected branches, and release automation.
+- New bootstrap evals are deterministic structural checks, not real harness
+  transcripts. True agent-behavior evals for Claude Code, Codex, Gemini,
+  Cursor, and OpenCode remain a future distribution/integration step.
 
 ### To Clarify
 

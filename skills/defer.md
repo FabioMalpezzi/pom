@@ -1,6 +1,6 @@
 ---
 name: defer
-description: Use this skill to preserve work without implementing it — parking a spec, task, or topic as Deferred with explicit reactivation criteria.
+description: Use when preserving important work without implementing it now.
 ---
 
 # Skill - defer

@@ -1,6 +1,6 @@
 ---
 name: improve
-description: Run a controlled self-improvement loop for a POM-managed project's method/governance: observation -> diagnosis -> proposal -> verification -> promotion or discard.
+description: Use when recurring POM method or governance friction needs controlled improvement.
 ---
 
 # Skill - improve
@@ -37,4 +37,3 @@ Do not use this skill for routine feature delivery work. Use planning workflows 
 - verification result;
 - promotion/discard decision;
 - next safe step recorded in a governed place.
-

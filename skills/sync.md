@@ -1,6 +1,6 @@
 ---
 name: sync
-description: Use this skill to refresh or sync an existing POM installation in a target project, especially when the project already has a pom/ folder, a POM submodule, or POM source changes must be propagated safely.
+description: Use when refreshing an installed pom/ folder or aligning a target project with source POM changes.
 ---
 
 # Skill - sync

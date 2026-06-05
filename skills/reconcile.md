@@ -1,6 +1,6 @@
 ---
 name: reconcile
-description: Use this skill when a divergence between a source and project memory must be resolved — classifying it as obsolescence, contradiction, expiry, or gap, and applying the appropriate resolution with loop closure.
+description: Use when sources and project memory disagree, expire, or expose a gap.
 ---
 
 # Skill - reconcile

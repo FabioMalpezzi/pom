@@ -1,6 +1,6 @@
 ---
 name: adopt
-description: Use this skill to introduce POM into an existing project without breaking its current structure — mapping existing folders, docs, tests, and decisions before proposing any changes.
+description: Use when introducing POM into an existing project or external repository without changing its structure first.
 ---
 
 # Skill - adopt

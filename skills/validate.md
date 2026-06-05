@@ -1,6 +1,6 @@
 ---
 name: validate
-description: Use this skill to run a read-only governance audit after significant POM actions, checking project state, wiki, task status, decisions, completion evidence, and orphan artifacts.
+description: Use when a significant POM action needs a read-only governance audit.
 ---
 
 # Skill - validate
