@@ -6,7 +6,7 @@ Templates define the shape of governed documents, and lint turns stable rules in
 
 ## Current State
 
-The README states the rule: template equals rule, lint equals enforcement. The lint configuration can be copied into a target project as `pom.config.json` and adapted to local roots, templates, wiki categories, decisions, tests, and handoff behavior.
+The README states the rule: template equals rule, lint equals enforcement. The lint configuration can be copied into a target project as `pom.config.json` and adapted to local roots, templates, wiki categories, decisions, tests, handoff behavior, and opt-in workflow modeling.
 
 The current repository provides templates for Decision Records, Open Discussion, agent instruction sections, Current Plan, docs, experiments, mock manifests, Project State, reconciliation, specs, task plans, wiki index, wiki log, and wiki pages.
 
@@ -32,6 +32,8 @@ The generated wiki reader must respect this discipline. Generated HTML is derive
 
 Artifact Policy adds the edit-permission layer that Source Authority does not answer. `pom.config.json` can mark paths as approval-required, generated, or historical. The portable defaults mark generated indexes and wiki reader output as generated; project-specific normative folders can be added by target projects without changing POM Source.
 
+Workflow modeling has its own top-level `workflows` config section. POM ships it disabled by default so target projects can choose their workflow root, generated-output root, and naming convention before treating YAML workflow models as active project artifacts.
+
 ## Sources
 
 | Source | Use |
@@ -39,7 +41,8 @@ Artifact Policy adds the edit-permission layer that Source Authority does not an
 | `README.md` | Template/lint model, completion verification, documentation discipline, and POM folders. |
 | `templates/` | Current reusable document shapes. |
 | `templates/agents/` | Profile modules for target-project agent instruction sections. |
-| `templates/POM_CONFIG_TEMPLATE.json` | Portable lint and adoption configuration. |
+| `templates/POM_CONFIG_TEMPLATE.json` | Portable lint, adoption, and opt-in workflow configuration. |
+| `skills/config.md` | Procedure for adding or updating `pom.config.json`, including workflow activation. |
 | `scripts/lib/lint-config.ts` | Default lint configuration used when project config is missing. |
 | `templates/OPEN_DISCUSSION_TEMPLATE.md` | Discussion template for non-authoritative desiderata and alternatives before promotion. |
 | `prompts/18-post-action-validator.md` | Post-action governance audit procedure. |

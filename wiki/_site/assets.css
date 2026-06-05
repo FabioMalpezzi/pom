@@ -700,7 +700,6 @@ blockquote {
     display: none;
   }
 }
-
 @media (max-width: 820px) {
   html { scroll-padding-top: 0; }
 

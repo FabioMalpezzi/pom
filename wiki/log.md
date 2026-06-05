@@ -4,6 +4,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-06-05] update | document workflow activation config
+
+Updated the wiki synthesis after reconciling the workflow activation changes. The adoption, governance, and skill catalog pages now state that workflow modeling is opt-in through the top-level `workflows` section in `pom.config.json`, and the catalog cites the guarded YAML loader used by the workflow scripts.
+
+Sources used: `skills/config.md`, `templates/POM_CONFIG_TEMPLATE.json`, `scripts/require-yaml.mjs`, `scripts/lint-workflows.mjs`, `scripts/to-mermaid.mjs`, `scripts/to-xstate.mjs`, `wiki/adoption-and-installation.md`, `wiki/templates-and-governance.md`, and `wiki/skills-and-prompts.md`.
+
 ## [2026-05-30] update | record POM v0.2.0 workflow modeling capability
 
 Added SPEC-0006 (`workflow-modeling`) and ADR-0002 (`workflow-context-injection`) to the specs table on `current-specs.md`. Added the `workflow` skill row to `skills-and-prompts.md` together with the new prompt 27, four templates (`WORKFLOW_TEMPLATE.yaml`, `PIPELINE_TEMPLATE.yaml`, `WORKFLOW_IMPLEMENTATION_GUIDE.md`, `WORKFLOW_INTEGRATION_GUIDE.md`), and the XState compatibility doc. Updated `experiments-and-extension.md` with the consolidated workflow-modeling experiment and its promotion outcome row in the candidate-outcome table.

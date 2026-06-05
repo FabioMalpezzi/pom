@@ -109,7 +109,7 @@ Complete skill catalog:
 ### `config`
 
 - **Illustration**: creates or updates `pom.config.json`.
-- **Real use cases**: map nonstandard documentation roots; set ownership mode; configure wiki, decisions, tests, task plans, templates, and lint severities.
+- **Real use cases**: map nonstandard documentation roots; set ownership mode; configure wiki, decisions, tests, task plans, templates, workflow activation, and lint severities.
 - **Why it exists / importance**: lets POM adapt to a Target Project instead of forcing every repository into one folder layout.
 
 ### `spike`
@@ -181,7 +181,7 @@ Complete skill catalog:
 ### `workflow`
 
 - **Illustration**: designs, validates, diagrams, derives scenarios for, and guides implementation of domain workflows declared as YAML state models.
-- **Real use cases**: model a ticket lifecycle; validate a pipeline; generate Mermaid; map a YAML workflow to implementation guidance for a Target Project.
+- **Real use cases**: model a ticket lifecycle; enable workflow roots through `pom.config.json`; validate a pipeline; generate Mermaid or XState views; map a YAML workflow to implementation guidance for a Target Project.
 - **Why it exists / importance**: gives workflow-heavy domains a precise, testable model while keeping execution runtime-owned by the Target Project.
 
 ### `loop-goal`
@@ -218,6 +218,8 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 | `decisions/ADR-0002-workflow-context-injection.md` | Closed decision behind workflow composition data-exchange model. |
 | `templates/WORKFLOW_TEMPLATE.yaml`, `templates/PIPELINE_TEMPLATE.yaml`, `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md`, `templates/WORKFLOW_INTEGRATION_GUIDE.md` | Workflow-skill templates and adoption/extension manuals. |
 | `docs/workflow-xstate-compatibility.md` | XState v5 compatibility and the stately.ai visualization workflow. |
+| `skills/config.md`, `templates/POM_CONFIG_TEMPLATE.json` | Workflow activation config shape and safe opt-in procedure. |
+| `scripts/require-yaml.mjs`, `scripts/lint-workflows.mjs`, `scripts/to-mermaid.mjs`, `scripts/to-xstate.mjs` | Guarded `js-yaml` dependency loading and workflow script entry points. |
 
 ## Linked Decisions
 

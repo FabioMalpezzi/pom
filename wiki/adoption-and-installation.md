@@ -257,12 +257,15 @@ Adoption profile controls which Memory Elements and governance modules are activ
 
 Overlay mode is distinct from adoption. In overlay mode, POM governs the operator's understanding, not the upstream project. Overlay artifacts should be kept local and out of upstream contributions unless explicitly wanted.
 
+Workflow modeling is separate from the adoption profile. Target projects opt in through the top-level `workflows` section in `pom.config.json`, which keeps workflow YAML roots and generated workflow artifacts explicit while leaving the shipped template disabled by default.
+
 ## Sources
 
 | Source | Use |
 |---|---|
 | `README.md` | Installation, presets, profile meanings, ownership, update flow, and overlay summary. |
-| `templates/POM_CONFIG_TEMPLATE.json` | Default config fields for ownership, adoption, roots, templates, wiki, decisions, tests, and handoff. |
+| `templates/POM_CONFIG_TEMPLATE.json` | Default config fields for ownership, adoption, roots, templates, wiki, decisions, tests, handoff, and opt-in workflow modeling. |
+| `skills/config.md` | Configuration procedure for mapping project roots and enabling workflow modeling safely. |
 | `prompts/01-bootstrap-new-project.md` | New project setup. |
 | `prompts/02-adopt-existing-project.md` | Existing project adoption without moving structures by default. |
 | `skills/sync.md` | Safe refresh and synchronization workflow for existing POM installations. |
