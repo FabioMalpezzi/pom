@@ -30,6 +30,7 @@
               Regex
             </label>
             <button id="runSearch" class="secondary" type="button" data-i18n="search.content">Search content</button>
+            <button id="openCommandPalette" class="secondary" type="button" data-i18n="command.open">Command</button>
           </div>
           <p id="configStatus" class="panel-note config-status"></p>
           <div id="searchResults" class="search-results"></div>
@@ -142,6 +143,21 @@
         </div>
       </aside>
     </div>
+
+    <dialog id="commandPalette" class="command-palette">
+      <div class="command-surface">
+        <div class="command-header">
+          <input id="commandInput" class="search command-input" type="search" placeholder="Path, file, or content..." data-i18n-placeholder="command.placeholder" autocomplete="off">
+          <button id="closeCommandPalette" class="secondary" type="button" data-i18n="command.close">Close</button>
+        </div>
+        <div class="nav-mode command-modes" role="tablist" aria-label="Command mode" data-i18n-aria-label="command.mode">
+          <button class="nav-mode-button active" type="button" data-command-mode="path" data-i18n="command.path">Open path</button>
+          <button class="nav-mode-button" type="button" data-command-mode="file" data-i18n="command.file">Find file</button>
+          <button class="nav-mode-button" type="button" data-command-mode="content" data-i18n="command.content">Find content</button>
+        </div>
+        <div id="commandResults" class="command-results" aria-live="polite"></div>
+      </div>
+    </dialog>
 
     <script type="module" src="/app.js"></script>
   </body>

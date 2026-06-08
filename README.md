@@ -130,6 +130,14 @@ Explicit form:
 node pom/scripts/project-reader/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations
 ```
 
+Standalone CLI form:
+
+```bash
+project-reader --root . --port 4173
+project-reader open wiki/overview.md --port 4173
+project-reader search "Operating Memory" --root .
+```
+
 Then open:
 
 ```text
@@ -140,18 +148,35 @@ If a coding-agent sandbox reports `EPERM` or `EACCES` while binding `127.0.0.1`,
 
 The reader starts from `wiki/index.md` when the project has a wiki. If the project has no wiki index, it shows a generated `POM Project Reader` entry page and still exposes project documentation and source files through an explicit allowlist.
 
-When `pom.config.json` exists, the reader uses it to classify configured project roots. For example, `documentation.officialRoot` and `documentation.existingRoots` become project documents, `decisions.root` becomes decisions, `taskPlans.root` becomes task plans, `analysis.root` becomes analysis, `source.roots` become source, and `tests.root` becomes tests. It also respects generated-output exclusions from `artifactPolicy.generated` in navigation and search. If the config is missing, the reader keeps the built-in allowlist. If the config exists but is invalid JSON, the server fails loudly instead of guessing. The UI shows whether it is using `pom.config.json` or the built-in roots.
+The reader is split into a reusable core and profiles. In `auto` mode it first honors `.project-reader.json`, then uses the POM profile when `pom.config.json` or the POM Source structure is present, otherwise falls back to common roots such as `README.md`, `docs/`, `src/`, and `tests/`. The POM profile classifies `documentation.officialRoot` and `documentation.existingRoots` as project documents, `decisions.root` as decisions, `taskPlans.root` as task plans, `analysis.root` as analysis, `source.roots` as source, and `tests.root` as tests. It also respects generated-output exclusions from `artifactPolicy.generated` in navigation and search. If a config exists but is invalid JSON, the server fails loudly instead of guessing. The UI shows which profile and config mode are active.
 
 It can show and search:
 
 - wiki pages, README, context, docs, specs, decisions, task plans, prompts, skills, templates, examples, selected experiment files, scripts, tests, `bootstrap-pom.mjs`, and `package.json`;
 - thematic navigation and project-tree navigation;
+- direct file opening with URLs such as `http://127.0.0.1:4173/?path=wiki/overview.md`;
+- command palette for direct path open, file lookup, and content search;
 - collapsible or pinned navigation and annotation side panels;
 - project-wide `rg` search with optional regex mode;
 - search inside the open file, with optional regex mode;
 - a responsive document surface that keeps prose readable while giving code blocks and tables more room on large screens;
 - Markdown tables, fixed-width text blocks, syntax-highlighted code, source line numbers where they are useful, and English/Italian interface labels.
 - local safety guards: rendering rejects files above 1 MB and binary-looking files, while project search skips files above 1 MB.
+
+For large repositories, the project tree uses a lazy API: expanding `src/server` reads `/api/tree?path=src/server` instead of building one global tree first. The thematic list loads progressively and renders through a virtualized window instead of one DOM button per file. The reader can open the wiki or a direct `?path=` URL immediately, and project search remains available during loading.
+
+cmux can drive the reader by opening the direct URL in a browser surface:
+
+```bash
+project-reader open wiki/overview.md --port 4173 --cmux
+cmux browser open "http://127.0.0.1:4173/?path=wiki/overview.md"
+```
+
+For a single Markdown file outside the Project Reader UI, cmux also provides:
+
+```bash
+cmux markdown open wiki/overview.md
+```
 
 Annotations are file-based. The UI saves JSON work files under the configured annotation directory. Treat this as runtime evidence and keep it out of commits unless the project intentionally wants to archive an annotation. If you choose a custom annotation directory, add it to the target project's ignore rules.
 

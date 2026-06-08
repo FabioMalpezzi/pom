@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-2026-06-05
+2026-06-08
 
 ---
 
@@ -94,6 +94,11 @@ POM also has a Target Project debugging procedure:
 bugs, test failures, build failures, performance issues, and unexpected
 behavior through evidence-first root-cause investigation before fixes.
 `skills/diagnose.md` remains scoped to POM method/tooling defects.
+
+On 2026-06-08 the Project Reader gained a reusable core, POM/generic
+adapters, lazy `/api/tree?path=...`, virtualized lists, a command
+palette, standalone `project-reader open/search`, and cmux-targetable
+`?path=` deep links for large Target Projects and non-POM repositories.
 
 The 2026-06-05 critical review cleanup aligned the public skill maps
 with the installed skill index, removed stale candidate-status prose from

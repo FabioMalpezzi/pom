@@ -6,6 +6,9 @@
   "engines": {
     "node": ">=22.6.0"
   },
+  "bin": {
+    "project-reader": "scripts/project-reader/cli.mjs"
+  },
   "scripts": {
     "pom:init": "node --experimental-strip-types scripts/install-pom.ts",
     "pom:help": "node --experimental-strip-types scripts/pom-help.ts",

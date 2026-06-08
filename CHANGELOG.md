@@ -14,6 +14,7 @@ This changelog records public-facing POM releases. Fine-grained development hist
 - **POM Source file-size lint** (`source-size-*`): enforces the 1000-line hard cap and warns at the 800-line working target for operational POM Source code files, without applying those limits to Target Project application files.
 - **Workflow activation config** (`templates/POM_CONFIG_TEMPLATE.json`, `skills/config.md`): ships the `workflows` section disabled by default and documents the activation steps for workflow modeling.
 - **Guarded YAML loader** (`scripts/require-yaml.mjs`): workflow scripts now fail with an actionable `js-yaml` install message instead of a raw module-resolution stack trace when the optional dependency is missing.
+- **Project Reader standalone CLI and profiles** (`project-reader`): adds `open` and `search` commands, a generic `.project-reader.json` profile, the POM profile as an adapter, a lazy `/api/tree?path=...` directory API, and a command palette for path/file/content lookup.
 
 ### Changed
 
@@ -26,6 +27,7 @@ This changelog records public-facing POM releases. Fine-grained development hist
 - Split large POM Source implementation files below the 800-line working target.
 - Removed stale candidate-status prose from the canonical loop/goal criteria prompt.
 - Routed workflow lint, Mermaid, and XState scripts through the guarded YAML loader.
+- Split the Project Reader into reusable core/adapters, changed tree navigation to lazy directory loading, and virtualized the thematic list so large Target Projects no longer require a global file tree or tens of thousands of buttons before browsing.
 
 ## 0.2.0 - 2026-05-30
 

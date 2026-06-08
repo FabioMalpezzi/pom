@@ -1,19 +1,26 @@
 import { applyStaticTranslations, nextLocale, readLocale, storeLocale, t as translate } from "./i18n.js";
 import { createAnnotationController } from "./annotations.js";
+import { createCommandPaletteController } from "./command-palette.js";
+import { createDocumentListController } from "./document-list.js";
 import { deleteJson, escapeHtml, escapeRegExp, getJson, humanError as formatError, postJson } from "./dom-utils.js";
 import { createDocumentSearchController } from "./document-search.js";
+import { createTreeNavController } from "./tree-nav.js";
 
 const SIDEBAR_PINNED_KEY = "pom.sidebarPinned.v2";
 const AGENT_PINNED_KEY = "pom.agentPinned.v1";
 const FLOATING_PANEL_CLOSE_DELAY_MS = 500;
+const DOCUMENT_SCAN_POLL_MS = 200;
 
 const state = {
   documents: [],
+  documentScan: null,
+  documentListScrollTop: 0,
   activeKind: "all",
   activeDocument: null,
   documentSearchMatches: [],
   documentSearchIndex: -1,
   selectedDocumentText: "",
+  commandMode: "path",
   agentTab: "write",
   agentOpen: false,
   navMode: "thematic",
@@ -46,6 +53,7 @@ const els = {
   treeNav: document.querySelector("#treeNav"),
   regexSearch: document.querySelector("#regexSearch"),
   runSearch: document.querySelector("#runSearch"),
+  openCommandPalette: document.querySelector("#openCommandPalette"),
   searchResults: document.querySelector("#searchResults"),
   configStatus: document.querySelector("#configStatus"),
   kindFilters: document.querySelector("#kindFilters"),
@@ -75,6 +83,11 @@ const els = {
   refreshProcessedAnnotations: document.querySelector("#refreshProcessedAnnotations"),
   processedAnnotationList: document.querySelector("#processedAnnotationList"),
   processedAnnotationDetail: document.querySelector("#processedAnnotationDetail"),
+  commandPalette: document.querySelector("#commandPalette"),
+  commandInput: document.querySelector("#commandInput"),
+  commandModeButtons: document.querySelectorAll("[data-command-mode]"),
+  commandResults: document.querySelector("#commandResults"),
+  closeCommandPalette: document.querySelector("#closeCommandPalette"),
 };
 
 const documentSearch = createDocumentSearchController({
@@ -98,13 +111,42 @@ const annotations = createAnnotationController({
   setAgentTab,
 });
 
+const treeNav = createTreeNavController({
+  els,
+  state,
+  t,
+  escapeHtml,
+  getJson,
+  loadDocument,
+});
+
+const documentList = createDocumentListController({
+  els,
+  state,
+  t,
+  escapeHtml,
+  loadDocument,
+});
+
+const commandPalette = createCommandPaletteController({
+  els,
+  state,
+  t,
+  escapeHtml,
+  getJson,
+  loadDocument,
+  humanError,
+});
+
 init();
 
 async function init() {
-  [state.status, state.documents] = await Promise.all([
+  const [status, documentsPayload] = await Promise.all([
     getJson("/api/status"),
     getJson("/api/documents"),
   ]);
+  state.status = status;
+  applyDocumentsPayload(documentsPayload, { replace: true });
   renderLocale();
   renderLayoutState();
   renderNavMode();
@@ -113,10 +155,10 @@ async function init() {
   renderFilters();
   renderDocumentNav();
   await annotations.loadAnnotations();
-  const entryDoc = state.documents.find((doc) => doc.path === "wiki/index.md")
-    || state.documents.find((doc) => doc.path === "__project_index__.md")
-    || state.documents[0];
-  if (entryDoc) await loadDocument(entryDoc.path);
+  await loadInitialDocument();
+  pollDocumentScan().catch((error) => {
+    els.eventResult.textContent = humanError(error);
+  });
 }
 
 function t(key, values) {
@@ -227,10 +269,27 @@ function bindFloatingPanelHover(panelElement, panel) {
 
 function renderReaderStatus() {
   if (!els.configStatus || !state.status) return;
-  const mode = state.status.documentSources?.mode;
-  els.configStatus.textContent = mode === "pom.config.json"
-    ? t("reader.configActive", { count: state.status.documentSources.configuredCount })
-    : t("reader.configFallback");
+  const sources = state.status.documentSources || {};
+  const configText = readerConfigText(sources);
+  const scan = state.documentScan;
+  if (!scan) {
+    els.configStatus.textContent = configText;
+    return;
+  }
+  if (scan.error) {
+    els.configStatus.textContent = `${configText} · ${t("reader.scanError")}`;
+    return;
+  }
+  els.configStatus.textContent = scan.complete
+    ? `${configText} · ${t("reader.scanComplete", { count: scan.loadedCount })}`
+    : `${configText} · ${t("reader.scanLoading", { count: scan.loadedCount })}`;
+}
+
+function readerConfigText(sources) {
+  if (sources.mode === "pom.config.json") return t("reader.configActive", { count: sources.configuredCount });
+  if (sources.mode === ".project-reader.json") return t("reader.genericConfigActive", { count: sources.configuredCount });
+  if (sources.profile === "generic") return t("reader.genericConfigFallback");
+  return t("reader.configFallback");
 }
 
 function renderAgentTab() {
@@ -259,6 +318,7 @@ function renderFilters() {
     button.textContent = kind === "all" ? t("filter.all") : kind;
     button.addEventListener("click", () => {
       state.activeKind = kind;
+      documentList.resetScroll();
       renderFilters();
       renderDocumentNav();
     });
@@ -282,125 +342,50 @@ function setNavMode(mode) {
 }
 
 function renderDocumentNav() {
-  renderDocumentList();
-  renderDocumentTree();
+  if (state.navMode === "tree") {
+    renderDocumentTree();
+  } else {
+    renderDocumentList();
+  }
+}
+
+async function loadInitialDocument() {
+  const requestedPath = initialDocumentPath();
+  for (const path of [requestedPath, "wiki/index.md", "__project_index__.md"].filter(Boolean)) {
+    try {
+      await loadDocument(path, { syncUrl: path === requestedPath });
+      return;
+    } catch (error) {
+      if (path === requestedPath) els.eventResult.textContent = humanError(error);
+    }
+  }
+  const entryDoc = state.documents[0];
+  if (entryDoc) await loadDocument(entryDoc.path);
 }
 
 function renderDocumentList() {
-  const query = els.search.value.trim().toLowerCase();
-  const docs = state.documents.filter((doc) => {
-    const matchesKind = state.activeKind === "all" || doc.kind === state.activeKind;
-    const haystack = `${doc.title} ${doc.path} ${doc.summary}`.toLowerCase();
-    return matchesKind && (!query || haystack.includes(query));
-  });
-  els.documentList.innerHTML = "";
-  if (!docs.length) {
-    els.documentList.innerHTML = `<p class="panel-note">${escapeHtml(t("document.noDocuments"))}</p>`;
-    return;
-  }
-  for (const doc of docs) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `doc-item${state.activeDocument?.path === doc.path ? " active" : ""}`;
-    button.innerHTML = `
-      <span class="doc-title">${escapeHtml(doc.title)}</span>
-      <span class="doc-meta">${escapeHtml(doc.kind)} · ${escapeHtml(doc.path)}</span>
-    `;
-    button.addEventListener("click", () => loadDocument(doc.path));
-    els.documentList.append(button);
-  }
+  documentList.render();
 }
 
 function renderDocumentTree() {
-  const query = els.search.value.trim().toLowerCase();
-  const docs = state.documents.filter((doc) => {
-    const matchesKind = state.activeKind === "all" || doc.kind === state.activeKind;
-    const haystack = `${doc.title} ${doc.path} ${doc.summary}`.toLowerCase();
-    return matchesKind && (!query || haystack.includes(query));
-  });
-  els.documentTree.innerHTML = "";
-  if (!docs.length) {
-    els.documentTree.innerHTML = `<p class="panel-note">${escapeHtml(t("document.noFiles"))}</p>`;
-    return;
-  }
-  const root = buildTree(docs);
-  appendTreeChildren(els.documentTree, root, query);
+  treeNav.render();
 }
 
-function buildTree(docs) {
-  const root = treeNode("", "");
-  for (const doc of docs) {
-    const parts = doc.path.split("/");
-    let node = root;
-    for (const part of parts.slice(0, -1)) {
-      if (!node.dirs.has(part)) node.dirs.set(part, treeNode(part, node.path ? `${node.path}/${part}` : part));
-      node = node.dirs.get(part);
+async function pollDocumentScan() {
+  while (!state.documentScan?.complete && !state.documentScan?.error) {
+    await delay(DOCUMENT_SCAN_POLL_MS);
+    const changed = applyDocumentsPayload(await getJson("/api/documents"), { replace: true });
+    renderReaderStatus();
+    if (changed) {
+      renderFilters();
+      renderDocumentNav();
     }
-    node.files.push(doc);
-  }
-  return root;
-}
-
-function treeNode(name, path) {
-  return { name, path, dirs: new Map(), files: [] };
-}
-
-function appendTreeChildren(parent, node, query) {
-  for (const dir of [...node.dirs.values()].sort(compareTreeNodes)) {
-    parent.append(renderDirectory(dir, query));
-  }
-  for (const doc of [...node.files].sort(compareTreeDocs)) {
-    parent.append(renderTreeFile(doc));
   }
 }
 
-function renderDirectory(node, query) {
-  const details = document.createElement("details");
-  details.className = "tree-dir";
-  details.open = Boolean(query) || node.path === "wiki" || Boolean(state.activeDocument?.path.startsWith(`${node.path}/`));
-  const summary = document.createElement("summary");
-  summary.textContent = node.name;
-  details.append(summary);
-  const body = document.createElement("div");
-  body.className = "tree-children";
-  appendTreeChildren(body, node, query);
-  details.append(body);
-  return details;
-}
-
-function renderTreeFile(doc) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = `tree-file${state.activeDocument?.path === doc.path ? " active" : ""}`;
-  button.innerHTML = `
-    <span class="tree-file-name">${escapeHtml(lastPathSegment(doc.path))}</span>
-    <span class="tree-file-meta">${escapeHtml(doc.kind)}</span>
-  `;
-  button.addEventListener("click", () => loadDocument(doc.path));
-  return button;
-}
-
-function compareTreeNodes(a, b) {
-  return treeTopRank(a.path) - treeTopRank(b.path) || a.name.localeCompare(b.name);
-}
-
-function compareTreeDocs(a, b) {
-  return treeTopRank(a.path) - treeTopRank(b.path) || a.path.localeCompare(b.path);
-}
-
-function treeTopRank(path) {
-  const top = path.split("/")[0];
-  const order = ["wiki", "README.md", "CONTEXT.md", "docs", "specs", "decisions", "tasks", "experiments", "scripts", "tests"];
-  const index = order.indexOf(top);
-  return index === -1 ? order.length : index;
-}
-
-function lastPathSegment(path) {
-  return path.split("/").at(-1);
-}
-
-async function loadDocument(path) {
+async function loadDocument(path, { syncUrl = true } = {}) {
   const doc = await getJson(`/api/document?path=${encodeURIComponent(path)}`);
+  const added = addDocumentIfMissing(doc);
   state.activeDocument = doc;
   els.activeKind.textContent = doc.kind;
   els.activeTitle.textContent = doc.title;
@@ -409,7 +394,83 @@ async function loadDocument(path) {
   state.selectedDocumentText = "";
   annotations.updateSelectionAction();
   documentSearch.run();
+  if (added) renderFilters();
+  if (syncUrl) syncActiveDocumentUrl(doc.path);
   renderDocumentNav();
+}
+
+function applyDocumentsPayload(payload, { replace = false } = {}) {
+  const normalized = normalizeDocumentsPayload(payload);
+  const nextDocuments = replace ? [] : [...state.documents];
+  const byPath = new Map(nextDocuments.map((doc) => [doc.path, doc]));
+  for (const doc of normalized.documents) {
+    byPath.set(doc.path, doc);
+  }
+  if (state.activeDocument && !byPath.has(state.activeDocument.path)) {
+    byPath.set(state.activeDocument.path, {
+      path: state.activeDocument.path,
+      kind: state.activeDocument.kind,
+      title: state.activeDocument.title,
+      summary: "",
+    });
+  }
+  const next = [...byPath.values()];
+  const previousSignature = documentsSignature(state.documents);
+  const nextSignature = documentsSignature(next);
+  const previousScan = JSON.stringify(state.documentScan || {});
+  const nextScan = JSON.stringify(normalized.scan || {});
+  state.documents = next;
+  state.documentScan = normalized.scan;
+  return previousSignature !== nextSignature || previousScan !== nextScan;
+}
+
+function normalizeDocumentsPayload(payload) {
+  if (Array.isArray(payload)) {
+    return {
+      documents: payload,
+      scan: {
+        started: true,
+        complete: true,
+        loadedCount: payload.length,
+        error: "",
+      },
+    };
+  }
+  return {
+    documents: Array.isArray(payload?.documents) ? payload.documents : [],
+    scan: payload?.scan || null,
+  };
+}
+
+function documentsSignature(docs) {
+  return `${docs.length}:${docs[0]?.path || ""}:${docs.at(-1)?.path || ""}`;
+}
+
+function initialDocumentPath() {
+  const params = new URLSearchParams(window.location.search);
+  const value = params.get("path") || params.get("file") || "";
+  return value.startsWith("/") ? "" : value;
+}
+
+function addDocumentIfMissing(doc) {
+  if (state.documents.some((item) => item.path === doc.path)) return false;
+  state.documents.push({
+    path: doc.path,
+    kind: doc.kind,
+    title: doc.title,
+    summary: "",
+  });
+  return true;
+}
+
+function syncActiveDocumentUrl(path) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("path", path);
+  window.history.replaceState({ path }, "", url);
+}
+
+function delay(ms) {
+  return new Promise((resolveDelay) => setTimeout(resolveDelay, ms));
 }
 
 async function runProjectSearch() {
@@ -443,17 +504,16 @@ function renderSearchResults(result) {
       <span class="doc-meta">${escapeHtml(match.text)}</span>
     `;
     button.addEventListener("click", () => {
-      if (state.documents.some((doc) => doc.path === match.path)) {
-        loadDocument(match.path).catch((error) => {
-          els.eventResult.textContent = error.message;
-        });
-      }
+      loadDocument(match.path).catch((error) => {
+        els.eventResult.textContent = error.message;
+      });
     });
     els.searchResults.append(button);
   }
 }
 
 function handleSearchInput() {
+  documentList.resetScroll();
   renderDocumentNav();
   if (!els.search.value.trim()) els.searchResults.innerHTML = "";
 }
@@ -487,6 +547,15 @@ els.runSearch.addEventListener("click", () => {
     els.searchResults.textContent = humanError(error);
   });
 });
+els.openCommandPalette.addEventListener("click", commandPalette.open);
+els.closeCommandPalette.addEventListener("click", commandPalette.close);
+els.commandInput.addEventListener("input", commandPalette.render);
+els.commandPalette.addEventListener("click", (event) => {
+  if (event.target === els.commandPalette) commandPalette.close();
+});
+for (const button of els.commandModeButtons) {
+  button.addEventListener("click", () => commandPalette.setMode(button.dataset.commandMode));
+}
 els.documentSearch.addEventListener("input", () => documentSearch.run());
 els.documentRegexSearch.addEventListener("change", () => documentSearch.run({ scroll: true }));
 els.documentSearch.addEventListener("keydown", (event) => {
@@ -497,6 +566,7 @@ els.documentSearch.addEventListener("keydown", (event) => {
 els.documentSearchPrev.addEventListener("click", () => documentSearch.move(-1));
 els.documentSearchNext.addEventListener("click", () => documentSearch.move(1));
 document.addEventListener("selectionchange", annotations.updateSelectionAction);
+document.addEventListener("keydown", commandPalette.handleKeydown);
 document.addEventListener("pointerdown", annotations.closeFloatingPanelFromOutside);
 els.documentContent.addEventListener("keyup", annotations.updateSelectionAction);
 els.documentContent.addEventListener("mouseup", annotations.updateSelectionAction);

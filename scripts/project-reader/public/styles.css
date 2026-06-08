@@ -381,7 +381,7 @@ textarea:focus {
 
 .search-actions {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 8px;
   align-items: center;
   margin-top: 8px;
@@ -440,6 +440,27 @@ textarea:focus {
 .search-results {
   display: grid;
   gap: 8px;
+}
+
+.document-list.virtualized {
+  display: block;
+  height: min(52vh, 560px);
+  margin-top: 2px;
+  overflow: auto;
+  position: relative;
+}
+
+.virtual-spacer {
+  position: relative;
+}
+
+.document-list.virtualized .doc-item {
+  box-sizing: border-box;
+  height: 56px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .agent-panel .proposal-list { max-height: 260px; overflow: auto; padding-right: 2px; }
@@ -509,6 +530,63 @@ textarea:focus {
   color: var(--muted);
   font-family: var(--mono);
   font-size: 11px;
+}
+
+.command-palette {
+  width: min(760px, calc(100vw - 32px));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  padding: 0;
+  box-shadow: var(--shadow);
+}
+
+.command-palette::backdrop {
+  background: rgba(27, 25, 23, 0.38);
+}
+
+.command-surface {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.command-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.command-modes {
+  grid-template-columns: 1fr 1fr 1fr;
+  margin-top: 0;
+}
+
+.command-results {
+  display: grid;
+  gap: 8px;
+  max-height: min(54vh, 520px);
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.command-result {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  gap: 3px;
+  min-height: 48px;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.command-result:hover {
+  border-color: var(--accent);
 }
 
 .doc-item,
