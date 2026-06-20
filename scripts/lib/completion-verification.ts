@@ -138,11 +138,30 @@ export function hasScenarioTests(text: string): boolean {
   return /scenario test/i.test(text) || /positive scenario/i.test(text) || /error\/misuse/i.test(text) || /test di scenario/i.test(text);
 }
 
+const NONE_REASON_TOKENS = ["none", "nessuna", "nessun", "nessuno", "na"];
+
+/**
+ * True when an exception reason means "no exception". Robust to surrounding
+ * emphasis and trailing punctuation or clarifying notes: a reason whose first
+ * token is a none-word (e.g. "_none_.", "_none_ — see note", "None.",
+ * "_nessuna_") counts as no exception. A genuine reason (any other leading
+ * token) does not.
+ */
+export function isNoneReason(reason: string): boolean {
+  const normalized = reason
+    .trim()
+    .toLowerCase()
+    .replace(/[_*`]/g, "")
+    .replace(/^[\s.;:—-]+/, "");
+  const firstToken = normalized.split(/[\s.,;:—-]+/)[0] ?? "";
+  return NONE_REASON_TOKENS.includes(firstToken);
+}
+
 export function hasExceptionReason(text: string): boolean {
   const match = text.match(/(?:Exception reason|Motivo eccezione|Motivo dell'eccezione):\s*(.+)/i);
   if (!match) return false;
   const reason = match[1].trim();
-  return !["_none_", "none", "_nessuna_", "nessuna"].includes(reason.toLowerCase()) && reason.length > 0;
+  return reason.length > 0 && !isNoneReason(reason);
 }
 
 export function completionVerificationFindings(

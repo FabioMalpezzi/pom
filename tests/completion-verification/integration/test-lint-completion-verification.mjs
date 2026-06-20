@@ -524,6 +524,52 @@ function scenarioReaderNotesWarnAndSuggestSkill() {
   }
 }
 
+function scenarioNoneReasonWithTrailingNoteDoesNotWarn() {
+  console.log("\nScenario 7: '_none_' with trailing punctuation or note is not an exception");
+  const dir = createTempProject();
+
+  try {
+    writeAdr(
+      dir,
+      "ADR-0007-none-with-note.md",
+      `
+# ADR None With Note
+
+| Field | Value |
+|---|---|
+| Date | 2026-05-16 |
+| Status | Accepted |
+| Category | governance |
+| Area | lint |
+| Summary | Accepted decision whose exception reason is none plus a clarifying note |
+
+## Completion Verification
+
+### Thesis
+
+The decision is valid and verified.
+
+### Antithesis
+
+It could be read as informal prose.
+
+Confutation: governance checks would not discover informal prose.
+
+### Exception
+
+Exception reason: _none_. Direction is Accepted; implementation details are follow-ups, not open alternatives.
+`,
+    );
+
+    const result = runLint(dir);
+
+    assert("lint exits without warnings", result.status === 0, `expected exit 0, got ${result.status}\n${result.stdout}\n${result.stderr}`);
+    assert("no exception warning for '_none_' + note", !result.stdout.includes("completion-verification-exception"), result.stdout);
+  } finally {
+    cleanup(dir);
+  }
+}
+
 console.log("Completion Verification Lint Tests");
 console.log("==================================");
 
@@ -533,6 +579,7 @@ scenarioExceptionReasonWarns();
 scenarioMetadataIgnoresLaterTables();
 scenarioLocalizedTemplatesAndIndexesWork();
 scenarioReaderNotesWarnAndSuggestSkill();
+scenarioNoneReasonWithTrailingNoteDoesNotWarn();
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 
