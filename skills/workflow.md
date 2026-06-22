@@ -31,21 +31,24 @@ Pass the mode as the first instruction to the agent.
 
 ## Key Rules
 
-- The YAML model is the source of authority. Diagrams, validation reports, scenarios, and code are derived.
+- The YAML model is the source of authority and is a finite-state machine definition. `templates/WORKFLOW_TEMPLATE.yaml` is a reference starting point, not a required file to copy; `pom:workflow:lint` validates any target workflow YAML that follows the schema for states, events, guards, transitions, invokes, temporal primitives, and Dynamic Workflow handle lifecycle. Diagrams, validation reports, scenarios, and code are derived.
 - `design` mode never invents business rules; missing rules become open points in the YAML and in the conversation.
 - `validate` mode reports findings with severity (Error / Warning / Info); only Errors block downstream modes.
 - `diagram` mode uses the stable Mermaid tooling. `scenarios` mode is prompt-driven: it derives files under `workflows/generated/` from the YAML and never modifies the YAML.
 - `implement` mode reads `pom.config.json` (language, framework, test runner) before proposing patterns. It proposes alternatives with criteria; the user picks one.
 - `implement` mode never installs a library on its own. If a library is proposed, the decision is recorded as an ADR.
 - The skill works only when `pom.config.json` declares `workflows.enabled: true`. Otherwise it stops and refers the user to `skills/config.md`.
-- The skill does not execute the workflow and does not track live instances.
+- Dynamic Workflow modeling is an opt-in profile of this same skill. It requires `workflows.dynamic.enabled: true` and records only the control plane: `fan_out_launch`, `await`, joins, timeout wake-ups, handle lifecycle, cancellation, detachment, suspend/resume boundaries, and compensation.
+- The skill does not execute the workflow, does not track live instances, and does not own target-project workers, queues, schedulers, timers, persistence, or runtime concurrency. For target implementation seams, POM ships optional TypeScript and Python runtime templates: `templates/WORKFLOW_RUNTIME_TEMPLATE.ts` and `templates/WORKFLOW_RUNTIME_TEMPLATE.py`.
 
-## Main Templates
+## Reference Templates
 
 - `templates/WORKFLOW_TEMPLATE.yaml`
 - `templates/PIPELINE_TEMPLATE.yaml`
 - `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md`
 - `templates/WORKFLOW_INTEGRATION_GUIDE.md`
+- `templates/WORKFLOW_RUNTIME_TEMPLATE.ts`
+- `templates/WORKFLOW_RUNTIME_TEMPLATE.py`
 
 ## Output
 
@@ -65,4 +68,5 @@ Pass the mode as the first instruction to the agent.
 
 - Spec: `specs/SPEC-0006-workflow-modeling.md`
 - ADR: `decisions/ADR-0002-workflow-context-injection.md`
+- Dynamic Workflow doctrine: `decisions/ADR-0004-dynamic-workflow-control-plane.md`
 - XState compatibility: `docs/workflow-xstate-compatibility.md`

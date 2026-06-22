@@ -11,12 +11,12 @@ L'agente di codifica usa **i propri tool nativi** (Read, Bash, Write) — non se
 Esegui l'audit fit del workflow POM al path <WORKFLOW_PATH>.
 
 Prima di iniziare:
-1. leggi `pom.config.json` e conferma che `workflows.enabled: true`. Se non lo è, ferma e instrada a `skills/config.md`.
+1. leggi `pom.config.json` e conferma che `workflows.enabled: true` e `workflows.loopGoal.enabled: true`. Se uno dei due manca o è falso, ferma e instrada a `skills/config.md`.
 2. leggi questo prompt + `skills/loop-goal.md`.
 3. leggi il file workflow indicato (`Read` tool).
 4. esegui il validator con `Bash`: `node scripts/lint-workflows.mjs <WORKFLOW_PATH>` — registra il verdetto (PASS/FAIL) e le eventuali entry Error/Warning.
 5. se il workflow contiene `state-invoke` o `event-invoke`, leggi ANCHE ogni sub-workflow referenziato (il path nell'`invoke.workflow` è relativo al file caller). Questo è il passo che distingue un audit di forma da un audit di integrità della composizione.
-6. **cerca il file di criteri** associato. Il nome canonico corrente del contratto è `criteria.md`. In POM Source vive di solito in `experiments/<topic>/design/criteria.md`; in un progetto target usa la convenzione dichiarata dal progetto, oppure cerca vicino al workflow in `design/`, `workflows/generated/`, o nella cartella di esperimento equivalente. I vecchi file `criteria-experiment-<N>-<HID>.md`, se presenti, sono artefatti storici o run-specifici: usali solo se non esiste `criteria.md` o se l'utente indica esplicitamente quel run. Se esiste un solo file di criteri o uno che cita esplicitamente questo workflow, leggilo. Se ne esistono più, chiedi all'utente quale è quello rilevante per questo workflow. Se non esiste alcun file di criteri, segnala chiaramente nell'output che l'audit di conformità non può essere eseguito e procedi solo con la classificazione fit.
+6. **cerca il file di criteri** associato. Il nome canonico corrente del contratto è `criteria.md`. In POM Source vive di solito in `experiments/<topic>/design/criteria.md`; in un progetto target parti da `workflows.loopGoal.criteriaPath` quando presente, poi dalla convenzione dichiarata dal progetto, oppure cerca vicino al workflow in `design/`, `workflows/generated/`, o nella cartella di esperimento equivalente. I vecchi file `criteria-experiment-<N>-<HID>.md`, se presenti, sono artefatti storici o run-specifici: usali solo se non esiste `criteria.md` o se l'utente indica esplicitamente quel run. Se esiste un solo file di criteri o uno che cita esplicitamente questo workflow, leggilo. Se ne esistono più, chiedi all'utente quale è quello rilevante per questo workflow. Se non esiste alcun file di criteri, segnala chiaramente nell'output che l'audit di conformità non può essere eseguito e procedi solo con la classificazione fit.
 
 Procedi con la classificazione:
 

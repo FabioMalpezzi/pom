@@ -1,7 +1,8 @@
 # Workflow Template
 #
-# This is the draft schema for a POM workflow model.
-# It lives inside experiments/workflow-modeling/ and is not part of POM main yet.
+# This is the canonical template for a POM workflow model.
+# In a target project, place workflow files under the configured
+# workflows.root, usually workflows/<name>.yaml.
 #
 # A workflow file declares:
 #   - identifying metadata
@@ -69,6 +70,38 @@ states:
           next_event: validation_passed
         - terminal_state: refused
           next_event: validation_failed
+
+  # Optional Dynamic Workflow control-plane fields. Use only when
+  # pom.config.json declares workflows.dynamic.enabled: true.
+  #
+  # fan_out_launch records a non-blocking launch boundary. The target
+  # project's data plane owns workers, queues, schedulers, persistence,
+  # cancellation mechanics, and real concurrent execution.
+  #
+  # Handle lifecycle invariant: every launched handle must be awaited,
+  # cancelled, or explicitly detached before any reachable final state.
+  - name: launching_batch
+    description: |
+      Control-plane state that launches a target-owned external batch and continues.
+    is_final: false
+    fan_out_launch:
+      workflow: workflows/child-workflow.yaml
+      over: items
+      handle: child_batch
+
+  - name: awaiting_batch
+    description: |
+      Control-plane state that waits for the named batch handle.
+    is_final: false
+    await:
+      handles: [child_batch]
+      join: all                 # all | quorum | first
+      # k: 2                    # required when join: quorum
+      timeout: 30min
+      on_timeout: timeout_elapsed
+    # Optional lifecycle exits for active handles.
+    # cancel_handles: [child_batch]
+    # detach_handles: [child_batch]
 
 events:
   - name: submit

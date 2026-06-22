@@ -16,7 +16,9 @@ complete taxonomy of possible agent loops.
 
 The canonical `loop-goal` skill is the procedure for defining criteria,
 modeling, auditing, deriving scenarios, guiding implementation, and
-concluding loop/goal experiments. This page is a human reading guide: it
+concluding loop/goal experiments. In a Target Project it is opt-in:
+`pom.config.json` must enable both `workflows.enabled` and
+`workflows.loopGoal.enabled`. This page is a human reading guide: it
 helps a reader choose a starting pattern before using the skill.
 
 Coding agents already have their own loop/goal behavior: they receive a
@@ -38,17 +40,21 @@ rollback, safety checks, and persistence.
 
 To realize such a system, the method must connect to two concrete
 layers. First, the loop/goal shape is integrated with the generic POM
-workflow model: the YAML names the states, events, terminal states,
-guards, context, invocations, loop bounds, timeouts, and any Dynamic
-Workflow handle lifecycle. Second, the target project implements that
-contract in real code. POM provides implementation guidance and verified
-reference evidence, but the executable system lives in the target stack.
-The repository contains two practical evidence lines: the
-`agent-loop-fsm` TypeScript runtime candidate, which proves that a
-modeled agent loop can run end-to-end, and the Dynamic Workflow
-TypeScript and Python reference executors, which prove the control-plane
-and data-plane split with launched handles, await, detach, cancel, and
-compensation.
+workflow model: the YAML is the finite-state-machine source of authority
+and names the states, events, terminal states, guards, context,
+invocations, loop bounds, timeouts, and any Dynamic Workflow handle
+lifecycle. The workflow template is a reference starting point, not a
+mandatory file to copy; the invariant is that the target YAML validates
+with `pom:workflow:lint`. Second, the target project implements that
+contract in real code. POM provides implementation guidance, optional
+TypeScript and Python runtime seam templates for execution, persistence,
+timers, retry, tools, and side effects, and verified reference evidence,
+but the executable system lives in the target stack. The repository
+contains two practical evidence lines: the `agent-loop-fsm` TypeScript
+runtime candidate, which proves that a modeled agent loop can run
+end-to-end, and the Dynamic Workflow TypeScript and Python reference
+executors, which prove the control-plane and data-plane split with
+launched handles, await, detach, cancel, and compensation.
 
 The current verified examples cover five shapes:
 
@@ -124,7 +130,7 @@ For an experiment or target adoption, the order matters:
 3. Run `pom:workflow:lint`.
 4. Audit fit and conformance with `loop-goal audit`.
 5. Generate scenarios with `loop-goal scenarios`.
-6. Guide implementation with `loop-goal runtime-guide` and the workflow implementation guide.
+6. Guide implementation with `loop-goal runtime-guide` and the workflow implementation guide; copy the TypeScript or Python runtime seam template only if it helps the target architecture.
 7. Conclude the experiment against the frozen criteria.
 
 Do not skip criteria when the work is experimental. The criteria file is

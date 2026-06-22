@@ -20,11 +20,15 @@ La sicurezza di farlo valutare allo stesso "famiglia" di agenti che ha aperto l'
 
 ```text
 Valuta in modo indipendente e avversariale l'esperimento loop/goal il
-cui file di criteri è <CRITERIA_PATH>. Il nome canonico corrente del
+cui file di criteri è <CRITERIA_PATH>. Prima leggi `pom.config.json`: in
+un progetto target procedi solo se `workflows.enabled: true` e
+`workflows.loopGoal.enabled: true`; se uno dei due manca o è falso,
+fermati e instrada a `skills/config.md`. Il nome canonico corrente del
 contratto è `criteria.md` (`experiments/<topic>/design/criteria.md` in
-POM Source, o la cartella dichiarata dal progetto target). I vecchi file
-`criteria-experiment-<N>-<HID>.md`, se presenti, sono artefatti storici o
-run-specifici: usali solo se l'utente indica esplicitamente quel run.
+POM Source, `workflows.loopGoal.criteriaPath` o la cartella dichiarata
+dal progetto target). I vecchi file `criteria-experiment-<N>-<HID>.md`,
+se presenti, sono artefatti storici o run-specifici: usali solo se
+l'utente indica esplicitamente quel run.
 
 ## Postura
 
@@ -49,10 +53,10 @@ indipendenza.
    sono le evidenze, non il racconto.
 3. raccogli le evidenze prodotte dagli altri agenti e dal runtime, con
    `Bash`/`Read`:
-   - i `.fit.md` (output del Workflow Fit Auditor) sotto `design/`;
+   - i `.fit.md` (output del Workflow Fit Auditor) sotto `design/` o sotto `workflows.loopGoal.artifactsRoot`;
    - i file di scenari (output dello Scenarios Generator);
    - gli output e gli snapshot del runtime, se presenti
-     (`evidence/`, `runtime-candidate/`);
+     (`evidence/`, `runtime-candidate/`, o `workflows.loopGoal.evidenceRoot`);
    - i workflow YAML modellati, per controllare di persona ciò che i
      `.fit.md` affermano, se hai un sospetto.
 4. NON leggere alcuna trascrizione del dialogo di definizione dei

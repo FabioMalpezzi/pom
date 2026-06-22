@@ -4,6 +4,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-06-22] update | clarify workflow templates and runtime seams
+
+Updated the wiki synthesis after workflow, Dynamic Workflow, and loop/goal adoption were clarified for Target Projects. The wiki now states that workflow YAML is the finite-state-machine source of authority, `WORKFLOW_TEMPLATE.yaml` is an optional reference starting point rather than a mandatory copy target, `pom:workflow:lint` validates any target YAML that follows the schema, and the TypeScript/Python runtime seam templates are optional adapters for execution, persistence, timers, retry, tools, and side effects.
+
+Sources used: `skills/workflow.md`, `skills/loop-goal.md`, `prompts/27-workflow-modeling.md`, `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md`, `templates/WORKFLOW_TEMPLATE.yaml`, `templates/WORKFLOW_RUNTIME_TEMPLATE.ts`, `templates/WORKFLOW_RUNTIME_TEMPLATE.py`, `templates/POM_CONFIG_TEMPLATE.json`, `scripts/lib/workflow-lint-rules.mjs`, and `README.md`.
+
 ## [2026-06-05] update | document workflow activation config
 
 Updated the wiki synthesis after reconciling the workflow activation changes. The adoption, governance, and skill catalog pages now state that workflow modeling is opt-in through the top-level `workflows` section in `pom.config.json`, and the catalog cites the guarded YAML loader used by the workflow scripts.

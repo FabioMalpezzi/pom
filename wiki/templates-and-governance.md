@@ -8,7 +8,7 @@ Templates define the shape of governed documents, and lint turns stable rules in
 
 The README states the rule: template equals rule, lint equals enforcement. The lint configuration can be copied into a target project as `pom.config.json` and adapted to local roots, templates, wiki categories, decisions, tests, handoff behavior, and opt-in workflow modeling.
 
-The current repository provides templates for Decision Records, Open Discussion, agent instruction sections, Current Plan, docs, experiments, mock manifests, Project State, reconciliation, specs, task plans, wiki index, wiki log, and wiki pages.
+The current repository provides templates for Decision Records, Open Discussion, agent instruction sections, Current Plan, docs, experiments, mock manifests, Project State, reconciliation, specs, task plans, wiki index, wiki log, wiki pages, workflow YAML reference models, and optional TypeScript/Python workflow runtime seam adapters.
 
 The target-project agent instruction template is intentionally compact. Its global block covers identity, language, Source Authority, Artifact Policy, Git posture, commands, adoption profile semantics, and skill routing. Task-specific procedures such as handoff, experiments, planning verification, docs/source layout, and status classification live in skills, prompts, templates, or profile modules instead of the always-on global section.
 
@@ -32,16 +32,16 @@ The generated wiki reader must respect this discipline. Generated HTML is derive
 
 Artifact Policy adds the edit-permission layer that Source Authority does not answer. `pom.config.json` can mark paths as approval-required, generated, or historical. The portable defaults mark generated indexes and wiki reader output as generated; project-specific normative folders can be added by target projects without changing POM Source.
 
-Workflow modeling has its own top-level `workflows` config section. POM ships it disabled by default so target projects can choose their workflow root, generated-output root, and naming convention before treating YAML workflow models as active project artifacts.
+Workflow modeling has its own top-level `workflows` config section. POM ships it disabled by default so target projects can choose their workflow root, generated-output root, naming convention, and opt-in profiles before treating YAML workflow models as active project artifacts. The YAML FSM template is not mandatory; it documents the shape expected by the validator. Target projects may keep existing workflow YAML files if they validate with `pom:workflow:lint`. The TypeScript and Python runtime seam templates are also optional starting points: projects can copy them, adapt them, or keep an existing execution/persistence/timer/retry/tool/side-effect adapter.
 
 ## Sources
 
 | Source | Use |
 |---|---|
 | `README.md` | Template/lint model, completion verification, documentation discipline, and POM folders. |
-| `templates/` | Current reusable document shapes. |
+| `templates/` | Current reusable document shapes, workflow reference templates, and optional workflow runtime seam templates. |
 | `templates/agents/` | Profile modules for target-project agent instruction sections. |
-| `templates/POM_CONFIG_TEMPLATE.json` | Portable lint, adoption, and opt-in workflow configuration. |
+| `templates/POM_CONFIG_TEMPLATE.json` | Portable lint, adoption, and opt-in workflow / Dynamic Workflow / loop-goal configuration. |
 | `skills/config.md` | Procedure for adding or updating `pom.config.json`, including workflow activation. |
 | `scripts/lib/lint-config.ts` | Default lint configuration used when project config is missing. |
 | `templates/OPEN_DISCUSSION_TEMPLATE.md` | Discussion template for non-authoritative desiderata and alternatives before promotion. |

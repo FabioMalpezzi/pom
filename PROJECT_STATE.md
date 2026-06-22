@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-2026-06-08
+2026-06-22
 
 ---
 
@@ -100,6 +100,16 @@ adapters, lazy `/api/tree?path=...`, virtualized lists, a command
 palette, standalone `project-reader open/search`, and cmux-targetable
 `?path=` deep links for large Target Projects and non-POM repositories.
 
+On 2026-06-22 workflow adoption was clarified for Target Projects:
+ordinary workflow modeling remains opt-in through `workflows.enabled`,
+Dynamic Workflow control-plane modeling is a separate opt-in profile
+through `workflows.dynamic.enabled`, and loop/goal modeling is a separate
+opt-in profile through `workflows.loopGoal.enabled`. The `workflow` and
+`loop-goal` skills still leave execution, persistence, tools, timers,
+retries, side effects, and runtime concurrency to the Target Project.
+POM now provides TypeScript and Python runtime seam templates for those
+Target Project adapters under `templates/WORKFLOW_RUNTIME_TEMPLATE.*`.
+
 The 2026-06-05 critical review cleanup aligned the public skill maps
 with the installed skill index, removed stale candidate-status prose from
 the canonical loop/goal criteria prompt, split large POM Source files
@@ -117,24 +127,9 @@ The four-agent lifecycle had its **first real dialog-mode run** on the `exp/dyna
 ### Current Objective
 
 Keep the integrated loop/goal and workflow documentation aligned with
-the canonical implementation, and harden POM skill routing without
-expanding POM into a runtime.
-
-### Priorities
-
-| Priority | Activity | Status | Dependencies |
-|---|---|---|---|
-| 1 | Open parallel experiment `exp/schema-loop-guard-timeout` for H6 `loop_guard` + H7 `timeout` → SPEC-0007 | **done (2026-05-31)** — adopted; SPEC-0007 complete; validator/tests/spec/guidance implemented | — |
-| 2 | Write prompt v3 of `define-loop-goal-criteria` with Consistency Check (D4) + dialog-mode hint (D5) | **done (#66, 2026-05-30)** — resolves D1–D5; adds section 7 Consistency Check and a 4th promotion criterion | — |
-| 3 | First real **dialog-mode** run of the full four-agent lifecycle | **done (2026-05-30)** via `exp/dynamic-workflows`; feedback in `agent-loop-fsm` §4-septies (4 limits to fold into prompt v4 + skill promotion) | — |
-| 3b | Promote the **Dynamic Workflow contract** to the workflow filone: an ADR (control-plane/data-plane doctrine) + SPEC-0006 contract entries for `fan_out_launch`/`await`/`join`/`react`/`compensation`; real data-plane executor remains target-owned | **done (2026-05-31)** — `decisions/ADR-0004-dynamic-workflow-control-plane.md` + SPEC-0006 contract section | — |
-| 3c | Two **reference executors** of the contract (TypeScript, Python), simple in structure but functionally complete | **done (2026-05-30)** — both verified on the scenarios; in `experiments/dynamic-workflows/runtime/` | — |
-| 4 | Auditor v2: add explicit "follow `state-invoke`/`event-invoke`" instruction to the audit prompt | **done (2026-05-31)** — already present in `prompts/29-loop-goal-audit.md`; confirmed by current-turn read | — |
-| 5 | Runtime: implement actual snapshot write/restore (the runtime today shows state+context are alive but doesn't serialize them) | **done (2026-05-31)** — `agent-runtime.ts` supports `--snapshot` and `--restore`; README updated | — |
-| 6 | Promote `skills-candidate/loop-goal.md` → `skills/loop-goal.md` + the 4 prompts to `prompts/28..31-loop-goal-*.md` | **done (2026-05-30)** — skill canonical, prompts numbered, registries updated; candidates kept in the closed experiment as history | — |
-| 6a | Short **ADR**: relationship between generic `workflow` skill and the `loop-goal` sub-type | **done** — `decisions/ADR-0003-workflow-vs-loop-goal-skill.md` | — |
-| 7 | TypeScript guided code for pipeline orchestrator (inherited from workflow-modeling) | pending (#45) | deferred until POM deploy on a target project |
-| 8 | **Integrate branches** `exp/agent-loop-fsm` + `exp/dynamic-workflows` + H6/H7 changes toward `main` | **done (2026-06-01)** — merged `exp/dynamic-workflows` into `main`; `exp/agent-loop-fsm` was already an ancestor; post-merge test/lint passed | — |
+the canonical implementation, make workflow, Dynamic Workflow, and
+loop/goal adoption portable to Target Projects, and harden POM skill
+routing without expanding POM into a runtime.
 
 ### Next Actions
 
@@ -163,8 +158,8 @@ Current post-integration state:
 
 ### Blockers / Risks
 
-- **None blocking**. The main risk is confusing contract ownership with runtime ownership: the Dynamic Workflow contract belongs to the workflow control plane, while real concurrent execution belongs to the target data plane. Validator coverage is partial, not the contract itself.
-- Secondary risk: the loop/goal lifecycle is powerful but heavy. Use `workflow` by default for ordinary domain workflows; use `loop-goal` only when the controller is agent-shaped and measured criteria matter.
+- **None blocking**. The main risk is confusing contract ownership with runtime ownership: the Dynamic Workflow contract belongs to the workflow control plane and is opt-in through `workflows.dynamic.enabled`, while real concurrent execution belongs to the target data plane. Validator coverage is partial, not the contract itself.
+- Secondary risk: the loop/goal lifecycle is powerful but heavy and is opt-in through `workflows.loopGoal.enabled`. Use `workflow` by default for ordinary domain workflows; use `loop-goal` only when the controller is agent-shaped and measured criteria matter.
 - Branch delivery guidance is procedural, not a project release policy. Target projects still own branch naming, PR templates, protected branches, and release automation.
 - New bootstrap evals are deterministic structural checks, not real harness
   transcripts. True agent-behavior evals for Claude Code, Codex, Gemini,

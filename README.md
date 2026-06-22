@@ -53,7 +53,8 @@ Use the smallest workflow that matches your situation:
 | Defer work without implementing | `skills/defer.md` |
 | Refresh or sync POM in a project | `skills/sync.md` |
 | Finish branch, PR, merge, or cleanup work | `skills/finish-branch.md` |
-| Model, validate, diagram, and implement domain workflows | `skills/workflow.md` (opt-in via `workflows.enabled` in `pom.config.json`) |
+| Model, validate, diagram, and implement domain workflows, including opt-in Dynamic Workflow control planes | `skills/workflow.md` (opt-in via `workflows.enabled` and `workflows.dynamic.enabled` for Dynamic Workflow in `pom.config.json`) |
+| Model and evaluate agent-shaped goal loops in Target Projects | `skills/loop-goal.md` (opt-in via `workflows.enabled` and `workflows.loopGoal.enabled`; YAML FSM schema/validator is mandatory, templates are optional starting points) |
 | See available commands | `npm run pom:help` |
 
 ### How to talk to the agent
@@ -790,7 +791,7 @@ Lint reads the `documentation` and `source` sections of `pom.config.json`. Exist
 | `WIKI_METHOD.md` | cited reference copy of the original LLM Wiki method |
 | `prompts/` | reusable prompts for applying the method |
 | `skills/` | short skill cards derived from the main POM prompts |
-| `templates/` | reusable templates for project state, tasks, specs, ADRs, wiki, docs, experiments, reconciliation, and the target-project updater |
+| `templates/` | reusable templates for project state, tasks, specs, ADRs, wiki, docs, experiments, reconciliation, workflow YAML, optional workflow runtime seams, and the target-project updater |
 | `scripts/` | installer, command help, documentation lint, wiki rendering, and Project Reader tooling |
 | `examples/` | concrete examples of filled POM documents (ADR, PROJECT_STATE, wiki page) |
 
@@ -827,8 +828,8 @@ POM skills are short operational aliases for the main prompts. They do not repla
 | `finish-branch` | finish branch, PR, merge, keep, discard, or cleanup decisions |
 | `reconcile` | resolve source/project memory divergence |
 | `validate` | read-only governance audit |
-| `workflow` | design, validate, diagram, and implement domain workflows |
-| `loop-goal` | model, audit, test, and conclude agent-shaped loop/goal workflows |
+| `workflow` | design, validate, diagram, and implement domain workflows, including opt-in Dynamic Workflow control planes |
+| `loop-goal` | model, audit, test, and conclude opt-in agent-shaped loop/goal workflows in Target Projects; YAML FSM schema/validator defines control flow, while TypeScript/Python templates are optional starting points for execution, persistence, timers, retry, tools, and side effects |
 
 ### Skill Usage Tracking
 
@@ -936,6 +937,12 @@ Canonical templates:
 | `CI_GUIDE_TEMPLATE.md` | optional CI starting point (GitHub Actions, GitLab CI, CircleCI, generic shell) |
 | `CURRENT_PLAN_TEMPLATE.md` | short roadmap and current activities |
 | `POM_CONFIG_TEMPLATE.json` | portable documentation lint config |
+| `WORKFLOW_TEMPLATE.yaml` | optional reference starting point for workflow YAML finite-state-machine models |
+| `PIPELINE_TEMPLATE.yaml` | optional reference starting point for linear pipeline workflows |
+| `WORKFLOW_IMPLEMENTATION_GUIDE.md` | implementation patterns for translating validated workflow YAML into target code |
+| `WORKFLOW_INTEGRATION_GUIDE.md` | adoption, migration, lifecycle, versioning, and retirement guide for workflow modeling |
+| `WORKFLOW_RUNTIME_TEMPLATE.ts` | optional TypeScript target-project seam template for execution, persistence, timers, retry, tools, and side effects |
+| `WORKFLOW_RUNTIME_TEMPLATE.py` | optional Python target-project seam template for execution, persistence, timers, retry, tools, and side effects |
 | `EXPERIMENT_TEMPLATE.md` | versioned experiment or one-shot work |
 | `MOCK_MANIFEST_TEMPLATE.md` | mockup package manifest |
 | `OPEN_DISCUSSION_TEMPLATE.md` | non-authoritative desiderata, hypotheses, alternatives, and questions |
@@ -950,4 +957,4 @@ Canonical templates:
 
 ## Agent Usage
 
-Before creating a governed document, the agent must read and use the relevant template from `pom/templates/`. If a template does not fit the case, propose a template change before creating documents with a parallel structure. See the templates table above for the mapping.
+Before creating a governed document, the agent must read and use the relevant template from `pom/templates/`. If a template does not fit the case, propose a template change before creating documents with a parallel structure. See the templates table above for the mapping. Workflow runtime seam templates are optional adapters for target projects; using them is not required, and POM still does not own runtime execution.

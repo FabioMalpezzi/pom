@@ -22,7 +22,7 @@ description: Use when modeling or evaluating an agent-shaped controller that ite
 
 ## Relationship to other POM artifacts
 
-- Generalises the `workflow` skill for the agentic case: a loop/goal workflow is still a POM workflow, validated by the same `pom:workflow:lint`. The `audit` and `scenarios` modes here produce *additional* artifacts (`.fit.md`, `.scenarios.md`) that the generic skill does not.
+- Generalises the `workflow` skill for the agentic case: a loop/goal workflow is still a POM YAML finite-state machine, optionally started from `templates/WORKFLOW_TEMPLATE.yaml` and validated by the same `pom:workflow:lint`. The template is not mandatory; any target workflow YAML may be used if it follows the schema and validates. The `audit` and `scenarios` modes here produce *additional* artifacts (`.fit.md`, `.scenarios.md`) that the generic skill does not.
 - Depends on the `agent-loop-fsm` experiment for its pattern evidence and on SPEC-0007 for bounded-loop and timeout primitives. In historical experiment criteria, primitives already accepted into backlog were not falsifications; in current workflows, `loop_guard` and `timeout` are normal validated schema fields.
 - Composes with `skills/workflow.md`: `design`/`validate`/`diagram`/`implement` modes there work unchanged on loop/goal workflows; this skill adds `define-criteria`, `audit`, `scenarios`, and `conclude` modes that the generic skill does not have.
 
@@ -45,6 +45,8 @@ Pass the mode as the first instruction.
 
 ## Key Rules
 
+- The skill works in Target Projects only when `pom.config.json` declares both `workflows.enabled: true` and `workflows.loopGoal.enabled: true`. Otherwise it stops and refers the user to `skills/config.md`.
+- Loop/goal is an opt-in profile for agent-shaped controllers inside Target Projects. POM models criteria, YAML FSM control flow, fit, scenarios, and implementation guidance. Target code still owns execution, persistence, tools, timers, retries, and side effects, while POM provides optional TypeScript and Python adaptation templates for those seams: `templates/WORKFLOW_RUNTIME_TEMPLATE.ts` and `templates/WORKFLOW_RUNTIME_TEMPLATE.py`.
 - **Criteri prima del modello** (regola d'ordine non negoziabile): la sequenza è `define-criteria` → `model` → `audit` → `scenarios`. `model` *deve* leggere il `criteria.md` esistente (se l'esperimento ha già fissato obiettivo + metriche gate/signal) e produrre un workflow conforme. `audit` *deve* verificare la conformità del workflow ai criteri, non solo la forma. Se non esiste un `criteria.md`, instradare a `define-criteria` prima di procedere con `model`.
 - **Fit ≠ conformità** (distinzione chiave dell'audit): un workflow può essere `clean fit` sul piano della forma (ogni stato e transizione mappa pulito alle primitive) ed essere non conforme ai criteri (es. manca un terminale di forfait_for_stall richiesto dal criteria; il signal non è misurabile sul modello prodotto). L'audit produce due dimensioni distinte. Solo se entrambe sono accettabili il workflow è "promovibile".
 - The YAML model is the source of authority. `.fit.md`, `.scenarios.md`, diagrams, and runtime code are derived.
@@ -75,8 +77,8 @@ The `auto` files were produced by the external TypeScript runtime as proof that 
 
 ## Output
 
-- `define-criteria`: `design/criteria.md` (short frozen contract, see prompt for format) **plus** `design/criteria.dialog.md` (the trace of the confronto — consequences signalled, off-grid questions, user calibrations; kept separate so the contract stays lean and freezable). Historical experiments may still use numbered `criteria-experiment-<N>-<HID>.md` files.
-- `model`: a new or updated `workflows-candidate/<name>.yaml` (during experiment) or `workflows/<name>.yaml` (after promotion).
+- `define-criteria`: the configured `workflows.loopGoal.criteriaPath`, default `design/criteria.md`, **plus** the configured `workflows.loopGoal.dialogPath`, default `design/criteria.dialog.md` (the trace of the confronto — consequences signalled, off-grid questions, user calibrations; kept separate so the contract stays lean and freezable). Historical experiments may still use numbered `criteria-experiment-<N>-<HID>.md` files.
+- `model`: a new or updated workflow YAML under the configured `workflows.root`; POM Source historical experiments may still use `workflows-candidate/<name>.yaml` before promotion.
 - `audit`: `design/<name>.fit.md` with two tables (states, transitions), counts, gate results, verdict.
 - `scenarios`: `design/<name>.scenarios.md` with one scenario per significant path + coverage table.
 - `runtime-guide`: a proposed change to target code, plus a note on which Pattern was chosen and why.

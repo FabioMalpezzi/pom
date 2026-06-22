@@ -13,11 +13,11 @@ L'agente di codifica usa i tool nativi (Read per i workflow YAML, Write per l'ou
 Genera gli scenari di test per il workflow POM al path <WORKFLOW_PATH>.
 
 Prima di iniziare:
-1. leggi `pom.config.json` e conferma che `workflows.enabled: true`.
+1. leggi `pom.config.json` e conferma che `workflows.enabled: true` e `workflows.loopGoal.enabled: true`; se uno dei due manca o è falso, ferma e instrada a `skills/config.md`.
 2. leggi questo prompt + `skills/loop-goal.md`.
 3. leggi il file workflow indicato (`Read`).
 4. se il workflow contiene `state-invoke` o `event-invoke`, leggi ANCHE ogni sub-workflow referenziato. Questo è indispensabile: senza i terminal_state del sub-workflow non puoi enumerare i path della composizione.
-5. cerca il file di criteri associato. Il nome canonico corrente del contratto è `criteria.md`. In POM Source vive di solito in `experiments/<topic>/design/criteria.md`; in un progetto target usa la convenzione dichiarata dal progetto, oppure cerca vicino al workflow in `design/`, `workflows/generated/`, o nella cartella di esperimento equivalente. I vecchi file `criteria-experiment-<N>-<HID>.md`, se presenti, sono artefatti storici o run-specifici: usali solo se non esiste `criteria.md` o se l'utente indica esplicitamente quel run. Se esiste, leggilo: la copertura degli scenari deve includere ogni condizione di uscita dichiarata.
+5. cerca il file di criteri associato. Il nome canonico corrente del contratto è `criteria.md`. In POM Source vive di solito in `experiments/<topic>/design/criteria.md`; in un progetto target parti da `workflows.loopGoal.criteriaPath` quando presente, poi dalla convenzione dichiarata dal progetto, oppure cerca vicino al workflow in `design/`, `workflows/generated/`, o nella cartella di esperimento equivalente. I vecchi file `criteria-experiment-<N>-<HID>.md`, se presenti, sono artefatti storici o run-specifici: usali solo se non esiste `criteria.md` o se l'utente indica esplicitamente quel run. Se esiste, leggilo: la copertura degli scenari deve includere ogni condizione di uscita dichiarata.
 
 Procedi con l'enumerazione.
 
@@ -114,7 +114,7 @@ Numero target: 4-10 scenari. Meno di 4 = copertura insufficiente. Più di 10 = s
 
 Per default scrivi il file vicino agli artefatti derivati del workflow:
 - in POM Source: input `experiments/<topic>/workflows-candidate/foo.yaml`, output `experiments/<topic>/design/foo.scenarios.md`;
-- in un progetto target: se il workflow vive in `workflows/`, usa `workflows/generated/foo.scenarios.md` oppure la cartella `design/` dichiarata dal progetto.
+- in un progetto target: se il workflow vive in `workflows/`, usa `workflows/generated/foo.scenarios.md`, oppure `workflows.loopGoal.artifactsRoot` quando configurato.
 
 Se il progetto ha una convenzione propria per gli artefatti derivati, seguila e dichiarala nel riepilogo.
 

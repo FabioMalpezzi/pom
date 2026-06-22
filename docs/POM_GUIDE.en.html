@@ -474,7 +474,7 @@
 
       <h3>What you get on the documentation and specification side</h3>
       <ul>
-        <li><strong>The YAML model becomes the spec</strong> for that workflow: states, events, guards, transitions, optional <code>context_schema</code> for typed input and per-terminal output, and explicit invariants. Versioned, reviewed in PRs, archived in Git.</li>
+        <li><strong>The YAML model becomes the FSM spec</strong> for that workflow: states, events, guards, transitions, optional <code>context_schema</code> for typed input and per-terminal output, and explicit invariants. <code>WORKFLOW_TEMPLATE.yaml</code> is an optional reference starting point, not a mandatory file to copy; any target YAML that follows the schema can be validated. Versioned, reviewed in PRs, archived in Git.</li>
         <li><strong>The validator</strong> (<code>npm run pom:workflow:lint</code>) checks 71 Error rules and 5 Warning rules: unreachable states, silent dead-ends, terminal states with an undocumented exit, ambiguous transitions, missing references between parent and child, illegal native asynchronous composition, loop guards, timeouts, and Dynamic Workflow handle lifecycle rules. Error reports include a stable code, location, contextual details, and a suggested fix so a coding agent can act without guessing. Errors fail the build in CI; warnings travel as reviewer judgment.</li>
         <li><strong>A Mermaid diagram</strong> is regenerated automatically every time the validator runs with <code>--mermaid-dir</code>. Drift between the model and its visual representation is impossible by construction. Renders natively on GitHub, embeddable anywhere Markdown is rendered, exportable to PNG/SVG.</li>
         <li><strong>An XState v5 MachineConfig JSON</strong> (<code>npm run pom:workflow:xstate</code>) can be imported into <a href="https://stately.ai">stately.ai</a> for an online interactive simulation, layout, and export. The team reviews the model graphically before any code is touched.</li>
@@ -488,6 +488,7 @@
         <li><strong>Pattern C (FSM library)</strong>: when the project already uses XState (TypeScript), <code>transitions</code> / <code>python-statemachine</code> (Python), or similar. The transformer to XState JSON is the bridge.</li>
         <li><strong>Suspend and restore</strong> are documented as a single snapshot shape (<code>workflow</code> + <code>version</code> + <code>state</code> + <code>context</code> for single machines; a stack of frames for composed workflows). The Pattern A code is stateless and the caller owns the state, so persisting between processes is two file writes and a load.</li>
         <li><strong>Bounded retry counters</strong> (max attempts) live in <code>context</code>, which means they survive snapshot + restore automatically.</li>
+        <li><strong>Optional TypeScript and Python runtime seam templates</strong> (<code>templates/WORKFLOW_RUNTIME_TEMPLATE.ts</code>, <code>templates/WORKFLOW_RUNTIME_TEMPLATE.py</code>) provide target-project starting points for execution, persistence, timers, retry, tools, and side effects. They are templates, not a POM-owned runtime.</li>
         <li><strong>Dynamic Workflow reference executors</strong> under <code>experiments/dynamic-workflows/runtime/</code> show complete TypeScript and Python examples for launch, await, cancel, detach, suspend, resume, compensation, and snapshot persistence. They are executable examples, not a POM-owned runtime.</li>
       </ul>
 
@@ -497,18 +498,20 @@
         <li>Use the <code>workflow</code> skill in mode <code>design</code> to draft <code>workflows/&lt;name&gt;.yaml</code> from prose, surfacing ambiguities as <code>open_points</code> instead of inventing rules.</li>
         <li>Run <code>npm run pom:workflow:lint workflows/&lt;name&gt;.yaml --mermaid-dir workflows/generated/</code>. Read the report; review the diagram with the domain expert.</li>
         <li>If a stately.ai simulation is wanted, run <code>npm run pom:workflow:xstate</code> on the same file and import the JSON into the editor.</li>
-        <li>Use the <code>workflow</code> skill in mode <code>implement</code> to produce target-language code. The agent reads <code>pom.config.json</code> for the language, picks a pattern with explicit criteria, generates the table + guard stubs + tests, and surfaces what was guided and what was left to the team to wire to the existing code.</li>
+        <li>Use the <code>workflow</code> skill in mode <code>implement</code> to produce target-language code. The agent reads <code>pom.config.json</code> for the language, picks a pattern with explicit criteria, generates the table + guard stubs + tests, and surfaces what was guided and what was left to the team to wire to the existing code. Copy the TypeScript or Python runtime seam template only when it helps the target architecture.</li>
         <li>Add a CI job that runs the validator on every PR touching <code>workflows/</code>. Drift between YAML, diagram, and code is prevented at the gate.</li>
       </ol>
 
       <h3>Where the discipline lives</h3>
-      <p>The capability ships four artifacts that explain the limits explicitly so adoption stays honest:</p>
+      <p>The capability ships several artifacts that explain the limits explicitly so adoption stays honest:</p>
       <ul>
         <li><code>specs/SPEC-0006-workflow-modeling.md</code>: schema, validator rules, the four pillars (no native async inside the FSM / no shared state / no inheritance / no runtime in POM), plus the accepted Dynamic Workflow control-plane contract.</li>
         <li><code>decisions/ADR-0002-workflow-context-injection.md</code>: closed decision on parent/child data exchange (<code>Result&lt;Terminal, Output&gt;</code>, no shared visibility).</li>
         <li><code>decisions/ADR-0004-dynamic-workflow-control-plane.md</code>: accepted decision that keeps POM as deterministic control plane and leaves real concurrent execution to the target project.</li>
+        <li><code>templates/WORKFLOW_TEMPLATE.yaml</code> and <code>templates/PIPELINE_TEMPLATE.yaml</code>: optional YAML starting points; the validated target YAML is the authority, not the copied template.</li>
         <li><code>templates/WORKFLOW_IMPLEMENTATION_GUIDE.md</code>: Pattern A/B/C catalogue, language profiles (TypeScript, Python), suspend/restore section, anti-patterns.</li>
         <li><code>templates/WORKFLOW_INTEGRATION_GUIDE.md</code>: adoption + extension manual for teams (file layout, configuration, lifecycle, migration patterns for existing projects, how to extend a workflow without breaking in-flight instances, versioning, retirement).</li>
+        <li><code>templates/WORKFLOW_RUNTIME_TEMPLATE.ts</code> and <code>templates/WORKFLOW_RUNTIME_TEMPLATE.py</code>: optional target-project runtime seam templates for execution, persistence, timers, retry, tools, and side effects; they are not a POM-owned runtime.</li>
         <li><code>docs/workflow-xstate-compatibility.md</code>: mapping table and the stately.ai workflow.</li>
       </ul>
 

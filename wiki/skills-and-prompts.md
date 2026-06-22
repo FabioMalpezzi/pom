@@ -180,14 +180,14 @@ Complete skill catalog:
 
 ### `workflow`
 
-- **Illustration**: designs, validates, diagrams, derives scenarios for, and guides implementation of domain workflows declared as YAML state models.
-- **Real use cases**: model a ticket lifecycle; enable workflow roots through `pom.config.json`; validate a pipeline; generate Mermaid or XState views; map a YAML workflow to implementation guidance for a Target Project.
+- **Illustration**: designs, validates, diagrams, derives scenarios for, and guides implementation of domain workflows declared as YAML finite-state-machine models.
+- **Real use cases**: model a ticket lifecycle; enable workflow roots through `pom.config.json`; validate a pipeline; generate Mermaid or XState views; map a YAML workflow to implementation guidance for a Target Project; use optional TypeScript or Python seam templates when execution, persistence, timers, retry, tools, or side effects need explicit adapters.
 - **Why it exists / importance**: gives workflow-heavy domains a precise, testable model while keeping execution runtime-owned by the Target Project.
 
 ### `loop-goal`
 
-- **Illustration**: models, audits, tests, and concludes agent-shaped loop/goal workflows and experiments.
-- **Real use cases**: define measurable criteria for an agent loop; audit controller fit; derive terminal-coverage scenarios; conclude whether an experiment actually met its objective.
+- **Illustration**: models, audits, tests, and concludes opt-in agent-shaped loop/goal workflows and experiments.
+- **Real use cases**: define measurable criteria for an agent loop; audit controller fit; derive terminal-coverage scenarios; conclude whether an experiment actually met its objective; adapt the optional TypeScript or Python runtime seam templates in the target project if the loop needs execution, persistence, timer, retry, tool, or side-effect ports.
 - **Why it exists / importance**: handles agentic feedback loops that are too specific for the generic `workflow` skill and need criteria, falsification, and independent evaluation.
 
 The prompt set covers session bootstrap, adoption, state, governance, planning, review, handoff, Project Reader note processing, config, experiments, wiki operations, extension, self-improvement, classification, deferral, sync, branch delivery, validation, reconciliation, clarification, pruning, POM diagnosis, Target Project root-cause debugging, workflow modeling, loop/goal workflow work, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.
@@ -216,7 +216,7 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 | `prompts/27-workflow-modeling.md` | Canonical prompt behind the workflow skill. |
 | `specs/SPEC-0006-workflow-modeling.md` | Workflow modeling specification and validator rule set. |
 | `decisions/ADR-0002-workflow-context-injection.md` | Closed decision behind workflow composition data-exchange model. |
-| `templates/WORKFLOW_TEMPLATE.yaml`, `templates/PIPELINE_TEMPLATE.yaml`, `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md`, `templates/WORKFLOW_INTEGRATION_GUIDE.md` | Workflow-skill templates and adoption/extension manuals. |
+| `templates/WORKFLOW_TEMPLATE.yaml`, `templates/PIPELINE_TEMPLATE.yaml`, `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md`, `templates/WORKFLOW_INTEGRATION_GUIDE.md`, `templates/WORKFLOW_RUNTIME_TEMPLATE.ts`, `templates/WORKFLOW_RUNTIME_TEMPLATE.py` | Workflow-skill reference templates, optional runtime seam templates, and adoption/extension manuals. |
 | `docs/workflow-xstate-compatibility.md` | XState v5 compatibility and the stately.ai visualization workflow. |
 | `skills/config.md`, `templates/POM_CONFIG_TEMPLATE.json` | Workflow activation config shape and safe opt-in procedure. |
 | `scripts/require-yaml.mjs`, `scripts/lint-workflows.mjs`, `scripts/to-mermaid.mjs`, `scripts/to-xstate.mjs` | Guarded `js-yaml` dependency loading and workflow script entry points. |

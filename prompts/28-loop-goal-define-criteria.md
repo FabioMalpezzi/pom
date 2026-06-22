@@ -23,7 +23,13 @@ codifica, `skills/workflow.md`, `skills/spike.md`, o
 ```text
 Sto aprendo un esperimento POM con dinamica loop/goal. Prima di
 modellare qualunque workflow, scrivere codice o produrre evidence,
-devo fissare per iscritto contesto, obiettivo e metriche. Le sette
+devo fissare per iscritto contesto, obiettivo e metriche. Prima di
+iniziare leggi `pom.config.json`: in un progetto target procedi solo se
+`workflows.enabled: true` e `workflows.loopGoal.enabled: true`; se manca
+uno dei due, fermati e instrada a `skills/config.md`. Usa
+`workflows.loopGoal.criteriaPath`, `workflows.loopGoal.dialogPath` e
+`workflows.loopGoal.evidenceRoot` quando presenti, invece di assumere i
+path storici di POM Source. Le sette
 sezioni qui sotto sono ciò che insieme dobbiamo definire — non un
 modulo che tu mi fai compilare, ma l'agenda di un confronto ragionato
 tra te e me da cui l'obiettivo e le scelte per raggiungerlo escono più
@@ -99,8 +105,9 @@ L'output finale di questa conversazione è il file
 `criteria.md` con il formato definito in fondo. In POM Source vive per
 convenzione sotto `experiments/<topic>/design/criteria.md`, dove
 `<topic>` è il nome della cartella dell'esperimento sotto `experiments/`.
-In un progetto target usa la cartella di esperimento o design dichiarata
-dal progetto e annota il path scelto. Se il file esiste già, rifiuta di
+In un progetto target usa `workflows.loopGoal.criteriaPath` quando
+presente, altrimenti la cartella di esperimento o design dichiarata dal
+progetto, e annota il path scelto. Se il file esiste già, rifiuta di
 sovrascrivere e chiedi perché stiamo ridefinendo i criteri.
 
 Se stiamo aprendo un nuovo giro su un esperimento che ha già una

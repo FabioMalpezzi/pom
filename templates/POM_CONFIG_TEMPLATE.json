@@ -45,7 +45,9 @@
     "taskPlan": "pom/templates/TASK_PLAN_TEMPLATE.md",
     "wikiIndex": "pom/templates/WIKI_INDEX_TEMPLATE.md",
     "wikiLog": "pom/templates/WIKI_LOG_TEMPLATE.md",
-    "wikiPage": "pom/templates/WIKI_PAGE_TEMPLATE.md"
+    "wikiPage": "pom/templates/WIKI_PAGE_TEMPLATE.md",
+    "workflowRuntimeTypeScript": "pom/templates/WORKFLOW_RUNTIME_TEMPLATE.ts",
+    "workflowRuntimePython": "pom/templates/WORKFLOW_RUNTIME_TEMPLATE.py"
   },
   "documentation": {
     "officialRoot": "docs",
@@ -118,7 +120,20 @@
     "enabled": false,
     "root": "workflows/",
     "generatedRoot": "workflows/generated/",
-    "namingConvention": "snake_case"
+    "namingConvention": "snake_case",
+    "dynamic": {
+      "enabled": false,
+      "contract": "control_plane_data_plane",
+      "note": "When true, the workflow skill may model Dynamic Workflow control-plane fields such as fan_out_launch, await, cancel_handles, detach_handles, and compensation. Target projects still own workers, queues, schedulers, persistence, and runtime execution."
+    },
+    "loopGoal": {
+      "enabled": false,
+      "artifactsRoot": "design/",
+      "criteriaPath": "design/criteria.md",
+      "dialogPath": "design/criteria.dialog.md",
+      "evidenceRoot": "evidence/",
+      "note": "When true, the loop-goal skill may define criteria, model, audit, derive scenarios, guide implementation, and conclude agent-shaped goal loops in the target project. It still relies on workflows.enabled and target-owned runtime code."
+    }
   },
   "skillUsage": {},
   "promptUsage": {}

@@ -1,6 +1,10 @@
-# Workflow Implementation Guide (draft)
+# Workflow Implementation Guide
 
 This guide helps a coding agent translate a POM workflow YAML into code in the target project. It proposes implementation patterns and selection criteria. It never imposes a library and never installs dependencies on its own.
+
+POM also ships target-adaptation runtime templates for the non-model responsibilities that remain project-owned: `templates/WORKFLOW_RUNTIME_TEMPLATE.ts` and `templates/WORKFLOW_RUNTIME_TEMPLATE.py`. They define ports for execution, persistence, timers, retry, tools, and side effects; copy and adapt them inside the target project when a workflow, Dynamic Workflow, or loop/goal model needs executable integration points.
+
+POM defines and validates the control flow itself as a YAML finite-state machine. `templates/WORKFLOW_TEMPLATE.yaml` is a reference starting point for the schema shape, not a required file to copy. Existing projects may write or keep their own workflow YAML files as long as they validate with `scripts/lint-workflows.mjs` / `npm run pom:workflow:lint` for states, events, guards, transitions, invokes, temporal primitives, and Dynamic Workflow handle lifecycle.
 
 The model file (`workflows/<name>.yaml`) is the source of authority. Code, tests, and diagrams derived from it must be kept in sync.
 
@@ -117,6 +121,19 @@ Recommended practice (not POM-installed):
 - add a CI check that runs the validator and refuses merges with Error-level findings;
 - when the team wants a model change, prefer an ADR if the change alters business meaning.
 
+## Runtime Port Templates
+
+Use `WORKFLOW_RUNTIME_TEMPLATE.ts` or `WORKFLOW_RUNTIME_TEMPLATE.py` as optional starting points when the target implementation needs explicit seams for:
+
+- execution: dispatching the next event or command in the project architecture;
+- persistence: saving and restoring workflow snapshots and active handles;
+- timers: scheduling timeout wake-up events and cancelling scheduled wake-ups;
+- retry: tracking attempts, deciding whether another attempt is allowed, and computing the next delay;
+- tools: calling project-owned tools, services, or agent capabilities;
+- side effects: publishing domain events and running compensation steps.
+
+These files are optional templates, not POM runtime. The target project may copy the appropriate language template, implement equivalent ports in its own style, or keep an existing runtime adapter. In every case, the POM YAML FSM remains the control-plane source of authority. The YAML is validated before implementation; the TypeScript or Python ports are only one target-owned adapter shape for realizing the validated FSM.
+
 ## Language Profiles
 
 The patterns above (A, B, C) are language-agnostic in description. The mapping into idiomatic code of each target language is the job of the coding agent. This section lists the conventions, library options, and test-runner choices the guide expects per supported language. Each profile is additive: more languages can be appended without restructuring.
@@ -223,6 +240,38 @@ Pattern C implementation shape:
   waits longer than process lifetime.
 
 Do not implement an in-POM scheduler to satisfy either primitive.
+
+## Dynamic Workflow in Target Projects
+
+Dynamic Workflow fields are control-plane contracts, not POM-owned runtime services. Use them only when `pom.config.json` declares `workflows.dynamic.enabled: true`.
+
+The model records:
+
+- where the control plane launches target-owned work with `fan_out_launch`;
+- which workflow-local handles identify active work;
+- where the control plane waits with `await` and `join: all | quorum | first`;
+- how timeout wake-ups re-enter the FSM;
+- which handles must be cancelled or intentionally detached;
+- which ordered `compensation` steps run on cancellation boundaries.
+
+The target project owns:
+
+- worker, queue, process, thread, or service execution;
+- durable scheduling and timeout event emission;
+- persistence of active handles and snapshots;
+- cancellation semantics for real work;
+- idempotency, retry, backoff, observability, and compensation implementation.
+
+POM provides `WORKFLOW_RUNTIME_TEMPLATE.ts` and `WORKFLOW_RUNTIME_TEMPLATE.py` as adaptation templates for those seams. They are useful starting points for execution, persistence, timer, retry, tool, and side-effect ports, but the concrete adapters remain target-owned.
+
+Implementation guidance:
+
+1. keep the POM YAML as the control-plane source of authority;
+2. implement a target data-plane adapter that translates `fan_out_launch` into project-native work submissions and returns durable handles;
+3. persist active handles with the workflow state so suspend/restore can resume without losing in-flight work;
+4. enforce the handle lifecycle invariant in target code: before a final state, every active handle is awaited, cancelled, or detached;
+5. treat `detach_handles` as an explicit ownership transfer. Document who monitors and cleans up the detached work;
+6. do not add native parallel states to the POM model to simulate runtime concurrency. If the project needs richer runtime semantics, adopt a target-owned workflow engine and record that library decision in an ADR.
 
 ## Suspend and Restore
 

@@ -6,11 +6,12 @@ Use this prompt as the canonical operational guide for the `workflow` skill (`sk
 I want to model, validate, visualize, derive scenarios for, or guide the implementation of a domain workflow declared as a YAML state model.
 
 Before doing anything:
-1. read `pom.config.json` and confirm that the workflows section is enabled (workflows.enabled: true). If missing or false, stop and route to `skills/config.md`.
-2. read this prompt and `skills/workflow.md`.
-3. identify the requested mode: design | validate | diagram | scenarios | implement.
-4. read the target workflow YAML if it already exists, the validation report if present, and the existing target code that implements the workflow if any.
-5. for `implement`, also read `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` and identify the target language / framework / test runner from `pom.config.json`.
+1. read `pom.config.json` and confirm that the workflows section is enabled (`workflows.enabled: true`). If missing or false, stop and route to `skills/config.md`.
+2. if the request involves Dynamic Workflow fields (`fan_out_launch`, `await`, `join`, `react`, handle lifecycle, cancellation, detachment, suspend/resume propagation, or compensation), also confirm `workflows.dynamic.enabled: true`. If missing or false, stop and route to `skills/config.md` instead of modeling those fields.
+3. read this prompt and `skills/workflow.md`.
+4. identify the requested mode: design | validate | diagram | scenarios | implement.
+5. read the target workflow YAML if it already exists, the validation report if present, and the existing target code that implements the workflow if any.
+6. for `implement`, also read `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` and identify the target language / framework / test runner from `pom.config.json`.
 
 Then execute the requested mode.
 
@@ -24,7 +25,7 @@ Steps:
 3. for every state, ask whether it is terminal (is_final) and whether it admits a documented exception out-transition (re_entry_allowed);
 4. for every guard, capture a textual description; do not encode the predicate logic in the YAML;
 5. surface ambiguities and unspecified rules as open points in the metadata.open_points list — do NOT invent business rules to fill gaps;
-6. write or update the workflow YAML following the schema in `templates/WORKFLOW_TEMPLATE.yaml`;
+6. write or update the workflow YAML following the schema documented by `templates/WORKFLOW_TEMPLATE.yaml`; the template is a reference starting point, not a mandatory file to copy;
 7. immediately run the validator on the produced file and include the verdict in the response;
 8. report what was modeled, what was deferred to open points, and what the validator said.
 
@@ -76,6 +77,25 @@ derivation is this prompt-driven mode: the coding agent reads the YAML,
 derives the scenarios, writes the generated Markdown file, and reports
 what coverage it produced.
 
+## Dynamic Workflow profile
+
+Use this profile inside the requested mode only when `workflows.dynamic.enabled: true` in `pom.config.json`.
+
+Goal: model Dynamic Workflow orchestration as a deterministic control plane while leaving real concurrent execution to the target project's data plane.
+
+Rules:
+1. use `fan_out_launch` only to record a non-blocking launch boundary that returns a workflow-local handle; do not model workers, queues, process pools, or actual scheduling in POM YAML;
+2. use `await` only to record where the control plane waits on named handles, with `join: all | quorum | first`, optional `k`, optional `timeout`, and optional `on_timeout` wake-up event;
+3. use `cancel_handles` when the control plane requires active child work to be cancelled before proceeding;
+4. use `detach_handles` only when the work intentionally continues outside this workflow and must not block terminal closure;
+5. use `react` only to describe deterministic reactions to observed completions, early exits, or batch completion; if reaction ordering or race semantics matter and are not specified, stop and ask;
+6. use `compensation` as an ordered undo saga for cancellation boundaries, not as generic error handling;
+7. preserve the handle lifecycle invariant: every launched handle must be awaited, cancelled, or explicitly detached before any reachable final state;
+8. never add native parallel regions, async transitions, or in-FSM fork/join semantics to bypass the control-plane/data-plane split;
+9. when the target data plane is unclear, write an open point naming the missing decision: worker mechanism, queue, scheduler, persistence, timeout emission, cancellation semantics, or compensation ownership.
+
+Validation note: POM Source currently validates the handle lifecycle subset most strongly. Treat the rest of the Dynamic Workflow fields as an accepted contract that may require project-specific review until validator coverage expands.
+
 ## Mode: implement
 
 Goal: guide a coding agent to translate the YAML into target code, proposing patterns and selection criteria without imposing one.
@@ -102,6 +122,7 @@ Do NOT install dependencies in the target project as part of `implement` mode.
 - Never modify YAML in modes other than `design`.
 - Never install libraries on behalf of the user.
 - Never execute the workflow. POM does not provide a runtime engine and does not track live instances.
+- For Dynamic Workflow, never implement target data-plane infrastructure unless the user separately asks for target code changes after the model is accepted.
 - Always state which mode is in use at the start of the response.
 - When the validator reports findings, restate them in the response — do not bury them in a file the user has to open separately.
 

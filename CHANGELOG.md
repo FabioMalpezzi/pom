@@ -15,6 +15,7 @@ This changelog records public-facing POM releases. Fine-grained development hist
 - **Workflow activation config** (`templates/POM_CONFIG_TEMPLATE.json`, `skills/config.md`): ships the `workflows` section disabled by default and documents the activation steps for workflow modeling.
 - **Guarded YAML loader** (`scripts/require-yaml.mjs`): workflow scripts now fail with an actionable `js-yaml` install message instead of a raw module-resolution stack trace when the optional dependency is missing.
 - **Project Reader standalone CLI and profiles** (`project-reader`): adds `open` and `search` commands, a generic `.project-reader.json` profile, the POM profile as an adapter, a lazy `/api/tree?path=...` directory API, and a command palette for path/file/content lookup.
+- **Workflow runtime seam templates** (`templates/WORKFLOW_RUNTIME_TEMPLATE.ts`, `templates/WORKFLOW_RUNTIME_TEMPLATE.py`): provide Target Project starting points for execution, persistence, timers, retry, tools, and side effects without making POM a runtime.
 
 ### Changed
 
@@ -28,6 +29,8 @@ This changelog records public-facing POM releases. Fine-grained development hist
 - Removed stale candidate-status prose from the canonical loop/goal criteria prompt.
 - Routed workflow lint, Mermaid, and XState scripts through the guarded YAML loader.
 - Split the Project Reader into reusable core/adapters, changed tree navigation to lazy directory loading, and virtualized the thematic list so large Target Projects no longer require a global file tree or tens of thousands of buttons before browsing.
+- Clarified workflow adoption for Target Projects: ordinary workflow modeling remains gated by `workflows.enabled`, Dynamic Workflow control-plane modeling is an explicit opt-in profile gated by `workflows.dynamic.enabled`, and loop/goal modeling is an explicit opt-in profile gated by `workflows.loopGoal.enabled`; runtime execution remains target-owned.
+- Improved workflow template discoverability in the canonical README, HTML guides, and `pom:help`, including optional TypeScript/Python runtime seam templates.
 
 ## 0.2.0 - 2026-05-30
 
