@@ -67,6 +67,7 @@ function isSpecializedGovernancePath(context: LintContext, path: string): boolea
     context.config.analysis.root,
     context.config.decisions.root,
     context.config.taskPlans.root,
+    context.config.wiki.root,
   ].filter(Boolean);
   return roots.some((root) => isSamePathOrInside(path, root));
 }

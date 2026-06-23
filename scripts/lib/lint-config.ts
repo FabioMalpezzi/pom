@@ -58,6 +58,7 @@ export type LintConfig = {
     severity: Severity;
   };
   wiki: {
+    root: string;
     baseIndexSections: string[];
     categorySections: Record<string, string[]>;
     projectIndexSections: string[];
@@ -180,6 +181,7 @@ const defaultConfig: LintConfig = {
     severity: "warning",
   },
   wiki: {
+    root: "wiki",
     baseIndexSections: ["## Overview"],
     categorySections: {},
     projectIndexSections: [],
@@ -339,6 +341,7 @@ function mergeConfig(base: LintConfig, raw: Record<string, unknown>, readers: Co
       severity: readSeverity(raw, "source.severity", base.source.severity),
     },
     wiki: {
+      root: readString(raw, "wiki.root", base.wiki.root),
       baseIndexSections: readStringArray(raw, "wiki.baseIndexSections", base.wiki.baseIndexSections),
       categorySections: readStringArrayRecord(raw, "wiki.categorySections", base.wiki.categorySections),
       projectIndexSections: readStringArray(raw, "wiki.projectIndexSections", base.wiki.projectIndexSections),

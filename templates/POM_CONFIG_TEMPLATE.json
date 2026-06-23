@@ -65,6 +65,7 @@
     "severity": "warning"
   },
   "wiki": {
+    "root": "wiki",
     "baseIndexSections": ["## Overview"],
     "categorySections": {},
     "projectIndexSections": [],

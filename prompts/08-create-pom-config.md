@@ -84,7 +84,7 @@ The configuration should cover, when applicable:
 - artifact policy for approval-required, generated, and historical paths;
 - analysis taxonomy, root, optional recommended path, namespace convention, and whether analysis root files are allowed;
 - POM template paths and any project-owned template overrides;
-- wiki index/log expectations and project-specific wiki categories/sections;
+- wiki root (`wiki.root`, default `wiki`), index/log expectations, and project-specific wiki categories/sections; set `wiki.root` when the wiki lives outside the conventional location (for example nested under a documentation root). The wiki lint and docs-source lint honor it, and the lint regenerates the reader at the configured root;
 - ADR root, patterns, index path, and whether existing ADRs must follow the POM ADR template exactly; if only the ADR root changes, POM derives the default ADR filename pattern and generated index path from that root;
 - `decisions.docsPathsRequiringAdr`: list of `docs/` path prefixes that trigger the `docs-without-adr` warning. When empty (default), any change under `docs/` triggers the warning. When populated, only changes matching at least one prefix trigger it. Example: `["docs/server-canonical/requirements/"]` means only requirement changes require an ADR, not plans or working notes;
 - task-plan root, task file pattern, index path, and whether task files must follow the POM task template exactly;

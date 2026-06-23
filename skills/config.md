@@ -48,6 +48,8 @@ tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}
 
 Map existing project conventions first. Do not migrate existing analysis, task, or test folders just to match the defaults.
 
+The wiki directory is also configurable through `wiki.root` (default `wiki`). Set it when the wiki lives outside the conventional location — for example nested under a documentation root such as `doc/tech/wiki`. The wiki lint and the docs-source lint (which excludes the wiki root from official-document section checks) honor `wiki.root`, so a wiki nested under the documentation root is not mistaken for official documentation. The lint regenerates the reader at the configured root automatically; to render a relocated wiki manually, pass the flags `npm run pom:wiki:render -- --source <wiki.root> --out <wiki.root>/_site`.
+
 The config may include `skillUsage` and `promptUsage` sections when the project intentionally tracks workflow usage. Do not reset these counters unless explicitly requested.
 
 ## Enabling Workflows
