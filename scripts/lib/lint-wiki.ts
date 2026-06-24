@@ -10,35 +10,42 @@ import {
   walkFiles,
 } from "./lint-helpers.ts";
 
+function stripWikiRoot(path: string, wikiRoot: string): string {
+  const prefix = `${wikiRoot}/`;
+  return path.startsWith(prefix) ? path.slice(prefix.length) : path;
+}
+
 export function checkWikiIndexCoverage(context: LintContext): void {
   if (!context.wikiGovernanceEnabled) return;
-  if (!pathExists(context.root, "wiki/index.md")) return;
+  const wikiRoot = context.config.wiki.root;
+  if (!pathExists(context.root, `${wikiRoot}/index.md`)) return;
 
-  const index = readText(context.root, "wiki/index.md");
+  const index = readText(context.root, `${wikiRoot}/index.md`);
   const wikiPages = walkFiles(
     context.root,
-    "wiki",
-    (path) => path.endsWith(".md") && !["wiki/index.md", "wiki/log.md"].includes(path),
+    wikiRoot,
+    (path) => path.endsWith(".md") && ![`${wikiRoot}/index.md`, `${wikiRoot}/log.md`].includes(path),
   );
 
   for (const page of wikiPages) {
-    const wikiRelative = page.replace(/^wiki\//, "");
+    const wikiRelative = stripWikiRoot(page, wikiRoot);
     const basename = wikiRelative.replace(/\.md$/, "");
     const obsidianLink = `[[${basename}]]`;
     const markdownLink = `](${wikiRelative})`;
     const plainPath = wikiRelative;
 
     if (!index.includes(obsidianLink) && !index.includes(markdownLink) && !index.includes(plainPath)) {
-      context.add("warning", "wiki-index-coverage", "Wiki page is not referenced in wiki/index.md.", page);
+      context.add("warning", "wiki-index-coverage", `Wiki page is not referenced in ${wikiRoot}/index.md.`, page);
     }
   }
 }
 
 export function checkWikiDocuments(context: LintContext): void {
   if (!context.wikiGovernanceEnabled) return;
-  if (!pathExists(context.root, "wiki")) return;
+  const wikiRoot = context.config.wiki.root;
+  if (!pathExists(context.root, wikiRoot)) return;
 
-  const wikiPages = walkFiles(context.root, "wiki", (path) => path.endsWith(".md"));
+  const wikiPages = walkFiles(context.root, wikiRoot, (path) => path.endsWith(".md"));
   const wikiPageSet = new Set(wikiPages);
 
   for (const page of wikiPages) {
@@ -88,6 +95,7 @@ export function checkWikiDocuments(context: LintContext): void {
 }
 
 function checkWikiLinks(context: LintContext, wikiPages: string[], wikiPageSet: Set<string>): void {
+  const wikiRoot = context.config.wiki.root;
   for (const page of wikiPages) {
     const text = stripMarkdownCode(readText(context.root, page));
 
@@ -95,8 +103,8 @@ function checkWikiLinks(context: LintContext, wikiPages: string[], wikiPageSet: 
       const rawTarget = match[1].split("|")[0].split("#")[0].trim();
       if (!rawTarget) continue;
 
-      const normalizedTarget = rawTarget.replace(/^wiki\//, "").replace(/\.md$/, "");
-      const candidate = normalize(`wiki/${normalizedTarget}.md`);
+      const normalizedTarget = stripWikiRoot(rawTarget, wikiRoot).replace(/\.md$/, "");
+      const candidate = normalize(`${wikiRoot}/${normalizedTarget}.md`);
 
       if (!wikiPageSet.has(candidate)) {
         context.add("error", "wiki-broken-wikilink", `Broken Obsidian link: [[${rawTarget}]]`, page);
@@ -126,9 +134,10 @@ function checkWikiLinks(context: LintContext, wikiPages: string[], wikiPageSet: 
 }
 
 function checkWikiLogFormat(context: LintContext): void {
-  if (!pathExists(context.root, "wiki/log.md")) return;
+  const wikiRoot = context.config.wiki.root;
+  if (!pathExists(context.root, `${wikiRoot}/log.md`)) return;
 
-  const text = readText(context.root, "wiki/log.md");
+  const text = readText(context.root, `${wikiRoot}/log.md`);
   const entries = [...text.matchAll(/^## .+$/gm)].map((match) => match[0]);
   const logEntryRegex = new RegExp(context.config.wiki.logEntryPattern);
   const invalid = entries.filter((entry) => !logEntryRegex.test(entry));
@@ -138,38 +147,40 @@ function checkWikiLogFormat(context: LintContext): void {
       "warning",
       "wiki-log-entry-format",
       `Log entry does not match '## [YYYY-MM-DD] action | detail': ${entry}`,
-      "wiki/log.md",
+      `${wikiRoot}/log.md`,
     );
   }
 }
 
 function checkWikiIndexBaseShape(context: LintContext): void {
-  if (!pathExists(context.root, "wiki/index.md")) return;
+  const wikiRoot = context.config.wiki.root;
+  if (!pathExists(context.root, `${wikiRoot}/index.md`)) return;
 
-  const text = readText(context.root, "wiki/index.md");
+  const text = readText(context.root, `${wikiRoot}/index.md`);
   for (const section of context.config.wiki.baseIndexSections) {
     if (!text.includes(section)) {
       context.add(
         "warning",
         "wiki-index-base-section",
-        `wiki/index.md is missing expected base POM section: ${section}`,
-        "wiki/index.md",
+        `${wikiRoot}/index.md is missing expected base POM section: ${section}`,
+        `${wikiRoot}/index.md`,
       );
     }
   }
 }
 
 function checkProjectWikiIndexShape(context: LintContext): void {
-  if (!pathExists(context.root, "wiki/index.md")) return;
+  const wikiRoot = context.config.wiki.root;
+  if (!pathExists(context.root, `${wikiRoot}/index.md`)) return;
 
-  const text = readText(context.root, "wiki/index.md");
+  const text = readText(context.root, `${wikiRoot}/index.md`);
   for (const section of context.config.wiki.projectIndexSections) {
     if (!text.includes(section)) {
       context.add(
         "warning",
         "project-wiki-index-section",
-        `wiki/index.md is missing expected project section: ${section}`,
-        "wiki/index.md",
+        `${wikiRoot}/index.md is missing expected project section: ${section}`,
+        `${wikiRoot}/index.md`,
       );
     }
   }
@@ -182,9 +193,10 @@ export function resolveWikiRenderScript(context: LintContext): string | undefine
 }
 
 export function renderWikiReaderIfNeeded(context: LintContext): void {
+  const wikiRoot = context.config.wiki.root;
   const changedWiki = changedWikiMarkdownFiles(context);
   if (changedWiki.length === 0) return;
-  if (!pathExists(context.root, "wiki")) return;
+  if (!pathExists(context.root, wikiRoot)) return;
 
   const script = resolveWikiRenderScript(context);
   if (!script) {
@@ -196,17 +208,22 @@ export function renderWikiReaderIfNeeded(context: LintContext): void {
 
   console.log("");
   console.log(
-    `POM wiki reader: ${changedWiki.length} wiki Markdown file${changedWiki.length === 1 ? "" : "s"} changed; regenerating wiki/_site/.`,
+    `POM wiki reader: ${changedWiki.length} wiki Markdown file${changedWiki.length === 1 ? "" : "s"} changed; regenerating ${wikiRoot}/_site/.`,
   );
-  execFileSync(process.execPath, [script], {
+  const renderArgs = [script];
+  if (wikiRoot !== "wiki") {
+    renderArgs.push("--source", wikiRoot, "--out", join(wikiRoot, "_site"));
+  }
+  execFileSync(process.execPath, renderArgs, {
     cwd: context.root,
     stdio: "inherit",
   });
 }
 
 function changedWikiMarkdownFiles(context: LintContext): string[] {
+  const wikiRoot = context.config.wiki.root;
   const onError = (message: string) => context.add("warning", "git-status", message);
   return [...gitChangedFiles(context.root, onError)].filter((path) => {
-    return path.startsWith("wiki/") && !path.startsWith("wiki/_site/") && path.endsWith(".md");
+    return path.startsWith(`${wikiRoot}/`) && !path.startsWith(`${wikiRoot}/_site/`) && path.endsWith(".md");
   });
 }
