@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "0.1",
+  "id": "broken-missing-route",
+  "suite": "core",
+  "critical": true,
+  "language": "en",
+  "setup": {
+    "projectShape": "target_project",
+    "trust": "trusted",
+    "fixture": "minimal-target"
+  },
+  "prompt": "Adopt POM in this existing project without moving its files.",
+  "expect": {
+    "requiredSkills": ["using-pom", "adopt"],
+    "requiredReads": ["skills/using-pom.md", "skills/adopt.md"],
+    "requiredActions": ["load_using_pom", "load_selected_skill"],
+    "prohibitedActions": ["edit_file"],
+    "artifacts": {
+      "mustExist": [],
+      "mustNotExist": []
+    },
+    "verdictRules": ["The invalid fixture must be rejected because expect.route is absent."]
+  }
+}

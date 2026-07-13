@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pom.local/schemas/skill-behavior-scenario.schema.json",
+  "title": "POM Skill Behavior Scenario",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "suite",
+    "critical",
+    "language",
+    "setup",
+    "prompt",
+    "expect"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "0.1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$" },
+    "suite": { "type": "string", "enum": ["core", "extended"] },
+    "critical": { "type": "boolean" },
+    "language": { "type": "string", "enum": ["en", "it"] },
+    "setup": { "$ref": "#/$defs/setup" },
+    "prompt": { "type": "string", "minLength": 20 },
+    "expect": { "$ref": "#/$defs/expectation" }
+  },
+  "$defs": {
+    "setup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projectShape", "trust", "fixture"],
+      "properties": {
+        "projectShape": {
+          "type": "string",
+          "enum": ["pom_source", "target_project", "non_pom_project"]
+        },
+        "trust": { "type": "string", "enum": ["trusted", "untrusted"] },
+        "fixture": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$" },
+        "pomConfig": { "type": ["object", "null"] },
+        "precondition": { "type": "string" },
+        "sessionEvent": {
+          "type": "string",
+          "enum": ["startup", "post_compaction"]
+        }
+      }
+    },
+    "expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route",
+        "requiredSkills",
+        "requiredReads",
+        "requiredActions",
+        "prohibitedActions",
+        "artifacts",
+        "verdictRules"
+      ],
+      "properties": {
+        "route": {
+          "type": "string",
+          "pattern": "^(none|[a-z][a-z0-9-]*)$"
+        },
+        "requiredSkills": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "forbiddenSkills": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "requiredReads": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "requiredActions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/action" }
+        },
+        "prohibitedActions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/action" }
+        },
+        "requiredOrder": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["before", "after"],
+            "properties": {
+              "before": { "$ref": "#/$defs/action" },
+              "after": { "$ref": "#/$defs/action" }
+            }
+          }
+        },
+        "artifacts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mustExist", "mustNotExist"],
+          "properties": {
+            "mustExist": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "mustNotExist": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "transcriptIncludes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "transcriptExcludes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "verdictRules": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "load_using_pom",
+        "load_selected_skill",
+        "read_config",
+        "read_source",
+        "announce_route",
+        "ask_clarification",
+        "gather_failure_evidence",
+        "run_verification",
+        "edit_file",
+        "create_governed_artifact",
+        "create_wiki",
+        "create_decision",
+        "create_task_plan",
+        "claim_success",
+        "inject_pom_bootstrap"
+      ]
+    }
+  }
+}

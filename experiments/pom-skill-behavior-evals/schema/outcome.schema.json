@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pom.local/schemas/skill-behavior-outcome.schema.json",
+  "title": "POM Skill Behavior Outcome",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "scenarioId",
+    "variant",
+    "repetition",
+    "environment",
+    "startedAt",
+    "finishedAt",
+    "result",
+    "checks",
+    "evidence"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "0.1" },
+    "runId": { "type": "string", "minLength": 1 },
+    "scenarioId": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]+$" },
+    "variant": { "type": "string", "minLength": 1 },
+    "repetition": { "type": "integer", "minimum": 1 },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend", "backendVersion", "model", "pomCommit"],
+      "properties": {
+        "backend": { "type": "string", "minLength": 1 },
+        "backendVersion": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "modelVersion": { "type": ["string", "null"] },
+        "pomCommit": { "type": "string", "minLength": 7 }
+      }
+    },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "finishedAt": { "type": "string", "format": "date-time" },
+    "result": {
+      "type": "string",
+      "enum": ["pass", "fail", "skipped", "timed_out", "indeterminate"]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "status", "summary"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "type": "string", "enum": ["deterministic", "transcript", "judge"] },
+          "status": { "type": "string", "enum": ["pass", "fail", "indeterminate"] },
+          "summary": { "type": "string", "minLength": 1 },
+          "evidence": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "usage": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["inputTokens", "outputTokens", "cost", "currency"],
+      "properties": {
+        "inputTokens": { "type": ["integer", "null"], "minimum": 0 },
+        "outputTokens": { "type": ["integer", "null"], "minimum": 0 },
+        "cost": { "type": ["number", "null"], "minimum": 0 },
+        "currency": { "type": ["string", "null"] }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summaryPath", "rawTranscriptCommitted", "sanitized"],
+      "properties": {
+        "summaryPath": { "type": "string", "minLength": 1 },
+        "transcriptPath": { "type": ["string", "null"] },
+        "rawTranscriptCommitted": { "type": "boolean", "const": false },
+        "sanitized": { "type": "boolean" }
+      }
+    },
+    "reason": { "type": ["string", "null"] }
+  }
+}

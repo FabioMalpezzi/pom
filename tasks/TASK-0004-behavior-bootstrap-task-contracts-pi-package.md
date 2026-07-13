@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+In progress
 
 ## Origin
 
@@ -93,10 +93,10 @@ These constraints bind every workstream and must be copied into experiment crite
 
 **Produces:** a clean branch or worktree dedicated to this initiative, with the current Project Reader patch preserved separately.
 
-- [ ] Record `git status`, current branch, HEAD, and active worktrees.
-- [ ] Finish, commit, stash with explicit approval, or otherwise isolate the existing Project Reader changes before implementation begins.
-- [ ] Create an experiment branch or harness-native workspace only after the existing changes are protected.
-- [ ] Run `npm run pom:test` and `npm run pom:lint` to establish the code baseline in the isolated workspace.
+- [x] Record `git status`, current branch, HEAD, and active worktrees.
+- [x] Finish, commit, stash with explicit approval, or otherwise isolate the existing Project Reader changes before implementation begins.
+- [x] Create an experiment branch or harness-native workspace only after the existing changes are protected.
+- [x] Run `npm run pom:test` and `npm run pom:lint` to establish the code baseline in the isolated workspace.
 
 **Checkpoint:** baseline commands pass, or failures are recorded as pre-existing blockers before candidate work starts.
 
@@ -113,11 +113,11 @@ experiments/task-plan-contracts/
 experiments/pi-package/
 ```
 
-- [ ] Create one `EXPERIMENT.md` per workstream using `templates/EXPERIMENT_TEMPLATE.md`.
-- [ ] Cross-link all four experiments to this Task Plan instead of duplicating the entire plan.
-- [ ] Define what result would discard each candidate.
-- [ ] Define which evidence is safe to commit and which raw evidence stays local.
-- [ ] Review whether the Pi package boundary needs a Decision Record before canonical promotion.
+- [x] Create one `EXPERIMENT.md` per workstream using `templates/EXPERIMENT_TEMPLATE.md`.
+- [x] Cross-link all four experiments to this Task Plan instead of duplicating the entire plan.
+- [x] Define what result would discard each candidate.
+- [x] Define which evidence is safe to commit and which raw evidence stays local.
+- [x] Review whether the Pi package boundary needs a Decision Record before canonical promotion.
 
 **Checkpoint:** each experiment has an independently reviewable promotion gate; none assumes success.
 
@@ -134,11 +134,11 @@ experiments/pom-skill-behavior-evals/schema/outcome.schema.json
 experiments/pom-skill-behavior-evals/README.md
 ```
 
-- [ ] Define scenario fields for identifier, language, setup fixture, user prompt, expected skill, required source reads, prohibited actions, expected artifacts, and verdict rules.
-- [ ] Define outcome fields for harness, model, model version when available, POM variant, repetition, start/end time, routing result, prohibited-action result, token/cost metrics when available, evidence path, and indeterminate reason.
-- [ ] Distinguish deterministic checks from LLM-judged checks.
-- [ ] Require a no-bootstrap control where it provides a meaningful baseline.
-- [ ] Make failed, skipped, timed-out, and indeterminate runs first-class outcomes rather than silently dropping them.
+- [x] Define scenario fields for identifier, language, setup fixture, user prompt, expected skill, required source reads, prohibited actions, expected artifacts, and verdict rules.
+- [x] Define outcome fields for harness, model, model version when available, POM variant, repetition, start/end time, routing result, prohibited-action result, token/cost metrics when available, evidence path, and indeterminate reason.
+- [x] Distinguish deterministic checks from LLM-judged checks.
+- [x] Require a no-bootstrap control where it provides a meaningful baseline.
+- [x] Make failed, skipped, timed-out, and indeterminate runs first-class outcomes rather than silently dropping them.
 
 ### Task P1.2 - Build the core scenario matrix
 
@@ -155,10 +155,10 @@ Core scenarios:
 9. An ordinary non-POM coding request in a project without POM does not force POM artifacts or POM workflow.
 10. An ambiguous memory request asks for clarification rather than creating multiple governed documents.
 
-- [ ] Reuse existing bilingual fixture intent where possible without treating structural fixtures as behavioral evidence.
-- [ ] Add at least two positive routing scenarios and at least three misuse/safety scenarios to the first runnable suite.
-- [ ] Define deterministic filesystem assertions for every scenario that can modify files.
-- [ ] Define transcript checks for skill announcement, source reads, ordering, and unsupported claims.
+- [x] Reuse existing bilingual fixture intent where possible without treating structural fixtures as behavioral evidence.
+- [x] Add at least two positive routing scenarios and at least three misuse/safety scenarios to the first runnable suite.
+- [x] Define deterministic filesystem assertions for every scenario that can modify files.
+- [x] Define transcript checks for skill announcement, source reads, ordering, and unsupported claims.
 
 ### Task P1.3 - Implement a local runner and Pi adapter
 
@@ -549,7 +549,9 @@ Exception reason: _none_
 
 ## Outcome
 
-Not started. This Task Plan records the approved direction, dependency order, experiment boundaries, measurable gates, and Pi package contract. No implementation candidate has been promoted.
+P0 completed on 2026-07-13. The Project Reader fix and this Task Plan were preserved in two separate commits, the work moved to `exp/pom-skill-evolution` in the existing checkout, and the clean baseline passed 893 tests with lint OK. Four experiment contracts now define falsification, evidence policy, and promotion gates. The Pi experiment concludes that an active extension requires a Decision Record before canonical promotion.
+
+P1 contract work has started: scenario and outcome schemas, ten core scenarios, a structural dry-run, and an intentionally invalid fixture now exist under `experiments/pom-skill-behavior-evals/`. The dry-run accepts all ten core contracts and rejects the known-bad fixture for its missing route. Real session execution, disposable project setup, transcript capture, and behavioral planted-failure validation remain open. No implementation candidate has been promoted.
 
 ## Done Criteria
 

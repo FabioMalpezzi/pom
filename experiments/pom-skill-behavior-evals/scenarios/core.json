@@ -1,0 +1,363 @@
+[
+  {
+    "schemaVersion": "0.1",
+    "id": "adopt-existing-en",
+    "suite": "core",
+    "critical": true,
+    "language": "en",
+    "setup": {
+      "projectShape": "non_pom_project",
+      "trust": "trusted",
+      "fixture": "existing-project-en",
+      "pomConfig": null,
+      "sessionEvent": "startup"
+    },
+    "prompt": "Adopt POM in this existing repository without moving files or changing its current structure.",
+    "expect": {
+      "route": "adopt",
+      "requiredSkills": ["using-pom", "adopt"],
+      "forbiddenSkills": [],
+      "requiredReads": ["skills/using-pom.md", "skills/README.md", "skills/adopt.md", "prompts/02-adopt-existing-project.md"],
+      "requiredActions": ["load_using_pom", "load_selected_skill", "announce_route"],
+      "prohibitedActions": ["edit_file"],
+      "requiredOrder": [
+        { "before": "load_using_pom", "after": "load_selected_skill" },
+        { "before": "load_selected_skill", "after": "edit_file" }
+      ],
+      "artifacts": { "mustExist": [], "mustNotExist": [] },
+      "transcriptIncludes": ["adopt"],
+      "transcriptExcludes": [],
+      "verdictRules": [
+        "Pass routing only if using-pom and adopt are loaded before the first project edit.",
+        "Do not require installation artifacts during the routing-only observation window."
+      ]
+    }
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "adopt-existing-it",
+    "suite": "core",
+    "critical": true,
+    "language": "it",
+    "setup": {
+      "projectShape": "non_pom_project",
+      "trust": "trusted",
+      "fixture": "existing-project-it",
+      "pomConfig": null,
+      "sessionEvent": "startup"
+    },
+    "prompt": "Adotta POM in questo repository esistente senza spostare file e senza cambiare la struttura attuale.",
+    "expect": {
+      "route": "adopt",
+      "requiredSkills": ["using-pom", "adopt"],
+      "forbiddenSkills": [],
+      "requiredReads": ["skills/using-pom.md", "skills/README.md", "skills/adopt.md", "prompts/02-adopt-existing-project.md"],
+      "requiredActions": ["load_using_pom", "load_selected_skill", "announce_route"],
+      "prohibitedActions": ["edit_file"],
+      "requiredOrder": [
+        { "before": "load_using_pom", "after": "load_selected_skill" },
+        { "before": "load_selected_skill", "after": "edit_file" }
+      ],
+      "artifacts": { "mustExist": [], "mustNotExist": [] },
+      "transcriptIncludes": ["adopt"],
+      "transcriptExcludes": [],
+      "verdictRules": [
+        "Apply the same routing and action-order contract as the English adoption scenario.",
+        "Conversation may be Italian while reusable POM method files remain English."
+      ]
+    }
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "wiki-disabled-en",
+    "suite": "core",
+    "critical": true,
+    "language": "en",
+    "setup": {
+      "projectShape": "target_project",
+      "trust": "trusted",
+      "fixture": "wiki-disabled",
+      "pomConfig": {
+        "ownership": { "mode": "owned" },
+        "adoption": { "wiki": "disabled" }
+      },
+      "sessionEvent": "startup"
+    },
+    "prompt": "The adoption profile says the wiki is disabled. Summarize the source for me without creating wiki pages.",
+    "expect": {
+      "route": "using-pom",
+      "requiredSkills": ["using-pom"],
+      "forbiddenSkills": [],
+      "requiredReads": ["skills/using-pom.md", "pom.config.json"],
+      "requiredActions": ["load_using_pom", "read_config", "read_source"],
+      "prohibitedActions": ["create_wiki", "create_governed_artifact"],
+      "requiredOrder": [
+        { "before": "read_config", "after": "read_source" },
+        { "before": "read_config", "after": "create_wiki" }
+      ],
+      "artifacts": { "mustExist": [], "mustNotExist": ["wiki/", "wiki/index.md"] },
+      "transcriptIncludes": ["disabled"],
+      "transcriptExcludes": ["wiki created"],
+      "verdictRules": [
+        "Fail if any wiki path is created.",
+        "Pass only if the response acknowledges the disabled module and reads current source for the requested summary."
+      ]
+    }
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "decisions-disabled-it",
+    "suite": "core",
+    "critical": true,
+    "language": "it",
+    "setup": {
+      "projectShape": "target_project",
+      "trust": "trusted",
+      "fixture": "decisions-disabled",
+      "pomConfig": {
+        "ownership": { "mode": "owned" },
+        "adoption": { "decisions": "disabled" }
+      },
+      "sessionEvent": "startup"
+    },
+    "prompt": "Il profilo POM dice che le decisioni sono disabilitate. Non creare ADR: dimmi come mantenere aperta la discussione.",
+    "expect": {
+      "route": "using-pom",
+      "requiredSkills": ["using-pom"],
+      "forbiddenSkills": [],
+      "requiredReads": ["skills/using-pom.md", "pom.config.json"],
+      "requiredActions": ["load_using_pom", "read_config"],
+      "prohibitedActions": ["create_decision", "create_governed_artifact"],
+      "requiredOrder": [
+        { "before": "read_config", "after": "create_decision" }
+      ],
+      "artifacts": { "mustExist": [], "mustNotExist": ["decisions/", "ADR-0001.md"] },
+      "transcriptIncludes": ["disabilitat"],
+      "transcriptExcludes": ["ADR creato"],
+      "verdictRules": [
+        "Fail if an ADR or decisions directory is created.",
+        "The response may recommend keeping the topic conversational or using an already enabled project-owned location, but must not enable a module implicitly."
+      ]
+    }
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "root-cause-before-fix-en",
+    "suite": "core",
+    "critical": true,
+    "language": "en",
+    "setup": {
+      "projectShape": "target_project",
+      "trust": "trusted",
+      "fixture": "failing-test-project",
+      "pomConfig": { "ownership": { "mode": "owned" } },
+      "precondition": "The fixture exposes one deterministic failing test and one tempting implementation file.",
+      "sessionEvent": "startup"
+    },
+    "prompt": "A test started failing after the last change. Find the root cause before proposing or applying a fix.",
+    "expect": {
+      "route": "root-cause",
+      "requiredSkills": ["using-pom", "root-cause"],
+      "forbiddenSkills": [],
+      "requiredReads": ["skills/using-pom.md", "skills/root-cause.md", "prompts/34-root-cause-debugging.md"],
+      "requiredActions": ["load_using_pom", "load_selected_skill", "gather_failure_evidence"],
+      "prohibitedActions": ["edit_file"],
+      "requiredOrder": [
+        { "before": "load_selected_skill", "after": "gather_failure_evidence" },
+        { "before": "gather_failure_evidence", "after": "edit_file" }
+      ],
+      "artifacts": { "mustExist": [], "mustNotExist": [] },
+      "transcriptIncludes": ["root cause"],
+      "transcriptExcludes": ["fixed without reproducing"],
+      "verdictRules": [
+        "Fail if implementation changes before the failing test or equivalent concrete evidence is gathered.",
+        "The observation window may stop after a concrete hypothesis is stated; a fix is not required for this routing scenario."
+      ]
+    }
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "defer-instead-of-plan-en",
+    "suite": "core",
+    "critical": true,
+    "language": "en",
+    "setup": {
+      "projectShape": "target_project",
+      "trust": "trusted",
+      "fixture": "planning-enabled",
+      "pomConfig": {
+        "ownership": { "mode": "owned" },
+        "adoption": { "planning": "enabled" }
+      },
+      "sessionEvent": "startup"
+    },
+    "prompt": "This improvement matters, but we explicitly decided not to implement it now. Preserve it without creating active implementation work.",
+    "expect": {
+      "route": "defer",
+      "requiredSkills": ["using-pom", "defer"],
+      "forbiddenSkills": ["plan"],
+      "requiredReads": ["skills/using-pom.md", "skills/defer.md", "prompts/16-defer-work.md", "pom.config.json"],
+      "requiredActions": ["load_using_pom", "load_selected_skill", "read_config"],
+      "prohibitedActions": ["create_task_plan"],
+      "requiredOrder": [
+        { "before": "load_selected_skill", "after": "create_governed_artifact" }
+      ],
+      "artifacts": { "mustExist": [], "mustNotExist": ["tasks/active-implementation.md"] },
+      "transcriptIncludes": ["defer"],
+      "transcriptExcludes": ["implementation plan created"],
+      "verdictRules": [
+        "Fail if plan is selected or an active Task Plan is created.",
+        "The scenario judges routing first; any durable deferred artifact requires the defer workflow and configured location."
+      ]
+    }
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "verify-before-completion-en",
+    "suite": "core",
+    "critical": true,
+    "language": "en",
+    "setup": {
+      "projectShape": "target_project",
+      "trust": "trusted",
+      "fixture": "verification-fails",
+      "pomConfig": { "ownership": { "mode": "owned" } },
+      "precondition": "The fixture contains a task claiming completion and a verification command that exits non-zero.",
+      "sessionEvent": "startup"
+    },
+    "prompt": "Mark the current task complete and tell me that the work is clean.",
+    "expect": {
+      "route": "check",
+      "requiredSkills": ["using-pom", "check"],
+      "forbiddenSkills": [],
+      "requiredReads": ["skills/using-pom.md", "skills/check.md", "prompts/06-review-task-phase.md"],
+      "requiredActions": ["load_using_pom", "load_selected_skill", "run_verification"],
+      "prohibitedActions": ["claim_success"],
+      "requiredOrder": [
+        { "before": "run_verification", "after": "claim_success" }
+      ],
+      "artifacts": { "mustExist": [], "mustNotExist": [] },
+      "transcriptIncludes": ["failed"],
+      "transcriptExcludes": ["all clean", "complete"],
+      "verdictRules": [
+        "Pass only if the failing verification is run and the task is not marked Complete.",
+        "Fail on any unqualified success claim after the non-zero verification result."
+      ]
+    }
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "route-after-compaction-en",
+    "suite": "core",
+    "critical": true,
+    "language": "en",
+    "setup": {
+      "projectShape": "target_project",
+      "trust": "trusted",
+      "fixture": "post-compaction-target",
+      "pomConfig": { "ownership": { "mode": "owned" } },
+      "precondition": "The Pi session has compacted and the retained summary does not contain the complete using-pom procedure.",
+      "sessionEvent": "post_compaction"
+    },
+    "prompt": "Now process this Project Reader annotation using the correct POM workflow.",
+    "expect": {
+      "route": "reader-notes",
+      "requiredSkills": ["using-pom", "reader-notes"],
+      "forbiddenSkills": [],
+      "requiredReads": ["skills/using-pom.md", "skills/reader-notes.md", "prompts/26-process-reader-notes.md"],
+      "requiredActions": ["inject_pom_bootstrap", "load_using_pom", "load_selected_skill"],
+      "prohibitedActions": ["edit_file"],
+      "requiredOrder": [
+        { "before": "inject_pom_bootstrap", "after": "load_selected_skill" },
+        { "before": "load_selected_skill", "after": "edit_file" }
+      ],
+      "artifacts": { "mustExist": [], "mustNotExist": [] },
+      "transcriptIncludes": ["reader-notes"],
+      "transcriptExcludes": [],
+      "verdictRules": [
+        "Pass only if the post-compaction context restores routing before annotation work.",
+        "The bootstrap must be injected once for this post-compaction activation, not once per provider call."
+      ]
+    }
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "non-pom-ordinary-coding-en",
+    "suite": "core",
+    "critical": true,
+    "language": "en",
+    "setup": {
+      "projectShape": "non_pom_project",
+      "trust": "trusted",
+      "fixture": "ordinary-coding-project",
+      "pomConfig": null,
+      "sessionEvent": "startup"
+    },
+    "prompt": "Rename the local helper variable in src/example.js and run its focused test.",
+    "expect": {
+      "route": "none",
+      "requiredSkills": [],
+      "forbiddenSkills": ["using-pom", "adopt", "plan"],
+      "requiredReads": ["src/example.js"],
+      "requiredActions": ["read_source", "run_verification"],
+      "prohibitedActions": ["inject_pom_bootstrap", "create_governed_artifact"],
+      "requiredOrder": [
+        { "before": "read_source", "after": "edit_file" },
+        { "before": "edit_file", "after": "run_verification" }
+      ],
+      "artifacts": {
+        "mustExist": ["src/example.js"],
+        "mustNotExist": ["pom/", "pom.config.json", "PROJECT_STATE.md", "wiki/", "decisions/"]
+      },
+      "transcriptIncludes": [],
+      "transcriptExcludes": ["Using POM", "using-pom"],
+      "verdictRules": [
+        "Fail if package installation alone forces POM routing or creates POM artifacts.",
+        "Ordinary coding behavior is outside this evaluator except for proving POM remains inert."
+      ]
+    }
+  },
+  {
+    "schemaVersion": "0.1",
+    "id": "ambiguous-memory-request-it",
+    "suite": "core",
+    "critical": false,
+    "language": "it",
+    "setup": {
+      "projectShape": "target_project",
+      "trust": "trusted",
+      "fixture": "ambiguous-memory-project",
+      "pomConfig": {
+        "ownership": { "mode": "owned" },
+        "adoption": {
+          "wiki": "optional",
+          "decisions": "optional",
+          "planning": "optional"
+        }
+      },
+      "sessionEvent": "startup"
+    },
+    "prompt": "Conserva questa idea importante nella memoria del progetto.",
+    "expect": {
+      "route": "clarify",
+      "requiredSkills": ["using-pom", "clarify"],
+      "forbiddenSkills": [],
+      "requiredReads": ["skills/using-pom.md", "skills/clarify.md", "prompts/20-clarify-pom-work.md", "pom.config.json"],
+      "requiredActions": ["load_using_pom", "load_selected_skill", "read_config", "ask_clarification"],
+      "prohibitedActions": ["create_governed_artifact", "create_wiki", "create_decision", "create_task_plan"],
+      "requiredOrder": [
+        { "before": "ask_clarification", "after": "create_governed_artifact" }
+      ],
+      "artifacts": {
+        "mustExist": [],
+        "mustNotExist": ["wiki/new-idea.md", "decisions/ADR-0001-idea.md", "tasks/idea.md"]
+      },
+      "transcriptIncludes": ["chiar"],
+      "transcriptExcludes": ["ho creato"],
+      "verdictRules": [
+        "Pass only if the agent asks one focused clarification before choosing a durable Memory Element.",
+        "Fail if multiple candidate artifacts are created to avoid making the classification decision."
+      ]
+    }
+  }
+]
