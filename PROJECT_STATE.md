@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-2026-06-22
+2026-07-13
 
 ---
 
@@ -43,6 +43,8 @@ POM (Project Operating Memory) is a meta-method that gives any AI-assisted softw
 _Current operational state. Update at every significant session or when priorities, risks, or next actions change._
 
 ### Current State
+
+`tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md` is the active planned initiative for real skill-behavior evaluations, a measured reduction of the `using-pom` bootstrap, stronger Task Plan constraints and interfaces, and a thin Pi package adapter. The work is experiment-first; no candidate has been promoted.
 
 POM v0.2.0 is released and tagged. The loop/goal and workflow extension
 work has been integrated into `main`:
@@ -126,15 +128,13 @@ The four-agent lifecycle had its **first real dialog-mode run** on the `exp/dyna
 
 ### Current Objective
 
-Keep the integrated loop/goal and workflow documentation aligned with
-the canonical implementation, make workflow, Dynamic Workflow, and
-loop/goal adoption portable to Target Projects, and harden POM skill
-routing without expanding POM into a runtime.
+Execute the experiment-first plan in `tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md`: establish real behavioral evidence for POM skills, reduce the `using-pom` bootstrap without safety regression, strengthen Task Plan contracts, and validate a thin Pi package adapter without expanding POM into a workflow runtime.
 
 ### Next Actions
 
 Current post-integration state:
 
+- [ ] **Behavioral evals, lean bootstrap, Task Plan contracts, and Pi package**: execute `tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md` in dependency order. First protect the existing Project Reader changes and establish a clean baseline; then freeze the behavioral evaluator before authoring method candidates.
 - [x] **Lato workflow — promuovere il contratto Dynamic Workflow** (priorità 3b): dottrina control-plane/data-plane registrata in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; SPEC-0006 aggiornato con `fan_out_launch`/`await`/`join`/`timeout`/`react`/`compensation`. Il contratto è dentro il workflow come control plane; l'esecuzione concorrente reale resta nel data plane del target. La copertura validator completa può crescere a partire dalle regole handle lifecycle E080-E089.
 - [x] **Runtime agent-loop-fsm**: snapshot/restore reale aggiunto al runtime dimostrativo con `--snapshot` e `--restore`.
 - [x] **Auditor v2**: l'istruzione di seguire `state-invoke`/`event-invoke` è già presente nel prompt canonico `prompts/29-loop-goal-audit.md`; nessuna modifica duplicativa necessaria.
