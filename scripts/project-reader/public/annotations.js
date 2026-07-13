@@ -79,6 +79,8 @@ export function createAnnotationController({
       ${escapeHtml(result.annotation.annotationId)}<br>
       ${escapeHtml(result.path)}
     `;
+    els.selectedText.value = "";
+    els.intent.value = "";
     await loadAnnotations();
   }
 

@@ -5,6 +5,7 @@ import { createServer } from "node:http";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { createAnnotationController } from "../../../scripts/project-reader/public/annotations.js";
 
 const POM_ROOT = process.cwd();
 
@@ -414,8 +415,44 @@ async function scenarioAnnotations() {
   }
 }
 
+async function scenarioAnnotationDraftReset() {
+  console.log("\nScenario 5: saving an annotation starts the next note with a clean draft");
+  let savedPayload = null;
+  const detailElement = { hidden: false, textContent: "" };
+  const els = {
+    selectedText: { value: "First selected passage." },
+    intent: { value: "First note.", focus() {} },
+    eventResult: { innerHTML: "" },
+    annotationList: { innerHTML: "", append() {} },
+    annotationDetail: detailElement,
+    processedAnnotationList: { innerHTML: "", append() {} },
+    processedAnnotationDetail: { hidden: false, textContent: "" },
+  };
+  const controller = createAnnotationController({
+    els,
+    state: { activeDocument: { path: "doc/manual.md", kind: "project_doc" } },
+    t: (key) => key,
+    escapeHtml: String,
+    getJson: async () => [],
+    postJson: async (_path, payload) => {
+      savedPayload = payload;
+      return { annotation: { annotationId: "annotation-test" }, path: ".pom-reader/annotations/annotation-test.json" };
+    },
+    deleteJson: async () => {},
+    humanError: String,
+    loadDocument: async () => {},
+    renderLayoutState() {},
+    setAgentTab() {},
+  });
+
+  await controller.saveAnnotation();
+
+  assert("saved annotation keeps the selected passage", savedPayload?.selectedText === "First selected passage.", JSON.stringify(savedPayload));
+  assert("next annotation does not retain the previous reference", els.selectedText.value === "" && els.intent.value === "", JSON.stringify({ selectedText: els.selectedText.value, intent: els.intent.value }));
+}
+
 async function scenarioStartupErrors() {
-  console.log("\nScenario 5: startup errors give actionable local-server guidance");
+  console.log("\nScenario 6: startup errors give actionable local-server guidance");
   const blocker = createServer((_, response) => {
     response.end("occupied");
   });
@@ -450,6 +487,7 @@ try {
   await scenarioAsyncNavigationAndDirectOpen();
   await scenarioGenericProfileAndCli();
   await scenarioAnnotations();
+  await scenarioAnnotationDraftReset();
   await scenarioStartupErrors();
 } catch (error) {
   if (isListenPermissionError(error)) {
