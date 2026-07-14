@@ -60,7 +60,7 @@ Planned interface:
 
 ```bash
 node experiments/pom-skill-behavior-evals/run.mjs --dry-run --suite core
-node experiments/pom-skill-behavior-evals/run.mjs --backend pi --variant baseline --suite core --repetitions 5
+POM_EVAL_MODEL=<provider/model-or-pattern> node experiments/pom-skill-behavior-evals/run.mjs --backend pi --variant baseline --suite core --repetitions 5
 node experiments/pom-skill-behavior-evals/report.mjs --input <run-directory>
 ```
 
@@ -87,13 +87,16 @@ Current experiment evidence:
 - scenario and outcome schemas;
 - ten core scenario contracts: nine critical, one non-critical, in English and Italian;
 - structural dry-run accepts the core matrix;
-- intentionally invalid fixture is rejected because `expect.route` is missing.
+- intentionally invalid fixture is rejected because `expect.route` is missing;
+- runner creates disposable synthetic fixtures, isolated Pi config/session directories, sanitized event/transcript evidence, and outcome JSON summaries;
+- synthetic Pi-event controls prove one passing ordinary-coding scenario and one planted non-POM activation failure without model credentials or cost;
+- a real Pi attempt against `broken-no-bootstrap` was classified as `skipped` because model credentials were unavailable, proving that backend readiness is separated from behavioral failure.
 
 Still planned:
 
-- machine-readable real-session summaries;
-- sanitized excerpts required to explain behavioral verdicts;
-- behavioral known-bad variant result;
+- real Pi model session summaries after credentials or a configured model are available;
+- sanitized excerpts required to explain real behavioral verdicts;
+- behavioral known-bad variant result from an actual model run;
 - baseline variance report.
 
 Raw full transcripts, credentials, and private environment details remain local.
@@ -143,5 +146,6 @@ Promotion path:
 
 - [x] Define scenario and outcome schemas.
 - [x] Add the core scenario matrix.
-- [ ] Implement disposable fixture setup and behavioral planted-failure checks.
+- [x] Implement disposable fixture setup and behavioral planted-failure checks.
+- [ ] Run the real Pi known-bad control with model credentials; the current no-credential attempt is recorded only as skipped backend readiness evidence.
 - [ ] Implement and run the Pi baseline.

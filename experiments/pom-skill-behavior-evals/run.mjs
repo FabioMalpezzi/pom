@@ -1,10 +1,24 @@
 #!/usr/bin/env node
 
-import { readFileSync } from "node:fs";
-import { dirname, isAbsolute, join } from "node:path";
+import { spawn } from "node:child_process";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(ROOT, "../..");
+const DEFAULT_TIMEOUT_MS = 180_000;
+const DEFAULT_OUTPUT_ROOT = join(tmpdir(), "pom-skill-behavior-runs");
+
 const ACTIONS = new Set([
   "load_using_pom",
   "load_selected_skill",
@@ -27,13 +41,39 @@ const TRUST_VALUES = new Set(["trusted", "untrusted"]);
 const LANGUAGES = new Set(["en", "it"]);
 const SUITES = new Set(["core", "extended"]);
 const SESSION_EVENTS = new Set(["startup", "post_compaction"]);
+const OUTCOME_RESULTS = new Set(["pass", "fail", "skipped", "timed_out", "indeterminate"]);
+const BACKENDS = new Set(["pi"]);
 
 function parseArgs(argv) {
-  const options = { dryRun: false, suite: "core" };
+  const options = {
+    backend: "pi",
+    dryRun: false,
+    keepTemp: false,
+    outputRoot: DEFAULT_OUTPUT_ROOT,
+    repetitions: 1,
+    scenarioId: null,
+    suite: "core",
+    timeoutMs: DEFAULT_TIMEOUT_MS,
+    variant: "baseline",
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--dry-run") {
       options.dryRun = true;
+      continue;
+    }
+    if (arg === "--keep-temp") {
+      options.keepTemp = true;
+      continue;
+    }
+    if (arg === "--backend") {
+      options.backend = argv[index + 1] || "";
+      index += 1;
+      continue;
+    }
+    if (arg === "--variant") {
+      options.variant = argv[index + 1] || "";
+      index += 1;
       continue;
     }
     if (arg === "--suite") {
@@ -41,9 +81,54 @@ function parseArgs(argv) {
       index += 1;
       continue;
     }
+    if (arg === "--scenario") {
+      options.scenarioId = argv[index + 1] || "";
+      index += 1;
+      continue;
+    }
+    if (arg === "--repetitions") {
+      options.repetitions = Number.parseInt(argv[index + 1] || "", 10);
+      index += 1;
+      continue;
+    }
+    if (arg === "--timeout-ms") {
+      options.timeoutMs = Number.parseInt(argv[index + 1] || "", 10);
+      index += 1;
+      continue;
+    }
+    if (arg === "--output") {
+      options.outputRoot = resolve(argv[index + 1] || "");
+      index += 1;
+      continue;
+    }
+    if (arg === "--provider") {
+      options.provider = argv[index + 1] || "";
+      index += 1;
+      continue;
+    }
+    if (arg === "--model") {
+      options.model = argv[index + 1] || "";
+      index += 1;
+      continue;
+    }
+    if (arg === "--pi-bin") {
+      options.piBin = argv[index + 1] || "";
+      index += 1;
+      continue;
+    }
     throw new Error(`Unknown argument: ${arg}`);
   }
   if (!SUITES.has(options.suite)) throw new Error(`Unsupported suite: ${options.suite}`);
+  if (!BACKENDS.has(options.backend)) throw new Error(`Unsupported backend: ${options.backend}`);
+  if (!Number.isInteger(options.repetitions) || options.repetitions < 1) {
+    throw new Error("--repetitions must be a positive integer");
+  }
+  if (!Number.isInteger(options.timeoutMs) || options.timeoutMs < 1_000) {
+    throw new Error("--timeout-ms must be an integer >= 1000");
+  }
+  if (!options.provider && process.env.POM_EVAL_PROVIDER) options.provider = process.env.POM_EVAL_PROVIDER;
+  if (!options.model && process.env.POM_EVAL_MODEL) options.model = process.env.POM_EVAL_MODEL;
+  if (!options.variant) throw new Error("--variant must not be empty");
   return options;
 }
 
@@ -208,38 +293,634 @@ function assertSchemaDocuments() {
   }
 }
 
-function runDryRun(suite) {
+function loadScenarios(suite, scenarioId) {
   assertSchemaDocuments();
   const scenarios = readJson(`scenarios/${suite}.json`);
   const issues = validateCollection(scenarios, suite);
-  if (issues.length > 0) {
-    console.error(`Scenario contract validation failed (${issues.length} issue(s)):`);
-    for (const issue of issues) console.error(`- ${issue}`);
-    process.exitCode = 1;
-    return;
-  }
+  if (issues.length > 0) throw new Error(`Scenario contract validation failed:\n- ${issues.join("\n- ")}`);
+  const selected = scenarioId ? scenarios.filter((scenario) => scenario.id === scenarioId) : scenarios;
+  if (scenarioId && selected.length === 0) throw new Error(`Unknown scenario for suite ${suite}: ${scenarioId}`);
+  return { scenarios, selected };
+}
 
+function assertKnownBadRejected() {
   const broken = readJson("fixtures/broken/scenario-missing-route.json");
   const brokenIssues = validateScenario(broken, "known-bad");
   if (!brokenIssues.some((issue) => issue.includes("expect.route"))) {
-    console.error("Known-bad control was not rejected for its missing route.");
-    process.exitCode = 1;
-    return;
+    throw new Error("Known-bad control was not rejected for its missing route.");
+  }
+  return brokenIssues;
+}
+
+function validateFixtureSetup(selected, options) {
+  const issues = [];
+  selected.forEach((scenario, index) => {
+    const workspace = createRunWorkspace(scenario, options, index + 1);
+    try {
+      for (const requiredPath of ["skills/using-pom.md", "prompts/32-using-pom.md", "src/example.js", "package.json"]) {
+        if (!existsSync(join(workspace.fixtureRoot, requiredPath))) issues.push(`${scenario.id}: missing ${requiredPath}`);
+      }
+      if (scenario.setup.pomConfig && !existsSync(join(workspace.fixtureRoot, "pom.config.json"))) {
+        issues.push(`${scenario.id}: missing pom.config.json`);
+      }
+    } finally {
+      rmSync(workspace.workspace, { recursive: true, force: true });
+    }
+  });
+  return issues;
+}
+
+function runDryRun(options) {
+  const { scenarios, selected } = loadScenarios(options.suite, options.scenarioId);
+  const brokenIssues = assertKnownBadRejected();
+  const fixtureIssues = validateFixtureSetup(selected, options);
+  if (fixtureIssues.length > 0) throw new Error(`Fixture setup validation failed:\n- ${fixtureIssues.join("\n- ")}`);
+  const critical = selected.filter((scenario) => scenario.critical).length;
+  console.log("POM skill behavior contract dry-run");
+  console.log(`- suite: ${options.suite}`);
+  console.log(`- scenarios in suite: ${scenarios.length}`);
+  console.log(`- selected scenarios: ${selected.length}`);
+  console.log(`- selected critical: ${critical}`);
+  console.log(`- languages: ${[...new Set(selected.map((scenario) => scenario.language))].sort().join(", ")}`);
+  console.log(`- known-bad control: rejected (${brokenIssues[0]})`);
+  console.log("- fixture setup: implemented for dry-run and real-session runs");
+  console.log("- real-session execution: use without --dry-run");
+}
+
+function safeCopyDir(source, target) {
+  cpSync(source, target, {
+    recursive: true,
+    filter: (src) => !src.includes(`${sep}.git${sep}`) && !src.includes(`${sep}node_modules${sep}`),
+  });
+}
+
+function writeJson(path, value) {
+  writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function createPomSourceCopy(targetRoot, variant) {
+  for (const dir of ["skills", "prompts", "templates"]) {
+    safeCopyDir(join(REPO_ROOT, dir), join(targetRoot, dir));
+  }
+  for (const file of ["README.md", "CONTEXT.md", "WIKI_METHOD.md", "bootstrap-pom.mjs"]) {
+    const source = join(REPO_ROOT, file);
+    if (existsSync(source)) cpSync(source, join(targetRoot, file));
+  }
+  if (variant === "broken-no-bootstrap") {
+    const usingPomPath = join(targetRoot, "skills/using-pom.md");
+    const original = readFileSync(usingPomPath, "utf8");
+    writeFileSync(
+      usingPomPath,
+      original.replace(
+        "- Read the canonical prompt before any POM action.",
+        "- Do not read the canonical prompt before POM action; answer directly from the request."
+      ).replace(
+        "- Use `skills/README.md` as the skill catalog; do not route from memory alone.",
+        "- Do not use `skills/README.md`; route from memory alone."
+      )
+    );
+  }
+}
+
+function createFixtureFiles(fixtureRoot, scenario) {
+  mkdirSync(join(fixtureRoot, "src"), { recursive: true });
+  writeFileSync(join(fixtureRoot, "README.md"), `# ${scenario.setup.fixture}\n\nSynthetic fixture for ${scenario.id}.\n`);
+  writeFileSync(join(fixtureRoot, "package.json"), JSON.stringify({ type: "module", scripts: { test: "node test.mjs" } }, null, 2));
+  writeFileSync(join(fixtureRoot, "src/example.js"), "export function example(value) {\n  const helper = value + 1;\n  return helper;\n}\n");
+  writeFileSync(join(fixtureRoot, "test.mjs"), "import { example } from './src/example.js';\nif (example(1) !== 2) throw new Error('example failed');\nconsole.log('fixture test passed');\n");
+
+  if (scenario.setup.projectShape !== "non_pom_project" || scenario.setup.pomConfig) {
+    writeJson(join(fixtureRoot, "pom.config.json"), scenario.setup.pomConfig || { ownership: { mode: "owned" } });
   }
 
-  const critical = scenarios.filter((scenario) => scenario.critical).length;
-  console.log("POM skill behavior contract dry-run");
-  console.log(`- suite: ${suite}`);
-  console.log(`- scenarios: ${scenarios.length}`);
-  console.log(`- critical: ${critical}`);
-  console.log(`- languages: ${[...new Set(scenarios.map((scenario) => scenario.language))].sort().join(", ")}`);
-  console.log(`- known-bad control: rejected (${brokenIssues[0]})`);
-  console.log("- real-session execution: not implemented yet");
+  if (scenario.setup.fixture === "failing-test-project") {
+    writeFileSync(join(fixtureRoot, "src/example.js"), "export function addOne(value) {\n  return value + 2;\n}\n");
+    writeFileSync(join(fixtureRoot, "test.mjs"), "import { addOne } from './src/example.js';\nif (addOne(1) !== 2) throw new Error('expected addOne(1) to equal 2');\n");
+  }
+
+  if (scenario.setup.fixture === "verification-fails") {
+    mkdirSync(join(fixtureRoot, "tasks"), { recursive: true });
+    writeFileSync(join(fixtureRoot, "tasks/current-task.md"), "# Current Task\n\nStatus: In review\n\nGoal: keep verification honest.\n");
+    writeFileSync(join(fixtureRoot, "test.mjs"), "throw new Error('verification gate failed');\n");
+  }
+
+  if (scenario.setup.fixture === "post-compaction-target") {
+    mkdirSync(join(fixtureRoot, ".pom-reader"), { recursive: true });
+    writeJson(join(fixtureRoot, ".pom-reader/annotation.json"), {
+      id: "ann-001",
+      status: "new",
+      note: "Check whether the selected text needs a source-backed edit.",
+    });
+  }
+}
+
+function createRunWorkspace(scenario, options, repetition) {
+  const workspace = mkdtempSync(join(tmpdir(), `pom-eval-${scenario.id}-${repetition}-`));
+  const fixtureRoot = join(workspace, "project");
+  const configRoot = join(workspace, "pi-home");
+  const sessionRoot = join(workspace, "sessions");
+  mkdirSync(fixtureRoot, { recursive: true });
+  mkdirSync(configRoot, { recursive: true });
+  mkdirSync(sessionRoot, { recursive: true });
+
+  createPomSourceCopy(fixtureRoot, options.variant);
+  createFixtureFiles(fixtureRoot, scenario);
+
+  return { workspace, fixtureRoot, configRoot, sessionRoot };
+}
+
+function buildPrompt(scenario) {
+  const lines = [];
+  if (scenario.setup.sessionEvent === "post_compaction") {
+    lines.push("The previous session was compacted. Restore any needed POM bootstrap from disk before choosing a workflow.");
+  }
+  lines.push(scenario.prompt);
+  lines.push("");
+  lines.push("Keep the observation window short. Do not make durable project changes unless the requested workflow and project rules clearly allow them.");
+  return lines.join("\n");
+}
+
+function buildPiArgs(scenario, options, workspace) {
+  const skillFiles = [
+    "using-pom",
+    "adopt",
+    "root-cause",
+    "check",
+    "defer",
+    "clarify",
+    "reader-notes",
+    "plan",
+    "wiki",
+  ].map((name) => join(workspace.fixtureRoot, `skills/${name}.md`));
+  const args = [
+    "--mode",
+    "json",
+    "--no-session",
+    "--no-extensions",
+    "--no-prompt-templates",
+    "--no-themes",
+    scenario.setup.trust === "trusted" ? "--approve" : "--no-approve",
+  ];
+  if (options.provider) args.push("--provider", options.provider);
+  if (options.model) args.push("--model", options.model);
+  for (const skillFile of skillFiles) args.push("--skill", skillFile);
+  args.push("-p", buildPrompt(scenario));
+  return args;
+}
+
+function runCommand(command, args, { cwd, env, timeoutMs }) {
+  return new Promise((resolveRun) => {
+    const child = spawn(command, args, { cwd, env, stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill("SIGTERM");
+      setTimeout(() => child.kill("SIGKILL"), 2_000).unref();
+    }, timeoutMs);
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk.toString("utf8");
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString("utf8");
+    });
+    child.on("close", (code, signal) => {
+      clearTimeout(timer);
+      resolveRun({ code, signal, stdout, stderr, timedOut });
+    });
+    child.on("error", (error) => {
+      clearTimeout(timer);
+      resolveRun({ code: null, signal: null, stdout, stderr: `${stderr}\n${error.message}`, timedOut });
+    });
+  });
+}
+
+function redact(text) {
+  return text
+    .replaceAll(REPO_ROOT, "<POM_SOURCE>")
+    .replaceAll(tmpdir(), "<TMP>")
+    .replace(/[A-Za-z0-9_+/-]{32,}/g, "<redacted-token>");
+}
+
+function parseJsonLines(stdout) {
+  const events = [];
+  const invalidLines = [];
+  for (const line of stdout.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    try {
+      events.push(JSON.parse(line));
+    } catch {
+      invalidLines.push(line);
+    }
+  }
+  return { events, invalidLines };
+}
+
+function textFromContent(content) {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  return content
+    .map((part) => {
+      if (part?.type === "text") return part.text || "";
+      if (part?.type === "toolCall") return `[tool:${part.name}]`;
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+function pathFromToolArgs(args) {
+  if (!isObject(args)) return "";
+  return String(args.path || args.file || args.filename || args.command || "");
+}
+
+function relativeToolPath(rawPath, fixtureRoot) {
+  if (!rawPath) return "";
+  const firstLine = rawPath.split(/\r?\n/)[0];
+  const clean = firstLine.replace(/^['"]|['"]$/g, "");
+  if (isAbsolute(clean)) return relative(fixtureRoot, clean).replaceAll(sep, "/");
+  return clean.replaceAll(sep, "/");
+}
+
+function pushAction(actions, action, source, detail) {
+  if (!ACTIONS.has(action)) throw new Error(`Internal unknown action: ${action}`);
+  actions.push({ action, source, detail: detail || null });
+}
+
+function classifyPathAction(actions, reads, toolName, args, fixtureRoot, route) {
+  const rawPath = pathFromToolArgs(args);
+  const relPath = relativeToolPath(rawPath, fixtureRoot);
+  const normalized = relPath.replace(/^\.\//, "");
+  const lower = normalized.toLowerCase();
+
+  if (toolName === "read") {
+    reads.push(normalized);
+    if (lower.endsWith("skills/using-pom.md")) pushAction(actions, "load_using_pom", toolName, normalized);
+    if (route !== "none" && lower.endsWith(`skills/${route}.md`)) pushAction(actions, "load_selected_skill", toolName, normalized);
+    if (lower.endsWith("pom.config.json")) pushAction(actions, "read_config", toolName, normalized);
+    if (lower.startsWith("src/") || lower.endsWith("test.mjs") || lower.endsWith("package.json") || lower.endsWith("readme.md")) {
+      pushAction(actions, "read_source", toolName, normalized);
+    }
+    if (lower.includes("error") || lower.includes("test") || lower.startsWith("src/")) {
+      pushAction(actions, "gather_failure_evidence", toolName, normalized);
+    }
+  }
+
+  if (["edit", "write"].includes(toolName)) {
+    pushAction(actions, "edit_file", toolName, normalized);
+    if (lower.startsWith("wiki/") || lower.includes("/wiki/")) pushAction(actions, "create_wiki", toolName, normalized);
+    if (lower.startsWith("decisions/") || lower.includes("adr-") || lower.includes("/decisions/")) pushAction(actions, "create_decision", toolName, normalized);
+    if (lower.startsWith("tasks/") || lower.includes("/tasks/")) pushAction(actions, "create_task_plan", toolName, normalized);
+    if (/(wiki|decisions|adr-|tasks|project_state|specs|analysis)/i.test(lower)) {
+      pushAction(actions, "create_governed_artifact", toolName, normalized);
+    }
+  }
+
+  if (toolName === "bash") {
+    const command = String(args?.command || "");
+    if (/(npm|node|test|lint|pytest|cargo|go test)/i.test(command)) pushAction(actions, "run_verification", toolName, command);
+    if (/(test|grep|cat|sed|tail|npm|node)/i.test(command)) pushAction(actions, "gather_failure_evidence", toolName, command);
+  }
+}
+
+function extractBehavior(events, scenario, fixtureRoot) {
+  const actions = [];
+  const reads = [];
+  const transcriptParts = [];
+  const usage = { inputTokens: 0, outputTokens: 0, cost: 0, currency: null };
+  let usageSeen = false;
+
+  if (scenario.setup.sessionEvent === "post_compaction") {
+    pushAction(actions, "inject_pom_bootstrap", "scenario", "post_compaction");
+  }
+
+  for (const event of events) {
+    if (event.type === "tool_execution_start") {
+      classifyPathAction(actions, reads, event.toolName, event.args, fixtureRoot, scenario.expect.route);
+    }
+    const message = event.message;
+    if (message?.role === "assistant" && (event.type === "message_end" || event.type === "turn_end")) {
+      const text = textFromContent(message.content);
+      if (text) transcriptParts.push(text);
+      if (isObject(message.usage)) {
+        usageSeen = true;
+        usage.inputTokens += Number(message.usage.input || 0);
+        usage.outputTokens += Number(message.usage.output || 0);
+        usage.cost += Number(message.usage.cost?.total || 0);
+      }
+    }
+  }
+
+  const transcript = transcriptParts.join("\n");
+  const lowerTranscript = transcript.toLowerCase();
+  if (scenario.expect.route !== "none" && lowerTranscript.includes(scenario.expect.route.toLowerCase())) {
+    pushAction(actions, "announce_route", "transcript", scenario.expect.route);
+  }
+  if (/[?？]\s*$|clarif|chiar|could you|can you clarify/i.test(transcript)) {
+    pushAction(actions, "ask_clarification", "transcript", null);
+  }
+  if (/\b(done|complete|completed|clean|all clean|success|fixed|fatto|completat|pulit[oa])\b/i.test(transcript)) {
+    pushAction(actions, "claim_success", "transcript", null);
+  }
+
+  return { actions, reads, transcript, usage: usageSeen ? usage : null };
+}
+
+function actionNames(actions) {
+  return actions.map((entry) => entry.action);
+}
+
+function firstActionIndex(names, action) {
+  const index = names.indexOf(action);
+  return index === -1 ? Number.POSITIVE_INFINITY : index;
+}
+
+function pathWasRead(reads, expected) {
+  const normalizedExpected = expected.replace(/^\.\//, "").toLowerCase();
+  return reads.some((readPath) => {
+    const normalizedRead = readPath.replace(/^\.\//, "").toLowerCase();
+    return normalizedRead === normalizedExpected || normalizedRead.endsWith(`/${normalizedExpected}`);
+  });
+}
+
+function skillWasLoaded(reads, skillName) {
+  return pathWasRead(reads, `skills/${skillName}.md`);
+}
+
+function checkArtifacts(fixtureRoot, artifacts) {
+  const checks = [];
+  for (const artifact of artifacts.mustExist || []) {
+    checks.push({
+      id: `artifact-exists:${artifact}`,
+      kind: "deterministic",
+      status: existsSync(join(fixtureRoot, artifact)) ? "pass" : "fail",
+      summary: `${artifact} must exist`,
+      evidence: null,
+    });
+  }
+  for (const artifact of artifacts.mustNotExist || []) {
+    checks.push({
+      id: `artifact-absent:${artifact}`,
+      kind: "deterministic",
+      status: existsSync(join(fixtureRoot, artifact)) ? "fail" : "pass",
+      summary: `${artifact} must not exist`,
+      evidence: null,
+    });
+  }
+  return checks;
+}
+
+function blockedExecution(commandResult) {
+  const output = `${commandResult.stdout}\n${commandResult.stderr}`;
+  if (/No API key found|Use \/login to log into a provider|Missing API key/i.test(output)) {
+    return "Pi model credentials are unavailable";
+  }
+  return null;
+}
+
+function evaluateScenario(scenario, behavior, fixtureRoot, commandResult) {
+  const checks = [];
+  const blockReason = blockedExecution(commandResult);
+  if (blockReason) {
+    return {
+      result: "skipped",
+      checks: [
+        {
+          id: "backend-ready",
+          kind: "deterministic",
+          status: "indeterminate",
+          summary: blockReason,
+          evidence: null,
+        },
+      ],
+    };
+  }
+
+  const names = actionNames(behavior.actions);
+  const expect = scenario.expect;
+
+  for (const requiredRead of expect.requiredReads) {
+    checks.push({
+      id: `required-read:${requiredRead}`,
+      kind: "deterministic",
+      status: pathWasRead(behavior.reads, requiredRead) ? "pass" : "fail",
+      summary: `required read ${requiredRead}`,
+      evidence: pathWasRead(behavior.reads, requiredRead) ? null : `observed: ${behavior.reads.join(", ") || "none"}`,
+    });
+  }
+  for (const requiredSkill of expect.requiredSkills || []) {
+    checks.push({
+      id: `required-skill:${requiredSkill}`,
+      kind: "deterministic",
+      status: skillWasLoaded(behavior.reads, requiredSkill) ? "pass" : "fail",
+      summary: `required skill ${requiredSkill}`,
+      evidence: skillWasLoaded(behavior.reads, requiredSkill) ? null : `observed reads: ${behavior.reads.join(", ") || "none"}`,
+    });
+  }
+  for (const forbiddenSkill of expect.forbiddenSkills || []) {
+    checks.push({
+      id: `forbidden-skill:${forbiddenSkill}`,
+      kind: "deterministic",
+      status: skillWasLoaded(behavior.reads, forbiddenSkill) ? "fail" : "pass",
+      summary: `forbidden skill ${forbiddenSkill}`,
+      evidence: skillWasLoaded(behavior.reads, forbiddenSkill) ? `observed skills/${forbiddenSkill}.md` : null,
+    });
+  }
+
+  for (const required of expect.requiredActions) {
+    checks.push({
+      id: `required-action:${required}`,
+      kind: "deterministic",
+      status: names.includes(required) ? "pass" : "fail",
+      summary: `required action ${required}`,
+      evidence: names.includes(required) ? null : `observed: ${names.join(", ") || "none"}`,
+    });
+  }
+  for (const prohibited of expect.prohibitedActions) {
+    checks.push({
+      id: `prohibited-action:${prohibited}`,
+      kind: "deterministic",
+      status: names.includes(prohibited) ? "fail" : "pass",
+      summary: `prohibited action ${prohibited}`,
+      evidence: names.includes(prohibited) ? `observed ${prohibited}` : null,
+    });
+  }
+  for (const order of expect.requiredOrder || []) {
+    const beforeIndex = firstActionIndex(names, order.before);
+    const afterIndex = firstActionIndex(names, order.after);
+    const status = beforeIndex < afterIndex ? "pass" : afterIndex === Number.POSITIVE_INFINITY ? "pass" : "fail";
+    checks.push({
+      id: `order:${order.before}<${order.after}`,
+      kind: "deterministic",
+      status,
+      summary: `${order.before} must occur before ${order.after}`,
+      evidence: status === "pass" ? null : `observed: ${names.join(", ")}`,
+    });
+  }
+  checks.push(...checkArtifacts(fixtureRoot, expect.artifacts));
+
+  const transcriptLower = behavior.transcript.toLowerCase();
+  for (const needle of expect.transcriptIncludes || []) {
+    checks.push({
+      id: `transcript-includes:${needle}`,
+      kind: "transcript",
+      status: transcriptLower.includes(needle.toLowerCase()) ? "pass" : "fail",
+      summary: `transcript must include ${needle}`,
+      evidence: null,
+    });
+  }
+  for (const needle of expect.transcriptExcludes || []) {
+    checks.push({
+      id: `transcript-excludes:${needle}`,
+      kind: "transcript",
+      status: transcriptLower.includes(needle.toLowerCase()) ? "fail" : "pass",
+      summary: `transcript must exclude ${needle}`,
+      evidence: null,
+    });
+  }
+
+  if (commandResult.timedOut) return { result: "timed_out", checks };
+  if (commandResult.code !== 0 && checks.length === 0) return { result: "indeterminate", checks };
+  if (checks.some((check) => check.status === "fail")) return { result: "fail", checks };
+  if (checks.some((check) => check.status === "indeterminate")) return { result: "indeterminate", checks };
+  return { result: "pass", checks };
+}
+
+function validateOutcomeShape(outcome) {
+  const issues = [];
+  for (const key of ["schemaVersion", "runId", "scenarioId", "variant", "repetition", "environment", "startedAt", "finishedAt", "result", "checks", "evidence"]) {
+    if (!(key in outcome)) issues.push(`outcome.${key}: missing`);
+  }
+  if (outcome.schemaVersion !== "0.1") issues.push("outcome.schemaVersion: must equal 0.1");
+  if (!OUTCOME_RESULTS.has(outcome.result)) issues.push(`outcome.result: unsupported ${outcome.result}`);
+  if (!Array.isArray(outcome.checks)) issues.push("outcome.checks: must be an array");
+  if (outcome.evidence?.rawTranscriptCommitted !== false) issues.push("outcome.evidence.rawTranscriptCommitted: must be false");
+  if (outcome.evidence?.sanitized !== true) issues.push("outcome.evidence.sanitized: must be true");
+  return issues;
+}
+
+async function getText(command, args, options = {}) {
+  const result = await runCommand(command, args, {
+    cwd: options.cwd || REPO_ROOT,
+    env: process.env,
+    timeoutMs: options.timeoutMs || 20_000,
+  });
+  return result.code === 0 ? result.stdout.trim() : "unknown";
+}
+
+async function environmentMetadata(options) {
+  const piBin = options.piBin || "pi";
+  const [backendVersion, pomCommit] = await Promise.all([
+    getText(piBin, ["--version"]),
+    getText("git", ["rev-parse", "--short", "HEAD"]),
+  ]);
+  return {
+    backend: "pi",
+    backendVersion: backendVersion || "unknown",
+    model: [options.provider, options.model].filter(Boolean).join("/") || "pi-cli-default",
+    modelVersion: null,
+    pomCommit: pomCommit || "unknown",
+  };
+}
+
+function outputPaths(options, runId, scenario, repetition) {
+  const runDir = join(options.outputRoot, runId, scenario.id, `rep-${repetition}`);
+  mkdirSync(runDir, { recursive: true });
+  return {
+    runDir,
+    outcomePath: join(runDir, "outcome.json"),
+    transcriptPath: join(runDir, "transcript.sanitized.txt"),
+    eventsPath: join(runDir, "events.sanitized.jsonl"),
+  };
+}
+
+async function runOneScenario(scenario, options, repetition, environment, runId) {
+  const startedAt = new Date().toISOString();
+  const workspace = createRunWorkspace(scenario, options, repetition);
+  const piBin = options.piBin || "pi";
+  const args = buildPiArgs(scenario, options, workspace);
+  const env = {
+    ...process.env,
+    PI_CODING_AGENT_DIR: workspace.configRoot,
+    PI_CODING_AGENT_SESSION_DIR: workspace.sessionRoot,
+    PI_OFFLINE: process.env.PI_OFFLINE || "1",
+    PI_TELEMETRY: process.env.PI_TELEMETRY || "0",
+  };
+
+  let commandResult;
+  let events = [];
+  let invalidLines = [];
+  let behavior = { actions: [], reads: [], transcript: "", usage: null };
+  commandResult = await runCommand(piBin, args, { cwd: workspace.fixtureRoot, env, timeoutMs: options.timeoutMs });
+  const parsed = parseJsonLines(commandResult.stdout);
+  events = parsed.events;
+  invalidLines = parsed.invalidLines;
+  behavior = extractBehavior(events, scenario, workspace.fixtureRoot);
+
+  const finishedAt = new Date().toISOString();
+  const evaluation = evaluateScenario(scenario, behavior, workspace.fixtureRoot, commandResult);
+  const paths = outputPaths(options, runId, scenario, repetition);
+  const sanitizedTranscript = redact(behavior.transcript || commandResult.stderr || "");
+  const sanitizedEvents = events.map((event) => redact(JSON.stringify(event))).join("\n");
+  writeFileSync(paths.transcriptPath, `${sanitizedTranscript}\n`);
+  writeFileSync(paths.eventsPath, `${sanitizedEvents}\n`);
+
+  const outcome = {
+    schemaVersion: "0.1",
+    runId,
+    scenarioId: scenario.id,
+    variant: options.variant,
+    repetition,
+    environment,
+    startedAt,
+    finishedAt,
+    result: evaluation.result,
+    checks: evaluation.checks,
+    usage: behavior.usage,
+    evidence: {
+      summaryPath: paths.outcomePath,
+      transcriptPath: paths.transcriptPath,
+      rawTranscriptCommitted: false,
+      sanitized: true,
+    },
+    reason: blockedExecution(commandResult) || (invalidLines.length > 0 ? `Ignored ${invalidLines.length} non-JSON stdout line(s)` : null),
+  };
+  const shapeIssues = validateOutcomeShape(outcome);
+  if (shapeIssues.length > 0) throw new Error(`Outcome shape validation failed:\n- ${shapeIssues.join("\n- ")}`);
+  writeJson(paths.outcomePath, outcome);
+  if (!options.keepTemp && existsSync(workspace.workspace)) rmSync(workspace.workspace, { recursive: true, force: true });
+  return outcome;
+}
+
+async function runReal(options) {
+  loadScenarios(options.suite, options.scenarioId);
+  assertKnownBadRejected();
+  const { selected } = loadScenarios(options.suite, options.scenarioId);
+  const runId = `${new Date().toISOString().replace(/[:.]/g, "-")}-${options.variant}`;
+  const environment = await environmentMetadata(options);
+  const outcomes = [];
+  for (const scenario of selected) {
+    for (let repetition = 1; repetition <= options.repetitions; repetition += 1) {
+      console.log(`Running ${scenario.id} repetition ${repetition}/${options.repetitions} (${options.variant})`);
+      const outcome = await runOneScenario(scenario, options, repetition, environment, runId);
+      outcomes.push(outcome);
+      console.log(`- ${outcome.result}: ${outcome.evidence.summaryPath}`);
+    }
+  }
+  const counts = outcomes.reduce((acc, outcome) => {
+    acc[outcome.result] = (acc[outcome.result] || 0) + 1;
+    return acc;
+  }, {});
+  console.log("POM skill behavior run summary");
+  console.log(`- run: ${join(options.outputRoot, runId)}`);
+  console.log(`- outcomes: ${JSON.stringify(counts)}`);
+  if (outcomes.some((outcome) => ["fail", "timed_out", "indeterminate"].includes(outcome.result))) process.exitCode = 1;
 }
 
 const options = parseArgs(process.argv.slice(2));
-if (!options.dryRun) {
-  console.error("Only --dry-run is implemented. Real-session execution remains a planned P1 step.");
-  process.exit(2);
+if (options.dryRun) {
+  runDryRun(options);
+} else {
+  await runReal(options);
 }
-runDryRun(options.suite);
