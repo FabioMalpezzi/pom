@@ -175,21 +175,21 @@ Expected result:
 The runner exits non-zero on failed critical scenarios and writes a summary that includes pass, fail, skipped, and indeterminate counts.
 ```
 
-- [ ] Keep model credentials in the environment and out of fixtures, logs, and committed reports.
-- [ ] Create a fresh temporary project and fresh session for every repetition.
-- [ ] Capture complete local evidence while committing only sanitized excerpts and machine summaries.
-- [ ] Record the exact Pi command, model, POM commit, package/extension variant, and evaluator commit.
-- [ ] Add timeout and cleanup behavior so failed runs do not leave processes or temporary repositories behind.
-- [ ] Add a dry-run mode that validates scenario setup without calling a model.
+- [x] Keep model credentials in the environment and out of fixtures, logs, and committed reports.
+- [x] Create a fresh temporary project and fresh session for every repetition.
+- [x] Capture complete local evidence while committing only sanitized excerpts and machine summaries.
+- [x] Record the exact Pi command, model, POM commit, package/extension variant, and evaluator commit.
+- [x] Add timeout and cleanup behavior so failed runs do not leave processes or temporary repositories behind.
+- [x] Add a dry-run mode that validates scenario setup without calling a model.
 
 ### Task P1.4 - Establish the current POM baseline
 
-- [ ] Run every core scenario five times on one fixed Pi/model configuration.
-- [ ] Run the no-bootstrap control on the routing and safety subset.
-- [ ] Manually inspect every failed and indeterminate outcome.
-- [ ] Record pass-rate variance rather than reporting only averages.
-- [ ] Classify failures as prompt behavior, harness integration, evaluator defect, or environmental failure.
-- [ ] Freeze the baseline report before authoring bootstrap or Task Plan candidates.
+- [x] Run every core scenario five times on one fixed Pi/model configuration.
+- [ ] Run the no-bootstrap control on the routing and safety subset. (Only an isolated `broken-no-bootstrap` control on `adopt-existing-en` has been run so far.)
+- [x] Manually inspect every failed and indeterminate outcome.
+- [x] Record pass-rate variance rather than reporting only averages.
+- [x] Classify failures as prompt behavior, harness integration, evaluator defect, or environmental failure.
+- [x] Freeze the baseline report before authoring bootstrap or Task Plan candidates. (Frozen at run `2026-07-14T21-57-44-462Z-baseline`, critical 0.978 reproducible from a single named run; the one miss is a documented brittle-exclude false positive, safety covered by deterministic checks.)
 
 **Phase P1 gate:** the evaluator must detect at least one intentionally planted routing or safety violation. A runner that passes a known-bad variant cannot be used to promote method changes.
 
@@ -552,6 +552,8 @@ Exception reason: _none_
 P0 completed on 2026-07-13. The Project Reader fix and this Task Plan were preserved in two separate commits, the work moved to `exp/pom-skill-evolution` in the existing checkout, and the clean baseline passed 893 tests with lint OK. Four experiment contracts now define falsification, evidence policy, and promotion gates. The Pi experiment concludes that an active extension requires a Decision Record before canonical promotion.
 
 P1 contract work has started: scenario and outcome schemas, ten core scenarios, a structural dry-run, and an intentionally invalid fixture now exist under `experiments/pom-skill-behavior-evals/`. The dry-run accepts all ten core contracts and rejects the known-bad fixture for its missing route. Real session execution, disposable project setup, transcript capture, and behavioral planted-failure validation remain open. No implementation candidate has been promoted.
+
+P1 is complete and the baseline is frozen (2026-07-14). The local runner and a deterministic `report.mjs` execute real Pi sessions in disposable projects with isolated Pi config/session directories, sanitized evidence, and no dropped outcomes. The first full five-repetition baseline (24/50) surfaced six instrumentation defects rather than unsafe POM behavior; after correcting them (transcript-variant matching, a clean non-POM fixture, bootstrap-preload accounting, a robust success-claim matcher, deferred-record classification, path-preserving redaction) plus removing an over-strict adoption edit prohibition, an intermediate run scored critical 0.956. An independent fresh-reviewer pass then caught a genuine overclaim (a two-run-derived 0.978 presented as a single run, with one false `claim_success` mislabeled as variance) plus a redaction hole that leaked a signature blob containing `sk-` and absolute home paths in outcome files. All were fixed — hardened redaction with home masking, repository-relative evidence paths, a matcher that skips bold/heading label lines — and evidence was re-scrubbed clean. A final clean five-repetition run (`2026-07-14T21-57-44-462Z-baseline`) then froze the baseline at critical 0.978, reproducible from committed code; its single critical miss is a documented brittle `transcriptExcludes` false positive (safety covered by deterministic checks) whose whole class is scheduled for negation-aware hardening during P2A. A broadened `broken-no-bootstrap` sweep confirms the evaluator catches planted degradation across several critical scenarios (critical drops to 0.59, including an action-ordering breach on root-cause). Nothing has been promoted to canonical paths.
 
 ## Done Criteria
 

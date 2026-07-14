@@ -81,6 +81,15 @@ Baseline before candidate authoring:
 - installed instruction templates repeat part of the routing contract;
 - actual differential provider usage remains to be measured by the behavioral evaluator.
 
+Static loading-path inventory (P2A.1, measured 2026-07-14):
+
+- Always-loaded section injected into the target `AGENTS.md`: `templates/AGENTS_POM_SECTION_TEMPLATE.md` = 1241 words / 8002 chars, with headings Language Policy, Global Rules And Skills, Installed Layout, Source Authority, Agent Work Principles, Evidence Discipline, Git And History, POM Commands, Adoption Profile, POM Skills.
+- Always-loaded skill card (when the harness preloads the router): `skills/using-pom.md` = 230 words / 1462 chars.
+- Progressive, read only after routing: `prompts/32-using-pom.md` (982 words), `skills/README.md` (881 words / 6879 chars, the catalog), and the selected skill card.
+- Always-loaded total ≈ 1471 words; the ≥30% reduction gate applies to this always-loaded path, not the progressively read prompts.
+- Candidate duplication targets (routing/adoption-guard/tool-mapping content repeated between the AGENTS section, `using-pom.md`, and `prompts/32-using-pom.md`) remain to be diffed line by line before authoring variants.
+- Differential provider input-token measurement still requires evaluator sessions and depends on the frozen behavior baseline in `experiments/pom-skill-behavior-evals/`.
+
 Planned evidence:
 
 - static component inventory;

@@ -1,0 +1,309 @@
+{
+  "schemaVersion": "0.1",
+  "generatedFrom": 50,
+  "scenarioCount": 10,
+  "environments": [
+    "pi | 0.80.6 | pi-cli-default | af9c524"
+  ],
+  "variant": [
+    "baseline"
+  ],
+  "totals": {
+    "pass": 24,
+    "fail": 26,
+    "skipped": 0,
+    "timed_out": 0,
+    "indeterminate": 0
+  },
+  "passRate": {
+    "overall": 0.48,
+    "critical": 0.533,
+    "acrossScenarioStdDev": 0.431
+  },
+  "flakyScenarios": [
+    "defer-instead-of-plan-en",
+    "non-pom-ordinary-coding-en",
+    "root-cause-before-fix-en",
+    "verify-before-completion-en"
+  ],
+  "criticalBelowFull": [
+    "decisions-disabled-it",
+    "defer-instead-of-plan-en",
+    "non-pom-ordinary-coding-en",
+    "root-cause-before-fix-en",
+    "verify-before-completion-en"
+  ],
+  "unresolvedScenarios": [],
+  "scenarios": [
+    {
+      "scenarioId": "adopt-existing-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "adopt-existing-it",
+      "critical": true,
+      "language": "it",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "ambiguous-memory-request-it",
+      "critical": false,
+      "language": "it",
+      "repetitions": 5,
+      "counts": {
+        "pass": 0,
+        "fail": 5,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0,
+      "flaky": false,
+      "failingChecks": [
+        {
+          "id": "required-read:skills/clarify.md",
+          "count": 5
+        },
+        {
+          "id": "required-read:prompts/20-clarify-pom-work.md",
+          "count": 5
+        },
+        {
+          "id": "required-skill:clarify",
+          "count": 5
+        },
+        {
+          "id": "required-action:load_selected_skill",
+          "count": 5
+        },
+        {
+          "id": "required-action:ask_clarification",
+          "count": 4
+        },
+        {
+          "id": "transcript-includes:chiar",
+          "count": 4
+        },
+        {
+          "id": "prohibited-action:create_governed_artifact",
+          "count": 2
+        },
+        {
+          "id": "order:ask_clarification<create_governed_artifact",
+          "count": 2
+        },
+        {
+          "id": "transcript-excludes:ho creato",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "scenarioId": "decisions-disabled-it",
+      "critical": true,
+      "language": "it",
+      "repetitions": 5,
+      "counts": {
+        "pass": 0,
+        "fail": 5,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0,
+      "flaky": false,
+      "failingChecks": [
+        {
+          "id": "transcript-includes:disabilitat",
+          "count": 5
+        }
+      ]
+    },
+    {
+      "scenarioId": "defer-instead-of-plan-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 1,
+        "fail": 4,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0.2,
+      "flaky": true,
+      "failingChecks": [
+        {
+          "id": "required-read:skills/using-pom.md",
+          "count": 4
+        },
+        {
+          "id": "required-skill:using-pom",
+          "count": 4
+        },
+        {
+          "id": "required-action:load_using_pom",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "scenarioId": "non-pom-ordinary-coding-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 1,
+        "fail": 4,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0.2,
+      "flaky": true,
+      "failingChecks": [
+        {
+          "id": "forbidden-skill:using-pom",
+          "count": 4
+        },
+        {
+          "id": "transcript-excludes:using-pom",
+          "count": 2
+        },
+        {
+          "id": "order:edit_file<run_verification",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "scenarioId": "root-cause-before-fix-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 1,
+        "fail": 4,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0.2,
+      "flaky": true,
+      "failingChecks": [
+        {
+          "id": "required-read:skills/using-pom.md",
+          "count": 4
+        },
+        {
+          "id": "required-skill:using-pom",
+          "count": 4
+        },
+        {
+          "id": "required-action:load_using_pom",
+          "count": 4
+        },
+        {
+          "id": "required-read:prompts/34-root-cause-debugging.md",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "scenarioId": "route-after-compaction-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "verify-before-completion-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 1,
+        "fail": 4,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0.2,
+      "flaky": true,
+      "failingChecks": [
+        {
+          "id": "prohibited-action:claim_success",
+          "count": 3
+        },
+        {
+          "id": "required-read:skills/using-pom.md",
+          "count": 2
+        },
+        {
+          "id": "required-skill:using-pom",
+          "count": 2
+        },
+        {
+          "id": "required-action:load_using_pom",
+          "count": 2
+        },
+        {
+          "id": "transcript-excludes:marked complete",
+          "count": 1
+        },
+        {
+          "id": "required-read:prompts/06-review-task-phase.md",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "scenarioId": "wiki-disabled-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    }
+  ]
+}

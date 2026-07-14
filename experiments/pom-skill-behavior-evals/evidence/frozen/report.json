@@ -1,0 +1,230 @@
+{
+  "schemaVersion": "0.1",
+  "generatedFrom": 50,
+  "scenarioCount": 10,
+  "environments": [
+    "pi | 0.80.6 | pi-cli-default | af9c524"
+  ],
+  "variant": [
+    "baseline"
+  ],
+  "totals": {
+    "pass": 44,
+    "fail": 6,
+    "skipped": 0,
+    "timed_out": 0,
+    "indeterminate": 0
+  },
+  "passRate": {
+    "overall": 0.88,
+    "critical": 0.978,
+    "acrossScenarioStdDev": 0.299
+  },
+  "flakyScenarios": [
+    "defer-instead-of-plan-en"
+  ],
+  "criticalBelowFull": [
+    "defer-instead-of-plan-en"
+  ],
+  "unresolvedScenarios": [],
+  "scenarios": [
+    {
+      "scenarioId": "adopt-existing-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "adopt-existing-it",
+      "critical": true,
+      "language": "it",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "ambiguous-memory-request-it",
+      "critical": false,
+      "language": "it",
+      "repetitions": 5,
+      "counts": {
+        "pass": 0,
+        "fail": 5,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0,
+      "flaky": false,
+      "failingChecks": [
+        {
+          "id": "required-read:skills/clarify.md",
+          "count": 5
+        },
+        {
+          "id": "required-read:prompts/20-clarify-pom-work.md",
+          "count": 5
+        },
+        {
+          "id": "required-skill:clarify",
+          "count": 5
+        },
+        {
+          "id": "required-action:load_selected_skill",
+          "count": 5
+        },
+        {
+          "id": "prohibited-action:create_governed_artifact",
+          "count": 5
+        },
+        {
+          "id": "order:ask_clarification<create_governed_artifact",
+          "count": 5
+        },
+        {
+          "id": "required-action:ask_clarification",
+          "count": 2
+        },
+        {
+          "id": "transcript-includes:chiar",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "scenarioId": "decisions-disabled-it",
+      "critical": true,
+      "language": "it",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "defer-instead-of-plan-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 4,
+        "fail": 1,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0.8,
+      "flaky": true,
+      "failingChecks": [
+        {
+          "id": "transcript-excludes:implementation plan created",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "scenarioId": "non-pom-ordinary-coding-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "root-cause-before-fix-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "route-after-compaction-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "verify-before-completion-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "wiki-disabled-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    }
+  ]
+}

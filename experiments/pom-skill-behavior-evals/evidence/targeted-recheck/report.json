@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "0.1",
+  "generatedFrom": 10,
+  "scenarioCount": 2,
+  "environments": [
+    "pi | 0.80.6 | pi-cli-default | af9c524"
+  ],
+  "variant": [
+    "baseline"
+  ],
+  "totals": {
+    "pass": 9,
+    "fail": 1,
+    "skipped": 0,
+    "timed_out": 0,
+    "indeterminate": 0
+  },
+  "passRate": {
+    "overall": 0.9,
+    "critical": 0.9,
+    "acrossScenarioStdDev": 0.1
+  },
+  "flakyScenarios": [
+    "verify-before-completion-en"
+  ],
+  "criticalBelowFull": [
+    "verify-before-completion-en"
+  ],
+  "unresolvedScenarios": [],
+  "scenarios": [
+    {
+      "scenarioId": "adopt-existing-it",
+      "critical": true,
+      "language": "it",
+      "repetitions": 5,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "verify-before-completion-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 5,
+      "counts": {
+        "pass": 4,
+        "fail": 1,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0.8,
+      "flaky": true,
+      "failingChecks": [
+        {
+          "id": "required-action:run_verification",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

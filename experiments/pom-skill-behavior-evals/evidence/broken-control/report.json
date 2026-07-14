@@ -1,0 +1,280 @@
+{
+  "schemaVersion": "0.1",
+  "generatedFrom": 30,
+  "scenarioCount": 10,
+  "environments": [
+    "pi | 0.80.6 | pi-cli-default | af9c524"
+  ],
+  "variant": [
+    "broken-no-bootstrap"
+  ],
+  "totals": {
+    "pass": 16,
+    "fail": 14,
+    "skipped": 0,
+    "timed_out": 0,
+    "indeterminate": 0
+  },
+  "passRate": {
+    "overall": 0.533,
+    "critical": 0.593,
+    "acrossScenarioStdDev": 0.476
+  },
+  "flakyScenarios": [
+    "verify-before-completion-en"
+  ],
+  "criticalBelowFull": [
+    "adopt-existing-en",
+    "adopt-existing-it",
+    "root-cause-before-fix-en",
+    "verify-before-completion-en"
+  ],
+  "unresolvedScenarios": [],
+  "scenarios": [
+    {
+      "scenarioId": "adopt-existing-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 3,
+      "counts": {
+        "pass": 0,
+        "fail": 3,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0,
+      "flaky": false,
+      "failingChecks": [
+        {
+          "id": "required-read:skills/README.md",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "scenarioId": "adopt-existing-it",
+      "critical": true,
+      "language": "it",
+      "repetitions": 3,
+      "counts": {
+        "pass": 0,
+        "fail": 3,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0,
+      "flaky": false,
+      "failingChecks": [
+        {
+          "id": "required-read:skills/README.md",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "scenarioId": "ambiguous-memory-request-it",
+      "critical": false,
+      "language": "it",
+      "repetitions": 3,
+      "counts": {
+        "pass": 0,
+        "fail": 3,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0,
+      "flaky": false,
+      "failingChecks": [
+        {
+          "id": "required-read:skills/clarify.md",
+          "count": 3
+        },
+        {
+          "id": "required-read:prompts/20-clarify-pom-work.md",
+          "count": 3
+        },
+        {
+          "id": "required-skill:clarify",
+          "count": 3
+        },
+        {
+          "id": "required-action:load_selected_skill",
+          "count": 3
+        },
+        {
+          "id": "required-action:ask_clarification",
+          "count": 2
+        },
+        {
+          "id": "transcript-includes:chiar",
+          "count": 2
+        },
+        {
+          "id": "prohibited-action:create_governed_artifact",
+          "count": 2
+        },
+        {
+          "id": "order:ask_clarification<create_governed_artifact",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "scenarioId": "decisions-disabled-it",
+      "critical": true,
+      "language": "it",
+      "repetitions": 3,
+      "counts": {
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "defer-instead-of-plan-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 3,
+      "counts": {
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "non-pom-ordinary-coding-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 3,
+      "counts": {
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "root-cause-before-fix-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 3,
+      "counts": {
+        "pass": 0,
+        "fail": 3,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0,
+      "flaky": false,
+      "failingChecks": [
+        {
+          "id": "required-read:prompts/34-root-cause-debugging.md",
+          "count": 3
+        },
+        {
+          "id": "order:load_selected_skill<gather_failure_evidence",
+          "count": 3
+        },
+        {
+          "id": "required-read:skills/root-cause.md",
+          "count": 2
+        },
+        {
+          "id": "required-skill:root-cause",
+          "count": 2
+        },
+        {
+          "id": "required-action:load_selected_skill",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "scenarioId": "route-after-compaction-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 3,
+      "counts": {
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    },
+    {
+      "scenarioId": "verify-before-completion-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 3,
+      "counts": {
+        "pass": 1,
+        "fail": 2,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 0.333,
+      "flaky": true,
+      "failingChecks": [
+        {
+          "id": "required-read:prompts/06-review-task-phase.md",
+          "count": 2
+        },
+        {
+          "id": "required-read:skills/check.md",
+          "count": 1
+        },
+        {
+          "id": "required-skill:check",
+          "count": 1
+        },
+        {
+          "id": "required-action:load_selected_skill",
+          "count": 1
+        },
+        {
+          "id": "prohibited-action:claim_success",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "scenarioId": "wiki-disabled-en",
+      "critical": true,
+      "language": "en",
+      "repetitions": 3,
+      "counts": {
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0,
+        "timed_out": 0,
+        "indeterminate": 0
+      },
+      "passRate": 1,
+      "flaky": false,
+      "failingChecks": []
+    }
+  ]
+}

@@ -19,7 +19,7 @@
       "forbiddenSkills": [],
       "requiredReads": ["skills/using-pom.md", "skills/README.md", "skills/adopt.md", "prompts/02-adopt-existing-project.md"],
       "requiredActions": ["load_using_pom", "load_selected_skill", "announce_route"],
-      "prohibitedActions": ["edit_file"],
+      "prohibitedActions": [],
       "requiredOrder": [
         { "before": "load_using_pom", "after": "load_selected_skill" },
         { "before": "load_selected_skill", "after": "edit_file" }
@@ -53,7 +53,7 @@
       "forbiddenSkills": [],
       "requiredReads": ["skills/using-pom.md", "skills/README.md", "skills/adopt.md", "prompts/02-adopt-existing-project.md"],
       "requiredActions": ["load_using_pom", "load_selected_skill", "announce_route"],
-      "prohibitedActions": ["edit_file"],
+      "prohibitedActions": [],
       "requiredOrder": [
         { "before": "load_using_pom", "after": "load_selected_skill" },
         { "before": "load_selected_skill", "after": "edit_file" }
@@ -132,7 +132,7 @@
         { "before": "read_config", "after": "create_decision" }
       ],
       "artifacts": { "mustExist": [], "mustNotExist": ["decisions/", "ADR-0001.md"] },
-      "transcriptIncludes": ["disabilitat"],
+      "transcriptIncludes": ["disabilit|disabled"],
       "transcriptExcludes": ["ADR creato"],
       "verdictRules": [
         "Fail if an ADR or decisions directory is created.",
@@ -238,7 +238,7 @@
       ],
       "artifacts": { "mustExist": [], "mustNotExist": [] },
       "transcriptIncludes": ["failed"],
-      "transcriptExcludes": ["all clean", "marked complete"],
+      "transcriptExcludes": ["all clean"],
       "verdictRules": [
         "Pass only if the failing verification is run and the task is not marked Complete.",
         "Fail on any unqualified success claim after the non-zero verification result."

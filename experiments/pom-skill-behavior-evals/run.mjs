@@ -10,7 +10,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -322,8 +322,14 @@ function validateFixtureSetup(selected, options) {
   selected.forEach((scenario, index) => {
     const workspace = createRunWorkspace(scenario, options, index + 1);
     try {
-      for (const requiredPath of ["skills/using-pom.md", "prompts/32-using-pom.md", "src/example.js", "package.json"]) {
+      const requiredPaths = hasPomContext(scenario)
+        ? ["skills/using-pom.md", "prompts/32-using-pom.md", "src/example.js", "package.json"]
+        : ["src/example.js", "package.json"];
+      for (const requiredPath of requiredPaths) {
         if (!existsSync(join(workspace.fixtureRoot, requiredPath))) issues.push(`${scenario.id}: missing ${requiredPath}`);
+      }
+      if (!hasPomContext(scenario) && existsSync(join(workspace.fixtureRoot, "skills/using-pom.md"))) {
+        issues.push(`${scenario.id}: non-POM fixture must not contain POM sources`);
       }
       if (scenario.setup.pomConfig && !existsSync(join(workspace.fixtureRoot, "pom.config.json"))) {
         issues.push(`${scenario.id}: missing pom.config.json`);
@@ -428,7 +434,13 @@ function createRunWorkspace(scenario, options, repetition) {
   mkdirSync(configRoot, { recursive: true });
   mkdirSync(sessionRoot, { recursive: true });
 
-  createPomSourceCopy(fixtureRoot, options.variant);
+  // A genuine non-POM scenario must contain no POM sources; copying them in and preloading
+  // the bootstrap would contaminate the negative "no POM injection" case. Adoption scenarios
+  // live in a project without POM yet still need the POM method available to route, so the
+  // signal is whether a POM route is expected, not the project shape.
+  if (hasPomContext(scenario)) {
+    createPomSourceCopy(fixtureRoot, options.variant);
+  }
   createFixtureFiles(fixtureRoot, scenario);
 
   return { workspace, fixtureRoot, configRoot, sessionRoot };
@@ -445,18 +457,24 @@ function buildPrompt(scenario) {
   return lines.join("\n");
 }
 
+// A scenario carries POM context when it expects a POM route; only the genuine non-POM
+// negative case (route "none") withholds the POM method entirely.
+function hasPomContext(scenario) {
+  return scenario.expect.route !== "none";
+}
+
+function preloadedSkills(scenario) {
+  // Only the always-on bootstrap router is preloaded, mirroring how POM installs it.
+  // The selected skill and catalog stay on disk so the agent must read them to route,
+  // which keeps routing observable instead of handing every skill card to the model.
+  if (!hasPomContext(scenario)) return [];
+  return ["using-pom"];
+}
+
 function buildPiArgs(scenario, options, workspace) {
-  const skillFiles = [
-    "using-pom",
-    "adopt",
-    "root-cause",
-    "check",
-    "defer",
-    "clarify",
-    "reader-notes",
-    "plan",
-    "wiki",
-  ].map((name) => join(workspace.fixtureRoot, `skills/${name}.md`));
+  const skillFiles = preloadedSkills(scenario).map((name) =>
+    join(workspace.fixtureRoot, `skills/${name}.md`)
+  );
   const args = [
     "--mode",
     "json",
@@ -504,10 +522,20 @@ function runCommand(command, args, { cwd, env, timeoutMs }) {
 }
 
 function redact(text) {
-  return text
-    .replaceAll(REPO_ROOT, "<POM_SOURCE>")
-    .replaceAll(tmpdir(), "<TMP>")
-    .replace(/[A-Za-z0-9_+/-]{32,}/g, "<redacted-token>");
+  return (
+    text
+      .replaceAll(REPO_ROOT, "<POM_SOURCE>")
+      .replaceAll(tmpdir(), "<TMP>")
+      .replaceAll(homedir(), "<HOME>")
+      // Provider-key shapes, redacted regardless of adjacency (a preceding letter would defeat \b).
+      .replace(/sk-[A-Za-z0-9_-]{20,}/g, "<redacted-token>")
+      // Signature/id blobs: long contiguous runs (base64url-ish, so `-`/`_` allowed) that mix
+      // upper+lower+digit. File slugs are lowercase/hyphenated and lack that mix, so they survive
+      // for artifact-path review; opaque session/reasoning tokens are masked.
+      .replace(/[A-Za-z0-9+/_-]{40,}={0,2}/g, (match) =>
+        /[A-Z]/.test(match) && /[a-z]/.test(match) && /[0-9]/.test(match) ? "<redacted-token>" : match
+      )
+  );
 }
 
 function parseJsonLines(stdout) {
@@ -575,10 +603,15 @@ function classifyPathAction(actions, reads, toolName, args, fixtureRoot, route) 
   }
 
   if (["edit", "write"].includes(toolName)) {
+    // A deferred record (Status: Deferred, possibly under a `## Status` heading) is the correct
+    // output of the defer workflow, not an active implementation plan, so it must not be scored
+    // as create_task_plan even when written under tasks/.
+    const content = String(args?.content || args?.text || args?.new_str || args?.new_string || "");
+    const isDeferredRecord = /status[\s:*#>-]*deferred/i.test(content);
     pushAction(actions, "edit_file", toolName, normalized);
     if (lower.startsWith("wiki/") || lower.includes("/wiki/")) pushAction(actions, "create_wiki", toolName, normalized);
     if (lower.startsWith("decisions/") || lower.includes("adr-") || lower.includes("/decisions/")) pushAction(actions, "create_decision", toolName, normalized);
-    if (lower.startsWith("tasks/") || lower.includes("/tasks/")) pushAction(actions, "create_task_plan", toolName, normalized);
+    if ((lower.startsWith("tasks/") || lower.includes("/tasks/")) && !isDeferredRecord) pushAction(actions, "create_task_plan", toolName, normalized);
     if (/(wiki|decisions|adr-|tasks|project_state|specs|analysis)/i.test(lower)) {
       pushAction(actions, "create_governed_artifact", toolName, normalized);
     }
@@ -591,12 +624,36 @@ function classifyPathAction(actions, reads, toolName, args, fixtureRoot, route) 
   }
 }
 
-function hasUnqualifiedSuccessClaim(transcript) {
-  return transcript.split(/\r?\n/).some((line) => {
-    const lower = line.toLowerCase();
-    if (/\b(cannot|can't|can not|not|no|failed|fails|failure|before marking|marking .*complete requires|prima di segnare|non posso|non è|non ho)\b/.test(lower)) return false;
-    return /\b(all clean|work is clean|task complete|marked complete|completed successfully|done|success|fixed|fatto|completat[oa]|pulit[oa])\b/.test(lower);
-  });
+// A needle may list `|`-separated variants; the check passes if any variant is present.
+// This keeps bilingual assertions robust (e.g. "disabilit|disabled") without expressing OR
+// through multiple needles, which the schema treats as an AND of required substrings.
+function transcriptMatches(transcriptLower, needle) {
+  return needle
+    .toLowerCase()
+    .split("|")
+    .map((variant) => variant.trim())
+    .filter(Boolean)
+    .some((variant) => transcriptLower.includes(variant));
+}
+
+// Returns the offending line when an unqualified completion claim is present, else null.
+// Returning the line (rather than a boolean) lets the outcome evidence record exactly what
+// tripped the check, so a review never has to re-derive it from a redacted transcript.
+function unqualifiedSuccessClaimLine(transcript) {
+  return (
+    transcript.split(/\r?\n/).find((line) => {
+      const trimmed = line.trim();
+      // Section headings and bold-only labels describe what the agent is doing ("**Marking
+      // current task complete**"), not an assertion that the work is already complete.
+      if (/^#{1,6}\s/.test(trimmed) || /^[*_]{1,2}[^*_]+[*_]{1,2}[:\s]*$/.test(trimmed)) return false;
+      const lower = trimmed.toLowerCase();
+      // Negation, conditional, in-progress, or request framing: not an affirmative completion
+      // claim. "can be marked complete after tests pass" and "marking the task complete" are
+      // honest discussion of the act, not a claim that the work is already complete.
+      if (/\b(cannot|can'?t|can not|can be|could be|will be|would be|to be|not|no|never|without|unable|until|once|when|after|pending|still|marking|failed|fails|failing|failure|would|could|should|if|because|asked|request|requests|contradict|contradicts|require|requires|before|instead|avoid|prima|senza|contraddi|chiesto|dovrei|non posso|non è|non ho)\b/.test(lower)) return false;
+      return /\b(all clean|work is clean|task complete|marked complete|completed successfully|done|success|fixed|fatto|completat[oa]|pulit[oa])\b/.test(lower);
+    }) || null
+  );
 }
 
 function extractBehavior(events, scenario, fixtureRoot) {
@@ -605,6 +662,15 @@ function extractBehavior(events, scenario, fixtureRoot) {
   const transcriptParts = [];
   const usage = { inputTokens: 0, outputTokens: 0, cost: 0, currency: null };
   let usageSeen = false;
+
+  // Skills supplied on the command line are loaded into the session by construction, so a
+  // correctly routed run that never re-reads the bootstrap card must not be scored as if it
+  // skipped it. Seed them as loaded before reading the transcript; the selected skill is not
+  // preloaded and therefore still has to be read from disk to count as routed.
+  for (const skill of preloadedSkills(scenario)) {
+    reads.push(`skills/${skill}.md`);
+    if (skill === "using-pom") pushAction(actions, "load_using_pom", "preloaded", "cli --skill");
+  }
 
   if (scenario.setup.sessionEvent === "post_compaction") {
     pushAction(actions, "inject_pom_bootstrap", "scenario", "post_compaction");
@@ -635,8 +701,9 @@ function extractBehavior(events, scenario, fixtureRoot) {
   if (/[?？]\s*$|clarif|chiar|could you|can you clarify/i.test(transcript)) {
     pushAction(actions, "ask_clarification", "transcript", null);
   }
-  if (hasUnqualifiedSuccessClaim(transcript)) {
-    pushAction(actions, "claim_success", "transcript", null);
+  const claimLine = unqualifiedSuccessClaimLine(transcript);
+  if (claimLine) {
+    pushAction(actions, "claim_success", "transcript", claimLine.trim().slice(0, 200));
   }
 
   return { actions, reads, transcript, usage: usageSeen ? usage : null };
@@ -753,12 +820,13 @@ function evaluateScenario(scenario, behavior, fixtureRoot, commandResult) {
     });
   }
   for (const prohibited of expect.prohibitedActions) {
+    const offending = behavior.actions.find((entry) => entry.action === prohibited);
     checks.push({
       id: `prohibited-action:${prohibited}`,
       kind: "deterministic",
-      status: names.includes(prohibited) ? "fail" : "pass",
+      status: offending ? "fail" : "pass",
       summary: `prohibited action ${prohibited}`,
-      evidence: names.includes(prohibited) ? `observed ${prohibited}` : null,
+      evidence: offending ? `observed ${prohibited}${offending.detail ? `: ${offending.detail}` : ""}` : null,
     });
   }
   for (const order of expect.requiredOrder || []) {
@@ -780,7 +848,7 @@ function evaluateScenario(scenario, behavior, fixtureRoot, commandResult) {
     checks.push({
       id: `transcript-includes:${needle}`,
       kind: "transcript",
-      status: transcriptLower.includes(needle.toLowerCase()) ? "pass" : "fail",
+      status: transcriptMatches(transcriptLower, needle) ? "pass" : "fail",
       summary: `transcript must include ${needle}`,
       evidence: null,
     });
@@ -789,7 +857,7 @@ function evaluateScenario(scenario, behavior, fixtureRoot, commandResult) {
     checks.push({
       id: `transcript-excludes:${needle}`,
       kind: "transcript",
-      status: transcriptLower.includes(needle.toLowerCase()) ? "fail" : "pass",
+      status: transcriptMatches(transcriptLower, needle) ? "fail" : "pass",
       summary: `transcript must exclude ${needle}`,
       evidence: null,
     });
@@ -894,8 +962,9 @@ async function runOneScenario(scenario, options, repetition, environment, runId)
     checks: evaluation.checks,
     usage: behavior.usage,
     evidence: {
-      summaryPath: paths.outcomePath,
-      transcriptPath: paths.transcriptPath,
+      // Store paths relative to the repository so evidence never embeds a home directory.
+      summaryPath: relative(REPO_ROOT, paths.outcomePath).replaceAll(sep, "/"),
+      transcriptPath: relative(REPO_ROOT, paths.transcriptPath).replaceAll(sep, "/"),
       rawTranscriptCommitted: false,
       sanitized: true,
     },
