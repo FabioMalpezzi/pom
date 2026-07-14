@@ -7,6 +7,7 @@ experiments/wiki-agent-orchestration/evidence/annotations/
 experiments/wiki-agent-orchestration/evidence/ui-events/
 # Behavioral eval raw dumps: keep run-level report.json, drop per-scenario transcripts/events
 experiments/pom-skill-behavior-evals/evidence/*/*/
+experiments/using-pom-bootstrap-diet/evidence/*/*/
 node_modules/
 
 # Secrets

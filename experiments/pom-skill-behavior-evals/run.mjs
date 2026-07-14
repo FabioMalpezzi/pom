@@ -121,6 +121,11 @@ function parseArgs(argv) {
       index += 1;
       continue;
     }
+    if (arg === "--bootstrap-section") {
+      options.bootstrapSection = resolve(argv[index + 1] || "");
+      index += 1;
+      continue;
+    }
     throw new Error(`Unknown argument: ${arg}`);
   }
   if (!SUITES.has(options.suite)) throw new Error(`Unsupported suite: ${options.suite}`);
@@ -134,6 +139,9 @@ function parseArgs(argv) {
   if (!options.provider && process.env.POM_EVAL_PROVIDER) options.provider = process.env.POM_EVAL_PROVIDER;
   if (!options.model && process.env.POM_EVAL_MODEL) options.model = process.env.POM_EVAL_MODEL;
   if (!options.variant) throw new Error("--variant must not be empty");
+  if (options.bootstrapSection && !existsSync(options.bootstrapSection)) {
+    throw new Error(`--bootstrap-section file not found: ${options.bootstrapSection}`);
+  }
   return options;
 }
 
@@ -446,8 +454,26 @@ function createRunWorkspace(scenario, options, repetition) {
   return { workspace, fixtureRoot, configRoot, sessionRoot };
 }
 
-function buildPrompt(scenario) {
+const bootstrapSectionCache = new Map();
+
+function readBootstrapSection(path) {
+  if (!bootstrapSectionCache.has(path)) bootstrapSectionCache.set(path, readFileSync(path, "utf8").trim());
+  return bootstrapSectionCache.get(path);
+}
+
+function buildPrompt(scenario, options = {}) {
   const lines = [];
+  // The always-loaded installed instruction section (baseline vs a compact candidate) is
+  // prepended for POM-context scenarios so its input-token cost and its effect on routing/safety
+  // are both measured. The genuine non-POM negative case receives no POM instruction.
+  if (options.bootstrapSection && hasPomContext(scenario)) {
+    lines.push("The following project instructions are always loaded from AGENTS.md at session start:");
+    lines.push("");
+    lines.push(readBootstrapSection(options.bootstrapSection));
+    lines.push("");
+    lines.push("---");
+    lines.push("");
+  }
   if (scenario.setup.sessionEvent === "post_compaction") {
     lines.push("The previous session was compacted. Restore any needed POM bootstrap from disk before choosing a workflow.");
   }
@@ -489,7 +515,7 @@ function buildPiArgs(scenario, options, workspace) {
   if (options.provider) args.push("--provider", options.provider);
   if (options.model) args.push("--model", options.model);
   for (const skillFile of skillFiles) args.push("--skill", skillFile);
-  args.push("-p", buildPrompt(scenario));
+  args.push("-p", buildPrompt(scenario, options));
   return args;
 }
 
