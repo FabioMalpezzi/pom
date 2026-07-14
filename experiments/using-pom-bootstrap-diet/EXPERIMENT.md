@@ -87,8 +87,21 @@ Static loading-path inventory (P2A.1, measured 2026-07-14):
 - Always-loaded skill card (when the harness preloads the router): `skills/using-pom.md` = 230 words / 1462 chars.
 - Progressive, read only after routing: `prompts/32-using-pom.md` (982 words), `skills/README.md` (881 words / 6879 chars, the catalog), and the selected skill card.
 - Always-loaded total ≈ 1471 words; the ≥30% reduction gate applies to this always-loaded path, not the progressively read prompts.
-- Candidate duplication targets (routing/adoption-guard/tool-mapping content repeated between the AGENTS section, `using-pom.md`, and `prompts/32-using-pom.md`) remain to be diffed line by line before authoring variants.
 - Differential provider input-token measurement still requires evaluator sessions and depends on the frozen behavior baseline in `experiments/pom-skill-behavior-evals/`.
+
+Duplication diff (P2A.1, 2026-07-14) across the always-loaded AGENTS section, the router card, and the progressive prompt:
+
+- Routing table lives in three places: the AGENTS section "Common routing" (19 rows, always loaded), `prompts/32-using-pom.md` "Routing signals" (22 rows, progressive), and `skills/README.md` (the catalog, progressive). The always-loaded 19-row table is the largest removable block; routing detail can load progressively via the router pointer + README.
+- Skill-consultation rules are triplicated: AGENTS "POM Skills" (8 bullets, always loaded) ~= `using-pom.md` "Key Rules" (6 bullets) ~= prompt 32 "Before any POM action" (7 steps). The always-loaded 8 bullets can collapse to a 2-3 line pointer, with the detail kept in the router card and prompt.
+- Adoption guard (critical safety) appears in AGENTS "Adoption Profile", `using-pom.md`, and prompt 32 step 6. Per the Global Constraint it must stay in one always-loaded canonical location; the AGENTS "Adoption Profile" block is that location and is retained verbatim.
+- Tool/command mapping appears in AGENTS "POM Commands" plus a pointer, and again in prompt 32 "Harness tool mapping" and `prompts/references/agent-harnesses.md`. The always-loaded command detail can shrink to a `npm run pom:help` / harness-reference pointer.
+- Removable-from-always-loaded (candidate): the 19-row routing table, the 8-bullet skill-consultation list, and most of the POM Commands prose. Retained-always-loaded (safety/identity/posture): project identity, Language Policy, Source Authority summary, Agent Work Principles, Evidence Discipline, Git rule, and the Adoption Profile guard.
+
+Candidate variants authored for P2A (experiment-only, in `experiments/using-pom-bootstrap-diet/candidates/`, not installed): `agents-section-compact-router.md` — the always-loaded section trimmed to identity + posture + canonical adoption guard + a minimal router pointer, with routing detail deferred to the progressively-read `skills/README.md` and prompt.
+
+Static reduction of the compact-router candidate (word count, supporting diagnostic only; the gate is measured input tokens): AGENTS section 1241 -> 709 words (-42.9%); always-loaded path (AGENTS + `using-pom.md` 230 words) 1471 -> 939 words (-36.2%), above the 30% target with margin. The candidate retains every safety guard exercised by the frozen behavioral suite: the verbatim Adoption Profile disabled-module guard, "read `using-pom.md` before the first POM action and after compaction", "read `pom.config.json` before governed artifacts", "route from `README.md`, not memory", and "descriptions are triggers only". Removed-from-always-loaded (now progressive): the 19-row routing table, the 8-bullet consultation list, and the POM Commands prose.
+
+Still open in P2A (require evaluator sessions): a compact-router-plus-generated-index variant; the negation-aware `transcriptExcludes` re-baseline; and the differential input-token + behavior comparison of baseline vs candidates on the same model, scenarios, and repetitions, with the 30% input-token gate and 100% critical-safety requirement.
 
 Planned evidence:
 

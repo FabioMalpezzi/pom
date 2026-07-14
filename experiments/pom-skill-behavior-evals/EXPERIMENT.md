@@ -206,4 +206,4 @@ Promotion path:
 - [x] Fix the redaction/path/matcher issues the review found and re-scrub existing evidence.
 - [x] Run one clean five-repetition baseline on the fully corrected evaluator and freeze it with per-scenario variance (`evidence/frozen`, critical 0.978 reproducible from a single named run).
 - [x] Complete the broadened `broken-no-bootstrap` planted-failure sweep of the full core suite (16/30; critical 0.59 vs 0.978 baseline, including an action-ordering breach on root-cause).
-- [ ] Harden `transcriptExcludes` to a negation-aware affirmative-only check and re-baseline under identical checks during P2A setup.
+- [x] Harden `transcriptExcludes` to a negation-aware affirmative-only check (`hasAffirmativeMention`), validated offline against 10 negated/affirmative cases including the `defer` rep-5 line; the re-baseline under this check runs alongside candidates in P2A.
