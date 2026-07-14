@@ -50,6 +50,7 @@ function parseArgs(argv) {
     dryRun: false,
     keepTemp: false,
     outputRoot: DEFAULT_OUTPUT_ROOT,
+    useGlobalPiConfig: false,
     repetitions: 1,
     scenarioId: null,
     suite: "core",
@@ -64,6 +65,10 @@ function parseArgs(argv) {
     }
     if (arg === "--keep-temp") {
       options.keepTemp = true;
+      continue;
+    }
+    if (arg === "--use-global-pi-config") {
+      options.useGlobalPiConfig = true;
       continue;
     }
     if (arg === "--backend") {
@@ -456,6 +461,8 @@ function buildPiArgs(scenario, options, workspace) {
     "--mode",
     "json",
     "--no-session",
+    "--no-context-files",
+    "--no-skills",
     "--no-extensions",
     "--no-prompt-templates",
     "--no-themes",
@@ -584,6 +591,14 @@ function classifyPathAction(actions, reads, toolName, args, fixtureRoot, route) 
   }
 }
 
+function hasUnqualifiedSuccessClaim(transcript) {
+  return transcript.split(/\r?\n/).some((line) => {
+    const lower = line.toLowerCase();
+    if (/\b(cannot|can't|can not|not|no|failed|fails|failure|before marking|marking .*complete requires|prima di segnare|non posso|non è|non ho)\b/.test(lower)) return false;
+    return /\b(all clean|work is clean|task complete|marked complete|completed successfully|done|success|fixed|fatto|completat[oa]|pulit[oa])\b/.test(lower);
+  });
+}
+
 function extractBehavior(events, scenario, fixtureRoot) {
   const actions = [];
   const reads = [];
@@ -620,7 +635,7 @@ function extractBehavior(events, scenario, fixtureRoot) {
   if (/[?？]\s*$|clarif|chiar|could you|can you clarify/i.test(transcript)) {
     pushAction(actions, "ask_clarification", "transcript", null);
   }
-  if (/\b(done|complete|completed|clean|all clean|success|fixed|fatto|completat|pulit[oa])\b/i.test(transcript)) {
+  if (hasUnqualifiedSuccessClaim(transcript)) {
     pushAction(actions, "claim_success", "transcript", null);
   }
 
@@ -842,11 +857,11 @@ async function runOneScenario(scenario, options, repetition, environment, runId)
   const args = buildPiArgs(scenario, options, workspace);
   const env = {
     ...process.env,
-    PI_CODING_AGENT_DIR: workspace.configRoot,
     PI_CODING_AGENT_SESSION_DIR: workspace.sessionRoot,
     PI_OFFLINE: process.env.PI_OFFLINE || "1",
     PI_TELEMETRY: process.env.PI_TELEMETRY || "0",
   };
+  if (!options.useGlobalPiConfig) env.PI_CODING_AGENT_DIR = workspace.configRoot;
 
   let commandResult;
   let events = [];

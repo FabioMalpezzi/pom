@@ -50,7 +50,7 @@ Excluded:
 - Branch or worktree: current checkout on `exp/pom-skill-evolution`; no separate worktree by user decision.
 - Temporary path: one fresh temporary project and Pi session per scenario repetition.
 - Dependency isolation: no new root runtime dependency; experiment-local dependencies require separate approval.
-- Environment/config isolation: credentials remain in environment variables; fixed model and Pi version recorded per run.
+- Environment/config isolation: credentials remain in environment variables or in the user's existing Pi login; the runner uses temporary Pi config by default and can read global Pi config only with `--use-global-pi-config`; fixed model and Pi version are recorded per run.
 - Service/data isolation: public synthetic fixtures only; no client or private repository content.
 - Import/build guardrail: stable source and tests must not import from `experiments/`.
 
@@ -61,6 +61,7 @@ Planned interface:
 ```bash
 node experiments/pom-skill-behavior-evals/run.mjs --dry-run --suite core
 POM_EVAL_MODEL=<provider/model-or-pattern> node experiments/pom-skill-behavior-evals/run.mjs --backend pi --variant baseline --suite core --repetitions 5
+POM_EVAL_MODEL=<provider/model-or-pattern> node experiments/pom-skill-behavior-evals/run.mjs --backend pi --variant baseline --suite core --repetitions 5 --use-global-pi-config
 node experiments/pom-skill-behavior-evals/report.mjs --input <run-directory>
 ```
 
@@ -90,11 +91,15 @@ Current experiment evidence:
 - intentionally invalid fixture is rejected because `expect.route` is missing;
 - runner creates disposable synthetic fixtures, isolated Pi config/session directories, sanitized event/transcript evidence, and outcome JSON summaries;
 - synthetic Pi-event controls prove one passing ordinary-coding scenario and one planted non-POM activation failure without model credentials or cost;
-- a real Pi attempt against `broken-no-bootstrap` was classified as `skipped` because model credentials were unavailable, proving that backend readiness is separated from behavioral failure.
+- a real Pi attempt against `broken-no-bootstrap` was classified as `skipped` because model credentials were unavailable, proving that backend readiness is separated from behavioral failure;
+- a real Pi attempt using global Pi config exposed ambient-context contamination, so the runner now disables ambient context files and skill discovery while still allowing global credentials when explicitly requested;
+- isolated real Pi known-bad control on `adopt-existing-en` with `broken-no-bootstrap` failed as expected because `skills/README.md` was not read;
+- one-repeat real Pi baseline for the core suite produced 8 pass and 2 fail before matcher refinement; `verify-before-completion-en` was a false positive from over-broad success-claim matching and passed after the matcher was narrowed;
+- the remaining baseline failure, `ambiguous-memory-request-it`, is behavioral evidence: the model routed to `defer` and wrote a governed artifact instead of loading `clarify` and asking a focused question.
 
 Still planned:
 
-- real Pi model session summaries after credentials or a configured model are available;
+- five-repetition real Pi critical baseline after the scenario contracts are reviewed against the one-repeat evidence;
 - sanitized excerpts required to explain real behavioral verdicts;
 - behavioral known-bad variant result from an actual model run;
 - baseline variance report.
@@ -147,5 +152,6 @@ Promotion path:
 - [x] Define scenario and outcome schemas.
 - [x] Add the core scenario matrix.
 - [x] Implement disposable fixture setup and behavioral planted-failure checks.
-- [ ] Run the real Pi known-bad control with model credentials; the current no-credential attempt is recorded only as skipped backend readiness evidence.
-- [ ] Implement and run the Pi baseline.
+- [x] Run the real Pi known-bad control with model credentials.
+- [ ] Review the one-repeat baseline failure on the ambiguous-memory scenario before running the full five-repetition critical baseline.
+- [ ] Implement and run the full Pi baseline.
