@@ -133,7 +133,7 @@ Promotion path:
 
 ## Follow-up
 
-- [ ] Define the four planning fixtures and expected manifests.
-- [ ] Freeze baseline generation and scoring.
-- [ ] Author the experiment-only candidate.
-- [ ] Compare fidelity, task sizing, and retained verification.
+- [x] Define the four planning fixtures and expected manifests (`fixtures/01..04`, 2026-07-15): multi-task code feature with a version floor + shared API (interfaces applicable); documentation-only governance change (interfaces not applicable); small independent correction (single-task, over-fragmentation trap); mixed migration with ordering/compatibility/rollback (ordering contracts applicable).
+- [x] Author the experiment-only candidate (`candidate-contract.md`, 2026-07-15): Global Constraints table + Dependency/Interface Map + per-task contract fields, with `not applicable` as a first-class answer and explicit anti-bloat guardrails.
+- [ ] Build `generate.mjs`/`score.mjs`, freeze baseline generation and scoring (requires Pi sessions).
+- [ ] Compare fidelity, task sizing, and retained verification; fresh-context executability review.
