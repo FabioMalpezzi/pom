@@ -729,7 +729,7 @@ function renderMermaidRuntime(config) {
   if (!config.mermaidRuntime) return "";
   return `<script type="module">
 import mermaid from "${escapeAttr(config.mermaidRuntime)}";
-mermaid.initialize({ startOnLoad: true, theme: "base" });
+mermaid.initialize({ startOnLoad: true, theme: "dark" });
 </script>`;
 }
 
