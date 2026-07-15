@@ -46,18 +46,17 @@ function anyPresent(text, tokens) {
 }
 
 function countTasks(plan) {
+  // Deliverable count = number of sub-task sections. Plans wrap sub-tasks as level-1 headings
+  // "# TASK-A" or "# TASK-0001-A" (a trailing letter suffix), under a parent "# TASK-0001".
+  // A single-task plan has only the parent and counts as 1. Also accept "# Task A" (space form).
   const ids = new Set();
-  // Task headings are level-1..4 "# Task A" / "## Task 1"; dedup by id so a plan that repeats a
-  // task section is not double-counted.
+  for (const m of plan.matchAll(/^#\s+TASK-(?:\d+-)?([A-Z])\b/gim)) ids.add(m[1].toUpperCase());
   for (const m of plan.matchAll(/^#{1,4}\s+Task\s+([A-Z0-9]+)\b/gim)) ids.add(m[1].toUpperCase());
-  if (ids.size === 0) {
-    for (const m of plan.matchAll(/\bTask\s+([A-Z0-9]{1,3})\b[:\-–.]/g)) ids.add(m[1].toUpperCase());
-  }
-  if (ids.size === 0) {
-    const headings = plan.match(/^#{1,4}\s+(Task|Step)\b.*$/gim) || [];
-    return headings.length || (/\bTask\b/i.test(plan) ? 1 : 0);
-  }
-  return ids.size;
+  if (ids.size > 0) return ids.size;
+  // No sub-task sections: a single-task plan if it has a TASK-NNNN title, else count headings.
+  if (/^#\s+TASK-\d+\b/im.test(plan)) return 1;
+  const headings = plan.match(/^#{1,4}\s+(Task|Step)\b.*$/gim) || [];
+  return headings.length || (/\bTASK-\d+\b/i.test(plan) ? 1 : 0);
 }
 
 function scorePlan(plan, expected) {
