@@ -97,6 +97,15 @@ Baseline POM evidence:
 - POM has no canonical Pi extension;
 - current structural tests do not prove session-start or post-compaction behavior.
 
+## Live probe evidence (P3.4 first probe, 2026-07-15, Pi 0.80.6, default model, `pi -e <staging>`)
+
+One live session in a synthetic trusted POM target project (a temp dir with `pom.config.json`, `src/example.js`, `package.json`), prompt "Adotta POM in questo repository esistente…". Both pivot questions resolved positively:
+
+- Skill-only routing works: from progressive disclosure alone the model read the package's `skills/using-pom.md`, then `skills/README.md` (catalog), routed to `skills/adopt.md`, and read `pom.config.json` before acting — no file edits first. No extension was needed to make it load and route.
+- Skill→prompt chain resolves from the package: after reading `skills/using-pom.md` (at the package's absolute path) the model read `prompts/32-using-pom.md`, and after routing to adopt it read `prompts/02-adopt-existing-project.md` — the linked prompts resolved against the package root. The path-resolution risk did not materialize; the model inferred the package root from the absolute skill path.
+
+Lean: this satisfies the falsification gate's "native packaged skill discovery alone reliably satisfies the clean-session acceptance contract" — so the active extension is, on this evidence, NOT required for routing/adoption, and no Decision Record is needed. Still to confirm before closing: post-compaction reload of `using-pom` (the one case that could still justify an extension) and the non-POM negative (package stays inert for ordinary work in an unrelated repo), plus repetition. This is a single probe, not the five-repetition acceptance.
+
 ## Falsification And Promotion Gate
 
 Reject the extension approach if:
