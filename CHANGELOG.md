@@ -4,6 +4,10 @@ This changelog records public-facing POM releases. Fine-grained development hist
 
 ## Unreleased
 
+### Changed
+
+- **Compact manual-install fallback** (`templates/AGENTS_POM_SECTION_TEMPLATE.md`): the fallback POM section for manual copy installs is now ~40% smaller (measured bootstrap input-token cost reduced from 3454 to 2042 tokens on the reference model). It keeps identity, source authority, evidence discipline, Git posture, and the disabled-module adoption guard, and routes through `pom/skills/using-pom.md` and the `pom/skills/README.md` catalog instead of embedding a per-skill routing table (routing detail loads progressively, in line with SPEC-0001). Behavioral evaluation showed no adoption-safety or completion-honesty regression; a marginal, non-safety routing-discipline variance was accepted as a documented trade-off. The default modular install (`templates/agents/`) is unchanged.
+
 ### Added
 
 - **Configurable wiki root** (`wiki.root` in `templates/POM_CONFIG_TEMPLATE.json`, `scripts/lib/lint-config.ts`, `scripts/lib/lint-wiki.ts`, `scripts/lib/lint-docs-source.ts`): the wiki directory can now be relocated like every other module root (for example nested under a documentation root such as `doc/tech/wiki`). The wiki lint honors `wiki.root` and the docs-source lint excludes it from official-document section checks, so a wiki nested under the docs root is no longer flagged as official documentation. The lint's wiki-reader regeneration passes the configured root to `render-wiki.mjs` via `--source`/`--out`; manual renders of a relocated wiki use the same flags. Defaults to `wiki`, so existing projects are unaffected.

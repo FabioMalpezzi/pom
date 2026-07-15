@@ -70,8 +70,16 @@ function testBootstrapArtifacts() {
   assert("modular agent router references root-cause", agentRouter.includes("root-cause"));
   assert("fallback agent template references using-pom", monolithicAgentTemplate.includes("pom/skills/using-pom.md"));
   assert("fallback agent template references harness mapping", monolithicAgentTemplate.includes("pom/prompts/references/agent-harnesses.md"));
-  assert("fallback agent template references finish-branch", monolithicAgentTemplate.includes("finish-branch"));
-  assert("fallback agent template references root-cause", monolithicAgentTemplate.includes("root-cause"));
+  // The compact fallback routes via the catalog and router rather than embedding a per-skill
+  // routing table (SPEC-0001: keep global instructions to identity, posture, source authority,
+  // and safety; workflow routing lives in skills and prompts).
+  assert("fallback agent template routes via the skills catalog", monolithicAgentTemplate.includes("pom/skills/README.md"));
+  assert(
+    "fallback agent template keeps the disabled-module adoption guard",
+    monolithicAgentTemplate.includes("pom.config.json") &&
+      /disabled/.test(monolithicAgentTemplate) &&
+      /must not create/.test(monolithicAgentTemplate),
+  );
   assert("harness reference includes session-start smoke", harnessReference.includes("## Session-Start Smoke"));
   assert(
     "harness reference avoids unverified support claims",

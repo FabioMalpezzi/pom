@@ -155,7 +155,9 @@ Promotion requires a frozen baseline, five repetitions per critical scenario, 10
 
 ## Outcome
 
-Decision: pending; candidate authoring is blocked until the behavioral evaluator baseline is frozen.
+Decision (2026-07-15): PARTIAL promotion. The compact router was promoted to the manual-install fallback template `templates/AGENTS_POM_SECTION_TEMPLATE.md` only (1241 -> 709 words; measured bootstrap input-token cost 3454 -> 2042, -40.9%). Behavioral evidence: 5-repetition comparison showed no safety breach and no false completion claim under the compact section; the user explicitly accepted the marginal, non-safety routing-discipline slip (compact critical 0.956 vs 1.0 baseline; two 1/5 ordering/prompt-read variances). Two structural assertions that encoded the old routing-table-in-section design were updated to assert the compact design (routing via the `README` catalog + preserved disabled-module guard), consistent with SPEC-0001's objective; `npm run pom:test` (893 passed) and `npm run pom:lint` pass.
+
+Explicitly NOT promoted / discarded from this round: the compaction was tested on the monolithic fallback, but the DEFAULT installed path is the modular assembly (`templates/agents/00-core.md` + `60-skills.md`), which was neither compacted nor behaviorally tested here. The proven concept transfers, but applying and re-confirming it on the modular default is deferred future work, not claimed as done. No default-path token reduction is claimed.
 
 Promotion path:
 
