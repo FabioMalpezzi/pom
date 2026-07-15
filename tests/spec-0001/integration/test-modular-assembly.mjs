@@ -99,9 +99,11 @@ function scenario1() {
     assert("POM section exists", section !== null, "No POM section found in AGENTS.md");
     assert("Lines ≤140", lines <= 140, `Got ${lines} lines, expected ≤140`);
     assert("Contains core principle", section.includes("authoritative source") || section.includes("Operating Memory"), "Core section missing");
-    assert("Explains installed POM layout", section.includes("day-zero project") && section.includes("Git-managed install"), "Installed layout guidance missing");
-    assert("Explains global rules vs skills", section.includes("Global Rules And Skills") && section.includes("If a rule applies only to one kind of work"), "Global/skills boundary missing");
-    assert("Contains skill routing", section.includes("Common routing") && section.includes("Temporary experiment or spike"), "Skill router missing");
+    assert("Explains installed POM layout", section.includes("day-zero project") && section.includes("pom.config.json"), "Installed layout guidance missing");
+    assert("Explains global rules vs skills", section.includes("pom/skills/") && section.includes("skill procedures"), "Global/skills boundary missing");
+    // The compact core keeps a minimal key-routes cue and delegates the full catalog to README
+    // (SPEC-0001: routing detail lives in skills/prompts, not the always-loaded section).
+    assert("Contains skill routing", (section.includes("Key routes") || section.includes("Common routing")) && section.includes("`clarify`"), "Skill router missing");
     assert("Does NOT contain wiki rules", !section.includes("## Persistent Wiki"), "Wiki section should not be included in minimal");
     assert("Does NOT contain ADR rules", !section.includes("## ADR And Specs"), "Decisions section should not be included in minimal");
     assert("Does NOT contain handoff workflow details", !section.includes("## Restart Context"), "Handoff workflow should not be included in minimal");
