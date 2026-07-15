@@ -214,10 +214,16 @@ POM is a Pi package: it registers its skills so a Pi session can load `using-pom
 pi -e git:github.com/FabioMalpezzi/pom
 
 # Or install it (writes Pi settings, not your project):
-pi install git:github.com/FabioMalpezzi/pom
+pi install git:github.com/FabioMalpezzi/pom      # add -l for project-local settings
+pi install /absolute/path/to/pom                 # from a local clone
+
+pi list                                          # show registered packages and skills
+pi remove git:github.com/FabioMalpezzi/pom       # remove from settings
 ```
 
-Once loaded, a natural POM request (for example "adopt POM in this repo" or "defer this work") makes the agent read `skills/using-pom.md`, consult the `skills/README.md` catalog, and follow the selected skill's linked prompt. This is skill-only: it does not run code, call a model, or write to your project; in a repository without POM it stays inert. To also install the POM method files into a project, use the bootstrap below.
+Once loaded, a natural POM request (for example "adopt POM in this repo" or "defer this work") makes the agent read `skills/using-pom.md`, consult the `skills/README.md` catalog, and follow the selected skill's linked prompt. This is skill-only: it does not run code, call a model, or write to your project; in a repository without POM it stays inert, and it reloads `using-pom` after compaction.
+
+**The Pi package does not replace installing POM in a project.** They are complementary: the Pi package gives the *agent* the POM method (skills) in every Pi session, while the project install below gives the *project* its Operating Memory — `pom.config.json`, the always-loaded POM section in `AGENTS.md` (harness-agnostic, shared with teammates), and the memory folders. Skills read `pom.config.json` to respect disabled modules, so a project you actually govern with POM still needs the bootstrap below. (Until these changes reach the default branch, append `@exp/pom-skill-evolution` to the git source.)
 
 ### First install (recommended)
 

@@ -16,6 +16,35 @@ If the goal is to improve POM itself, clone the POM Source as its own repository
 
 ## Details
 
+### Two Ways To Bring In POM
+
+POM can arrive by two complementary paths that are not alternatives:
+
+- **Pi package (skill package)** gives the *agent* the POM method — Pi registers the POM skills so any session can load `using-pom` and route POM work. It is portable to any repository, applies only to your Pi sessions, and writes nothing to the project. It is the delivery of the method.
+- **Project install (bootstrap)** gives the *project* its Operating Memory — `pom.config.json` (the adoption profile), the method files under `pom/`, the always-loaded POM section in `AGENTS.md`, and the memory folders (wiki, decisions, tasks, `PROJECT_STATE.md`). It is per-project, harness-agnostic (works for Codex, Claude Code, Cursor, and teammates without the Pi package), and is the result the method produces.
+
+Installing the Pi package does not replace the project install: skills read `pom.config.json` to respect disabled modules, the memory lives in the project, and the `AGENTS.md` section keeps every harness POM-aware. With the Pi package loaded you can also ask the agent to adopt POM into a repository, and it will run the `adopt` workflow to create the project install for you.
+
+#### Install As A Pi Package
+
+POM is a skill-only Pi package: no extension, no active adapter, no Decision Record. Pi registers the POM skills; a natural POM request loads `using-pom` and follows the catalog and linked prompts. In a repository without POM it stays inert, and it reloads `using-pom` after context compaction.
+
+```bash
+# Try it for one run (no settings write):
+pi -e git:github.com/FabioMalpezzi/pom
+
+# Install persistently (global Pi settings; add -l for project-local .pi/settings.json):
+pi install git:github.com/FabioMalpezzi/pom
+
+# Install from a local clone:
+pi install /absolute/path/to/pom
+
+pi list                                       # show registered packages and skills
+pi remove git:github.com/FabioMalpezzi/pom    # remove from settings
+```
+
+Install writes Pi settings only, never your project files. Until these changes reach the default branch, install from the current branch by appending `@exp/pom-skill-evolution` to the git source.
+
 ### Install POM In A Project
 
 From the target project root, use the bootstrap script and choose the preset that matches the repository relationship:

@@ -47,7 +47,7 @@
           <p class="dek">POM can be installed as a reusable method without forcing a project into a new shape. Presets, profiles, and ownership posture decide how much memory and governance to introduce.</p>
           <div class="meta">
             <span>Source: adoption-and-installation.md</span>
-            <span>Generated: 2026-06-22</span>
+            <span>Generated: 2026-07-15</span>
           </div>
         </header>
         <aside class="generated-notice">
@@ -61,6 +61,27 @@
 <p>Do not clone the POM Source directly into a target project root. The bootstrap is the supported install path because it keeps reusable POM files under <code>pom/</code> and keeps project-owned memory at the target project root.</p>
 <p>If the goal is to improve POM itself, clone the POM Source as its own repository and use the source commands. That is development on POM, not installation into a target project.</p>
 <h2 id="details">Details <a class="heading-anchor" href="#details" aria-label="Copy link to Details">#</a></h2>
+<h3 id="two-ways-to-bring-in-pom">Two Ways To Bring In POM <a class="heading-anchor" href="#two-ways-to-bring-in-pom" aria-label="Copy link to Two Ways To Bring In POM">#</a></h3>
+<p>POM can arrive by two complementary paths that are not alternatives:</p>
+<ul><li><strong>Pi package (skill package)</strong> gives the *agent* the POM method — Pi registers the POM skills so any session can load <code>using-pom</code> and route POM work. It is portable to any repository, applies only to your Pi sessions, and writes nothing to the project. It is the delivery of the method.</li><li><strong>Project install (bootstrap)</strong> gives the *project* its Operating Memory — <code>pom.config.json</code> (the adoption profile), the method files under <code>pom/</code>, the always-loaded POM section in <code>AGENTS.md</code>, and the memory folders (wiki, decisions, tasks, <code>PROJECT_STATE.md</code>). It is per-project, harness-agnostic (works for Codex, Claude Code, Cursor, and teammates without the Pi package), and is the result the method produces.</li></ul>
+<p>Installing the Pi package does not replace the project install: skills read <code>pom.config.json</code> to respect disabled modules, the memory lives in the project, and the <code>AGENTS.md</code> section keeps every harness POM-aware. With the Pi package loaded you can also ask the agent to adopt POM into a repository, and it will run the <code>adopt</code> workflow to create the project install for you.</p>
+<h4 id="install-as-a-pi-package">Install As A Pi Package <a class="heading-anchor" href="#install-as-a-pi-package" aria-label="Copy link to Install As A Pi Package">#</a></h4>
+<p>POM is a skill-only Pi package: no extension, no active adapter, no Decision Record. Pi registers the POM skills; a natural POM request loads <code>using-pom</code> and follows the catalog and linked prompts. In a repository without POM it stays inert, and it reloads <code>using-pom</code> after context compaction.</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash"><span class="tok-comment"># Try it for one run (no settings write):</span>
+pi -e git:github.com/FabioMalpezzi/pom
+
+<span class="tok-comment"># Install persistently (global Pi settings; add -l for project-local .pi/settings.json):</span>
+pi install git:github.com/FabioMalpezzi/pom
+
+<span class="tok-comment"># Install from a local clone:</span>
+pi install /absolute/path/to/pom
+
+pi list                                       <span class="tok-comment"># show registered packages and skills</span>
+pi remove git:github.com/FabioMalpezzi/pom    <span class="tok-comment"># remove from settings</span></code></pre>
+</figure>
+<p>Install writes Pi settings only, never your project files. Until these changes reach the default branch, install from the current branch by appending <code>@exp/pom-skill-evolution</code> to the git source.</p>
 <h3 id="install-pom-in-a-project">Install POM In A Project <a class="heading-anchor" href="#install-pom-in-a-project" aria-label="Copy link to Install POM In A Project">#</a></h3>
 <p>From the target project root, use the bootstrap script and choose the preset that matches the repository relationship:</p>
 <figure class="code-figure code-highlight">
@@ -227,7 +248,8 @@ node bootstrap-pom.mjs --profile refresh</code></pre>
 <details class="outline-section" open>
     <summary><a class="level-2" href="#details">Details</a></summary>
     <div class="outline-children">
-      <a class="level-3" href="#install-pom-in-a-project">Install POM In A Project</a>
+      <a class="level-3" href="#two-ways-to-bring-in-pom">Two Ways To Bring In POM</a>
+<a class="level-3" href="#install-pom-in-a-project">Install POM In A Project</a>
 <a class="level-3" href="#what-bootstrap-creates">What Bootstrap Creates</a>
 <a class="level-3" href="#customize-pom-for-a-project">Customize POM For A Project</a>
 <a class="level-3" href="#customize-templates">Customize Templates</a>
