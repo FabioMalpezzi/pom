@@ -1,0 +1,16 @@
+{
+  "fixture": "04-mixed-migration",
+  "interfaceApplicable": true,
+  "exactConstraints": [
+    { "label": "postgres >= 13", "anyOf": ["13"] },
+    { "label": "zero downtime", "anyOf": ["zero downtime", "zero-downtime", "no downtime"] },
+    { "label": "dual-write compatibility", "anyOf": ["dual-write", "dual write", "both ", "populate both"] },
+    { "label": "reversible / bake period before dropping full_name", "anyOf": ["reversible", "rollback", "bake period", "bake"] }
+  ],
+  "interfaceSignatures": ["first_name", "last_name", "full_name"],
+  "interfaceDriftSignals": [],
+  "orderingSignals": ["before", "after"],
+  "expectedTaskCount": { "min": 4, "max": 4 },
+  "mustStateNotApplicable": false,
+  "verificationRequired": true
+}

@@ -1,0 +1,14 @@
+{
+  "fixture": "02-docs-governance",
+  "interfaceApplicable": false,
+  "exactConstraints": [
+    { "label": "docs/process only, no code", "anyOf": ["documentation only", "docs only", "no code", "process change", "no CI", "no test"] },
+    { "label": "API impact note", "anyOf": ["API impact"] }
+  ],
+  "interfaceSignatures": [],
+  "interfaceDriftSignals": [],
+  "expectedTaskCount": { "min": 1, "max": 2 },
+  "mustStateNotApplicable": true,
+  "fabricatedInterfaceSignals": ["Consumes: `", "Produces: `RateLimiter", "function ", "class ", "CI job", "add a test", "unit test", "endpoint"],
+  "verificationRequired": true
+}

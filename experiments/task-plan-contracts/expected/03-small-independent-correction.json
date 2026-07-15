@@ -1,0 +1,14 @@
+{
+  "fixture": "03-small-independent-correction",
+  "interfaceApplicable": false,
+  "exactConstraints": [
+    { "label": "no API signature change", "anyOf": ["no API", "no signature change", "same signature", "unchanged signature", "no public API"] },
+    { "label": "no new dependency", "anyOf": ["no new dependency", "no dependency", "no new dep", "without a new dependency"] }
+  ],
+  "interfaceSignatures": [],
+  "interfaceDriftSignals": [],
+  "expectedTaskCount": { "min": 1, "max": 1 },
+  "mustStateNotApplicable": true,
+  "overFragmentationSignals": ["Task 2", "Task 3", "Task B", "Task C", "Step 2", "Step 3"],
+  "verificationRequired": true
+}

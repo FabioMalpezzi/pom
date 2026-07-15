@@ -1,0 +1,15 @@
+{
+  "fixture": "01-multitask-code-feature",
+  "interfaceApplicable": true,
+  "exactConstraints": [
+    { "label": "token-bucket lower floor 3.2.0", "anyOf": ["3.2.0"] },
+    { "label": "token-bucket 3.x-only / no 4.x", "anyOf": ["< 4", "<4", "3.x", "not ... 4", "no 4.x", "below 4"] },
+    { "label": "node >= 18", "anyOf": ["18"] },
+    { "label": "no second rate-limit dependency", "anyOf": ["no second", "single rate", "not add a second", "one rate-limit", "without a second"] }
+  ],
+  "interfaceSignatures": ["check(", "reset(", "retryAfterMs"],
+  "interfaceDriftSignals": ["retryAfterSeconds", "retryAfterSec", "retryAfter:", "retry_after_ms", "cost)"],
+  "expectedTaskCount": { "min": 3, "max": 3 },
+  "mustStateNotApplicable": false,
+  "verificationRequired": true
+}
