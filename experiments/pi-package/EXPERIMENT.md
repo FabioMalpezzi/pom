@@ -121,9 +121,22 @@ Promotion requires wiring tests, live five-repetition critical scenarios, instal
 | Maintainability | Manifest and dynamic resource registration diverge | Choose one registration mechanism and test package contents |
 | Architecture | Adapter is mistaken for POM runtime | Decision Record and explicit no-model/no-workflow/no-write boundary |
 
+## Pi API findings (P3.1, verified against installed Pi 0.80.6, 2026-07-15)
+
+Read from the installed package docs (`docs/extensions.md`, `docs/packages.md`, `docs/skills.md`):
+
+- Package manifest: `package.json` with a `pi` key — `pi.skills`, `pi.extensions`, `pi.prompts`, `pi.themes` (arrays of paths/globs), plus `keywords: ["pi-package"]`. Skills register through `pi.skills` alone; NO extension is required to register skills. Pi core imports belong in `peerDependencies` with `"*"`. Load temporarily with `pi -e <path>`; install with `pi install <path>` (writes settings, not project files).
+- Skills are progressive-disclosure: at startup Pi extracts name+description into the system prompt (XML); the model then `read`s the full SKILL.md on demand — "models don't always do this; use prompting or `/skill:name` to force it." Package skills come from `skills/` dirs or `pi.skills`; project skills load only after trust.
+- Extension API (only if needed): `export default function (pi: ExtensionAPI)`, `pi.on("before_agent_start", ...)` can modify `event.systemPrompt` / inject a message; `pi.on("session_compact", ...)` fires after compaction (reinjection point); `resources_discover` can add skill paths; trust is exposed via the ctx trust context. Loaded via jiti (TS, no build). No timers/sockets/model calls/writes from the factory.
+
+Two decisions this forces on the experiment:
+
+1. Test order (falsification gate): evaluate the skill-only package FIRST. If a natural POM request in a trusted POM repo makes the model load `using-pom` and route correctly with no extension, the extension is rejected and no Decision Record is needed. Only if skill-only is unreliable (or post-compaction reload fails) is the thin `before_agent_start` + `session_compact` injector justified — and then a Decision Record for the active-adapter boundary is required before promotion.
+2. Integration risk to resolve in P3.2/P3.4: POM skill cards reference linked prompts as `prompts/NN-*.md` / `pom/prompts/...`, assuming the installed `pom/` layout. In a Pi package the layout is `<pkg>/skills/` + `<pkg>/prompts/`, and Pi's `read` resolves relative paths against cwd, not the skill directory. So the staging package must either mirror the POM root layout AND make the package root discoverable to the model, or rewrite each skill's linked-resource paths. The live acceptance run must confirm the model can actually follow the skill→prompt→template chain from a package.
+
 ## Outcome
 
-Decision: pending. Active extension promotion requires a Decision Record; no canonical package metadata or extension will be changed before the experiment closes.
+Decision: pending. Skill-only packaging is tested before any extension; active extension promotion (if the skill-only path proves insufficient) requires a Decision Record. No canonical package metadata or extension will be changed before the experiment closes.
 
 Promotion path:
 

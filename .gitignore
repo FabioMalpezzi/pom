@@ -15,3 +15,4 @@ node_modules/
 .env.local
 .env.*.local
 experiments/task-plan-contracts/evidence/*/*/
+experiments/pi-package/staging/
