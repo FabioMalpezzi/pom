@@ -1,0 +1,143 @@
+{
+  "generatedFrom": 40,
+  "rows": [
+    {
+      "fixture": "01-multitask-code-feature",
+      "variant": "baseline",
+      "reps": 5,
+      "meanConstraintRate": 1,
+      "meanPassRate": 1,
+      "meanTaskCount": 3,
+      "checkRates": {
+        "constraint:token-bucket lower floor 3.2.0": 1,
+        "constraint:token-bucket 3.x-only / no 4.x": 1,
+        "constraint:node >= 18": 1,
+        "constraint:no second rate-limit dependency": 1,
+        "interface:signatures-present": 1,
+        "interface:no-drift": 1,
+        "task-count": 1,
+        "verification-retained": 1
+      }
+    },
+    {
+      "fixture": "01-multitask-code-feature",
+      "variant": "candidate",
+      "reps": 5,
+      "meanConstraintRate": 1,
+      "meanPassRate": 0.95,
+      "meanTaskCount": 2.8,
+      "checkRates": {
+        "constraint:token-bucket lower floor 3.2.0": 1,
+        "constraint:token-bucket 3.x-only / no 4.x": 1,
+        "constraint:node >= 18": 1,
+        "constraint:no second rate-limit dependency": 1,
+        "interface:signatures-present": 1,
+        "interface:no-drift": 1,
+        "task-count": 0.6,
+        "verification-retained": 1
+      }
+    },
+    {
+      "fixture": "02-docs-governance",
+      "variant": "baseline",
+      "reps": 5,
+      "meanConstraintRate": 1,
+      "meanPassRate": 0.933,
+      "meanTaskCount": 1,
+      "checkRates": {
+        "constraint:docs/process only, no code": 1,
+        "constraint:API impact note": 1,
+        "not-applicable-stated": 1,
+        "no-fabricated-interface": 0.6,
+        "task-count": 1,
+        "verification-retained": 1
+      }
+    },
+    {
+      "fixture": "02-docs-governance",
+      "variant": "candidate",
+      "reps": 5,
+      "meanConstraintRate": 1,
+      "meanPassRate": 0.933,
+      "meanTaskCount": 1,
+      "checkRates": {
+        "constraint:docs/process only, no code": 1,
+        "constraint:API impact note": 1,
+        "not-applicable-stated": 1,
+        "no-fabricated-interface": 0.6,
+        "task-count": 1,
+        "verification-retained": 1
+      }
+    },
+    {
+      "fixture": "03-small-independent-correction",
+      "variant": "baseline",
+      "reps": 5,
+      "meanConstraintRate": 0.9,
+      "meanPassRate": 0.967,
+      "meanTaskCount": 1,
+      "checkRates": {
+        "constraint:no API signature change": 0.8,
+        "constraint:no new dependency": 1,
+        "not-applicable-stated": 1,
+        "no-over-fragmentation": 1,
+        "task-count": 1,
+        "verification-retained": 1
+      }
+    },
+    {
+      "fixture": "03-small-independent-correction",
+      "variant": "candidate",
+      "reps": 5,
+      "meanConstraintRate": 1,
+      "meanPassRate": 1,
+      "meanTaskCount": 1,
+      "checkRates": {
+        "constraint:no API signature change": 1,
+        "constraint:no new dependency": 1,
+        "not-applicable-stated": 1,
+        "no-over-fragmentation": 1,
+        "task-count": 1,
+        "verification-retained": 1
+      }
+    },
+    {
+      "fixture": "04-mixed-migration",
+      "variant": "baseline",
+      "reps": 5,
+      "meanConstraintRate": 1,
+      "meanPassRate": 0.956,
+      "meanTaskCount": 2.8,
+      "checkRates": {
+        "constraint:postgres >= 13": 1,
+        "constraint:zero downtime": 1,
+        "constraint:dual-write compatibility": 1,
+        "constraint:reversible / bake period before dropping full_name": 1,
+        "interface:signatures-present": 1,
+        "interface:no-drift": 1,
+        "interface:ordering-expressed": 1,
+        "task-count": 0.6,
+        "verification-retained": 1
+      }
+    },
+    {
+      "fixture": "04-mixed-migration",
+      "variant": "candidate",
+      "reps": 5,
+      "meanConstraintRate": 1,
+      "meanPassRate": 0.933,
+      "meanTaskCount": 2.2,
+      "checkRates": {
+        "constraint:postgres >= 13": 1,
+        "constraint:zero downtime": 1,
+        "constraint:dual-write compatibility": 1,
+        "constraint:reversible / bake period before dropping full_name": 1,
+        "interface:signatures-present": 1,
+        "interface:no-drift": 1,
+        "interface:ordering-expressed": 1,
+        "task-count": 0.4,
+        "verification-retained": 1
+      }
+    }
+  ]
+}

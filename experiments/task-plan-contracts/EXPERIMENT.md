@@ -115,7 +115,13 @@ Promotion requires improvement over baseline in exact constraint and interface f
 
 ## Outcome
 
-Decision: pending; generation starts only after the shared evaluator contract is stable enough to record real model outcomes.
+Decision (2026-07-15): the candidate contract is NOT promoted; the hypothesis is not supported. Evidence: 40 generated plans (4 fixtures x 5 reps x 2 variants, `evidence/full`, no secrets/home paths).
+
+- Deterministic scoring: the baseline already propagates exact constraints and interfaces at ~1.0. The candidate is safe — it did not over-fragment the small-fix or documentation fixtures (both stayed 1 task in both variants), did not fabricate interfaces (it stated `not applicable` correctly on the non-code fixtures), and marginally improved one constraint on fixture 03 (0.8 -> 1.0). But it showed no clear fidelity gain over baseline. (An early task-count regression was a scoring artifact from a broken heading regex; fixed before the verdict.)
+- Fresh-context executability review (blinded-by-intent, an engineer executing a dependent task): rate-limiting pair — the per-task Dependencies/Contracts table helped MARGINALLY (saved an up-scroll, recorded a "needs TASK-B for e2e" dependency), the top-level Global Constraints table was marginal for a short code feature; migration pair — the explicit tables did NOT help and the candidate LOST executable detail the prose baseline carried (the name-split rule, the downstream-dependency audit, and the pre-drop backup), a coverage regression, plus mild duplication between the Interface Map row and the step block.
+- This trips the falsification gate: the baseline propagates constraints and interfaces equally well, and the added sections mostly add document weight and — on the migration — displaced concrete operational steps despite the contract's own "do not replace operational detail" guardrail. The added structure appears to distract generation from operational completeness.
+
+Recommendation: keep the current Task Plan prompt and template. At most, a NARROW, OPTIONAL per-task "Depends on / Consumes / Produces" line could be offered for genuinely multi-task or migration plans, with an explicit rule that it must never displace operational steps — but the measured benefit is marginal and the observed regression risk is real, so even that is not clearly justified. The experiment stands as evidence that POM's current planning format is already strong; no canonical prompt/template change is promoted.
 
 Promotion path:
 
@@ -135,5 +141,5 @@ Promotion path:
 
 - [x] Define the four planning fixtures and expected manifests (`fixtures/01..04`, 2026-07-15): multi-task code feature with a version floor + shared API (interfaces applicable); documentation-only governance change (interfaces not applicable); small independent correction (single-task, over-fragmentation trap); mixed migration with ordering/compatibility/rollback (ordering contracts applicable).
 - [x] Author the experiment-only candidate (`candidate-contract.md`, 2026-07-15): Global Constraints table + Dependency/Interface Map + per-task contract fields, with `not applicable` as a first-class answer and explicit anti-bloat guardrails.
-- [ ] Build `generate.mjs`/`score.mjs`, freeze baseline generation and scoring (requires Pi sessions).
-- [ ] Compare fidelity, task sizing, and retained verification; fresh-context executability review.
+- [x] Build `generate.mjs`/`score.mjs`, freeze baseline generation and scoring (40 plans in `evidence/full`).
+- [x] Compare fidelity, task sizing, and retained verification; fresh-context executability review — candidate not supported (see Outcome).
