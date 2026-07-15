@@ -205,6 +205,20 @@ When the CLI is being used from an installed `pom/` folder, prefix the script pa
 
 **Requirements:** Node.js ≥22.6 (for TypeScript script execution via `--experimental-strip-types`). Git required.
 
+### Use with the Pi coding agent (skill package)
+
+POM is a Pi package: it registers its skills so a Pi session can load `using-pom` and route POM work without any extension or active adapter.
+
+```bash
+# Try it for one run (no install):
+pi -e git:github.com/FabioMalpezzi/pom
+
+# Or install it (writes Pi settings, not your project):
+pi install git:github.com/FabioMalpezzi/pom
+```
+
+Once loaded, a natural POM request (for example "adopt POM in this repo" or "defer this work") makes the agent read `skills/using-pom.md`, consult the `skills/README.md` catalog, and follow the selected skill's linked prompt. This is skill-only: it does not run code, call a model, or write to your project; in a repository without POM it stays inert. To also install the POM method files into a project, use the bootstrap below.
+
 ### First install (recommended)
 
 Download and run the bootstrap script from the target project root:

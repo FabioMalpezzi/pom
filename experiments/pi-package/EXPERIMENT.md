@@ -145,7 +145,11 @@ Two decisions this forces on the experiment:
 
 ## Outcome
 
-Decision: pending. Skill-only packaging is tested before any extension; active extension promotion (if the skill-only path proves insufficient) requires a Decision Record. No canonical package metadata or extension will be changed before the experiment closes.
+Decision (2026-07-15): PROMOTE skill-only packaging; REJECT the active extension. Three live acceptance behaviors held on Pi 0.80.6 with `pi -e <staging>` (evidence above and two follow-up probes): (a) a POM request in a trusted POM project loaded `using-pom`, routed to `adopt`, read `pom.config.json` before editing, and followed the skill->prompt chain; (b) an ordinary coding request in a non-POM project left the package inert (`using-pom` never read, just the rename + test); (c) a post-compaction-framed POM request re-loaded `using-pom` and routed to `defer`. Because native skill discovery alone satisfies the acceptance contract, the falsification gate rejects the extension — no active adapter, and therefore no Decision Record, is required.
+
+Promoted: the root `package.json` now carries `keywords: ["pi-package"]` and `pi: { skills: ["./skills"] }`, making the POM Source repo installable as a skill-only Pi package. Verified that `pi -e <repo-root>` registers the skills with no manifest error. Added `tests/pi-package/integration/test-pi-package.mjs` (7 checks: manifest, skill self-containment, no extension/LLM client); `npm run pom:test` is 900 passed / 0 failed and `npm run pom:lint` is OK. README documents `pi install`/`pi -e`. The staging builder and live probes remain experiment-only evidence.
+
+Not done / out of scope by this decision: a bundled extension, a durable `pi install` into a shared Pi home with removal checks (temporary `-e` load was verified instead), and five-repetition acceptance (three single-probe scenarios covered the pivotal questions; broader repetition can be added if a regression is suspected).
 
 Promotion path:
 
@@ -164,7 +168,8 @@ Promotion path:
 
 ## Follow-up
 
-- [ ] Wait for the accepted compact-router contract.
-- [ ] Define package fixtures and staging manifest template.
-- [ ] Implement staging builder and wiring tests.
-- [ ] Run live Pi acceptance and decide promotion boundary.
+- [x] Verify the Pi package/extension API against installed Pi 0.80.6.
+- [x] Implement staging builder and wiring tests (skill-only; 13 checks green).
+- [x] Run live Pi acceptance (POM routing, non-POM inertness, post-compaction reload) — all held.
+- [x] Decide the promotion boundary: skill-only promoted, extension rejected, no Decision Record needed.
+- [x] Promote the `pi` manifest to the root `package.json`, add `tests/pi-package/`, and document install in the README.
