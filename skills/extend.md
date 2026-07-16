@@ -1,6 +1,6 @@
 ---
 name: extend
-description: Use when changing POM itself: config rules, templates, prompts, skills, lint, scripts, or source-target alignment.
+description: Use when changing POM itself through config rules, templates, prompts, skills, lint, scripts, or source-target alignment.
 ---
 
 # Skill - extend

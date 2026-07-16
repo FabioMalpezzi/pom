@@ -1,3 +1,9 @@
+---
+name: pom-skill-catalog
+description: Catalog of POM workflows and their canonical prompts. Use as an internal routing reference, not as an invokable workflow.
+disable-model-invocation: true
+---
+
 # POM Skills
 
 POM skills are short operational cards derived from prompts in `prompts/`.

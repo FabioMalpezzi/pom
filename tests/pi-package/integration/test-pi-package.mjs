@@ -9,6 +9,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import yaml from "js-yaml";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
@@ -34,10 +35,29 @@ assert("skills/using-pom.md exists", existsSync(join(ROOT, "skills", "using-pom.
 assert("skills/README.md catalog exists", existsSync(join(ROOT, "skills", "README.md")));
 
 const skillFiles = readdirSync(join(ROOT, "skills")).filter((f) => f.endsWith(".md"));
+const skillMetadata = new Map();
+const invalidSkillMetadata = [];
 const linked = new Set();
 for (const f of skillFiles) {
-  for (const m of readFileSync(join(ROOT, "skills", f), "utf8").matchAll(/`?(prompts\/[A-Za-z0-9._/-]+\.md)`?/g)) linked.add(m[1]);
+  const content = readFileSync(join(ROOT, "skills", f), "utf8");
+  const frontmatter = content.match(/^---\n([\s\S]*?)\n---/);
+  try {
+    if (!frontmatter) throw new Error("frontmatter is required");
+    const metadata = yaml.load(frontmatter[1]);
+    if (!metadata?.name) throw new Error("name is required");
+    if (!metadata?.description) throw new Error("description is required");
+    skillMetadata.set(f, metadata);
+  } catch (error) {
+    invalidSkillMetadata.push(`${f}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  for (const m of content.matchAll(/`?(prompts\/[A-Za-z0-9._/-]+\.md)`?/g)) linked.add(m[1]);
 }
+assert("every exported skill document has valid metadata", invalidSkillMetadata.length === 0, invalidSkillMetadata.join(", "));
+assert("skills/README.md stays out of model invocation", skillMetadata.get("README.md")?.["disable-model-invocation"] === true);
+assert("POM improve uses a collision-safe Pi skill name", skillMetadata.get("improve.md")?.name === "pom-improve");
+const names = [...skillMetadata.values()].map((metadata) => metadata.name);
+assert("exported Pi skill names are unique", new Set(names).size === names.length);
+
 const missing = [...linked].filter((p) => !existsSync(join(ROOT, p)));
 assert("every skill-linked prompt resolves in the repo", missing.length === 0, missing.join(", "));
 
