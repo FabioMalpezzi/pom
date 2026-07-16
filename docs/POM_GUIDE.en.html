@@ -64,6 +64,7 @@
         <a href="#tools">Tools</a>
         <a href="#reader">Reader</a>
         <a href="#workflow">Practice</a>
+        <a href="#pi-package">Pi</a>
         <a href="#install">Install</a>
         <a href="#overlay">Overlay</a>
         <a href="#adoption">Adoption</a>
@@ -240,13 +241,19 @@
           <div class="command-list">
             <code>node pom/scripts/project-reader/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations</code>
           </div>
+          <p>The standalone CLI can launch the reader, open a file directly, or search content:</p>
+          <div class="command-list">
+            <code>project-reader --root . --port 4173</code>
+            <code>project-reader open wiki/overview.md --port 4173</code>
+            <code>project-reader search "Operating Memory" --root .</code>
+          </div>
           <p>Then open <code>http://127.0.0.1:4173</code>.</p>
         </div>
         <div class="item">
           <h3>Read, search, annotate</h3>
           <p>The reader starts from <code>wiki/index.md</code> when a wiki exists. Without a wiki, it shows a generated project entry page and still exposes project documentation and source files.</p>
           <p>When <code>pom.config.json</code> exists, configured roots refine the document set and classification: documentation roots, decision records, task plans, analysis, source roots, tests, mockup packages, root-level Markdown, and generated-output exclusions. Without the config, the reader keeps its built-in allowlist. The UI shows which mode is active.</p>
-          <p>It supports thematic and tree navigation, pinned or collapsible side panels, project-wide <code>rg</code> search when ripgrep is installed, search inside the open file, optional regex mode, Markdown tables, fixed-width text, syntax-highlighted code, and useful source line numbers. Rendering rejects files above 1 MB and binary-looking files; search skips files above 1 MB. The document pane keeps prose readable while giving code blocks and tables more room on large screens.</p>
+          <p>It supports thematic and tree navigation, direct opening through URLs such as <code>?path=wiki/overview.md</code>, a command palette, pinned or collapsible side panels, project-wide <code>rg</code> search when ripgrep is installed, search inside the open file, optional regex mode, Markdown tables, fixed-width text, syntax-highlighted code, and useful source line numbers. In large repositories, the tree loads directories on demand and lists are virtualized. Rendering rejects files above 1 MB and binary-looking files; search skips files above 1 MB. The document pane keeps prose readable while giving code blocks and tables more room on large screens.</p>
           <p>Annotations are JSON work files under the configured annotation directory. The default is <code>.pom-reader/annotations/</code>. Treat them as runtime evidence unless the project chooses to archive one. The right panel separates new notes, in-progress work, and processed history; the UI can reopen the target document when it still exists. It does not talk directly to an AI agent, and browser-based source editing is not part of the current workflow. The server binds to <code>127.0.0.1</code> and sends restrictive browser security headers.</p>
         </div>
       </div>
@@ -267,7 +274,7 @@
         <div class="item">
           <span class="tag">2. Workflow</span>
           <h3>The agent chooses the procedure</h3>
-          <p>The agent chooses a short skill, reads the linked instructions, and uses a template only when a real document is needed.</p>
+          <p>The agent starts from <code>using-pom</code> when the route is not already clear, consults the catalog, chooses a short skill, and reads its linked canonical prompt. A template is used only when a real document is needed.</p>
         </div>
         <div class="item">
           <span class="tag gold">3. Memory</span>
@@ -278,6 +285,27 @@
           <span class="tag teal">4. Verification</span>
           <h3>POM checks reliability</h3>
           <p>POM checks that the result is reliable. For code this usually means tests. For documents it means checking the sources, looking for contradictions, and challenging the conclusion before treating it as settled.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="pi-package">
+      <h2>Use POM with the Pi coding agent</h2>
+      <p>POM can be loaded into Pi as a skills-only package. This makes <code>using-pom</code> available in every session and lets the agent route natural requests to the right procedure without an extension, a POM runtime, or calls to an additional model.</p>
+      <div class="grid two">
+        <div class="item">
+          <h3>Try or install it</h3>
+          <div class="command-list">
+            <code>pi -e git:github.com/FabioMalpezzi/pom</code>
+            <code>pi install git:github.com/FabioMalpezzi/pom</code>
+            <code>pi install /absolute/path/to/pom</code>
+          </div>
+          <p><code>pi list</code> shows registered packages and skills; <code>pi remove git:github.com/FabioMalpezzi/pom</code> removes the package from settings.</p>
+        </div>
+        <div class="item">
+          <h3>Agent package and project installation are complementary</h3>
+          <p>The Pi package gives the method to the agent. It does not install POM in the repository or create Operating Memory. A project governed with POM must still use the bootstrap below, which adds <code>pom/</code>, <code>pom.config.json</code>, and shared project instructions.</p>
+          <p>In a repository without a POM installation, the package remains inert until a request explicitly concerns the method.</p>
         </div>
       </div>
     </section>

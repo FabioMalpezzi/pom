@@ -64,6 +64,7 @@
         <a href="#tools">Strumenti</a>
         <a href="#reader">Reader</a>
         <a href="#workflow">Pratica</a>
+        <a href="#pi-package">Pi</a>
         <a href="#install">Installa</a>
         <a href="#overlay">Overlay</a>
         <a href="#adoption">Adozione</a>
@@ -240,13 +241,19 @@
           <div class="command-list">
             <code>node pom/scripts/project-reader/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations</code>
           </div>
+          <p>La CLI standalone può avviare il reader, aprire direttamente un file o cercare contenuti:</p>
+          <div class="command-list">
+            <code>project-reader --root . --port 4173</code>
+            <code>project-reader open wiki/overview.md --port 4173</code>
+            <code>project-reader search "Operating Memory" --root .</code>
+          </div>
           <p>Poi aprire <code>http://127.0.0.1:4173</code>.</p>
         </div>
         <div class="item">
           <h3>Leggere, cercare, annotare</h3>
           <p>Il reader parte da <code>wiki/index.md</code> quando esiste una wiki. Senza wiki, mostra una pagina indice generata per il progetto e rende comunque consultabili documentazione e sorgenti.</p>
           <p>Quando esiste <code>pom.config.json</code>, le root configurate migliorano il set documentale e la classificazione: documentazione, decisioni, task plan, analisi, root sorgente, test, pacchetti mockup, Markdown alla root ed esclusioni generate. Senza config, il reader mantiene l'allowlist interna. La UI mostra quale modalità è attiva.</p>
-          <p>Supporta navigazione tematica e ad albero, pannelli laterali fissabili o collassabili, ricerca di progetto con <code>rg</code> quando ripgrep è installato, ricerca nel file aperto, modalità regex opzionale, tabelle Markdown, testo a larghezza fissa, codice colorato per sintassi e numeri di riga dove servono. Il rendering rifiuta file oltre 1 MB e file che sembrano binari; la ricerca salta i file oltre 1 MB. L'area documento mantiene leggibile il testo e lascia più spazio a codice e tabelle sugli schermi grandi.</p>
+          <p>Supporta navigazione tematica e ad albero, apertura diretta tramite URL come <code>?path=wiki/overview.md</code>, command palette, pannelli laterali fissabili o collassabili, ricerca di progetto con <code>rg</code> quando ripgrep è installato, ricerca nel file aperto, modalità regex opzionale, tabelle Markdown, testo a larghezza fissa, codice colorato per sintassi e numeri di riga dove servono. Nei repository grandi, l'albero carica le directory su richiesta e gli elenchi vengono virtualizzati. Il rendering rifiuta file oltre 1 MB e file che sembrano binari; la ricerca salta i file oltre 1 MB. L'area documento mantiene leggibile il testo e lascia più spazio a codice e tabelle sugli schermi grandi.</p>
           <p>Le annotazioni sono file JSON nella directory di annotazione configurata. Il default è <code>.pom-reader/annotations/</code>. Vanno trattate come evidenza runtime, salvo scelta esplicita di archiviarne una. Il pannello destro separa nuove note, lavoro in elaborazione e storico; la UI può riaprire il documento di riferimento quando esiste ancora. Non parla direttamente con un agente AI, e l'editing dei sorgenti dal browser non fa parte del flusso corrente. Il server si lega a <code>127.0.0.1</code> e invia header browser restrittivi.</p>
         </div>
       </div>
@@ -267,7 +274,7 @@
         <div class="item">
           <span class="tag">2. Workflow</span>
           <h3>L'agente sceglie la procedura</h3>
-          <p>L'agente sceglie una skill breve, legge le istruzioni collegate e usa un template solo quando serve davvero un documento.</p>
+          <p>L'agente parte da <code>using-pom</code> quando il percorso non è già chiaro, consulta il catalogo, sceglie una skill breve e legge il prompt canonico collegato. Un template viene usato solo quando serve davvero un documento.</p>
         </div>
         <div class="item">
           <span class="tag gold">3. Memoria</span>
@@ -278,6 +285,27 @@
           <span class="tag teal">4. Verifica</span>
           <h3>POM controlla l'affidabilità</h3>
           <p>POM controlla che il risultato sia affidabile. Per il codice di solito significa test. Per i documenti significa controllare le fonti, cercare contraddizioni e sfidare la conclusione prima di considerarla chiusa.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="pi-package">
+      <h2>Usare POM con il coding agent Pi</h2>
+      <p>POM può essere caricato in Pi come pacchetto di sole skill. Questo rende disponibile <code>using-pom</code> in ogni sessione e permette all'agente di instradare richieste naturali verso la procedura corretta, senza estensioni, runtime POM o chiamate a un modello aggiuntivo.</p>
+      <div class="grid two">
+        <div class="item">
+          <h3>Provarlo o installarlo</h3>
+          <div class="command-list">
+            <code>pi -e git:github.com/FabioMalpezzi/pom</code>
+            <code>pi install git:github.com/FabioMalpezzi/pom</code>
+            <code>pi install /percorso/assoluto/pom</code>
+          </div>
+          <p><code>pi list</code> mostra pacchetti e skill registrati; <code>pi remove git:github.com/FabioMalpezzi/pom</code> rimuove il pacchetto dalle impostazioni.</p>
+        </div>
+        <div class="item">
+          <h3>Pacchetto agente e installazione progetto sono complementari</h3>
+          <p>Il pacchetto Pi dà il metodo all'agente. Non installa POM nel repository e non crea Operating Memory. Un progetto governato con POM deve comunque usare il bootstrap qui sotto, che aggiunge <code>pom/</code>, <code>pom.config.json</code> e le istruzioni condivise del progetto.</p>
+          <p>In un repository senza installazione POM, il pacchetto resta inerte finché una richiesta non riguarda esplicitamente il metodo.</p>
         </div>
       </div>
     </section>
