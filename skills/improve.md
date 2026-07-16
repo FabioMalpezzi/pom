@@ -1,5 +1,5 @@
 ---
-name: improve
+name: pom-improve
 description: Use when recurring POM method or governance friction needs controlled improvement.
 ---
 
