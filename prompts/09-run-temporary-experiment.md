@@ -6,19 +6,20 @@ Use this prompt to manage a temporary experiment without polluting the stable co
 I want to run a temporary experiment on this project.
 
 Before modifying files:
-1. clarify the experiment objective;
-2. identify what must be tested and what would count as a useful outcome;
-3. check Git status with `git status`;
-4. detect whether the current checkout is already isolated:
+1. read `pom.config.json` when present; preserve its ownership mode, adoption profile, configured roots, and artifact policy;
+2. clarify the experiment objective;
+3. identify what must be tested and what would count as a useful outcome;
+4. check Git status with `git status`;
+5. detect whether the current checkout is already isolated:
    - compare `git rev-parse --git-dir` with `git rev-parse --git-common-dir`;
    - if they differ, check `git rev-parse --show-superproject-working-tree` so a submodule is not mistaken for a disposable worktree;
-5. propose where to work:
+6. propose where to work:
    - Git branch `exp/<topic>` if the experiment touches project files;
    - harness-native worktree/workspace feature, when available, if the experiment is risky, broad, dependency-heavy, or likely to leave many file changes;
    - Git worktree on branch `exp/<topic>` only if no native worktree feature is available and the user approves the location;
    - `/tmp` if it is only temporary exploration;
    - `experiments/<topic>/` only if artifacts must remain in the repository during evaluation;
-6. wait for my approval.
+7. wait for my approval.
 
 If the request concerns one-shot work, for example a focused refactor, test of a new LLM model, library/API trial, comparison script, quick benchmark, or temporary technical analysis:
 - if it is lightweight and already decided, propose direct work on the current branch with a clear task/commit;
@@ -63,14 +64,16 @@ experiments/<topic>/
   artifacts/
   references/
 
-At the end, propose a consolidation decision:
+At the end, propose a consolidation decision that respects the adoption profile:
 - discard the experiment and remove/abandon the branch;
-- archive a synthesis in `analysis/`;
-- update `wiki/` if it becomes current knowledge;
-- create or update a spec;
-- create a new ADR if a structural decision changes;
-- generate a task plan if implementation work emerges;
-- leave only a Git/branch reference if artifacts should not be promoted into the project.
+- archive a synthesis in `analysis/` only when `adoption.analysis` permits it and use the configured analysis root;
+- update `wiki/` only when `adoption.wiki` is enabled and the result is current reusable knowledge;
+- create or update a spec only when governed documentation is enabled or the Target Project already owns an equivalent authoritative spec convention;
+- create a new ADR only when `adoption.decisions` is enabled; otherwise use the Target Project's approved decision mechanism or ask whether to enable Decision Records;
+- generate a task plan only when `adoption.tasks` permits structured task artifacts and implementation work emerges;
+- leave only a Git/branch reference when the relevant module is disabled or artifacts should not be promoted into the project.
+
+Never enable a disabled adoption module implicitly during consolidation. Ask before changing `pom.config.json` or introducing a new governed artifact type.
 
 If the experiment branch or worktree needs merge, PR, keep, discard, or cleanup handling after evaluation, use `skills/finish-branch.md`.
 

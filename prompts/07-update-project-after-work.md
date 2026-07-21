@@ -5,7 +5,9 @@ Use this prompt at the end of a work session.
 ```text
 Update the project state after the completed work.
 
-First summarize what changed.
+First read `pom.config.json` when present, especially the adoption profile, artifact policy, configured roots, and `handoff` rules. Disabled modules are not closeout obligations and must not be created or enabled by this prompt.
+
+Then summarize what changed.
 
 Completion verification:
 - before handoff, verify that any work marked Complete or Accepted during this session has passed the completion verification gate;

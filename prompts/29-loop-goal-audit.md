@@ -1,153 +1,98 @@
-# Prompt — Audit fit di un workflow loop/goal
+# Prompt - Audit a Loop/Goal Workflow
 
-Versione: v1 (2026-05-30).
-Stato: **canonico** (promosso da `agent-loop-fsm` il 2026-05-30).
-
-Scopo: guidare un agente di codifica (Claude Code, Cursor, qualunque altro) ad eseguire l'audit fit di un workflow POM di tipo loop/goal. L'output è un file `<name>.fit.md` che classifica ogni stato e ogni transizione come `clean fit`, `adapted fit` o `forced lossy`, con motivazione domain-level.
-
-L'agente di codifica usa **i propri tool nativi** (Read, Bash, Write) — non serve runtime LLM esterno né chiave API aggiuntiva. È esattamente lo stesso lavoro che il runtime esterno (`runtime-candidate/workflow-fit-auditor.ts`) automatizza con un LLM separato, ma fatto con la connessione dell'agente di codifica già attiva.
+Use this prompt to audit the structural fit and criteria conformity of an agent-shaped loop/goal workflow. The auditor produces a derived `.fit.md` artifact and never modifies the workflow YAML.
 
 ```text
-Esegui l'audit fit del workflow POM al path <WORKFLOW_PATH>.
+Audit the POM loop/goal workflow at <WORKFLOW_PATH>.
 
-Prima di iniziare:
-1. leggi `pom.config.json` e conferma che `workflows.enabled: true` e `workflows.loopGoal.enabled: true`. Se uno dei due manca o è falso, ferma e instrada a `skills/config.md`.
-2. leggi questo prompt + `skills/loop-goal.md`.
-3. leggi il file workflow indicato (`Read` tool).
-4. esegui il validator con `Bash`: `node scripts/lint-workflows.mjs <WORKFLOW_PATH>` — registra il verdetto (PASS/FAIL) e le eventuali entry Error/Warning.
-5. se il workflow contiene `state-invoke` o `event-invoke`, leggi ANCHE ogni sub-workflow referenziato (il path nell'`invoke.workflow` è relativo al file caller). Questo è il passo che distingue un audit di forma da un audit di integrità della composizione.
-6. **cerca il file di criteri** associato. Il nome canonico corrente del contratto è `criteria.md`. In POM Source vive di solito in `experiments/<topic>/design/criteria.md`; in un progetto target parti da `workflows.loopGoal.criteriaPath` quando presente, poi dalla convenzione dichiarata dal progetto, oppure cerca vicino al workflow in `design/`, `workflows/generated/`, o nella cartella di esperimento equivalente. I vecchi file `criteria-experiment-<N>-<HID>.md`, se presenti, sono artefatti storici o run-specifici: usali solo se non esiste `criteria.md` o se l'utente indica esplicitamente quel run. Se esiste un solo file di criteri o uno che cita esplicitamente questo workflow, leggilo. Se ne esistono più, chiedi all'utente quale è quello rilevante per questo workflow. Se non esiste alcun file di criteri, segnala chiaramente nell'output che l'audit di conformità non può essere eseguito e procedi solo con la classificazione fit.
+## Preconditions
 
-Procedi con la classificazione:
+1. Read `pom.config.json`.
+2. In a Target Project, continue only when both `workflows.enabled: true` and `workflows.loopGoal.enabled: true`. Otherwise stop and route to `skills/config.md`.
+3. Read `skills/loop-goal.md`, this prompt, and the workflow at `<WORKFLOW_PATH>`.
+4. Run `node scripts/lint-workflows.mjs <WORKFLOW_PATH>` and record PASS/FAIL, errors, and warnings. If the root workflow fails validation, stop before classification, report the findings, and request correction; an invalid model cannot receive a fit verdict.
+5. Follow every `state.invoke.workflow` and `transition.invoke.workflow` reference. Resolve each path relative to its caller, read the sub-workflow, and validate it too. If an invoked workflow fails validation, stop before classifying the composition and report the findings.
+6. Locate the accepted `criteria.md` from `workflows.loopGoal.criteriaPath`, the project's declared convention, or the workflow's nearby design directory. Legacy numbered criteria files may be used only when no current `criteria.md` exists or the user explicitly identifies that round.
+7. If several plausible criteria files exist, ask which one governs the workflow. If none exists, continue with structural fit only and state that criteria conformity is not executable.
 
-## Primitive POM note (riferimento per classificare)
+## Structural model
 
-- **states**: stati nominali, opzionalmente `is_final` o `re_entry_allowed`.
-- **events**: nomi degli eventi che triggrano transizioni.
-- **transitions**: archi `{from, to, event, guard?}`.
-- **guards**: predicati nominali referenziati dalle transizioni.
-- **invariants**: regole testuali.
-- **context_schema**: schema documental del context.
-- **state-invoke**: invocazione sincrona di sub-workflow da uno stato (`state.invoke: {workflow, on_completion[]}`).
-- **event-invoke**: invocazione sincrona da una transizione (`transition.invoke`).
-- **pipeline**: sequenza lineare di workflow autonomi.
-- **self-transition**: `from == to`, tipicamente con un guard (retry, loop locale).
+Treat the workflow YAML as authoritative. Audit current supported contracts, including:
+- states, events, transitions, guards, invariants, and `context_schema`;
+- synchronous `state-invoke` and `event-invoke` composition;
+- bounded loops through `loop_guard`;
+- state residence bounds through `timeout`;
+- Dynamic Workflow control-plane fields when enabled: launch, await/join, timeout reaction, cancellation, detachment, compensation, suspend, and resume.
 
-Primitive temporali promosse da SPEC-0007:
-- **`loop_guard`**: bound a un loop per numero di visite (`max_visits`) e/o durata (`max_duration`).
-- **`timeout`**: bound di permanenza in uno stato non-loop.
+POM models the deterministic control plane. Target code owns workers, scheduling, persistence, timers, cancellation mechanics, side effects, and runtime execution. Native parallel FSM states, implicit asynchronous transitions, or unmodeled fork/join semantics are not clean fits.
 
-Un workflow che usa `loop_guard` o `timeout` non è "outside POM": queste primitive sono normali campi validati dallo schema. Se stai auditando un vecchio esperimento che le descrive come "estensioni attese", trattalo come linguaggio storico, non come stato corrente.
+## Classification
 
-Parallelismo nativo dentro la FSM POM resta fuori modello: parallel
-states, transizioni async e fork/join interni alla state machine rendono
-il fit `forced lossy` o `adapted con grossa nota`. Il contratto Dynamic
-Workflow accettato da ADR-0004 è invece **dentro il workflow come control
-plane deterministico**: `fan_out_launch`, `await` con `join`/`k`/timeout,
-`react`, `cancel_handles`, `detach_handles`, lifecycle propagation e
-`compensation` descrivono i confini che la FSM governa. Non classificarli
-come fork/join nativo. Valuta invece se il modello dichiara esplicitamente
-launch, wait/join, timeout, reaction, cancel/detach, compensation e
-handle lifecycle; la sola parte che resta al target è l'esecuzione
-concorrente reale del data plane (workers, queue, scheduler, thread/process
-cancel, persistenza durevole).
+Classify every state and every transition as exactly one of:
 
-## Definizioni di fit
+- **clean fit**: represented directly without semantic loss;
+- **adapted fit**: representable with a documented convention, runtime responsibility, or minor translation;
+- **forced lossy**: material semantics are absent, ambiguous, or distorted.
 
-- **clean fit**: mappa direttamente a una primitiva POM, senza riformulazione.
-- **adapted fit**: usa la primitiva con una piccola riformulazione documentata (split, merge, rename, context counter quando il target non ha ancora adottato una primitiva schema disponibile).
-- **forced lossy**: la primitiva distorce il significato di dominio. Il modello tradisce il workflow.
+For each item record:
+- YAML identifier;
+- classification;
+- domain-level reason;
+- adaptation or loss;
+- runtime responsibility, if any;
+- related criterion, if any.
 
-## Struttura del file `<name>.fit.md` da produrre
+Do not classify from field shape alone. Ask whether the model preserves the behavior that matters to the domain and experiment.
 
-    ---
-    experiment: <topic>
-    hypothesis: <Hx, se applicabile>
-    artifact: <relative path al .yaml>
-    iteration: 1
-    date: <YYYY-MM-DD>
-    pattern: <breve descrizione del pattern modellato>
-    ---
+Validator discipline:
+- any validator error stops classification and produces a validation-failure report instead of a fit verdict;
+- validator warnings require explicit treatment;
+- an unreadable or invalid invoked workflow makes the composition incomplete;
+- never repair YAML during the audit.
 
-    # Fit classification — <workflow name>
+## Criteria conformity
 
-    ## States (N)
+When accepted criteria exist, evaluate structural fit and criteria conformity separately.
 
-    | State | Fit | Note |
-    |---|---|---|
-    | ... | clean fit / adapted / forced | motivazione domain-level (1 frase) |
+For every objective clause, gate, signal, and exit condition, record:
+- the workflow element or external evidence that supports it;
+- whether it is `satisfied`, `unsupported`, `contradicted`, or `not assessable`;
+- the reason and source citation.
 
-    ## Transitions (N)
+A clean structural model may still fail its criteria. A criteria-conforming intention may still be structurally lossy. If either dimension is unacceptable, mark the workflow non-promotable.
 
-    | Transition | Fit | Note |
-    |---|---|---|
-    | <from> → <to> (event: <e>, guard: <g>?) | ... | ... |
+## Output
 
-    **Conteggio**: N1/N stati clean fit · N2/N transizioni clean fit
+Propose the output path before writing. Prefer:
+- configured `workflows.loopGoal.artifactsRoot` or project convention in a Target Project;
+- the design directory associated with the experiment in POM Source.
 
-    ## Gate results
+Write `<name>.fit.md` with:
 
-    | Check | Result |
-    |---|---|
-    | Validator (`pom:workflow:lint`) | PASS / FAIL — <count> errors, <count> warnings |
-    | Sub-workflow valido (se composizione) | PASS / FAIL — uno per ogni sub |
-    | Primitive speciali dichiarate | lista (`loop_guard`, `timeout`, Dynamic Workflow handle lifecycle, ...) o "nessuna" |
+1. workflow and criteria paths;
+2. validator results for the root and every invoked workflow;
+3. declared special primitives;
+4. state classification table;
+5. transition classification table;
+6. criteria conformity table;
+7. counts and percentages for clean/adapted/forced classifications;
+8. semantic losses and runtime-owned responsibilities;
+9. promotion verdict: promotable / non-promotable / not assessable;
+10. exact follow-up actions.
 
-    ## Conformity check (vs criteria)
+Ask for approval before writing if the output path is new, ambiguous, or covered by an approval-required artifact policy. Otherwise write only the derived audit file; do not modify YAML, criteria, decisions, or project state.
 
-    Se hai trovato un file di criteri associato al workflow, qui devi verificare punto per punto la conformità.
+## Verification
 
-    | Criterio (dal `criteria.md`) | Atteso | Verificato nel workflow? | Note |
-    |---|---|---|---|
-    | Obiettivo | <una frase dal criteria> | sì / parziale / no | come il workflow lo realizza, o cosa manca |
-    | Gate: <nome> | <soglia> | sì / parziale / no | quale elemento del workflow lo supporta |
-    | Signal: <nome> | <trend, baseline> | sì / parziale / no | idem |
-    | Out of scope: <voce> | non modellato | conferma / violazione | il workflow rispetta lo scope o lo eccede? |
-    | Condizione di uscita: raggiunto | <criterio> | sì / no | quale terminale del workflow corrisponde |
-    | Condizione di uscita: forfait per stallo | <es. loop_guard max_visits=N> | sì / parziale / no | come il workflow esprime il bound |
-    | Condizione di uscita: forfait per budget | <es. max_duration=T> | sì / parziale / no | idem |
-    | Falsificazione | <evento osservabile> | il workflow espone quell'osservabile? | sì / no |
+Before finishing, verify that:
+- the root workflow and every invoked workflow were read and validated;
+- every state and transition appears exactly once in the classification;
+- validator failures were not classified clean;
+- every accepted criterion appears in the conformity table;
+- structural fit and criteria conformity have separate verdicts;
+- percentages agree with table counts;
+- the output path follows configuration;
+- no source workflow or accepted criteria were modified.
 
-    Se il file di criteri non esiste o non è applicabile, scrivi qui: "Conformity check non eseguito: nessun `criteria.md` trovato per questo workflow." e ferma.
-
-    Se la conformità è "no" o "parziale" su uno qualunque dei gate o delle condizioni di uscita, **il verdetto complessivo NON può essere "clean fit"** — anche se ogni stato/transizione mappa pulito alle primitive. Distinguere fit (forma) da conformità (corrispondenza ai criteri) è il punto di questo audit.
-
-    ## Verdict
-
-    Due dimensioni distinte:
-
-    - **Fit (forma)**: clean / adapted / forced, con motivazione (cosa nel workflow forza la classificazione).
-    - **Conformità (rispetto ai criteri)**: conforme / non conforme su gate / signal / condizioni di uscita / scope / falsificazione, con elenco esplicito delle non-conformità.
-
-    Verdetto complessivo solo se BOTH sono accettabili. Una di esse "no" rende il verdetto "non promovibile" — il workflow va rivisto o i criteri vanno aggiornati per via documentata (supersedere esplicito del criteria.md).
-
-## Vincoli
-
-- Una riga per ogni stato e per ogni transizione. Niente placeholder, ogni nota deve essere motivata.
-- Per ogni terminale (`is_final: true`) presente nel workflow, deve esserci almeno una riga in States.
-- Per ogni transizione presente nel YAML, deve esserci almeno una riga in Transitions.
-- Per i workflow composti: il fit di uno stato con `invoke` mappa a `state-invoke` (clean fit se l'on_completion copre tutti i terminali del sub-workflow; adapted se ne copre solo alcuni con motivazione).
-- Se il validator fallisce, non dichiarare il workflow "clean": riporta il fallimento e ferma la classificazione.
-- Sii preciso ma sintetico. Target totale: 40-80 righe per `<name>.fit.md`.
-
-## Path di output
-
-Per default scrivi il file vicino agli artefatti di design del workflow:
-- in POM Source: input `experiments/<topic>/workflows-candidate/foo.yaml`, output `experiments/<topic>/design/foo.fit.md`;
-- in un progetto target: se il workflow vive in `workflows/`, usa `workflows/generated/foo.fit.md` oppure la cartella `design/` dichiarata dal progetto.
-
-Se il progetto ha una convenzione propria per gli artefatti derivati, seguila e dichiarala nel riepilogo.
-
-## Termine
-
-Una volta scritto il file, rispondi all'utente con un riepilogo di 2-3 righe: percentuale clean fit, eventuali estensioni backlog dichiarate, eventuali criticità. Cita il path del file scritto.
+Final response: give the output path, clean-fit percentage, criteria-conformity verdict, validator verdict, and the most important loss or blocker in 2-4 lines.
 ```
-
-## Note di consolidazione
-
-Questo prompt è la versione *coding-agent-native* del lavoro che il runtime TypeScript in `experiments/agent-loop-fsm/runtime-candidate/workflow-fit-auditor.ts` automatizza. Differenze pratiche:
-
-- **Niente runtime LLM esterno**, niente chiave API aggiuntiva, niente `npm install`. L'agente di codifica usa la sua connessione e i suoi tool nativi.
-- **Più allineato alla filosofia POM** ("no runtime in POM"): la skill istruisce, l'agente esegue. POM non porta una dipendenza LLM nei target.
-- **Migliore meta-osservazione del runtime esterno** già integrata: il prompt include esplicitamente l'istruzione di seguire `state-invoke`/`event-invoke` (la limitazione diagnostica vista al primo test del runtime esterno su `agent-supervisor.yaml`).
-- **Worked example a confronto**: gli output committati `design/agent-supervisor-auto.fit.md` e `design/agent-loop-table-auto.fit.md` (prodotti dal runtime esterno) servono da riferimento di "ecco come dovrebbe venire". Sono affiancati ai `.fit.md` scritti a mano da confrontare per validare il pattern.

@@ -270,13 +270,15 @@ acceptance. Silent "OK" is not enough when the contract is logically
 weak.
 
 Keep the frozen contract lean, but also keep the dialogue trace. The
-`define-criteria` mode writes a separate
-`experiments/<topic>/design/criteria.dialog.md` file for the
-consequences signalled during the discussion, off-grid questions, and
-user calibrations. Historical experiments may still use numbered
+`define-criteria` mode writes the trace at
+`workflows.loopGoal.dialogPath` when configured. In POM Source, the
+usual fallback is `experiments/<topic>/design/criteria.dialog.md`; a
+Target Project must follow its configured path or declared convention
+instead of inheriting that source-specific location. Historical
+experiments may still use numbered
 `criteria-experiment-<N>-<HID>.dialog.md` traces. The evaluator reads the
 frozen criteria and evidence, not this dialogue trace; the trace exists
-so the reasoned confrontation is inspectable later and can improve the
+so the reasoned dialogue is inspectable later and can improve the
 method.
 
 ## Boundaries

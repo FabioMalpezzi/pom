@@ -153,3 +153,9 @@ Sources used: `prompts/28-loop-goal-define-criteria.md`, `skills/loop-goal.md`, 
 Updated the loop/goal tutorial with the optional integration pattern: an agent-native goal tracker can track session status and budget, while POM loop/goal defines the measurable contract, gate, signal, falsification, and exits. Agents without native goal tracking should carry the active loop state through a POM note, task plan, or workflow state.
 
 Sources used: `wiki/loop-goal-workflow-tutorial.md`, `skills/loop-goal.md`, and the 2026-06-01 loop/goal trial in this repository session.
+
+## [2026-07-21] update | align loop-goal guidance with configured paths
+
+Updated the loop/goal tutorial to distinguish POM Source fallback paths from Target Project paths configured through `workflows.loopGoal.dialogPath`.
+
+Sources used: `prompts/28-loop-goal-define-criteria.md`, `skills/loop-goal.md`, `templates/POM_CONFIG_TEMPLATE.json`, and `wiki/loop-goal-workflow-tutorial.md`.

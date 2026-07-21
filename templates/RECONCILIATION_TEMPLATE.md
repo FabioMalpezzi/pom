@@ -22,7 +22,7 @@ Divergence type: _
 | Type | Resolution path |
 |---|---|
 | Obsolescence | Update the wiki page to reflect the current source (only if `adoption.wiki` is enabled and wiki exists) |
-| Contradiction | Create an ADR that resolves the contradiction; update wiki after decision (only if wiki is enabled and exists) |
+| Contradiction | Record an explicit authoritative decision. Create an ADR only if `adoption.decisions` is enabled; if it is disabled, use the project's approved decision mechanism or ask whether to enable Decision Records. Update wiki after the decision only if wiki is enabled and exists. |
 | Expiry | Archive or remove the memory; note the reason |
 | Gap | Create a new wiki page or section (only if wiki is enabled and exists); flag as open question if source is unclear |
 

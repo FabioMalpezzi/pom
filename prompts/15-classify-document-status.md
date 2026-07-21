@@ -6,7 +6,9 @@ document type or status is unclear.
 ```text
 Classify the requested artifact before writing it.
 
-First decide the document type. Apply precedence before choosing:
+First read `pom.config.json` when present. Use its ownership mode, adoption profile, configured roots, file patterns, and existing project-specific statuses. Do not propose an artifact owned by a disabled adoption module unless the user explicitly asks to enable that module; otherwise choose an enabled authoritative form or report that configuration must be clarified.
+
+Then decide the document type. Apply precedence before choosing:
 
 - durable approved decision or boundary -> ADR, even when the decision is reusable knowledge;
 - desiderata, unresolved alternatives, exploratory reasoning, comparison, synthesis, or evidence -> Open Discussion or analysis, even when it will later inform the wiki;

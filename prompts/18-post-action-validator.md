@@ -24,6 +24,17 @@ lint, or `skills/check.md` for ordinary local verification.
 
 **Read-only.** Do not edit, write, or modify any file. Report findings; the caller or main agent fixes them.
 
+## Operating Profile
+
+Before auditing, read `pom.config.json` when present. Respect its ownership mode, adoption profile, configured roots, and artifact policy. Mark a governed module N/A when it is disabled; do not report its missing folders or artifacts as defects. In particular:
+
+- skip Rule 2 when `adoption.wiki` is disabled;
+- skip Rule 3 when structured task plans are disabled and no configured task plan exists;
+- skip Rule 4 when `adoption.decisions` is disabled;
+- mark the test-specific part of Rule 5 N/A when `adoption.tests` is disabled, while still applying the goal-backward check and the fitting non-code verification path.
+
+If `pom.config.json` is absent, state that the adoption profile is unknown and infer nothing merely from POM's optional capabilities.
+
 ## The 6 Rules
 
 ### Rule 1 — PROJECT_STATE.md is current

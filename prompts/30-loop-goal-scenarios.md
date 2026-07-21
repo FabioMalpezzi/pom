@@ -1,132 +1,99 @@
-# Prompt — Scenari di test di un workflow loop/goal
+# Prompt - Generate Loop/Goal Workflow Scenarios
 
-Versione: v1 (2026-05-30).
-Stato: **canonico** (promosso da `agent-loop-fsm` il 2026-05-30).
-
-Scopo: guidare un agente di codifica ad enumerare i path significativi attraverso un workflow POM di tipo loop/goal e produrre il file `<name>.scenarios.md` con uno scenario per path. È materiale che il runtime del progetto target può consumare come fixture di test (path tracciabili end-to-end con setup, sequenza di eventi, terminale atteso, assertioni di context).
-
-Esegue lo stesso lavoro del modo `scenarios` della skill generica `workflow`, ma con due specializzazioni per il dominio loop/goal: (1) traversa le composizioni (`state-invoke`, `event-invoke`) per generare scenari end-to-end della catena; (2) collega gli scenari ai criteri se esistono, garantendo copertura di ogni condizione di uscita dichiarata nel `criteria.md`.
-
-L'agente di codifica usa i tool nativi (Read per i workflow YAML, Write per l'output). **Niente runtime LLM esterno.**
+Use this prompt to derive path-based test scenarios from an agent-shaped loop/goal workflow. The scenarios are derived artifacts for a Target Project's test implementation; they do not replace executable tests.
 
 ```text
-Genera gli scenari di test per il workflow POM al path <WORKFLOW_PATH>.
+Generate test scenarios for the POM loop/goal workflow at <WORKFLOW_PATH>.
 
-Prima di iniziare:
-1. leggi `pom.config.json` e conferma che `workflows.enabled: true` e `workflows.loopGoal.enabled: true`; se uno dei due manca o è falso, ferma e instrada a `skills/config.md`.
-2. leggi questo prompt + `skills/loop-goal.md`.
-3. leggi il file workflow indicato (`Read`).
-4. se il workflow contiene `state-invoke` o `event-invoke`, leggi ANCHE ogni sub-workflow referenziato. Questo è indispensabile: senza i terminal_state del sub-workflow non puoi enumerare i path della composizione.
-5. cerca il file di criteri associato. Il nome canonico corrente del contratto è `criteria.md`. In POM Source vive di solito in `experiments/<topic>/design/criteria.md`; in un progetto target parti da `workflows.loopGoal.criteriaPath` quando presente, poi dalla convenzione dichiarata dal progetto, oppure cerca vicino al workflow in `design/`, `workflows/generated/`, o nella cartella di esperimento equivalente. I vecchi file `criteria-experiment-<N>-<HID>.md`, se presenti, sono artefatti storici o run-specifici: usali solo se non esiste `criteria.md` o se l'utente indica esplicitamente quel run. Se esiste, leggilo: la copertura degli scenari deve includere ogni condizione di uscita dichiarata.
+## Preconditions
 
-Procedi con l'enumerazione.
+1. Read `pom.config.json`.
+2. In a Target Project, continue only when both `workflows.enabled: true` and `workflows.loopGoal.enabled: true`. Otherwise stop and route to `skills/config.md`.
+3. Read `skills/loop-goal.md`, this prompt, and the workflow at `<WORKFLOW_PATH>`.
+4. Run `node scripts/lint-workflows.mjs <WORKFLOW_PATH>`. If validation fails, report the errors and do not present the scenario set as complete.
+5. Follow every `state.invoke.workflow` and `transition.invoke.workflow` reference. Resolve each path relative to its caller, read the sub-workflow, and validate it.
+6. Locate the accepted `criteria.md` from `workflows.loopGoal.criteriaPath`, the project's convention, or the nearby design directory. Use a legacy numbered criteria file only when no current contract exists or the user explicitly identifies that round.
+7. If criteria are missing, continue with workflow-path coverage and mark criteria-exit coverage not assessable.
 
-## Cosa è uno scenario
+## Scenario contract
 
-Uno scenario è un cammino tracciabile dal `initial_state` a un terminale (o a un punto di rientro in un ciclo di alto livello), con:
+Each scenario must contain:
+- a unique descriptive name;
+- purpose and related criterion or invariant;
+- initial workflow state;
+- plausible initial context using only fields declared in `context_schema`;
+- preconditions and fixtures;
+- an ordered table of current state, external event, guard outcome, transition, side effect, and context change;
+- expected terminal or intentional loop re-entry;
+- final context assertions;
+- expected runtime-owned effects;
+- whether it is positive, failure, misuse, loop, timeout, or edge coverage.
 
-- nome descrittivo (es. `goal_completed_happy_path`, `goal_failed_plan_failed`, `replan_loop_then_success`);
-- stato iniziale (= `initial_state` del workflow);
-- context iniziale di esempio plausibile (campi del `context_schema`);
-- sequenza tabellare `(stato_corrente, evento_esterno) → transizione + side-effect` per ogni transizione attraversata (incluso l'attraversamento dei sub-workflow, se presenti);
-- stato finale atteso (uno dei terminali, o `initial_state` se il workflow è progettato per cicli di rientro);
-- assertioni sul context al termine.
+Use only declared states, events, transitions, guards, context fields, invoked workflows, and control-plane fields. Do not invent behavior to make a path convenient. If required behavior is missing, report a modeling gap.
 
-## Tipi di scenario da generare
+## Required coverage
 
-Punta alla **copertura**, non all'esaustività combinatoria. Generare in ordine:
+Prefer meaningful path coverage over combinatorial exhaustion. Generate, in order:
 
-1. **Happy path principale** — il cammino di successo dichiarato dal workflow.
-2. **Failure path per ogni failure mode** — uno scenario per ogni evento che porta a un terminale di errore (es. `goal_invalid`, `plan_failed`, `action_failed`, `impossible`, `retries_exhausted`, ecc.). Devi visitare ogni terminale `failed`-like almeno una volta.
-3. **Loop path** se il workflow contiene cicli (loop edge o self-transition):
-   - uno scenario che attraversa il loop almeno una volta e poi esce per successo;
-   - uno scenario che attraversa il loop almeno una volta e poi esce per fallimento;
-   - se `loop_guard` è dichiarato (o se il target usa ancora un pattern context-counter equivalente), uno scenario di esaurimento del bound.
-4. **Edge case** dichiarati nelle descrizioni degli stati o negli `invariants` (es. "an agent can be stopped while idle"): uno scenario per ognuno se non già coperto sopra.
+1. the principal happy path;
+2. at least one path to every failure-like terminal;
+3. for each material loop:
+   - loop at least once, then succeed;
+   - loop at least once, then fail;
+   - exhaust `loop_guard` or the declared equivalent bound;
+4. every declared edge case or invariant not already covered;
+5. every final state at least once;
+6. every invoked sub-workflow terminal that changes the caller's behavior;
+7. timeout and recovery paths when `timeout` exists;
+8. Dynamic Workflow lifecycle paths when enabled, including relevant join, timeout reaction, cancel/detach, compensation, suspend, and resume outcomes;
+9. one error or misuse scenario for an invalid event, failed guard, malformed context, or prohibited operation that the contract says must be rejected.
 
-Numero target: 4-10 scenari. Meno di 4 = copertura insufficiente. Più di 10 = stai esaurendo combinazioni invece di coprire path.
+For accepted criteria, cover:
+- reached exit;
+- stall exit;
+- budget exit when representable by the workflow or its declared runtime boundary;
+- the observable falsification event;
+- each gate and signal whose evidence can be exercised by a scenario.
 
-## Struttura del file `<name>.scenarios.md` da produrre
+Do not force experiment-level budget or evidence collection into the YAML when it is correctly owned outside the workflow. Mark that coverage as external and name the expected test or evidence source.
 
-    # Scenari di test — `<workflow file name>`
+## Composition
 
-    **Workflow**: `<workflow_name>` (v<version>)
-    **Sub-workflow invocati** (se applicabile): `<list>`
-    **Terminali del workflow**: `<list>`
-    **Criteri di riferimento** (se applicabile): `<path al criteria.md>`
+For invoked workflows, produce end-to-end caller paths rather than isolated fragments only. Show:
+- the caller transition into invocation;
+- sub-workflow events and terminal;
+- `on_completion` or equivalent mapping back to the caller;
+- propagated context and failure behavior.
 
-    ---
+If a referenced workflow cannot be read or validated, mark all dependent paths incomplete.
 
-    ## Scenario 1: <nome>
+## Output
 
-    **Descrizione**: <una frase>
+Propose the output path before writing. Prefer `workflows.loopGoal.artifactsRoot` or the project's configured derived-artifact convention; in POM Source use the experiment's design directory.
 
-    | Campo | Valore |
-    |---|---|
-    | Stato iniziale | <initial_state> |
-    | Stato finale atteso | <terminal o stato di rientro> |
-    | Context iniziale | <oggetto JSON di esempio, può essere `{}` se non c'è context_schema> |
-    | Context finale atteso | <oggetto JSON di esempio> |
+Write `<name>.scenarios.md` with:
 
-    ### Sequenza eventi e transizioni
+1. source workflow, invoked workflows, and criteria paths;
+2. validator summary;
+3. coverage matrix for states, transitions, terminals, loops, special primitives, and criteria exits;
+4. numbered scenarios using the scenario contract above;
+5. modeling gaps and externally owned verification;
+6. uncovered paths with reasons.
 
-    | # | Stato corrente | Evento esterno | Transizione | Side-effect / Note |
-    |---|---|---|---|---|
-    | 1 | <stato> | <evento> | <stato → stato> | <cosa cambia / cosa invoca / cosa scrive nel context> |
-    | 2 | ... | ... | ... | ... |
+Ask for approval before writing if the path is new, ambiguous, or approval-required. Write only the scenario artifact; do not modify YAML, criteria, runtime code, or tests.
 
-    Per i passi che entrano in un sub-workflow, prefissare lo stato con `(sub:<sub-workflow-name>)`.
+## Verification
 
-    ### Assertioni
+Before finishing, verify that:
+- every scenario uses only declared workflow elements;
+- every final state and failure terminal is covered;
+- material loops include success, failure, and bound exhaustion;
+- invoked workflows are traversed end to end;
+- every applicable accepted criterion exit is covered or explicitly external;
+- at least one error or misuse scenario exists;
+- the matrix agrees with the scenarios;
+- validator failures and uncovered paths are visible;
+- no source workflow or accepted criteria were modified.
 
-    - <invariante post-condizione>
-    - <invariante post-condizione>
-
-    ---
-
-    ## Scenario 2: ...
-
-    ... (idem) ...
-
-    ---
-
-    ## Riepilogo copertura
-
-    | Terminale / condizione di uscita | Scenario/i | Coperto? |
-    |---|---|---|
-    | <terminale 1> | #N, #M | ✅ |
-    | <terminale 2> | #K | ✅ |
-    | <loop visitato almeno una volta> | #N, #M | ✅ |
-    | <criterio del criteria.md: forfait per stallo> | #M | ✅ |
-    | <criterio del criteria.md: falsificazione> | non applicabile / #X | ✅ / ❌ |
-
-    Se la riga "Coperto?" è ❌ per qualcosa, aggiungi uno scenario per coprirla o spiega perché la copertura non è possibile/sensata.
-
-## Vincoli
-
-- Usa SOLO eventi, transizioni e stati effettivamente dichiarati nei workflow letti. Non inventare nulla.
-- Per workflow con `state-invoke`: nella sequenza, dopo l'evento che entra nello stato che invoca il sub-workflow, espandi i passi del sub-workflow (prefisso `(sub:...)`) fino al suo terminale, poi torna al parent con l'evento di `on_completion`.
-- Se il workflow ha self-transition (es. retry), assicurati che almeno uno scenario attraversi la self-transition più di una volta.
-- Se il `criteria.md` cita un evento o un terminale specifico (es. condizione di falsificazione: "il design note dichiara primitiva strutturale nuova"), produci uno scenario che lo esercita.
-- Per ogni terminale `is_final: true` deve esistere almeno UNO scenario che lo raggiunge.
-
-## Path di output
-
-Per default scrivi il file vicino agli artefatti derivati del workflow:
-- in POM Source: input `experiments/<topic>/workflows-candidate/foo.yaml`, output `experiments/<topic>/design/foo.scenarios.md`;
-- in un progetto target: se il workflow vive in `workflows/`, usa `workflows/generated/foo.scenarios.md`, oppure `workflows.loopGoal.artifactsRoot` quando configurato.
-
-Se il progetto ha una convenzione propria per gli artefatti derivati, seguila e dichiarala nel riepilogo.
-
-## Termine
-
-Una volta scritto il file, rispondi all'utente con un riepilogo di 2-3 righe: numero di scenari, copertura dei terminali, eventuali path non coperti. Cita il path del file scritto.
+Final response: give the output path, scenario count, terminal coverage, criteria-exit coverage, and any incomplete path in 2-4 lines.
 ```
-
-## Note di consolidazione
-
-Questo prompt è la versione *coding-agent-native* del lavoro che il runtime TypeScript in `experiments/agent-loop-fsm/runtime-candidate/workflow-scenarios-generator.ts` automatizza. Stessa differenza dell'audit: niente runtime esterno, niente chiave LLM aggiuntiva, l'agente di codifica usa i suoi tool.
-
-Differenza intenzionale rispetto al modo `scenarios` della skill generica `workflow` (prompt 27): qui c'è il vincolo esplicito di leggere `criteria.md` (se esiste) e di garantire copertura di ogni condizione di uscita dichiarata. Quel collegamento criteria → scenari è specifico del dominio loop/goal e giustifica una skill dedicata.
-
-Worked example committato: `experiments/agent-loop-fsm/design/agent-supervisor.scenarios.md` — 7 scenari su un workflow composto (supervisor + sub-workflow goal-lifecycle invocato via `state-invoke`), con copertura di tutti i terminali e dei due path attraverso il replan loop.

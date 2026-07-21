@@ -35,7 +35,7 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `25-self-improvement-loop.md` | improve a POM-managed project's method/governance with observation -> diagnosis -> proposal -> verification -> promotion/discard |
 | `26-process-reader-notes.md` | process human Project Reader annotations through source-backed edits, outcome recording, and verification |
 | `27-workflow-modeling.md` | model a domain/agent workflow as a POM FSM, including opt-in Dynamic Workflow control planes (design / validate / diagram / implement modes) |
-| `28-loop-goal-define-criteria.md` | define an opt-in loop/goal experiment's objective and gate/signal metrics, via reasoned confronto, before any modeling |
+| `28-loop-goal-define-criteria.md` | define an opt-in loop/goal experiment's objective and gate/signal metrics through reasoned dialogue before any modeling |
 | `29-loop-goal-audit.md` | classify an opt-in loop/goal workflow's states/transitions as clean/adapted/forced and check conformity to the criteria |
 | `30-loop-goal-scenarios.md` | enumerate happy/failure/loop/edge test scenarios for an opt-in loop/goal workflow, with terminal coverage |
 | `31-loop-goal-conclude.md` | independently and adversarially conclude a loop/goal experiment against the frozen criteria |

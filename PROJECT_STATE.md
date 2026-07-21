@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-2026-07-13
+2026-07-21
 
 ---
 
@@ -44,7 +44,9 @@ _Current operational state. Update at every significant session or when prioriti
 
 ### Current State
 
-`tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md` is in progress on `exp/pom-skill-evolution`. P0 is complete: the clean baseline passed 893 tests with lint OK, and four experiment contracts define the workstreams. P1 now has scenario and outcome schemas, ten bilingual core scenarios, a structural dry-run, and an invalid control fixture that the dry-run rejects. Real Pi sessions and behavioral planted-failure validation have not run. No candidate has been promoted.
+Prompt governance now has automated bidirectional catalog/link coverage and static contract guards for loop/goal prompts, standalone config guards, and reconciliation with disabled Decision Records. Canonical loop/goal prompts 28–31 and `skills/loop-goal.md` are portable current procedures without embedded promotion history; loop/goal modeling requires accepted criteria, and invalid workflows stop before fit classification.
+
+`tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md` has completed P0 through P3. Real Pi sessions froze the five-repetition behavioral baseline at critical 0.978, and the planted `broken-no-bootstrap` degradation was detected at critical 0.59. The lean bootstrap and skill-only Pi package were promoted; the proposed Task Plan contract and active Pi extension were rejected by their gates. Remaining follow-ups are optional re-baselining after negation-aware matcher hardening, broader deferred-record detection, five-repetition Pi acceptance, and a durable install/removal check.
 
 POM v0.2.0 is released and tagged. The loop/goal and workflow extension
 work has been integrated into `main`:
@@ -128,13 +130,13 @@ The four-agent lifecycle had its **first real dialog-mode run** on the `exp/dyna
 
 ### Current Objective
 
-Execute the experiment-first plan in `tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md`: establish real behavioral evidence for POM skills, reduce the `using-pom` bootstrap without safety regression, strengthen Task Plan contracts, and validate a thin Pi package adapter without expanding POM into a workflow runtime.
+Maintain the promoted lean bootstrap and skill-only Pi package from `tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md`, while keeping the rejected Task Plan contract and active Pi extension out of the method. Treat the remaining evaluator and durable-install checks as explicit follow-ups rather than unfinished P1–P3 work.
 
 ### Next Actions
 
 Current post-integration state:
 
-- [ ] **Behavioral evals, lean bootstrap, Task Plan contracts, and Pi package**: P0 is complete and the P1 contracts/dry-run exist. Next build disposable project fixtures, action/transcript capture, timeout/cleanup, and a behaviorally broken POM variant; the evaluator must reject that variant before baseline sessions run.
+- [ ] **Behavioral evaluation follow-ups**: optionally re-freeze the baseline after negation-aware `transcriptExcludes` hardening, broaden deferred-record detection, run five-repetition Pi acceptance, and verify durable `pi install`/removal. P0–P3 are closed; these follow-ups do not reopen the rejected Task Plan contract or active extension.
 - [x] **Lato workflow — promuovere il contratto Dynamic Workflow** (priorità 3b): dottrina control-plane/data-plane registrata in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; SPEC-0006 aggiornato con `fan_out_launch`/`await`/`join`/`timeout`/`react`/`compensation`. Il contratto è dentro il workflow come control plane; l'esecuzione concorrente reale resta nel data plane del target. La copertura validator completa può crescere a partire dalle regole handle lifecycle E080-E089.
 - [x] **Runtime agent-loop-fsm**: snapshot/restore reale aggiunto al runtime dimostrativo con `--snapshot` e `--restore`.
 - [x] **Auditor v2**: l'istruzione di seguire `state-invoke`/`event-invoke` è già presente nel prompt canonico `prompts/29-loop-goal-audit.md`; nessuna modifica duplicativa necessaria.
