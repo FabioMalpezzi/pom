@@ -68,6 +68,7 @@ function testBootstrapArtifacts() {
   assert("modular agent router references harness mapping", agentRouter.includes("pom/prompts/references/agent-harnesses.md"));
   assert("modular agent router references finish-branch", agentRouter.includes("finish-branch"));
   assert("modular agent router references root-cause", agentRouter.includes("root-cause"));
+  assert("modular agent router references mcp-interface", agentRouter.includes("mcp-interface"));
   assert("fallback agent template references using-pom", monolithicAgentTemplate.includes("pom/skills/using-pom.md"));
   assert("fallback agent template references harness mapping", monolithicAgentTemplate.includes("pom/prompts/references/agent-harnesses.md"));
   // The compact fallback routes via the catalog and router rather than embedding a per-skill

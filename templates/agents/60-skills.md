@@ -19,6 +19,7 @@ Key routes (read the skill card before acting; see `README.md` for the full cata
 | Ambiguous POM request or unclear artifact/status | `clarify` |
 | Existing project adoption; new or empty project | `adopt`; `seed` |
 | Target Project bug, test/build failure, or unexpected behavior | `root-cause` |
+| Design, audit, reshape, or verify an MCP server interface | `mcp-interface` |
 | Park or postpone work without implementing | `defer` |
 | Verify a completed phase, task, spec, or ADR | `check` |
 | Wiki build, query, or maintenance | `wiki` |
