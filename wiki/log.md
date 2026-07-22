@@ -4,6 +4,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-07-22] update | add MCP interface workflow
+
+Updated the skill and prompt synthesis with `mcp-interface`, including its version-aware protocol boundary, agent-ergonomic audit modes, POM verification gate, and host-visible token evidence requirement.
+
+Sources used: `skills/mcp-interface.md`, `prompts/35-mcp-interface.md`, `skills/README.md`, `prompts/README.md`, and `PROJECT_STATE.md`.
+
 ## [2026-06-22] update | clarify workflow templates and runtime seams
 
 Updated the wiki synthesis after workflow, Dynamic Workflow, and loop/goal adoption were clarified for Target Projects. The wiki now states that workflow YAML is the finite-state-machine source of authority, `WORKFLOW_TEMPLATE.yaml` is an optional reference starting point rather than a mandatory copy target, `pom:workflow:lint` validates any target YAML that follows the schema, and the TypeScript/Python runtime seam templates are optional adapters for execution, persistence, timers, retry, tools, and side effects.

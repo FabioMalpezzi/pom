@@ -42,6 +42,7 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `32-using-pom.md` | bootstrap POM-aware work, route to the right skill, and map common harness tools |
 | `33-finish-branch.md` | finish branch, PR, merge, keep, discard, or cleanup decisions |
 | `34-root-cause-debugging.md` | investigate Target Project bugs, test failures, build failures, and unexpected behavior before fixes |
+| `35-mcp-interface.md` | design, audit, reshape, or verify MCP tools, resources, prompts, schemas, responses, and errors |
 
 ## References
 

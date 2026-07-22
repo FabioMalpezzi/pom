@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-2026-07-21
+2026-07-22
 
 ---
 
@@ -45,6 +45,8 @@ _Current operational state. Update at every significant session or when prioriti
 ### Current State
 
 Prompt governance now has automated bidirectional catalog/link coverage and static contract guards for loop/goal prompts, standalone config guards, and reconciliation with disabled Decision Records. Canonical loop/goal prompts 28–31 and `skills/loop-goal.md` are portable current procedures without embedded promotion history; loop/goal modeling requires accepted criteria, and invalid workflows stop before fit classification.
+
+`skills/mcp-interface.md` and `prompts/35-mcp-interface.md` provide the current POM procedure for designing, auditing, reshaping, and verifying MCP interfaces. The procedure adapts AXI ergonomics to version-specific MCP contracts, keeps runtime ownership in Target Projects, separates tool/resource/prompt audits, requires approval before any public-contract change, distinguishes transport authorization from JSON-RPC and tool execution errors, and applies the POM verification gate. Token-efficiency claims require host-visible token measurements rather than serialized size alone.
 
 `tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md` has completed P0 through P3. Real Pi sessions froze the five-repetition behavioral baseline at critical 0.978, and the planted `broken-no-bootstrap` degradation was detected at critical 0.59. The lean bootstrap and skill-only Pi package were promoted; the proposed Task Plan contract and active Pi extension were rejected by their gates. Remaining follow-ups are optional re-baselining after negation-aware matcher hardening, broader deferred-record detection, five-repetition Pi acceptance, and a durable install/removal check.
 

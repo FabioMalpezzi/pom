@@ -18,6 +18,10 @@ Website: <https://www.improveandmanage.com/>
 
 Special thanks to **Andrej Karpathy** for the LLM Wiki pattern that inspired POM's persistent wiki approach.
 
+Special thanks to **Kun Chen** for [Agent eXperience Interface (AXI)](https://github.com/kunchenguid/axi), whose principles for agent-facing CLIs strongly inspired POM's `mcp-interface` guidance for designing efficient interfaces exposed to AI agents.
+
+Special thanks to **[Supermemory](https://github.com/supermemoryai/skills)** for its public work on persistent agent memory and skill-based context delivery, which helped inspire POM's compact, on-demand operating guidance.
+
 ## Readable Guides
 
 For a reader-friendly explanation of POM's purpose, tools, adoption levels, skills, and recommendations, see:

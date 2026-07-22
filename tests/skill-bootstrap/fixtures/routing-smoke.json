@@ -178,5 +178,17 @@
       "disabledModule": "decisions",
       "forbiddenArtifacts": ["decisions/", "ADR"]
     }
+  },
+  {
+    "id": "mcp-interface-en",
+    "language": "en",
+    "prompt": "Audit the tools and response schemas exposed by this MCP server for agent ergonomics and excessive round trips.",
+    "expectedSkill": "mcp-interface"
+  },
+  {
+    "id": "mcp-interface-it",
+    "language": "it",
+    "prompt": "Analizza e migliora l'interfaccia del mio server MCP: tool, schemi, errori e numero di chiamate necessarie all'agente.",
+    "expectedSkill": "mcp-interface"
   }
 ]

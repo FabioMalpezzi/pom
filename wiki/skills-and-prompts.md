@@ -94,6 +94,12 @@ Complete skill catalog:
 - **Real use cases**: reproduce a failing test; isolate a build failure; add a regression test before fixing a bug; stop after repeated failed fix attempts and return to investigation.
 - **Why it exists / importance**: enforces "root cause before fix" so agents do not patch symptoms or stack speculative changes.
 
+### `mcp-interface`
+
+- **Illustration**: designs, audits, reshapes, or verifies MCP tools, resources, prompts, schemas, responses, and errors for reliable agent use.
+- **Real use cases**: inventory an MCP server surface; distinguish transport authorization, JSON-RPC, and tool execution errors; reduce avoidable round trips without losing task success; verify schema, compatibility, security, and host-visible token evidence.
+- **Why it exists / importance**: applies version-specific MCP contracts and agent ergonomics while keeping runtime ownership in the Target Project.
+
 ### `zero-tech-debt`
 
 - **Illustration**: reshapes a scoped change around the intended product and architecture end state.
@@ -190,7 +196,7 @@ Complete skill catalog:
 - **Real use cases**: define measurable criteria for an agent loop; audit controller fit; derive terminal-coverage scenarios; conclude whether an experiment actually met its objective; adapt the optional TypeScript or Python runtime seam templates in the target project if the loop needs execution, persistence, timer, retry, tool, or side-effect ports.
 - **Why it exists / importance**: handles agentic feedback loops that are too specific for the generic `workflow` skill and need criteria, falsification, and independent evaluation.
 
-The prompt set covers session bootstrap, adoption, state, governance, planning, review, handoff, Project Reader note processing, config, experiments, wiki operations, extension, self-improvement, classification, deferral, sync, branch delivery, validation, reconciliation, clarification, pruning, POM diagnosis, Target Project root-cause debugging, workflow modeling, loop/goal workflow work, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.
+The prompt set covers session bootstrap, adoption, state, governance, planning, review, handoff, Project Reader note processing, config, experiments, wiki operations, extension, self-improvement, classification, deferral, sync, branch delivery, validation, reconciliation, clarification, pruning, POM diagnosis, Target Project root-cause debugging, MCP interface ergonomics, workflow modeling, loop/goal workflow work, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.
 
 The installed agent section now keeps the minimal profile to global posture plus a skill router. Profile modules add active workflow entry points, while detailed procedures stay in skills and prompts.
 
@@ -210,6 +216,8 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 | `prompts/26-process-reader-notes.md` | Canonical procedure for claiming, evaluating, applying, recording, and verifying Project Reader notes. |
 | `skills/challenge.md` | Skill card for adversarial thesis/antithesis review. |
 | `prompts/24-challenge-antithesis.md` | Read-only challenge procedure that looks for material antitheses before acceptance or completion. |
+| `skills/mcp-interface.md` | Skill card for MCP interface design, audit, reshape, and verification. |
+| `prompts/35-mcp-interface.md` | Version-aware MCP interface ergonomics and verification procedure. |
 | `specs/SPEC-0002-skill-yaml-frontmatter.md` | YAML frontmatter requirements for skill discovery. |
 | `specs/SPEC-0001-modular-agents-template.md` | Global-vs-skill boundary and profile-aware agent instruction assembly. |
 | `skills/workflow.md` | Workflow modeling skill card (5 modes: design / validate / diagram / scenarios / implement). |

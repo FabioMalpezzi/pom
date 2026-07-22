@@ -53,6 +53,7 @@ Routing signals:
 | completed phase/task/workstream must be verified | `check` |
 | significant POM action needs read-only governance audit | `validate` |
 | Target Project bug, test failure, build failure, performance problem, or unexpected behavior | `root-cause` |
+| design, audit, reshape, or verify an MCP server interface | `mcp-interface` |
 | important work should be preserved without implementation | `defer` |
 | temporary experiment or isolated exploration | `spike` |
 | installed POM refresh or source/target alignment | `sync` |
@@ -76,7 +77,7 @@ Harness tool mapping summary:
 | invoke/load skill | native skill loading or read skill file | Skill tool | `activate_skill` | plugin skill loading or rule file | native skill tool when available | skill tool when available |
 | dispatch subagent | multi-agent tools if enabled; otherwise fresh context/read-back | Task | `@generalist` or named agent | available agent/subagent feature | available agent feature | task/agent equivalent when available |
 
-Behavioral smoke prompts for future harness evals live in `tests/skill-bootstrap/fixtures/routing-smoke.json` in the POM Source repository. They include English and Italian prompts for `adopt`, `wiki`, `pulse`, `validate`, `plan`, `spike`, `sync`, `finish-branch`, `root-cause`, and disabled-module negative cases.
+Behavioral smoke prompts for future harness evals live in `tests/skill-bootstrap/fixtures/routing-smoke.json` in the POM Source repository. They include English and Italian prompts for `adopt`, `wiki`, `pulse`, `validate`, `plan`, `spike`, `sync`, `finish-branch`, `root-cause`, `mcp-interface`, and disabled-module negative cases.
 
 Output:
 - state the selected POM skill and why;

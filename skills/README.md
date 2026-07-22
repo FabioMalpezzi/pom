@@ -76,6 +76,7 @@ Existing project structures should be mapped first, not moved by default.
 | `reader-notes` | process human Project Reader notes through source-backed edits and outcome recording | `prompts/26-process-reader-notes.md` |
 | `diagnose` | debug failing or confusing POM workflows with a focused feedback loop | `prompts/22-diagnose-pom-problem.md` |
 | `root-cause` | investigate Target Project bugs, test failures, build failures, and unexpected behavior before fixes | `prompts/34-root-cause-debugging.md` |
+| `mcp-interface` | design, audit, reshape, or verify MCP interfaces for agent ergonomics | `prompts/35-mcp-interface.md` |
 | `zero-tech-debt` | reshape a scoped change around the intended product and architecture end state | `prompts/23-zero-tech-debt.md` |
 | `challenge` | run adversarial thesis/antithesis review before accepting or completing non-code work | `prompts/24-challenge-antithesis.md` |
 | `config` | create or update `pom.config.json` | `prompts/08-create-pom-config.md` |

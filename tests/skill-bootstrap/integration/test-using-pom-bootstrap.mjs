@@ -197,8 +197,8 @@ function testSkillDescriptions() {
   }
 }
 
-function testBilingualSmokeFixtures() {
-  console.log("\nScenario 6: behavioral smoke fixtures cover English and Italian routing");
+function testBilingualRoutingEvalFixtures() {
+  console.log("\nScenario 6: routing eval fixtures cover English and Italian prompts");
 
   const fixtures = JSON.parse(read("tests/skill-bootstrap/fixtures/routing-smoke.json"));
   const skillNames = new Set(
@@ -209,7 +209,7 @@ function testBilingualSmokeFixtures() {
 
   assert("fixtures are present", fixtures.length >= 10, `${fixtures.length} fixtures`);
 
-  for (const expectedSkill of ["adopt", "wiki", "pulse", "validate", "plan", "spike", "sync", "finish-branch", "root-cause"]) {
+  for (const expectedSkill of ["adopt", "wiki", "pulse", "validate", "plan", "spike", "sync", "finish-branch", "root-cause", "mcp-interface"]) {
     for (const language of ["en", "it"]) {
       const found = fixtures.some((fixture) => fixture.expectedSkill === expectedSkill && fixture.language === language);
       assert(`fixture exists for ${expectedSkill} ${language}`, found);
@@ -242,7 +242,7 @@ testBootstrapPromptCoverage();
 testFinishBranchCoverage();
 testRootCauseCoverage();
 testSkillDescriptions();
-testBilingualSmokeFixtures();
+testBilingualRoutingEvalFixtures();
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

@@ -64,7 +64,7 @@ const skillFiles = readdirSync(join(ROOT, "skills")).filter((entry) => entry.end
 const rawSkillLinks = skillFiles.flatMap((file) => promptLinks(read(`skills/${file}`)));
 const skillLinks = new Set(rawSkillLinks.map((file) => basename(file)));
 
-assert("there are exactly 34 canonical numbered prompts", canonical.length === 34, `${canonical.length} found`);
+assert("there are exactly 35 canonical numbered prompts", canonical.length === 35, `${canonical.length} found`);
 assert("every canonical prompt is catalogued", canonical.every((file) => promptCatalog.has(file)));
 assert("the prompt catalog has no stale numbered entries", [...promptCatalog].every((file) => canonical.includes(file)));
 assert("every canonical prompt is linked by a skill", canonical.every((file) => skillLinks.has(file)));
@@ -130,6 +130,10 @@ assertContract("control-plane boundary", "skills/loop-goal.md", {
 assertContract("experiment consolidation", "prompts/09-run-temporary-experiment.md", {
   required: ["adoption.analysis", "adoption.wiki", "adoption.decisions", "adoption.tasks", "Never enable a disabled adoption module implicitly"],
   forbidden: ["Write analysis when adoption.analysis is disabled.", "Update the wiki when adoption.wiki is disabled.", "Create an ADR even when adoption.decisions is disabled.", "Create structured tasks when adoption.tasks is disabled.", "Enable disabled modules automatically during consolidation."],
+});
+assertContract("MCP interface ergonomics", "prompts/35-mcp-interface.md", {
+  required: ["separate interface inventories", "SHOULD also return serialized JSON", "successful `structuredContent` MUST conform", "JSON-RPC protocol errors", "`isError: true`", "untrusted hints", "Ask for explicit approval before any public-contract change", "Goal-Backward Check", "at least two positive representative agent intents", "HTTP 401/403 transport authorization", "host-visible token usage", "Missing evidence never counts as verified"],
+  forbidden: ["Use one generic inventory for tools, resources, and prompts.", "Never mirror structured content in TextContent.", "Output-schema conformance is optional.", "Return every failure as a JSON-RPC protocol error.", "Return every failure with isError true.", "Trust tool annotations as enforcement controls.", "Compatible public-contract changes need no approval.", "Skip the Goal-Backward Check.", "One positive representative agent intent is sufficient.", "Treat every authorization failure as a tool execution error.", "Serialized byte count proves token efficiency.", "Missing evidence counts as verified."],
 });
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);
