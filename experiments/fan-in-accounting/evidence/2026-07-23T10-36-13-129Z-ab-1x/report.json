@@ -1,0 +1,477 @@
+{
+  "runId": "2026-07-23T10-36-13-129Z-ab-1x",
+  "startedAt": "2026-07-23T10:36:13.129Z",
+  "finishedAt": "2026-07-23T10:39:34.575Z",
+  "environment": {
+    "piVersion": "0.81.1",
+    "provider": "openai-codex",
+    "model": "gpt-5.4-mini",
+    "repetitions": 1
+  },
+  "summary": {
+    "variants": {
+      "baseline": {
+        "runs": 8,
+        "completed": 8,
+        "scenarioPasses": 4,
+        "scenarioPassRate": 0.5,
+        "checkPassRate": 0.7037037037037037
+      },
+      "candidate": {
+        "runs": 8,
+        "completed": 8,
+        "scenarioPasses": 3,
+        "scenarioPassRate": 0.375,
+        "checkPassRate": 0.8148148148148148
+      }
+    },
+    "delta": 0.11111111111111105,
+    "gate": {
+      "noDroppedRuns": true,
+      "candidateCheckRateAtLeast090": false,
+      "targetedImprovementAtLeast010": true
+    }
+  },
+  "outcomes": [
+    {
+      "variant": "baseline",
+      "fixtureId": "independent-data-work",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": false,
+        "checks": [
+          {
+            "id": "parallel",
+            "pass": true
+          },
+          {
+            "id": "no-false-edge",
+            "pass": false
+          },
+          {
+            "id": "real-final-edge",
+            "pass": true
+          }
+        ]
+      },
+      "response": "**Mode:** design\n\n### Dependency shape\n- **One control-plane workflow** fans out **40 independent audit launches**.\n- Each audit:\n  - reads **exactly one distinct route file**,\n  - produces **its own immutable result**,\n  - does **not** read or depend on any other audit result,\n  - writes **no project file**.\n- The workflow then enters a **fan-in** phase for the final report.\n\n### Shared resources\n- Shared inputs:\n  - the list of 40 route files,\n  - the final report request/output target.\n- No shared mutable audit artifact is modeled.\n- Any result collection is control-plane-owned only; audit outputs stay immutable and isolated.\n\n### Fan-in and completion\n- Use **`fan_out_launch`** for the 40 audits.\n- Use **`await` with `join: all`** on all 40 handles before producing the final report.\n- Do **not** model audit-to-audit dependencies.\n- Because a final report consumes all audit results, every launched handle must be **awaited** before terminal completion.\n- If any audit may fail or time out, that decision is an **open point** unless explicitly specified.\n\n### Scenarios\n- Positive:\n  - launch 40 audits, each on its own route file;\n  - all 40 complete independently;\n  - await all handles;\n  - final report is produced from the 40 results.\n- Negative:\n  - an audit tries to consume another audit’s output → refused;\n  - final report starts before all audits complete → refused;\n  - one audit writes a project file → refused.\n- Completion:\n  - workflow reaches completion only after all launched handles are accounted for.\n\n### Open points\n- What happens if one audit fails: fail-fast, partial report, or report-with-gaps?\n- Are there timeouts for audit completion?\n- Is final report content ordered, or order-independent?\n- Are route files fixed upfront or discovered dynamically?\n- How are audit results named/stored in the control plane?\n- Should cancellation of remaining audits occur if one audit cannot complete?\n\n### POM boundary\n- This is a **control-plane model only**.\n- Do **not** model workers, queues, schedulers, concurrency primitives, or file I/O infrastructure.\n- Do **not** add project-specific execution semantics beyond launch/await/aggregate.\n- The workflow should only describe dependency shape and completion wiring.\n"
+    },
+    {
+      "variant": "baseline",
+      "fixtureId": "shared-write-conflict",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": false,
+        "checks": [
+          {
+            "id": "hidden-write-conflict",
+            "pass": true
+          },
+          {
+            "id": "coordination",
+            "pass": true
+          },
+          {
+            "id": "not-a-data-edge",
+            "pass": false
+          }
+        ]
+      },
+      "response": "Mode: design\n\n## Dependency shape\n- 20 peer security checks, fully independent.\n- One control-plane launch phase, one convergence phase.\n- No check-to-check ordering or data dependency.\n\n## Shared resources\n- `report.md` is the only shared resource.\n- Direct concurrent appends are a data-plane concern, not something POM should assume is safe.\n- Open point: who serializes/report-merges writes.\n\n## Fan-in and completion\n- Model as `fan_out_launch` of 20 handles, then `await` with `join: all`.\n- Final completion only after every handle is resolved.\n- Each launched handle must be awaited, cancelled, or explicitly detached before any final state.\n\n## Scenarios\n- Launch 20 checks, all complete, then finalize the report.\n- A check finishes early: control plane still waits for the remaining handles.\n- A premature close before all handles are accounted for: refused.\n- If individual check failures are possible, their handling stays an open point.\n\n## Open points\n- Should workers append directly to `report.md`, or emit per-worker results for a single writer to merge?\n- What is the failure policy for one failed security check?\n- Are timeouts or cancellation required for slow checks?\n- Is partial reporting acceptable, or must the report wait for all 20?\n\n## POM boundary\n- POM can model the 20-way launch, wait, and final fan-in.\n- POM should not model concurrent file appends, locking, or scheduler behavior.\n- The shared report write strategy belongs in the target implementation, not in the workflow model.\n"
+    },
+    {
+      "variant": "baseline",
+      "fixtureId": "shared-api-capacity",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": true,
+        "checks": [
+          {
+            "id": "capacity-dependency",
+            "pass": true
+          },
+          {
+            "id": "bounded-concurrency",
+            "pass": true
+          },
+          {
+            "id": "preserve-parallelism",
+            "pass": true
+          }
+        ]
+      },
+      "response": "**Mode:** design\n\n### Dependency shape\n- 80 independent leaf tasks\n- no task consumes another task’s output\n- one control plane coordinates all launches and completion\n- each task makes one call to the same external API\n\n### Shared resources\n- shared API capacity: max 10 concurrent in-flight requests\n- shared API budget: max 100 requests per minute\n- shared completion sink for the 80 task results\n- open point: whether retries consume the same minute budget\n\n### Fan-in and completion\n- fan-out is parallel at the workflow level, but bounded by the shared API limits\n- fan-in should wait for all 80 handles to finish before final completion\n- if batching is used, each batch can fan-in locally, then the workflow does a final `await join: all`\n- no handle should be left unmanaged before final state\n\n### Scenarios\n- 80 tasks start independently and all complete successfully\n- at most 10 requests are active at any time\n- once 100 requests have been issued within a minute, further dispatch waits\n- final completion occurs only after every task has returned or failed per policy\n- refusal case to model: any design that requires one task’s output before launching another\n\n### Open points\n- retry policy for failed API calls\n- timeout per request\n- whether partial failures fail the whole workflow or are collected\n- exact rate-limit enforcement strategy: batching vs token bucket vs external gate\n- result aggregation shape and ordering\n- whether results need deduplication or normalization\n\n### POM boundary\n- POM should model only orchestration, launch/await, and completion boundaries\n- POM should not model the worker pool, queue, scheduler, or API client internals\n- POM should not embed the actual rate-limit mechanism\n- the data plane owns the external API calls and enforcement details\n\n**Path written/proposed:** none  \n**Validator verdict:** not run  \n**Next action:** decide the rate-limit enforcement strategy and failure policy, then express the workflow as YAML.\n"
+    },
+    {
+      "variant": "baseline",
+      "fixtureId": "hierarchical-fan-in",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": false,
+        "checks": [
+          {
+            "id": "hierarchical-reduction",
+            "pass": false
+          },
+          {
+            "id": "batches",
+            "pass": false
+          },
+          {
+            "id": "identity-provenance",
+            "pass": false
+          },
+          {
+            "id": "reconcile-layers",
+            "pass": false
+          },
+          {
+            "id": "one-batch-handle",
+            "pass": false
+          }
+        ]
+      },
+      "response": "Mode: design\n\n## Dependency shape\n- Parent workflow: `start -> launch audits -> await completion -> final synthesis -> done`\n- Child dependency: each file audit is independent and launched with `fan_out_launch`.\n- Control plane stays deterministic; no parallel FSM regions.\n- Guard text to capture in YAML: “audit input available”, “launch capacity available” if you choose to model throttling.\n\n## Shared resources\n- Use a shared result store or artifact registry outside the workflow for large outputs.\n- Each audit should write its raw/large result there and return only a compact handle/reference.\n- Parent should collect:\n  - file identifier\n  - child handle\n  - result reference\n  - completion status\n- Avoid passing all raw audit payloads into the final model call.\n\n## Fan-in and completion\n- Launch 100 audit children with `fan_out_launch`.\n- Use `await` with `join: all` on the launched handles.\n- If the final synthesis needs only a summary, have children emit compact completion events and pointers, not full payloads.\n- Ensure handle lifecycle is closed: every launched handle must be awaited, cancelled, or detached before any final state.\n- No `detach_handles` unless a child is explicitly allowed to continue after workflow closure.\n\n## Scenarios\n- Positive: from `collect_inputs` on `launch_audits`, launch 100 audit handles.\n- Positive: from `await_audits` on `children_completed`, proceed to `synthesize_final_report`.\n- Negative: from `await_audits` on `timeout`, refuse or route to an explicit timeout path if you define one.\n- Negative: from `synthesize_final_report` with raw child outputs as input, refuse that design path; use references/summaries instead.\n- Terminal check: final state must not be reachable while any launched handle remains unaccounted for.\n\n## Open points\n- Worker mechanism: what actually executes the 100 audits?\n- Result persistence: which store holds the large outputs and references?\n- Timeout semantics: should `await` use a timeout, and what happens on timeout?\n- Cancellation semantics: if one audit fails, are the others cancelled or allowed to finish?\n- Final synthesis input: should the final model consume per-file summaries, artifact pointers, or both?\n- Size policy: what qualifies as “large” and what is the summary format?\n\n## POM boundary\n- POM models control flow only; it does not implement the audit workers, storage layer, or model-call plumbing.\n- Use `fan_out_launch` / `await` / shared references to model orchestration, not execution infrastructure.\n- No raw 100-file payload fan-in at the final model step.\n"
+    },
+    {
+      "variant": "baseline",
+      "fixtureId": "balanced-missing-duplicate",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": true,
+        "checks": [
+          {
+            "id": "find-missing",
+            "pass": true
+          },
+          {
+            "id": "find-duplicate",
+            "pass": true
+          },
+          {
+            "id": "count-insufficient",
+            "pass": true
+          },
+          {
+            "id": "refuse-complete",
+            "pass": true
+          }
+        ]
+      },
+      "response": "Mode: scenarios\n\n## Dependency shape\n- Fan-in collector expecting `route-001` through `route-060`\n- One incoming record per route is implied\n- Current observed shape: 60 records total, but `route-007` missing and `route-008` duplicated\n\n## Shared resources\n- Single collector / aggregation state\n- Per-route receipt tracking\n- Completion gate for the fan-in\n- Duplicate-detection state for route IDs\n\n## Fan-in and completion\n- Completion is only verifiable if the model defines how to treat:\n  - missing expected routes\n  - duplicate arrivals for an expected route\n- With `route-007` absent, the collector cannot be confirmed complete under a strict one-record-per-route expectation\n- With `route-008` duplicated, the collector needs an explicit rule for duplicate acceptance vs refusal\n\n## Scenarios\n- Positive: receive `route-001` .. `route-060` once each, expect collector to reach completion\n- Negative: receive `route-007` absent from the input set, expect collection to remain incomplete or report missing input\n- Negative: receive `route-008` a second time, expect duplicate to be refused or ignored per model rule\n- Negative: receive any undeclared route ID, expect refusal\n- Completion check: after processing the 60 provided records, expect completion only if the model explicitly allows missing/duplicate reconciliation\n- Terminal check: once the collector reaches its final state, any further route arrival should be refused\n\n## Open points\n- Should a missing expected route block completion, or is late arrival allowed?\n- Should a duplicate route be refused, ignored, or merged?\n- Is completion strict on the full `route-001`..`route-060` set, or is it based on record count?\n- Is there a timeout or compensating action for missing `route-007`?\n\n## POM boundary\n- POM can derive verification scenarios, but it does not invent duplicate/missing-record business rules\n- The unresolved handling of `route-007` and `route-008` must be decided in the model before scenarios can be made fully executable\n"
+    },
+    {
+      "variant": "baseline",
+      "fixtureId": "quorum-vs-completeness",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": false,
+        "checks": [
+          {
+            "id": "quorum-readiness",
+            "pass": true
+          },
+          {
+            "id": "separate-completeness",
+            "pass": false
+          },
+          {
+            "id": "account-statuses",
+            "pass": true
+          },
+          {
+            "id": "partial-policy-open",
+            "pass": true
+          }
+        ]
+      },
+      "response": "Mode: scenarios\n\n## Dependency shape\n- One non-blocking batch launch of 10 child handles.\n- One fan-in wait using `join: quorum` with `k: 6`.\n- Outcomes observed: 6 successes, 2 failures, 1 timeout, 1 unknown-identity completion.\n\n## Shared resources\n- The 10 workflow-local handles.\n- A result/identity correlation map for matching completions to launched handles.\n- A reporting payload that distinguishes success, failure, timeout, and unknown identity.\n\n## Fan-in and completion\n- Control-plane quorum is satisfied by the 6 successful results.\n- The 2 failures, 1 timeout, and 1 unknown-identity outcome are non-success signals that still need lifecycle handling.\n- Open decision: whether the remaining 4 children are cancelled, detached, or otherwise awaited before any final state.\n\n## Scenarios\n1. **Positive control scenario**: after fan-out of 10, when 6 successful results arrive and `join quorum k=6` is met, expect the await to complete.\n2. **Mixed-outcome quorum scenario**: after 6 successes, 2 failures, 1 timeout, and 1 unknown identity, expect quorum success at the control plane, with the non-success outcomes preserved for reporting.\n3. **Partial-report scenario**: if partial reports are acceptable, expect a report containing the 6 successes plus the 4 non-success outcomes.\n4. **Partial-report refusal scenario**: if partial reports are not acceptable, expect reporting to be blocked or deferred until the business rule is decided.\n5. **Unknown-identity scenario**: when a completion cannot be matched to a launched handle, expect that case to be surfaced as an open point unless the model defines identity reconciliation.\n6. **Lifecycle scenario**: after quorum is reached, expect all still-active handles to be explicitly cancelled, detached, or awaited before final closure.\n\n## Open points\n- Are partial reports acceptable?\n- How should unknown-identity completions be handled?\n- What must happen to the 4 non-qualifying children before final state: cancel, detach, or continue waiting?\n- Does the timeout count as a failure for reporting purposes?\n\n## POM boundary\n- POM can model the control plane: fan-out, quorum await, and completion handling.\n- POM does not decide business reporting policy or implement child execution/scheduling.\n- No file written.\n"
+    },
+    {
+      "variant": "baseline",
+      "fixtureId": "ambiguous-partial-policy",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": true,
+        "checks": [
+          {
+            "id": "surface-open-point",
+            "pass": true
+          },
+          {
+            "id": "do-not-invent",
+            "pass": true
+          },
+          {
+            "id": "request-policy-decision",
+            "pass": true
+          }
+        ]
+      },
+      "response": "Mode: design\n\n### Dependency shape\n- 50 independent launches from one request set.\n- One synthesis step consumes whatever results return.\n- No worker ordering, retry, or ranking rule is defined.\n\n### Shared resources\n- Input item list.\n- Launch handles for the 50 workers.\n- Partial result set / synthesis buffer.\n- Final report artifact.\n- Ownership and merge rules for shared state are unspecified.\n\n### Fan-in and completion\n- The model needs a non-blocking fan-out boundary and a completion gate for synthesis.\n- The acceptable omission rate is not defined.\n- It is not defined whether the report waits for all handles, a subset, or a timeout boundary.\n- The label/status of the final report is also unspecified.\n\n### Scenarios\n- All 50 workers return successfully.\n- Some workers return, some never do.\n- Many workers fail or do not return.\n- No workers return before synthesis.\n- Late results arrive after synthesis has started.\n\n### Open points\n- How many omissions are acceptable?\n- Which failure modes may be ignored?\n- What is the completion rule: all, quorum, first, timeout, or best-effort cutoff?\n- What report label/status should be emitted for partial completion?\n- Who owns synthesis when results are missing or late?\n- What timeout and cancellation behavior applies, if any?\n\n### POM boundary\n- Model only the control plane: fan-out, waiting, partial completion, and final synthesis.\n- Do not model worker internals, scheduling, or storage mechanics.\n- Do not invent a tolerance policy; leave it as an open point.\n\nNext action: decide the omission/failure threshold and final report status labels, then model the fan-in rule.\n"
+    },
+    {
+      "variant": "baseline",
+      "fixtureId": "ordinary-workflow-regression",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": true,
+        "checks": [
+          {
+            "id": "ordinary-fsm",
+            "pass": true
+          },
+          {
+            "id": "no-forced-dynamic",
+            "pass": true
+          }
+        ]
+      },
+      "response": "Mode: design\n\n### Dependency shape\n- Single-document, single-reviewer workflow.\n- Core path: `draft -> under_review -> accepted` or `draft -> under_review -> rejected -> draft`.\n- No concurrent child work, no fan-out, no join, no compensation.\n\n### Shared resources\n- One shared resource: the document being reviewed.\n- One decision input: reviewer accept/reject outcome.\n- No shared queues, handles, or batch artifacts.\n\n### Fan-in and completion\n- No fan-in.\n- Completion is simple terminal closure at `accepted`.\n- `rejected` is not terminal if revision back to `draft` is allowed.\n\n### Scenarios\n- Positive: from `draft` on `submit_for_review`, expect transition to `under_review`.\n- Positive: from `under_review` on `accept`, expect transition to `accepted`.\n- Positive: from `under_review` on `reject`, expect transition to `rejected`.\n- Positive: from `rejected` on `revise`, expect transition to `draft`.\n- Negative: from `accepted` on any event, expect no transition.\n- Negative: from `draft` on `accept` or `reject`, expect transition refused.\n- Negative: from `under_review` on `revise`, expect transition refused.\n\n### Open points\n- Whether `under_review` and `rejected` are explicit states in the YAML, or whether review/rejection are represented differently.\n- Whether `revise` is a distinct event or an internal return-to-draft transition.\n- Whether reviewer identity/authorization is modeled or treated as outside the workflow.\n- Whether `accepted` is final with no re-entry, and whether `rejected` is a normal non-terminal state.\n\n### POM boundary\n- This fits POM as a simple, deterministic workflow.\n- No Dynamic Workflow features are needed.\n- No batch work or concurrent execution is modeled.\n"
+    },
+    {
+      "variant": "candidate",
+      "fixtureId": "independent-data-work",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": false,
+        "checks": [
+          {
+            "id": "parallel",
+            "pass": true
+          },
+          {
+            "id": "no-false-edge",
+            "pass": false
+          },
+          {
+            "id": "real-final-edge",
+            "pass": true
+          }
+        ]
+      },
+      "response": "Mode: design\n\n### Dependency shape\n- 40 independent audit branches.\n- Each branch:\n  - reads one distinct route file,\n  - produces one immutable result,\n  - writes no project file,\n  - consumes no other audit output.\n- One downstream final-report step fans in all 40 audit results.\n- No audit-to-audit edges.\n\n### Shared resources\n- Read-only filesystem access to the 40 route files.\n- Final-report synthesis context/output.\n- No shared mutable project artifact among audits.\n\n### Fan-in and completion\n- The final report depends on all 40 audit identities being settled.\n- Each result should preserve its source audit identity.\n- Open points:\n  - whether failed / cancelled / timed-out audits count as settled for synthesis,\n  - whether partial reporting is allowed,\n  - where the stable launch identity set comes from if not already explicit.\n\n### Scenarios\n- All 40 audits complete successfully; final report consumes all 40 results.\n- One audit result is missing; final report does not complete.\n- One audit is duplicated and one is absent; identity reconciliation fails or remains incomplete.\n- One audit fails/cancels/times out; handling is unspecified and must be decided.\n- No audit consumes another audit’s output; no inter-audit dependency should exist.\n\n### Open points\n- Completion policy for failed, cancelled, or timed-out audits.\n- Source of the canonical 40-audit identity set.\n- Whether duplicates or unknown identities are rejected or merely flagged in the final report.\n- Any bounded-capacity or ordering constraint for file reads and synthesis.\n\n### POM boundary\n- POM models the control plane only: fan-out, await, and fan-in.\n- POM does not model the actual file-reading workers, scheduler, queue, retry system, or persistence layer.\n- The final report is a dependent synthesis step, not a runtime execution engine.\n"
+    },
+    {
+      "variant": "candidate",
+      "fixtureId": "shared-write-conflict",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": false,
+        "checks": [
+          {
+            "id": "hidden-write-conflict",
+            "pass": true
+          },
+          {
+            "id": "coordination",
+            "pass": false
+          },
+          {
+            "id": "not-a-data-edge",
+            "pass": true
+          }
+        ]
+      },
+      "response": "**Mode: design**\n\n### Dependency shape\n- The 20 security checks are **parallel, independent branches**: no data dependency between workers.\n- The only coupling is **post-work aggregation** into `report.md`.\n\n### Shared resources\n- `report.md` is a **shared mutable resource**.\n- Direct concurrent appends create a **mutation/ordering dependency** even if the checks themselves are independent.\n- Open decision: whether the workflow allows concurrent append semantics, or whether a single aggregator writes the report after fan-in.\n\n### Fan-in and completion\n- Model as **fan-out of 20 launches** followed by **await all**.\n- Completion should be based on **all 20 handles settling**, not on the current file length or append count.\n- If any worker can fail, timeout, or be cancelled, the fan-in needs an explicit rule for whether partial report content is allowed or must be withheld.\n- Because `report.md` is shared, the safe design is: workers emit per-check results; a final step synthesizes the report.\n\n### Scenarios\n- Positive: all 20 checks complete successfully, fan-in collects all results, report is written once.\n- Negative: one check missing, fan-in must not declare completion.\n- Negative: one duplicate result for an identity, report synthesis must reject or flag it.\n- Negative: one worker fails or times out, completion policy must say whether the report is partial or blocked.\n- Shared-resource scenario: two workers attempt to append to `report.md` concurrently; the workflow must define whether that is permitted.\n\n### Open points\n- Who owns `report.md`: workers directly, or a single aggregator?\n- If workers append directly, what guarantees atomicity, ordering, and deduplication?\n- Are failed/timed-out checks allowed to contribute partial text?\n- What is the completion policy: strict all-success, or complete with documented exceptions?\n\n### POM boundary\n- POM can model the **control plane**: launch, await, completion, and aggregation boundaries.\n- POM should **not** model the actual concurrent write mechanism to `report.md`; that belongs to the target project’s data plane.\n- Recommended next action: revise the design so each check returns a result and a single final step writes `report.md`.\n"
+    },
+    {
+      "variant": "candidate",
+      "fixtureId": "shared-api-capacity",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": true,
+        "checks": [
+          {
+            "id": "capacity-dependency",
+            "pass": true
+          },
+          {
+            "id": "bounded-concurrency",
+            "pass": true
+          },
+          {
+            "id": "preserve-parallelism",
+            "pass": true
+          }
+        ]
+      },
+      "response": "Mode: design\n\n### Dependency shape\n- 80 parallel tasks, no task-to-task data dependency.\n- Only dependency is shared capacity on the external API.\n- No sequential “and then” edges needed between tasks.\n\n### Shared resources\n- One external API.\n- Capacity limits:\n  - max 10 concurrent requests\n  - max 100 requests/minute\n- These are shared-resource constraints, not business dependencies.\n\n### Fan-in and completion\n- Fan out 80 handles, then await all.\n- Completion should mean all 80 tasks reach a terminal state.\n- Open point: how failures, timeouts, and 429/rate-limit responses affect overall completion.\n\n### Scenarios\n- All 80 requests succeed within the concurrency and rate limits.\n- A request is delayed because the 10-concurrent cap is already reached.\n- A request is delayed because the 100/min cap is exhausted.\n- One task fails while others continue.\n- One task times out.\n- All tasks settle and the workflow closes only after the last terminal result.\n\n### Open points\n- Enforcement mechanism for the 10-concurrent and 100/min limits.\n- Retry policy for rate-limit or transient API failures.\n- Timeout policy per task and for the batch.\n- Whether partial results are allowed or the batch must fully succeed.\n- Cancellation policy if one task fails.\n- Idempotency requirements for repeated API calls.\n\n### POM boundary\n- Model only the control plane: fan-out, await, join, and completion.\n- Do not model workers, queues, schedulers, or transport details.\n- Put rate limiting, retries, backpressure, and execution mechanics in the target project data plane.\n"
+    },
+    {
+      "variant": "candidate",
+      "fixtureId": "hierarchical-fan-in",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": false,
+        "checks": [
+          {
+            "id": "hierarchical-reduction",
+            "pass": true
+          },
+          {
+            "id": "batches",
+            "pass": true
+          },
+          {
+            "id": "identity-provenance",
+            "pass": true
+          },
+          {
+            "id": "reconcile-layers",
+            "pass": true
+          },
+          {
+            "id": "one-batch-handle",
+            "pass": false
+          }
+        ]
+      },
+      "response": "Mode: design\n\n### Dependency shape\n- 100 file audits are independent; no audit needs another audit’s output.\n- The only downstream dependency is on **summaries**, not on all raw outputs.\n- Use a **hierarchical reduction**: file audits → batch summaries → final synthesis.\n- Any sequential ordering should exist only for capacity/backpressure reasons, not because of domain logic.\n\n### Shared resources\n- Likely shared resources: model/API quota, worker capacity, memory, raw-result storage, and cancellation/timeout signaling.\n- The concurrency cap, batch size, persistence, and timeout emission mechanism are **open points** owned by the target project.\n- Preserve the handle lifecycle: every launched audit handle must be awaited, cancelled, or explicitly detached before final closure.\n\n### Fan-in and completion\n- Launch 100 audit handles with `fan_out_launch`.\n- Await them in batches; each batch produces a compact summary.\n- A final `await`/reduce step consumes batch summaries only, so the last model call never receives all raw outputs.\n- Completion policy is not fully defined: whether failed, cancelled, or timed-out audits count as settled is an open point.\n- Identity accounting must be explicit at fan-in: preserve file identity, detect duplicates/unknowns, and keep incomplete synthesis visibly incomplete if partial results are allowed.\n\n### Scenarios\n- All 100 files complete exactly once; all batch summaries reconcile; final synthesis succeeds.\n- One expected file is missing from a batch summary.\n- One file appears twice, including the case where duplication masks a different missing file.\n- One unknown file identity appears in results.\n- One audit fails.\n- One audit times out or is cancelled.\n- Partial synthesis is refused when incompleteness is not allowed.\n- Partial synthesis is explicitly allowed and labeled incomplete, with unresolved files named.\n- Batch reduction preserves provenance across layers.\n\n### Open points\n- Batch size and reduction-tree shape.\n- Concurrency limit / backpressure policy.\n- Whether failed, cancelled, or timed-out audits count as settled.\n- Whether partial synthesis is allowed.\n- Duplicate and unknown identity handling rules.\n- Raw-output storage and retention.\n- Timeout emission and cancellation semantics.\n- Whether final output may link to raw results or only summarize them.\n\n### POM boundary\n- POM models the **control plane** only: launch, await, cancellation, detachment, and summary fan-in.\n- It does **not** implement the data plane: file access, worker pools, queues, retries, rate limiting, persistence, or the auditing model itself.\n- Large-output handling must be decided in the target project, not invented in the workflow model.\n\nNo file written in this read-only review.\n"
+    },
+    {
+      "variant": "candidate",
+      "fixtureId": "balanced-missing-duplicate",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": true,
+        "checks": [
+          {
+            "id": "find-missing",
+            "pass": true
+          },
+          {
+            "id": "find-duplicate",
+            "pass": true
+          },
+          {
+            "id": "count-insufficient",
+            "pass": true
+          },
+          {
+            "id": "refuse-complete",
+            "pass": true
+          }
+        ]
+      },
+      "response": "Mode: scenarios\n\n### Dependency shape\n- Fan-in/reduction: 60 expected route identities converge into one collector.\n- The downstream synthesis depends on identity provenance, not just record count.\n\n### Shared resources\n- Collector state\n- Expected-route registry / launch snapshot\n- Any deduplication or reconciliation store for route identities\n\n### Fan-in and completion\n- Completion must be judged against the expected identity set `route-001..route-060`.\n- A total of 60 received records is not enough if one expected identity is missing and another is duplicated.\n- The duplicate `route-008` does not compensate for missing `route-007`.\n\n### Scenarios\n1. Positive: all routes `route-001..route-060` received exactly once; expect complete synthesis.\n2. Missing identity: `route-007` absent; expect fan-in refused or marked incomplete.\n3. Duplicate identity: `route-008` received twice; expect duplicate detected and synthesis refused or marked incomplete.\n4. Missing + duplicate together: 60 records total, `route-007` missing, `route-008` duplicated; expect not complete despite count matching 60.\n5. Count-only false positive: `results.length == 60` but identity set mismatch; expect completeness rejected.\n6. Provenance check: duplicate `route-008` must not mask the absence of `route-007`; expect both anomalies reported.\n7. Full completeness check: identity set exactly matches expected set and each identity appears once; expect complete fan-in.\n\n### Open points\n- Does a duplicate invalidate synthesis outright, or can it be tolerated with warning?\n- Is partial synthesis allowed when one expected route is missing?\n- If partial synthesis is allowed, must it be labeled incomplete?\n- What is the required behavior for unknown, failed, cancelled, or timed-out route records?\n\n### POM boundary\n- This is a verification scenario set only.\n- No workflow file was written in this read-only evaluation.\n- Proposed output path: `workflows/generated/<name>.scenarios.md`\n\nRecommended next action: confirm the duplicate/missing-route policy and whether incomplete fan-in may be accepted.\n"
+    },
+    {
+      "variant": "candidate",
+      "fixtureId": "quorum-vs-completeness",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": false,
+        "checks": [
+          {
+            "id": "quorum-readiness",
+            "pass": true
+          },
+          {
+            "id": "separate-completeness",
+            "pass": false
+          },
+          {
+            "id": "account-statuses",
+            "pass": true
+          },
+          {
+            "id": "partial-policy-open",
+            "pass": true
+          }
+        ]
+      },
+      "response": "Mode: scenarios\n\n### Dependency shape\n- One fan-out launch boundary for 10 child handles.\n- One fan-in wait boundary with `join: quorum`, `k: 6`.\n- No other ordering or data dependency was specified.\n\n### Shared resources\n- Not specified: worker limit, queue/scheduler, persistence, timeout emission, cancellation, retry/idempotency, backpressure.\n- Treat those as target-project data-plane decisions.\n\n### Fan-in and completion\n- Expected launch snapshot: 10 identities.\n- Result accounting should preserve source identity and terminal status.\n- Observed mix: 6 succeeded, 2 failed, 1 timed out, 1 unknown identity.\n- Whether quorum is satisfied by terminal results vs successful results is not defined.\n- Whether partial reports are acceptable is not decided.\n\n### Scenarios\n- Positive control: from `await` with `join: quorum`, `k: 6`, when 6 launched handles have settled as allowed by the model, expect wake-up.\n- Negative control: from `await` with `join: quorum`, `k: 6`, when fewer than 6 launched handles have settled, expect wait continues.\n- Reporting: when 6 succeed, 2 fail, 1 times out, and 1 result has an unknown identity, expect all statuses to be surfaced and the unknown identity to be flagged.\n- Missing identity: when one launched identity never appears, expect missing-identity reporting.\n- Duplicate identity: when one launched identity appears twice, expect duplicate detection and no double-counting.\n- Failed result: when a child fails, expect failure surfaced in fan-in accounting.\n- Timed-out result: when a child times out, expect timeout surfaced in fan-in accounting.\n- Unknown identity: when a result is not in the launch snapshot, expect it to be rejected from completeness counting.\n- Partial report: if partial synthesis is disallowed, expect refusal until the policy is decided.\n- Partial report: if partial synthesis is allowed, expect the report to be explicitly labeled incomplete.\n\n### Open points\n- Does quorum count only successful results, or any settled terminal result?\n- Are partial reports acceptable?\n- Do failed, timed-out, or cancelled children count toward quorum?\n- Do duplicate or unknown identities invalidate the batch or just annotate it?\n- What concurrency, timeout, cancellation, and persistence semantics belong in the data plane?\n\n### POM boundary\n- POM models the control plane only; it does not run children or define worker infrastructure.\n- Proposed file: `workflows/generated/batch-quorum.scenarios.md`\n- Validator: not run in scenarios mode.\n- Next action: decide the quorum/counting and partial-report policy, then freeze the fan-in contract.\n"
+    },
+    {
+      "variant": "candidate",
+      "fixtureId": "ambiguous-partial-policy",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": false,
+        "checks": [
+          {
+            "id": "surface-open-point",
+            "pass": true
+          },
+          {
+            "id": "do-not-invent",
+            "pass": false
+          },
+          {
+            "id": "request-policy-decision",
+            "pass": true
+          }
+        ]
+      },
+      "response": "Mode: design\n\n### Dependency shape\n- One 50-item fan-out, with no stated dependencies between workers.\n- Final synthesis depends only on the set of results that arrive.\n- The description implies partial synthesis is allowed, but it does not define the rule for when synthesis may start.\n\n### Shared resources\n- No shared business resource is described.\n- Open resource questions: worker capacity, queue/scheduler, timeout source, retry policy, persistence, and any shared report state.\n\n### Fan-in and completion\n- This is a Dynamic Workflow fan-out/fan-in model.\n- The model needs `fan_out_launch` for the 50 launches and `await` for the synthesis boundary.\n- Open points:\n  - how many omissions are acceptable;\n  - which failures may be ignored;\n  - whether missing, failed, cancelled, or timed-out workers count as settled;\n  - whether the final report is allowed to be partial;\n  - how the report must be labelled if incomplete;\n  - whether late arrivals can revise the synthesis.\n\n### Scenarios\n- All 50 workers return successfully.\n- Some workers do not return, and synthesis proceeds.\n- One or more workers fail.\n- One or more workers time out or are cancelled.\n- A duplicate or unknown worker identity appears.\n- The final report is explicitly labelled incomplete, if partial synthesis is allowed.\n- The final report is refused, if partial synthesis is not allowed.\n\n### Open points\n- Acceptable omission threshold: none specified.\n- Ignorable failure types: none specified.\n- Completion policy: exact 50/50 vs partial allowed is unspecified.\n- Report labelling rule: incomplete/partial wording is unspecified.\n- Identity/provenance rule for results: unspecified.\n- Timeout, cancellation, and retry semantics: unspecified.\n- Concurrency/backpressure limit for the 50 launches: unspecified.\n\n### POM boundary\n- POM can model the control plane only: launch, wait, and synthesis.\n- POM does not define the worker implementation, scheduling, queueing, or runtime execution.\n"
+    },
+    {
+      "variant": "candidate",
+      "fixtureId": "ordinary-workflow-regression",
+      "critical": true,
+      "repetition": 1,
+      "status": "completed",
+      "exitCode": 0,
+      "evaluation": {
+        "pass": true,
+        "checks": [
+          {
+            "id": "ordinary-fsm",
+            "pass": true
+          },
+          {
+            "id": "no-forced-dynamic",
+            "pass": true
+          }
+        ]
+      },
+      "response": "Mode: design\n\n**Dependency shape**\n- Linear review flow, no batch or concurrent child execution.\n- States: `draft` → `in_review` → `accepted` or `rejected` → `draft`.\n- Events: `submit`, `accept`, `reject`, `revise`.\n- No guard logic was specified beyond the reviewer’s decision, so no predicate was invented.\n\n**Shared resources**\n- Only obvious shared resource is the document record itself and the reviewer’s attention.\n- No shared-write conflicts, queues, workers, or capacity rules were provided.\n- Reviewer authorization/identity is not specified.\n\n**Fan-in and completion**\n- None: this workflow has no fan-out/fan-in and no child handles.\n- Completion is straightforward:\n  - `accepted` is the terminal/final state.\n  - `draft`, `in_review`, and `rejected` are non-final.\n- `rejected` can re-enter `draft` via `revise`.\n\n**Scenarios**\n- Positive:\n  - from `draft` on `submit`, expect `in_review`\n  - from `in_review` on `accept`, expect `accepted`\n  - from `in_review` on `reject`, expect `rejected`\n  - from `rejected` on `revise`, expect `draft`\n- Refusals:\n  - from `accepted` on any event, expect no transition\n  - from `draft` on `accept`/`reject`, expect transition refused\n  - from `in_review` on `revise`, expect transition refused unless you explicitly add it\n- No guarded-transition negatives were derived because no guards were defined.\n\n**Open points**\n- Whether `rejected` is a named state or just an outcome label.\n- Whether `submit` is allowed only from `draft` or also from `rejected` after revision.\n- Whether reviewer identity/authorization should be modeled as a guard.\n- Whether `accepted` is strictly final with no exceptions (`re_entry_allowed: false` implied).\n- Whether notifications, audit logging, or content validation belong in the workflow or outside it.\n\n**POM boundary**\n- POM models the control flow only.\n- It does not define the review policy, approval criteria, storage layer, notifications, or human roles.\n- No dynamic workflow fields are needed here.\n\nActions taken: derived the workflow shape from the prose and identified open points instead of inventing rules.  \nFile written: none.  \nValidator verdict: not run.  \nRecommended next action: confirm the open points, then I can draft the YAML.\n"
+    }
+  ]
+}

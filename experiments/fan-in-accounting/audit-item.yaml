@@ -1,0 +1,28 @@
+workflow: audit_route_item
+version: 1
+description: Experimental leaf workflow for one independently addressable route audit.
+initial_state: auditing
+states:
+  - name: auditing
+    description: Audit one route identity without writing shared project files.
+    is_final: false
+  - name: succeeded
+    description: Return a successful result carrying the route identity.
+    is_final: true
+  - name: failed
+    description: Return an explicit failed result carrying the route identity.
+    is_final: true
+events:
+  - name: audit_succeeded
+    description: Audit checks completed successfully.
+  - name: audit_failed
+    description: Audit checks failed explicitly.
+transitions:
+  - from: auditing
+    to: succeeded
+    event: audit_succeeded
+  - from: auditing
+    to: failed
+    event: audit_failed
+invariants:
+  - description: Every terminal output preserves the input route identity and an explicit status.

@@ -500,6 +500,17 @@
 
       <p>Avoid it when the workflow is essentially a concurrent rule engine across many candidate machines, when the dominant complexity is real-time or distributed coordination, or when a stronger tool (XState, dedicated workflow engine) is already in use. POM workflow modeling is intentionally a subset of XState's expressive surface; native parallel states, async transitions, and fork/join inside the FSM stay outside the model. Dynamic Workflow is different: POM may record deterministic control-plane primitives such as <code>fan_out_launch</code>, <code>await</code>, <code>cancel_handles</code>, and <code>detach_handles</code>, while the target project owns the real concurrent data plane.</p>
 
+      <h3>Real fan-in cases the agent handles explicitly</h3>
+      <ul>
+        <li><strong>Independent work, one report:</strong> preserve parallel audits and create one batch handle; item identities and statuses stay in the result manifest.</li>
+        <li><strong>Shared output:</strong> classify workers appending to one report as a mutation dependency without inventing a lock, single writer, queue, or serialization policy.</li>
+        <li><strong>Quorum:</strong> allow a declared threshold to wake the control plane without calling a report complete while expected identities remain failed, timed out, missing, duplicated, or unknown.</li>
+        <li><strong>Equal counts:</strong> detect one missing identity hidden by a duplicate even when the received count equals the expected count.</li>
+        <li><strong>Large synthesis:</strong> reduce outputs in bounded hierarchical groups, preserve accounting in every summary, and reconcile summary identities again before final synthesis.</li>
+        <li><strong>Capacity:</strong> record only real task-supplied limits; physical workers, APIs, queues, scheduling, persistence, rate limiting, and backpressure remain Target Project data-plane concerns.</li>
+      </ul>
+      <p>These improvements guide agent design and scenario review. They do not execute fan-out, prove Target Project runtime behavior, or add a POM runtime; current canonical lint remains strongest on handle lifecycle.</p>
+
       <h3>What you get on the documentation and specification side</h3>
       <ul>
         <li><strong>The YAML model becomes the FSM spec</strong> for that workflow: states, events, guards, transitions, optional <code>context_schema</code> for typed input and per-terminal output, and explicit invariants. <code>WORKFLOW_TEMPLATE.yaml</code> is an optional reference starting point, not a mandatory file to copy; any target YAML that follows the schema can be validated. Versioned, reviewed in PRs, archived in Git.</li>

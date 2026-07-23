@@ -1,0 +1,28 @@
+workflow: summarize_audit_batch
+version: 1
+description: Experimental leaf workflow that reduces one reconciled batch without losing identity provenance.
+initial_state: summarizing
+states:
+  - name: summarizing
+    description: Summarize only reconciled audit results from one named batch.
+    is_final: false
+  - name: summarized
+    description: Return counts and the complete list of represented identities.
+    is_final: true
+  - name: rejected
+    description: Refuse a batch whose expected and represented identities differ.
+    is_final: true
+events:
+  - name: summary_ready
+    description: Batch counts and provenance reconcile.
+  - name: summary_invalid
+    description: Batch counts or provenance do not reconcile.
+transitions:
+  - from: summarizing
+    to: summarized
+    event: summary_ready
+  - from: summarizing
+    to: rejected
+    event: summary_invalid
+invariants:
+  - description: A summarized batch carries the exact represented identity set, not only a scalar count.

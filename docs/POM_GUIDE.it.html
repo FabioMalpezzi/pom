@@ -500,6 +500,17 @@
 
       <p>Evitalo quando il workflow è essenzialmente un rule engine concorrente su molte macchine candidate, quando la complessità dominante è il real-time o il coordinamento distribuito, oppure quando un tool più potente (XState, motore di workflow dedicato) è già in uso. La modellazione workflow di POM è volutamente un sottoinsieme della superficie espressiva di XState; stati paralleli nativi, transizioni asincrone e fork/join dentro la FSM restano fuori modello. Dynamic Workflow è diverso: POM può registrare primitive deterministiche di control plane come <code>fan_out_launch</code>, <code>await</code>, <code>cancel_handles</code> e <code>detach_handles</code>, mentre il progetto target possiede il vero data plane concorrente.</p>
 
+      <h3>Casi reali di fan-in gestiti esplicitamente dall'agente</h3>
+      <ul>
+        <li><strong>Lavoro indipendente, un solo report:</strong> mantiene paralleli gli audit e crea un solo batch handle; identità e stati degli elementi restano nel manifest dei risultati.</li>
+        <li><strong>Output condiviso:</strong> classifica più worker che scrivono lo stesso report come dipendenza di mutazione senza inventare lock, writer unico, coda o serializzazione.</li>
+        <li><strong>Quorum:</strong> permette alla soglia dichiarata di svegliare il control plane senza chiamare completo un report mentre identità attese risultano fallite, scadute, mancanti, duplicate o sconosciute.</li>
+        <li><strong>Conteggi uguali:</strong> rileva un'identità mancante nascosta da un duplicato anche quando il numero di record ricevuti coincide con quello atteso.</li>
+        <li><strong>Sintesi troppo grande:</strong> riduce gli output in gruppi gerarchici bounded, conserva l'accounting in ogni summary e riconcilia di nuovo le identità dei summary prima della sintesi finale.</li>
+        <li><strong>Capacità:</strong> registra solo limiti reali forniti dal task; worker, API, code, scheduling, persistenza, rate limiting e backpressure fisici restano responsabilità del data plane del progetto target.</li>
+      </ul>
+      <p>Questi miglioramenti guidano la progettazione dell'agente e la revisione degli scenari. Non eseguono il fan-out, non provano il comportamento runtime del progetto target e non aggiungono un runtime POM; il lint canonico resta più forte sul lifecycle degli handle.</p>
+
       <h3>Cosa ottieni sul lato documentazione e specifiche</h3>
       <ul>
         <li><strong>Il modello YAML diventa la specifica FSM</strong> di quel workflow: stati, eventi, guard, transizioni, <code>context_schema</code> opzionale per input tipato e output per ogni terminale, e invarianti esplicite. <code>WORKFLOW_TEMPLATE.yaml</code> è un punto di partenza di riferimento opzionale, non un file obbligatorio da copiare; qualunque YAML del progetto target che segue lo schema può essere validato. Versionato, revisionato in PR, archiviato in Git.</li>

@@ -190,6 +190,17 @@ Complete skill catalog:
 - **Real use cases**: model a ticket lifecycle; enable workflow roots through `pom.config.json`; validate a pipeline; generate Mermaid or XState views; map a YAML workflow to implementation guidance for a Target Project; use optional TypeScript or Python seam templates when execution, persistence, timers, retry, tools, or side effects need explicit adapters.
 - **Why it exists / importance**: gives workflow-heavy domains a precise, testable model while keeping execution runtime-owned by the Target Project.
 
+For Dynamic Workflow fan-out and fan-in, the canonical procedure now handles several recurring real-world failures more explicitly:
+
+1. **Independent audits followed by one report.** Forty route or compliance audits may run independently while a final report consumes every result. The skill preserves parallel work, records only the real data dependency into the report, creates one batch handle rather than forty item handles, and keeps failure or partial-publication policy open when the task does not decide it.
+2. **Independent checks writing one shared file.** Security checks can be logically independent yet all append to `report.md`. The skill classifies this as a shared-mutation dependency, but does not silently invent a lock, single writer, serialized execution, or queue. Those implementation choices remain Target Project decisions.
+3. **Quorum readiness without a complete report.** A batch may wake after six successful children while other children fail, time out, or return an unknown identity. The skill separates the control-plane wake-up from the `complete` label: unknown records stay visible for reconciliation but cannot satisfy an expected identity, and incomplete accounting cannot be presented as complete.
+4. **Equal counts hiding missing work.** A collector expecting sixty identities may receive sixty records because one identity is missing and another is duplicated. The skill reconciles identity sets instead of trusting scalar counts, exposing both the missing and duplicate identities.
+5. **Outputs too large for one synthesis context.** A hundred large audit results may not fit safely into one final model input. The skill uses bounded hierarchical groups, preserves expected, observed, represented, status, duplicate, unknown, and unresolved accounting in every group summary, then reconciles summary identities again before final synthesis.
+6. **Real capacity versus invented capacity.** An API quota or synthesis-context limit supplied by the task is recorded explicitly. Item count alone is not converted into a limit, and physical workers, queues, scheduling, retries, persistence, rate limiting, and backpressure remain in the Target Project data plane.
+
+These are agent-procedure guarantees, not runtime claims. Current canonical lint is strongest on Dynamic Workflow handle lifecycle; fan-in provenance, publication policy, and business semantics still require scenario review.
+
 ### `loop-goal`
 
 - **Illustration**: models, audits, tests, and concludes opt-in agent-shaped loop/goal workflows and experiments.

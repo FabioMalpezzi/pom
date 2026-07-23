@@ -4,6 +4,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-07-23] update | explain Dynamic Workflow fan-in guidance
+
+Updated the workflow skill synthesis with concrete fan-in cases: independent audits, shared-write mutation, quorum readiness versus completeness, equal-count missing-plus-duplicate reconciliation, bounded hierarchical reduction, and task-supplied capacity. Clarified that these are control-plane agent instructions, while runtime execution remains Target Project-owned and static fan-in lint remains deferred.
+
+Sources used: `prompts/27-workflow-modeling.md`, `skills/workflow.md`, `experiments/fan-in-accounting/EXPERIMENT.md`, `wiki/skills-and-prompts.md`, and `wiki/current-specs.md`.
+
 ## [2026-07-22] update | add MCP interface workflow
 
 Updated the skill and prompt synthesis with `mcp-interface`, including its version-aware protocol boundary, agent-ergonomic audit modes, POM verification gate, and host-visible token evidence requirement.

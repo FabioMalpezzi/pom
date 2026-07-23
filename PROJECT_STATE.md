@@ -132,16 +132,15 @@ The four-agent lifecycle had its **first real dialog-mode run** on the `exp/dyna
 
 ### Current Objective
 
-Maintain the promoted lean bootstrap and skill-only Pi package from `tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md`, while keeping the rejected Task Plan contract and active Pi extension out of the method. Treat the remaining evaluator and durable-install checks as explicit follow-ups rather than unfinished P1–P3 work.
+Maintain the closed fan-in accounting improvement in `prompts/27-workflow-modeling.md`. The experiment promoted only compact agent instructions for dependency classification, one batch handle, layered identity accounting, readiness versus completeness, task-supplied capacity, control/data-plane ownership, and fan-in scenarios. The full prose candidate and structured schema/validator were not promoted.
+
+Continue maintaining the promoted lean bootstrap and skill-only Pi package from `tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md`, while keeping the rejected Task Plan contract and active Pi extension out of the method. Treat the remaining evaluator and durable-install checks as explicit follow-ups rather than unfinished P1–P3 work.
 
 ### Next Actions
 
-Current post-integration state:
-
+- [x] **Close fan-in accounting experiment**: within the five-attempt limit, minimally promoted the supported procedure to `prompts/27-workflow-modeling.md`. The final frozen 8-fixture sample had four lexical matcher false negatives but no critical semantic violation on direct inspection; the hierarchical response used bounded groups and final summary reconciliation. `skills/workflow.md`, canonical schema/validator, implementation guide, and `SPEC-0008` remain unchanged.
 - [ ] **Behavioral evaluation follow-ups**: optionally re-freeze the baseline after negation-aware `transcriptExcludes` hardening, broaden deferred-record detection, run five-repetition Pi acceptance, and verify durable `pi install`/removal. P0–P3 are closed; these follow-ups do not reopen the rejected Task Plan contract or active extension.
 - [x] **Lato workflow — promuovere il contratto Dynamic Workflow** (priorità 3b): dottrina control-plane/data-plane registrata in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; SPEC-0006 aggiornato con `fan_out_launch`/`await`/`join`/`timeout`/`react`/`compensation`. Il contratto è dentro il workflow come control plane; l'esecuzione concorrente reale resta nel data plane del target. La copertura validator completa può crescere a partire dalle regole handle lifecycle E080-E089.
-- [x] **Runtime agent-loop-fsm**: snapshot/restore reale aggiunto al runtime dimostrativo con `--snapshot` e `--restore`.
-- [x] **Auditor v2**: l'istruzione di seguire `state-invoke`/`event-invoke` è già presente nel prompt canonico `prompts/29-loop-goal-audit.md`; nessuna modifica duplicativa necessaria.
 - [x] **Esperimento H6/H7** (priorità 1): adottato. SPEC-0007 è completa; validator E060-E073/W060, esempi, fixture, test automatico e guida Pattern A/B/C sono presenti.
 - [x] **Dynamic Workflow follow-up — handle lifecycle**: regole statiche E080-E089 aggiunte al validator per `fan_out_launch.handle`, `await.handles`, `cancel_handles`, `detach_handles` e terminali senza handle attivi impliciti; esempi e fixture in `experiments/dynamic-workflows/`; test automatici in `tests/workflow-validator/integration/test-dynamic-handles.mjs` e `tests/dynamic-workflows/integration/test-reference-executors.mjs`. I reference executor TypeScript e Python rimuovono gli handle attesi, propagano `detach`/`cancel` alle FSM figlie e rifiutano terminali con handle ancora attivi.
 - [x] **Integrare i rami verso `main`** (priorità 8): `exp/dynamic-workflows` è stato mergiato in `main`; il ramo includeva già `exp/agent-loop-fsm` e le modifiche H6/H7. Verifica post-merge: `npm run pom:test` e `npm run pom:lint` passati.
@@ -162,7 +161,8 @@ Current post-integration state:
 
 ### Blockers / Risks
 
-- **None blocking**. The main risk is confusing contract ownership with runtime ownership: the Dynamic Workflow contract belongs to the workflow control plane and is opt-in through `workflows.dynamic.enabled`, while real concurrent execution belongs to the target data plane. Validator coverage is partial, not the contract itself.
+- **Fan-in accounting enforcement remains intentionally limited.** The canonical prompt carries the supported procedure, while static fan-in schema/lint remains deferred because the experiment showed that structural validity alone does not prove semantic provenance or scenario truth.
+- The main Dynamic Workflow risk is confusing contract ownership with runtime ownership: the Dynamic Workflow contract belongs to the workflow control plane and is opt-in through `workflows.dynamic.enabled`, while real concurrent execution belongs to the target data plane. Validator coverage is partial, not the contract itself.
 - Secondary risk: the loop/goal lifecycle is powerful but heavy and is opt-in through `workflows.loopGoal.enabled`. Use `workflow` by default for ordinary domain workflows; use `loop-goal` only when the controller is agent-shaped and measured criteria matter.
 - Branch delivery guidance is procedural, not a project release policy. Target projects still own branch naming, PR templates, protected branches, and release automation.
 - New bootstrap evals are deterministic structural checks, not real harness

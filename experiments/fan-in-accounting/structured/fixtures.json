@@ -1,0 +1,105 @@
+[
+  {
+    "id": "independent-data-work",
+    "mode": "design",
+    "task": "Design the dependency shape for 40 route audits. Each audit reads a different route file, produces its own immutable result, writes no project file, and does not consume another audit's output. A final report consumes all audit results.",
+    "expect": {
+      "workflow_kind": "dynamic",
+      "identity_domain": "route_audit",
+      "parallel_units": true,
+      "required_edge_types": ["data"],
+      "required_scenarios": ["positive", "missing"],
+      "policies_open": ["failure_policy", "partial_policy"]
+    }
+  },
+  {
+    "id": "shared-write-conflict",
+    "mode": "design",
+    "task": "Design 20 independent security checks. Their inputs and outputs do not depend on each other, but every worker currently appends directly to the same report.md file. The completion and partial-report policies are not decided.",
+    "expect": {
+      "workflow_kind": "dynamic",
+      "identity_domain": "security_check",
+      "parallel_units": true,
+      "required_edge_types": ["mutation"],
+      "required_scenarios": ["positive", "missing", "failed"],
+      "policies_open": ["failure_policy", "partial_policy"]
+    }
+  },
+  {
+    "id": "shared-api-capacity",
+    "mode": "design",
+    "task": "Design 80 independent classification tasks. No task consumes another task's output. All tasks call one external API limited to 10 concurrent requests and 100 requests per minute.",
+    "expect": {
+      "workflow_kind": "dynamic",
+      "identity_domain": "classification_task",
+      "parallel_units": true,
+      "capacity_required": true,
+      "required_capacity_classes": ["data_plane_execution"],
+      "required_scenarios": ["positive", "capacity"],
+      "policies_open": ["failure_policy", "partial_policy"]
+    }
+  },
+  {
+    "id": "hierarchical-fan-in",
+    "mode": "design",
+    "task": "Design a Dynamic Workflow that audits 100 files. Each audit may emit a large result, and a single final model call cannot safely receive all raw outputs. No policy for failed or partial work has been decided.",
+    "expect": {
+      "workflow_kind": "dynamic",
+      "identity_domain": "file_audit",
+      "parallel_units": true,
+      "minimum_reductions": 1,
+      "capacity_required": true,
+      "required_capacity_classes": ["control_plane_input"],
+      "required_scenarios": ["positive", "missing", "duplicate", "failed", "timed_out", "unknown", "capacity"],
+      "policies_open": ["duplicate_policy", "unknown_policy", "failure_policy", "partial_policy"]
+    }
+  },
+  {
+    "id": "balanced-missing-duplicate",
+    "mode": "scenarios",
+    "task": "Derive verification scenarios for a fan-in expecting route-001 through route-060. The collector receives 60 records, but route-007 is absent and route-008 appears twice. No partial-output policy has been decided.",
+    "expect": {
+      "workflow_kind": "dynamic",
+      "identity_domain": "route",
+      "required_scenarios": ["positive", "missing", "duplicate", "partial_refused"],
+      "policies_open": ["partial_policy"]
+    }
+  },
+  {
+    "id": "quorum-vs-completeness",
+    "mode": "scenarios",
+    "task": "A batch launches 10 children and waits with join quorum k=6. Six successful results arrive, two children fail, one times out, and one returns an unknown identity. Derive the control and reporting scenarios. The business owner has not decided whether partial reports are acceptable or how failures affect reporting.",
+    "expect": {
+      "workflow_kind": "dynamic",
+      "identity_domain": "child",
+      "join": "quorum",
+      "k": 6,
+      "quorum_basis": "successful_outcomes",
+      "eligible_statuses": ["succeeded"],
+      "required_scenarios": ["positive", "failed", "timed_out", "unknown", "partial_refused", "partial_allowed"],
+      "policies_open": ["failure_policy", "partial_policy"]
+    }
+  },
+  {
+    "id": "ambiguous-partial-policy",
+    "mode": "design",
+    "task": "Design a 50-item fan-out and final synthesis. The description says only: produce the best report possible even if some workers do not return. It does not define how many omissions are acceptable, which failures may be ignored, or how the report should be labelled.",
+    "expect": {
+      "workflow_kind": "dynamic",
+      "identity_domain": "work_item",
+      "required_scenarios": ["positive", "missing", "failed", "timed_out"],
+      "policies_open": ["failure_policy", "partial_policy"]
+    }
+  },
+  {
+    "id": "ordinary-workflow-regression",
+    "mode": "design",
+    "task": "Design a document approval workflow: draft is submitted for review; a reviewer accepts or rejects it; accepted is final and rejected may be revised back to draft. There is no batch work or concurrent child execution.",
+    "expect": {
+      "workflow_kind": "ordinary",
+      "parallel_units": false,
+      "required_edge_types": ["ordering_authority"],
+      "required_scenarios": ["ordinary_transition"]
+    }
+  }
+]

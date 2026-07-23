@@ -1,0 +1,140 @@
+workflow: route_audit_fan_in_accounting
+version: 1
+description: |
+  Experimental Dynamic Workflow control plane for auditing 40–100 route
+  identities, reconciling every child result by identity, reducing complete
+  results in bounded batches, and refusing to label partial work complete.
+
+initial_state: launch_audits
+
+states:
+  - name: launch_audits
+    description: Launch one target-owned audit task for every snapshotted route identity.
+    is_final: false
+    fan_out_launch:
+      workflow: audit-item.yaml
+      over: route_ids
+      handle: route_audits
+
+  - name: wait_for_audits
+    description: Wait until the route audit batch settles or the declared timeout wakes the control plane.
+    is_final: false
+    await:
+      handles: [route_audits]
+      join: all
+      timeout: 10min
+      on_timeout: audit_wait_timed_out
+
+  - name: cancel_audits_after_timeout
+    description: Cancel the still-active audit handle before publishing an incomplete timeout outcome.
+    is_final: false
+    cancel_handles: [route_audits]
+
+  - name: reconcile_results
+    description: Compare expected and observed identities, statuses, duplicates, and unknown results before synthesis.
+    is_final: false
+
+  - name: launch_batch_summaries
+    description: Launch hierarchical reduction only after strict reconciliation succeeds.
+    is_final: false
+    fan_out_launch:
+      workflow: summarize-batch.yaml
+      over: reconciled_batches
+      handle: batch_summaries
+
+  - name: wait_for_batch_summaries
+    description: Wait for every batch summary before final consolidation.
+    is_final: false
+    await:
+      handles: [batch_summaries]
+      join: all
+      timeout: 5min
+      on_timeout: summary_wait_timed_out
+
+  - name: cancel_summaries_after_timeout
+    description: Cancel the still-active summary handle before publishing an incomplete timeout outcome.
+    is_final: false
+    cancel_handles: [batch_summaries]
+
+  - name: publish_complete_report
+    description: Publish a report labelled complete only when every expected identity succeeded exactly once.
+    is_final: true
+
+  - name: publish_incomplete_report
+    description: Publish an explicitly incomplete report with unresolved identities and statuses.
+    is_final: true
+
+  - name: accounting_failed
+    description: Refuse synthesis because duplicate or unknown identities make the result set untrustworthy.
+    is_final: true
+
+events:
+  - name: audits_launched
+    description: The external audit batch returned its workflow-local handle.
+  - name: audits_settled
+    description: The external data plane delivered its result manifest.
+  - name: audit_wait_timed_out
+    description: The audit wait expired before strict fan-in completion.
+  - name: audits_cancelled
+    description: The timed-out audit batch was explicitly cancelled.
+  - name: reconciliation_complete
+    description: Every expected identity succeeded exactly once.
+  - name: reconciliation_partial
+    description: Missing, failed, or timed-out identities remain and partial reporting is explicitly allowed.
+  - name: reconciliation_invalid
+    description: Duplicate or unknown identities make synthesis unsafe.
+  - name: summaries_launched
+    description: Hierarchical batch reductions were launched.
+  - name: summaries_ready
+    description: Every expected batch summary was reconciled.
+  - name: summaries_cancelled
+    description: The timed-out summary batch was explicitly cancelled.
+  - name: summary_wait_timed_out
+    description: Batch-summary fan-in did not complete before its timeout.
+
+transitions:
+  - from: launch_audits
+    to: wait_for_audits
+    event: audits_launched
+  - from: wait_for_audits
+    to: reconcile_results
+    event: audits_settled
+  - from: wait_for_audits
+    to: cancel_audits_after_timeout
+    event: audit_wait_timed_out
+  - from: cancel_audits_after_timeout
+    to: publish_incomplete_report
+    event: audits_cancelled
+  - from: reconcile_results
+    to: launch_batch_summaries
+    event: reconciliation_complete
+  - from: reconcile_results
+    to: publish_incomplete_report
+    event: reconciliation_partial
+  - from: reconcile_results
+    to: accounting_failed
+    event: reconciliation_invalid
+  - from: launch_batch_summaries
+    to: wait_for_batch_summaries
+    event: summaries_launched
+  - from: wait_for_batch_summaries
+    to: publish_complete_report
+    event: summaries_ready
+  - from: wait_for_batch_summaries
+    to: cancel_summaries_after_timeout
+    event: summary_wait_timed_out
+  - from: cancel_summaries_after_timeout
+    to: publish_incomplete_report
+    event: summaries_cancelled
+
+invariants:
+  - description: A report is complete only when expected and observed identity sets match exactly and every status is succeeded.
+  - description: Duplicate and unknown identities block synthesis rather than being hidden by count equality.
+  - description: Partial reporting is an explicit terminal outcome and lists every unresolved identity.
+  - description: Batch summaries preserve source identity counts and provenance for final reconciliation.
+
+metadata:
+  experiment: fan_in_accounting
+  open_points:
+    - Decide whether accounting belongs in workflow schema fields, context schema plus guards, or guidance only.
+    - Decide which accounting properties are statically verifiable by POM rather than target-runtime obligations.

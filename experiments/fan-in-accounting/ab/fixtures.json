@@ -1,0 +1,93 @@
+[
+  {
+    "id": "independent-data-work",
+    "critical": true,
+    "mode": "design",
+    "task": "Design the dependency shape for 40 route audits. Each audit reads a different route file, produces its own immutable result, writes no project file, and does not consume another audit's output. A final report consumes all audit results.",
+    "checks": [
+      { "id": "parallel", "any": ["parallel", "concurrent", "independent", "fan-out"] },
+      { "id": "no-false-edge", "any": ["no (?:data )?dependenc", "no (?:audit-to-audit )?edge", "no audit consumes another", "no branch depends", "depends? only on (?:its|their) own", "consumes? no other", "depends? on no other", "does not (?:need|consume|read).{0,50}(?:other|previous|upstream)"] },
+      { "id": "real-final-edge", "any": ["report.{0,80}(?:wait|depend|consume)", "fan-in", "await"] }
+    ]
+  },
+  {
+    "id": "shared-write-conflict",
+    "critical": true,
+    "mode": "design",
+    "task": "Design 20 independent security checks. Their inputs and outputs do not depend on each other, but every worker currently appends directly to the same report.md file.",
+    "checks": [
+      { "id": "hidden-write-conflict", "any": ["write conflict", "shared (?:mutable )?(?:file|resource)", "same file", "race condition"] },
+      { "id": "coordination", "any": ["single (?:writer|aggregator)", "serializ", "report is written once", "fan-in.{0,30}merge decision", "workers? emit.{0,80}final step", "return results?.{0,80}final report", "isolate.{0,50}write", "return.{0,80}(?:result|output).{0,80}(?:merge|consolidat)"] },
+      { "id": "not-a-data-edge", "any": ["no data dependenc", "no data[/,;]", "no branch depends", "checks? (?:themselves )?(?:are|remain).{0,30}independent", "no .{0,30}(?:input|output).{0,30}(?:another|other)", "data-independent", "inputs?.{0,40}independent"] }
+    ]
+  },
+  {
+    "id": "shared-api-capacity",
+    "critical": true,
+    "mode": "design",
+    "task": "Design 80 independent classification tasks. No task consumes another task's output. All tasks call one external API limited to 10 concurrent requests and 100 requests per minute.",
+    "checks": [
+      { "id": "capacity-dependency", "any": ["rate limit", "quota", "capacity"] },
+      { "id": "bounded-concurrency", "any": ["bounded concurrency", "concurrency limit", "max(?:imum)? 10 concurrent", "10 concurrent requests", "excess work waits", "semaphore", "worker pool", "backpressure"] },
+      { "id": "preserve-parallelism", "any": ["parallel", "concurrent", "independent"] }
+    ]
+  },
+  {
+    "id": "hierarchical-fan-in",
+    "critical": true,
+    "mode": "design",
+    "task": "Design a Dynamic Workflow that audits 100 files. Each audit may emit a large result, and a single final model call cannot safely receive all raw outputs.",
+    "checks": [
+      { "id": "hierarchical-reduction", "any": ["hierarchical", "layered", "multi-stage", "tree reduction"] },
+      { "id": "batches", "any": ["batch", "chunk"] },
+      { "id": "identity-provenance", "any": ["identit", "provenance", "represented"] },
+      { "id": "reconcile-layers", "any": ["reconcil", "expected count", "settled identities", "audit results.{0,40}batch summar", "batches.{0,140}preserv.{0,60}(?:identit|status|missing|duplicate)", "count.{0,40}(?:each|per).{0,30}(?:batch|layer)"] },
+      { "id": "one-batch-handle", "any": ["batch handle", "single.{0,30}handle", "one.{0,30}handle.{0,30}(?:batch|100-file)", "one launch handle"] }
+    ]
+  },
+  {
+    "id": "balanced-missing-duplicate",
+    "critical": true,
+    "mode": "scenarios",
+    "task": "Derive verification scenarios for a fan-in expecting route-001 through route-060. The collector receives 60 records, but route-007 is absent and route-008 appears twice.",
+    "checks": [
+      { "id": "find-missing", "any": ["route-007.{0,30}missing", "missing.{0,30}route-007"] },
+      { "id": "find-duplicate", "any": ["route-008.{0,30}duplicat", "duplicat.{0,30}route-008"] },
+      { "id": "count-insufficient", "any": ["count.{0,50}(?:insufficient|not (?:enough|sufficient))", "length.{0,50}not (?:enough|sufficient)", "records?\\.length", "record count", "same (?:total )?count.{0,50}(?:does not|is not)", "even though the count is 60", "60 records.{0,100}(?:identity|missing|duplicat|not sufficient)"] },
+      { "id": "refuse-complete", "any": ["not complete", "incomplete", "refuse.{0,40}(?:synth|report|complete)", "must not.{0,40}complete"] }
+    ]
+  },
+  {
+    "id": "quorum-vs-completeness",
+    "critical": true,
+    "mode": "scenarios",
+    "task": "A batch launches 10 children and waits with join quorum k=6. Six successful results arrive, two children fail, one times out, and one returns an unknown identity. Derive the control and reporting scenarios. The business owner has not decided whether partial reports are acceptable.",
+    "checks": [
+      { "id": "quorum-readiness", "any": ["quorum.{0,60}(?:reached|satisfied|ready|resume|is met)", "quorum boundary is satisfied", "quorum wait to wake", "six.{0,40}(?:enough|satisf)", "control-plane wakeup", "control-plane wake-up"] },
+      { "id": "separate-completeness", "any": ["quorum.{0,100}(?:not|does not).{0,60}complete", "readiness.{0,80}completeness", "reporting (?:is|completeness is) separate", "quorum wake-up is not the same", "successes do not prove a complete report", "join.{0,80}account"] },
+      { "id": "account-statuses", "any": ["fail.{0,80}time", "time.{0,80}fail"], "all": ["unknown"] },
+      { "id": "partial-policy-open", "any": ["open point", "ask.{0,80}(?:owner|user)", "unspecified", "must be decided"] }
+    ]
+  },
+  {
+    "id": "ambiguous-partial-policy",
+    "critical": true,
+    "mode": "design",
+    "task": "Design a 50-item fan-out and final synthesis. The description says only: produce the best report possible even if some workers do not return. It does not define how many omissions are acceptable, which failures may be ignored, or how the report should be labelled.",
+    "checks": [
+      { "id": "surface-open-point", "any": ["open point", "ambig", "unspecified", "clarif"] },
+      { "id": "do-not-invent", "any": ["do not invent", "must not invent", "rather than invent", "cannot assume", "not assume", "does not define", "not define", "not rules", "behavior (?:is )?(?:unresolved|undefined)", "remain.{0,30}(?:unspecified|open)", "is unspecified"] },
+      { "id": "request-policy-decision", "any": ["ask.{0,100}(?:missing|omission|failure|partial|label)", "decide.{0,80}(?:missing|omission|failure|partial|label)", "acceptable omission", "required label", "completion policy.{0,60}(?:open|underspecified|decid)"] }
+    ]
+  },
+  {
+    "id": "ordinary-workflow-regression",
+    "critical": true,
+    "mode": "design",
+    "task": "Design a document approval workflow: draft is submitted for review; a reviewer accepts or rejects it; accepted is final and rejected may be revised back to draft. There is no batch work or concurrent child execution.",
+    "checks": [
+      { "id": "ordinary-fsm", "any": ["state", "transition"], "all": ["draft", "accept", "reject"] },
+      { "id": "no-forced-dynamic", "any": ["no (?:dynamic|fan-out|parallel)", "does not (?:need|require).{0,40}(?:dynamic|fan-out|parallel)", "ordinary.{0,30}(?:fsm|workflow)", "simple.{0,30}(?:fsm|workflow)"] }
+    ]
+  }
+]
