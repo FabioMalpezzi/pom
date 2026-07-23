@@ -12,7 +12,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname, isAbsolute } from 'node:path';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 // ---------- Tipi del contratto ----------
 type Json = Record<string, any>;

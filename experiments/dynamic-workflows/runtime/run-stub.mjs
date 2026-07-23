@@ -20,7 +20,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, isAbsolute, join, dirname } from 'node:path';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 function load(pathSpec, baseDir) {
   const abs = isAbsolute(pathSpec) ? pathSpec : resolve(baseDir, pathSpec);

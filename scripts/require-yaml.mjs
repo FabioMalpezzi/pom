@@ -8,7 +8,8 @@
 
 let yaml;
 try {
-  yaml = (await import('js-yaml')).default;
+  const module = await import('js-yaml');
+  yaml = module.default ?? module;
 } catch {
   console.error('[pom:workflow] Missing dependency: js-yaml.');
   console.error('The POM workflow scripts need js-yaml.');

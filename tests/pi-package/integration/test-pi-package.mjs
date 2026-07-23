@@ -9,7 +9,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import yaml from "js-yaml";
+import * as yaml from "js-yaml";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
