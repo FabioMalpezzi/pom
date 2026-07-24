@@ -44,7 +44,7 @@ _Current operational state. Update at every significant session or when prioriti
 
 ### Current State
 
-Prompt governance now has automated bidirectional catalog/link coverage and static contract guards for loop/goal prompts, standalone config guards, and reconciliation with disabled Decision Records. Canonical loop/goal prompts 28–31 and `skills/loop-goal.md` are portable current procedures without embedded promotion history; loop/goal modeling requires accepted criteria, and invalid workflows stop before fit classification.
+Prompt governance now has automated bidirectional catalog/link coverage and static contract guards for loop/goal prompts, standalone config guards, and reconciliation with disabled Decision Records. Canonical loop/goal prompts 28–31 and `skills/loop-goal.md` are portable current procedures without embedded promotion history; loop/goal modeling requires accepted criteria, and invalid workflows stop before fit classification. Loop/goal guidance now requires verification and evidence for each active or advancing iteration, and recommends a target-owned Iteration Record for autonomous, persistent, resumable, or artifact-mutating loops without adding a YAML primitive.
 
 `skills/mcp-interface.md` and `prompts/35-mcp-interface.md` provide the current POM procedure for designing, auditing, reshaping, and verifying MCP interfaces. The procedure adapts AXI ergonomics to version-specific MCP contracts, keeps runtime ownership in Target Projects, separates tool/resource/prompt audits, requires approval before any public-contract change, distinguishes transport authorization from JSON-RPC and tool execution errors, and applies the POM verification gate. Token-efficiency claims require host-visible token measurements rather than serialized size alone.
 
@@ -61,9 +61,9 @@ work has been integrated into `main`:
 - `decisions/ADR-0003-workflow-vs-loop-goal-skill.md` defines
   `loop-goal` as a separate agentic subtype of the generic `workflow`
   skill.
-- Five verified loop/goal workflow examples live under
+- Six verified loop/goal workflow examples live under
   `templates/examples/workflow/loop-goal/`: ReAct minimal, Goal
-  Lifecycle, flat SPAO, bounded retry, and supervisor+invoke.
+  Lifecycle, flat SPAO, bounded retry, supervisor+invoke, and Iteration Record with bounded verification.
 - SPEC-0007 is complete: `loop_guard` and `timeout` are validated schema
   primitives. Target projects still own counters, timers, scheduling,
   persistence, and timeout event emission.

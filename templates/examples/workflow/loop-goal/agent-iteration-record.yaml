@@ -1,0 +1,108 @@
+workflow: pom_iteration_record_self_test
+version: 1
+description: |
+  Temporary self-test of an agent-shaped loop that records verification
+  evidence for every iteration and stops after at most fifty visits.
+
+initial_state: preparing
+
+states:
+  - name: preparing
+    description: Establish the candidate and the current iteration record.
+    is_final: false
+  - name: executing
+    description: Apply or run the current candidate within the bounded loop.
+    is_final: false
+    loop_guard:
+      max_visits: 50
+      on_exhaustion: stalled
+  - name: verifying
+    description: Run the declared gate and collect evidence for this iteration.
+    is_final: false
+  - name: recording
+    description: Persist the iteration record before any active-loop decision.
+    is_final: false
+  - name: deciding
+    description: Decide whether the goal is reached, the candidate is rejected, or the loop continues.
+    is_final: false
+  - name: reached
+    description: The accepted goal condition was observed with evidence.
+    is_final: true
+  - name: stalled
+    description: The maximum of fifty loop visits was exhausted without reaching the goal.
+    is_final: true
+  - name: failed
+    description: Verification failed or the record could not be persisted.
+    is_final: true
+
+events:
+  - name: start_iteration
+    description: Begin the first or next bounded iteration.
+  - name: candidate_executed
+    description: The candidate action completed and produced an observation.
+  - name: verification_complete
+    description: The declared verifier produced a result and evidence reference.
+  - name: verification_failed
+    description: The declared verifier failed or could not produce usable evidence.
+  - name: record_persisted
+    description: The current iteration record was persisted successfully.
+  - name: goal_reached
+    description: The accepted gate and objective condition hold.
+  - name: continue_iteration
+    description: The goal is not reached and the loop may continue.
+  - name: candidate_rejected
+    description: The candidate did not improve the measured result.
+  - name: record_failed
+    description: The iteration record could not be persisted.
+
+guards:
+  - name: evidence_present
+    description: The current iteration has a declared verification and evidence reference.
+  - name: iteration_budget_available
+    description: Target code confirms that the fifty-visit loop budget remains available.
+
+transitions:
+  - from: preparing
+    to: executing
+    event: start_iteration
+    description: Start the bounded loop.
+  - from: executing
+    to: verifying
+    event: candidate_executed
+    description: Observe the candidate result before deciding.
+  - from: verifying
+    to: recording
+    event: verification_complete
+    guard: evidence_present
+    description: Do not advance without verification and evidence.
+  - from: verifying
+    to: failed
+    event: verification_failed
+    description: A failed or unusable verification cannot advance the loop.
+  - from: recording
+    to: deciding
+    event: record_persisted
+    description: Persist the iteration record before choosing the next exit.
+  - from: recording
+    to: failed
+    event: record_failed
+    description: Fail loudly when the record cannot be persisted.
+  - from: deciding
+    to: reached
+    event: goal_reached
+    description: Finish only after the verified record is available.
+  - from: deciding
+    to: executing
+    event: continue_iteration
+    guard: iteration_budget_available
+    description: Begin another iteration within the fifty-visit bound.
+  - from: deciding
+    to: executing
+    event: candidate_rejected
+    guard: iteration_budget_available
+    description: Reject the candidate and try another bounded iteration.
+
+invariants:
+  - description: Every advancing iteration has a verification result and evidence reference before the decision state.
+  - description: The target runtime owns the Iteration Record persistence and loop counter; POM validates the control-plane shape.
+  - description: Reaching stalled is the only allowed result of exhausting the fifty-visit loop guard.

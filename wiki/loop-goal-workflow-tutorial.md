@@ -8,7 +8,7 @@ navTitle: Loop/Goal Tutorial
 
 Loop/goal workflows model agent-shaped controllers: a system receives a
 goal, decides what to do next, acts, observes the result, and either
-continues or terminates. The five YAML files under
+continues or terminates. The six YAML files under
 `templates/examples/workflow/loop-goal/` are verified examples, not the
 complete taxonomy of possible agent loops.
 
@@ -56,7 +56,7 @@ end-to-end, and the Dynamic Workflow TypeScript and Python reference
 executors, which prove the control-plane and data-plane split with
 launched handles, await, detach, cancel, and compensation.
 
-The current verified examples cover five shapes:
+The current verified examples cover six shapes:
 
 | Example | Use It When |
 |---|---|
@@ -65,6 +65,7 @@ The current verified examples cover five shapes:
 | `agent-loop-table.yaml` | The whole control flow should stay flat: perception, planning, action, observation. |
 | `agent-retry-bounded.yaml` | The key behavior is retrying a failed action with an explicit bound. |
 | `agent-supervisor.yaml` | A parent controller delegates the goal to a synchronous child workflow and routes on the child terminal. |
+| `agent-iteration-record.yaml` | The loop must verify and record each iteration before continuing, with a maximum of 50 visits. |
 
 These examples were validated during the `agent-loop-fsm` experiment.
 They are safe starting points, but they do not exhaust the design space.
@@ -180,6 +181,36 @@ A good invocation is explicit about both layers:
 > bounded iteration, then close the tracker or update the explicit state
 > only after reporting the measured evidence.
 
+### Iteration Records
+
+For a short synchronous trial, the criteria and evidence artifacts may be
+enough. For an autonomous, persistent, resumable, or artifact-mutating loop,
+keep one target-owned record per iteration. It makes progress auditable and
+lets a later run distinguish a measured attempt from an agent's claim.
+
+Every iteration that advances or remains active names its verification and
+links the evidence used for the decision. Automation is preferred; semantic or
+human validation is valid when the accepted criteria require it.
+
+A minimal example is:
+
+```yaml
+iteration_id: 7
+state: verifying
+action_or_candidate: benchmark_candidate_7
+observation: score_improved
+verification:
+  method: benchmark
+  status: passed
+evidence_ref: evidence/iteration-007.json
+decision: keep
+```
+
+Use `keep`, `reject`, `rollback`, or `inconclusive` only when the loop really
+has mutable candidates. Parent iteration, metric values, budget usage, and
+artifact/state hashes are additional fields for resumable or reproducible
+loops. This record is target-owned; it is not a new POM workflow primitive.
+
 Shell commands usually cannot create or close an agent-native goal
 tracker. They still matter inside the loop because they measure the POM
 contract: lint, tests, audits, benchmark scripts, scenario counters,
@@ -293,7 +324,7 @@ Dynamic Workflow control-plane/data-plane contract and make handle
 lifecycle explicit: awaited, cancelled, or detached before terminal
 states.
 
-Do not treat the five verified examples as a closed category list. They
+Do not treat the six verified examples as a closed category list. They
 are regression-safe anchors. New loop/goal shapes should still go
 through criteria, modeling, lint, audit, scenarios, and conclusion before
 being promoted as examples.
@@ -303,7 +334,7 @@ being promoted as examples.
 | Source | Use |
 |---|---|
 | `skills/loop-goal.md` | Canonical operating procedure and modes for loop/goal work. |
-| `templates/examples/workflow/loop-goal/README.md` | Catalog of the five verified YAML examples. |
+| `templates/examples/workflow/loop-goal/README.md` | Catalog of the six verified YAML examples. |
 | `experiments/agent-loop-fsm/RESULTS.md` | Evidence behind H1-H5 and the verified examples. |
 | `specs/SPEC-0006-workflow-modeling.md` | Workflow schema, composition rules, and Dynamic Workflow backlog doctrine. |
 | `specs/SPEC-0007-loop-guard-timeout.md` | Declarative loop bound and timeout primitives. |

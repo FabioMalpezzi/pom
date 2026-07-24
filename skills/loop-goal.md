@@ -65,6 +65,8 @@ Do not model before criteria are explicitly accepted. Do not weaken criteria aft
 - POM is a deterministic control-plane method, not a workflow runtime.
 - `loop_guard` and `timeout` are validated schema contracts; their counters, clocks, scheduling, and event emission remain Target Project responsibilities.
 - Never invent business rules, runtime behavior, evidence, baselines, or user approval.
+- Every iteration that advances or remains active must name its verification and evidence; automation is preferred, while semantic or human validation is allowed when the accepted criteria require it.
+- For autonomous, persistent, or artifact-mutating loops, use an explicit Iteration Record; keep it target-owned and do not add it to the workflow schema.
 - The criteria dialogue must record material consequences and user calibrations in `criteria.dialog.md`; it is not a transcript.
 - Accepted `criteria.md` is frozen for the experiment round.
 - Audit stops when the root or an invoked workflow fails validation and never edits YAML.

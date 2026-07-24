@@ -185,6 +185,38 @@ Independent of the target language, the guide discourages:
 - Hard-coding the transition table in code instead of deriving it from the YAML — the YAML is the source of authority. Whenever the YAML changes, the table is regenerated, not patched.
 - Mixing Pattern A with Pattern C in the same machine. Pick one consistently per workflow.
 
+## Iteration Records
+
+For a short, synchronous trial, the criteria file and evidence artifacts may
+be sufficient. Use an explicit Iteration Record when the loop is autonomous,
+persistent, resumes after interruption, or mutates an artifact. The record is
+target-owned runtime state, not a new POM YAML primitive.
+
+Each iteration that advances or remains active must name its verification and
+link the evidence used for the decision. Automation is preferred, but an
+accepted criterion may require semantic or human validation instead.
+
+A minimal record shape is:
+
+```yaml
+iteration_id: 7
+state: verifying
+action_or_candidate: benchmark_candidate_7
+observation: score_improved
+verification:
+  method: benchmark
+  status: passed
+evidence_ref: evidence/iteration-007.json
+decision: keep
+```
+
+For artifact-optimisation loops, `decision` may be `keep`, `reject`,
+`rollback`, or `inconclusive`. Do not force this disposition vocabulary onto
+loops that do not produce mutable candidates. Add parent iteration, metrics,
+budget usage, and artifact/state hashes when resumption or reproducibility
+requires them. A malformed or stale record must fail loudly rather than be
+silently repaired.
+
 ## Loop Guards And Timeouts
 
 `loop_guard` and `timeout` are schema contracts, not POM-owned runtime

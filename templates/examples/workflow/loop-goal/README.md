@@ -19,6 +19,7 @@ Per workflow di dominio classici (ticket lifecycle, document approval, spec evol
 | `agent-loop-table.yaml` | SPAO (Perception → Planning → Action → Observation) | 6 stati, 7 transizioni, transition table piatta. Niente `invoke`, niente composizione, una sola superficie. | Esperimento `agent-loop-fsm` H2 |
 | `agent-retry-bounded.yaml` | Bounded retry via self-transition guarded | 5 stati, 5 transizioni (incluso 1 self), 2 guard mutuamente esclusivi (`has_attempts_left`, `no_attempts_left`). Counter nel `context`; H6 `loop_guard` lo renderebbe dichiarativo. | Esperimento `agent-loop-fsm` H3 |
 | `agent-supervisor.yaml` | Supervisor + sub-workflow autonomo | 5 stati, 6 transizioni, 1 `state-invoke` su `agent-orchestrator-goal-lifecycle.yaml` con `on_completion` per dispatch sui terminali. Composizione sincrona a due livelli. | Esperimento `agent-loop-fsm` H4 |
+| `agent-iteration-record.yaml` | Iteration Record + verifica bounded | 8 stati, 9 transizioni, `loop_guard.max_visits: 50`, verifica con evidenza prima della decisione e fallimento esplicito se il record non è disponibile. | Self-test dell’estensione Iteration Record |
 
 ## Verifica
 
