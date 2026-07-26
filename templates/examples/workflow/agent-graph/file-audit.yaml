@@ -1,0 +1,55 @@
+workflow: file_audit
+version: 1
+description: |
+  The per-file child workflow launched by `security-sweep.yaml`. One worker
+  reads one file, reports the authorization checks it believes are missing,
+  and terminates.
+
+  It is deliberately small: POM models the control plane, and the target
+  project owns how the worker actually reads, reasons, and reports.
+
+initial_state: reading
+
+states:
+  - name: reading
+    description: |
+      The worker reads the assigned file.
+    is_final: false
+  - name: reported
+    description: |
+      The worker reported its findings, possibly an empty set. An empty set
+      is a successful result, not a missing one.
+    is_final: true
+  - name: unreadable
+    description: |
+      The file could not be read. This identity is accounted for as failed,
+      never silently dropped from the batch manifest.
+    is_final: true
+
+events:
+  - name: findings_ready
+    description: |
+      The worker finished its pass over the file.
+  - name: read_failed
+    description: |
+      The file could not be read.
+
+transitions:
+  - from: reading
+    to: reported
+    event: findings_ready
+  - from: reading
+    to: unreadable
+    event: read_failed
+
+invariants:
+  - description: |
+      A worker always reaches a terminal state, so every expected identity
+      appears in the batch manifest with a terminal status.
+
+metadata:
+  owner: security engineering
+  provenance: speculative
+  tags:
+    - agent-graph
+    - worker

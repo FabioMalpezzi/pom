@@ -1,0 +1,40 @@
+workflow: evidence_bad_flag
+version: 1
+description: |
+  independent_context declared as a string instead of a boolean.
+initial_state: working
+states:
+  - name: working
+    description: |
+      Work in progress.
+    is_final: false
+  - name: accepted
+    description: |
+      Accepted terminal.
+    is_final: true
+  - name: rejected
+    description: |
+      Rejected terminal.
+    is_final: true
+events:
+  - name: submitted
+    description: |
+      Work submitted for judgement.
+  - name: refused
+    description: |
+      Work refused.
+guards:
+  - name: review_passed
+    description: |
+      The artifact was reviewed and accepted.
+    evidence:
+      source: model_judgment
+      independent_context: "yes"
+transitions:
+  - from: working
+    to: accepted
+    event: submitted
+    guard: review_passed
+  - from: working
+    to: rejected
+    event: refused

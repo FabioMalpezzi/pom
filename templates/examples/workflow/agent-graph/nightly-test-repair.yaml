@@ -1,0 +1,115 @@
+workflow: nightly_test_repair
+version: 1
+description: |
+  A scheduled agent takes the red test suite on main, forms a hypothesis,
+  applies a patch, and runs the suite again until it is green or the bound
+  is spent.
+
+  The state graph below says which transitions are legal. It does not say
+  what starts a cycle, what evidence decides success, what a failed cycle
+  hands to the next one, or who receives the run when the bound is spent.
+  Those live in `runtime_loop`, which is what separates a managed loop from
+  "keep trying".
+
+  Read the goal line carefully: "without modifying the tests themselves" is
+  not a stylistic note. It is the guard against this agent's classic failure
+  mode, which is discovering that the fastest way to a green suite is to
+  delete the tests that fail. The evidence line makes that checkable.
+
+initial_state: analyzing
+
+states:
+  - name: analyzing
+    description: |
+      Read the failure output and form one hypothesis about the cause.
+    is_final: false
+
+  - name: patching
+    description: |
+      Apply the proposed patch and run the suite again. The visit bound
+      lives here because this is the state a cycle re-enters.
+    is_final: false
+    loop_guard:
+      max_visits: 5
+      on_exhaustion: escalated
+
+  - name: green
+    description: |
+      The suite passes and no test was removed or skipped.
+    is_final: true
+
+  - name: escalated
+    description: |
+      The loop stopped without success and the run was handed to a person.
+    is_final: true
+
+events:
+  - name: hypothesis_ready
+    description: |
+      A hypothesis about the cause has been formed.
+  - name: suite_passed
+    description: |
+      The suite run reported no failures.
+  - name: suite_failed
+    description: |
+      The suite run still reports failures.
+
+guards:
+  - name: suite_green
+    description: |
+      The suite run reports no failing test, and the set of executed tests
+      is not smaller than at the starting commit.
+    evidence:
+      source: deterministic
+      description: |
+        Exit code and JUnit report of `npm test`, compared against the test
+        inventory of the starting commit. No model judgement is involved.
+
+transitions:
+  - from: analyzing
+    to: patching
+    event: hypothesis_ready
+  - from: patching
+    to: green
+    event: suite_passed
+    guard: suite_green
+  - from: patching
+    to: analyzing
+    event: suite_failed
+
+runtime_loop:
+  trigger:
+    kind: schedule
+    description: |
+      The 02:00 nightly job starts a cycle when the suite on main is red.
+      The agent deciding to continue is not a trigger.
+  goal: |
+    The suite on main is green again without modifying the tests themselves.
+  evidence: |
+    Exit code of `npm test` plus the JUnit report, and no test deleted or
+    marked skip relative to the starting commit.
+  feedback: |
+    The names of the still-failing tests, the first line of each error, and
+    the diff attempted in the previous cycle. Not the transcript.
+  stop:
+    on_success: green
+    on_exhaustion: escalated
+    escalation: |
+      The owning team of the module receives the branch with the last diff
+      and the tests still red.
+
+invariants:
+  - description: |
+      A green verdict is never reached by removing or skipping a test.
+  - description: |
+      The visit bound is spent by the runtime; POM declares it and does not
+      count it.
+
+metadata:
+  owner: platform engineering
+  provenance: speculative
+  open_points:
+    - "Whether a cycle that touches production configuration rather than source needs a separate approval gate is undecided."
+  tags:
+    - agent-graph
+    - runtime-loop

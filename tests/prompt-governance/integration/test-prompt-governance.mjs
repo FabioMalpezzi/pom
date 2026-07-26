@@ -127,6 +127,30 @@ assertContract("control-plane boundary", "skills/loop-goal.md", {
   required: ["deterministic control-plane method", "Target Project responsibilities", "user retains the Adopt/Refine/Reject promotion decision"],
   forbidden: ["POM executes workflow runtime instances.", "POM owns workers and scheduling.", "Native concurrent FSM regions are supported."],
 });
+assertContract("graph honesty", "prompts/27-workflow-modeling.md", {
+  required: [
+    "metadata.provenance: observed",
+    "worker workspace isolation",
+    "where each worker does its work",
+    "what happens when two workers produce contradictory results",
+    "independent_context: true",
+    "agreeing with itself",
+    "Never declare `independent_context: true` to silence the warning",
+    "\"The agent says it is done\" is not evidence",
+    "`stop.on_success` and `stop.on_exhaustion` reference declared states",
+  ],
+  forbidden: [
+    "A speculative model needs no declaration.",
+    "Worker workspace isolation is a data-plane detail POM ignores.",
+    "Parallel workers may share one mutable workspace by default.",
+    "Merge conflicts between workers are resolved at implementation time.",
+    "A model-judged guard needs no independent context.",
+    "Declare independent_context true to clear the warning.",
+    "The verifier may reuse the executor's context.",
+    "The agent reporting done is sufficient evidence.",
+    "runtime_loop stop targets may reference undeclared states.",
+  ],
+});
 assertContract("experiment consolidation", "prompts/09-run-temporary-experiment.md", {
   required: ["adoption.analysis", "adoption.wiki", "adoption.decisions", "adoption.tasks", "Never enable a disabled adoption module implicitly"],
   forbidden: ["Write analysis when adoption.analysis is disabled.", "Update the wiki when adoption.wiki is disabled.", "Create an ADR even when adoption.decisions is disabled.", "Create structured tasks when adoption.tasks is disabled.", "Enable disabled modules automatically during consolidation."],

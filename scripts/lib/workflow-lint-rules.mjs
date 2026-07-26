@@ -70,6 +70,15 @@ export const ERROR_RULES = {
   E087: 'cancel_handles must be a non-empty list of declared active handles.',
   E088: 'detach_handles must be a non-empty list of declared active handles.',
   E089: 'A final state is reachable with active handles that were not awaited, cancelled, or detached.',
+  E090: 'A guard evidence block is not a mapping, or evidence.source is missing or not one of deterministic, model_judgment, human.',
+  E091: 'guards[].evidence.independent_context is present but is not a boolean.',
+  E100: 'runtime_loop is present but is not a mapping.',
+  E101: 'runtime_loop.trigger is missing, is not a mapping, or trigger.kind is not one of user_request, schedule, event, evidence_failure.',
+  E102: 'runtime_loop.goal is missing or is not a non-empty string.',
+  E103: 'runtime_loop.evidence is missing or is not a non-empty string.',
+  E104: 'runtime_loop.stop is missing or is not a mapping.',
+  E105: 'runtime_loop.stop.on_success is missing or does not reference a declared state.',
+  E106: 'runtime_loop.stop.on_exhaustion is missing or does not reference a declared state.',
 };
 
 export const WARNING_RULES = {
@@ -77,5 +86,9 @@ export const WARNING_RULES = {
   W002: 'Silent dead-end: non-final state with no outgoing transitions.',
   W003: 'Final state has at least one outgoing transition (re-entry from terminal). Suppressed when the state declares re_entry_allowed: true.',
   W004: 'Non-deterministic transition: same (from, event) declared more than once with ambiguous guard coverage.',
+  W005: 'Self-review risk: a guard declares evidence.source: model_judgment without independent_context: true, so the judgement may share the context that produced the work.',
+  W006: 'A guard on a transition leaving an await state declares no evidence block, so the fan-in verification has no declared source of truth.',
+  W007: 'runtime_loop declares no feedback, so a failed cycle hands the next cycle nothing actionable.',
+  W008: 'runtime_loop.stop declares no escalation, so an exhausted run has no named owner.',
   W060: 'loop_guard declares a cause-specific exhaustion target for a bound dimension that is not present.',
 };

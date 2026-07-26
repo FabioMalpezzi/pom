@@ -22,15 +22,47 @@ Goal: produce or revise a workflow YAML from an informal description without inv
 
 Steps:
 1. ask the user for a short prose description of the workflow if not already provided;
-2. identify states, transitions, events, and guards from the description;
-3. for every state, ask whether it is terminal (is_final) and whether it admits a documented exception out-transition (re_entry_allowed);
-4. for every guard, capture a textual description; do not encode the predicate logic in the YAML;
-5. surface ambiguities and unspecified rules as open points in the metadata.open_points list — do NOT invent business rules to fill gaps;
-6. write or update the workflow YAML following the schema documented by `templates/WORKFLOW_TEMPLATE.yaml`; the template is a reference starting point, not a mandatory file to copy;
-7. immediately run the validator on the produced file and include the verdict in the response;
-8. report what was modeled, what was deferred to open points, and what the validator said.
+2. establish the provenance of the description before drafting anything. Ask whether the process has been observed running — traces, logs, runs, an existing implementation, a manual procedure people already follow — or whether it is being designed from intention alone. Record the answer as `metadata.provenance: observed` or `metadata.provenance: speculative`. A speculative model is legitimate, but say so in the response and name the parts nobody has confirmed yet; an undeclared speculative model freezes assumptions that were never tested;
+3. identify states, transitions, events, and guards from the description;
+4. for every state, ask whether it is terminal (is_final) and whether it admits a documented exception out-transition (re_entry_allowed);
+5. for every guard, capture a textual description; do not encode the predicate logic in the YAML;
+6. for every guard that judges work produced by an agent or by a model, declare the evidence block described under "Verification evidence" below;
+7. if the workflow is re-entered by a runtime instead of being driven start-to-finish by a caller, declare the `runtime_loop` block described under "Runtime loop" below;
+8. surface ambiguities and unspecified rules as open points in the metadata.open_points list — do NOT invent business rules to fill gaps;
+9. write or update the workflow YAML following the schema documented by `templates/WORKFLOW_TEMPLATE.yaml`; the template is a reference starting point, not a mandatory file to copy;
+10. immediately run the validator on the produced file and include the verdict in the response;
+11. report what was modeled, what was deferred to open points, the declared provenance, and what the validator said.
 
 Do not invent business rules to fill gaps. If the user has not decided, the gap stays in open_points.
+
+### Verification evidence
+
+A guard decides whether work may move forward. When the work being judged was produced by an agent or by a model, declare on the guard where that decision actually comes from:
+
+- `source: deterministic` — a test run, schema validation, query, diff, or build result decides. Prefer this whenever it is available.
+- `source: model_judgment` — a model decides. Then also declare `independent_context`.
+- `source: human` — a person decides.
+
+For `model_judgment`, `independent_context: true` means the judging context is separate from the context that produced the work: a fresh session, a separate agent, or a call that receives the artifact and the acceptance rules but not the executor's conversation. A verifier handed the executor's own context is not verifying, it is agreeing with itself, and it will approve exactly the failures the executor could not see. The validator raises W005 when a guard declares `model_judgment` without declared independence.
+
+Never declare `independent_context: true` to silence the warning. If the target project cannot yet run the judgement on a separate context, leave it absent and record the gap as an open point.
+
+At a fan-in this matters most, because a guard leaving an `await` state decides what an entire parallel run produced. The validator raises W006 when such a guard declares no evidence at all.
+
+### Runtime loop
+
+The state graph says which transitions are legal. It does not say what starts another cycle, what evidence decides success, what a failed cycle hands to the next one, or who receives the run when the budget is gone. Without those, a re-entered workflow degrades into "keep trying", which is an unbounded cost with no owner.
+
+Declare `runtime_loop` when a runtime re-enters this workflow — on a schedule, on an event, on failed evidence, or on a user request — rather than a caller driving it once from start to finish. The block is optional; a workflow executed once per request does not need it.
+
+Once declared it is a contract and the validator enforces it:
+- `trigger.kind` is one of `user_request`, `schedule`, `event`, `evidence_failure`, with a description of what actually starts a cycle (E101);
+- `goal` names the observable state a cycle tries to reach. Reject "keep improving", "make it better", and any goal whose achievement cannot be observed (E102);
+- `evidence` names the check that decides success — a test run, schema validation, query, diff, build result, or human review. "The agent says it is done" is not evidence (E103);
+- `stop.on_success` and `stop.on_exhaustion` reference declared states (E104-E106). If a stop target is not reachable through transitions, W001 reports it and that is a real finding, not a false positive;
+- missing `feedback` raises W007 and missing `stop.escalation` raises W008. Resolve both with the user rather than writing filler text to silence them.
+
+Ask for the loop bound explicitly. `runtime_loop` says what happens when the budget is exhausted; it does not itself count anything. The counting belongs to `loop_guard` and `timeout` on the states that can repeat, and to the target project's runtime.
 
 ## Mode: validate
 
@@ -42,7 +74,8 @@ Steps:
 3. summarize the verdict (PASS / PASS WITH WARNINGS / FAIL) and the count of errors and warnings;
 4. for each finding, restate the rule code, the location, and a one-sentence interpretation;
 5. for W003 specifically, if the state legitimately admits a documented exception, propose adding `re_entry_allowed: true` to the state and explain why; do NOT modify the YAML in this mode;
-6. recommend the next action: fix errors, accept warnings as documented exceptions, or revise the model.
+6. for W005 and W006, never propose adding or flipping an evidence declaration to clear the warning. Report which verification the model leaves unproven, what an independent judgement would require in this target project, and let the user decide;
+7. recommend the next action: fix errors, accept warnings as documented exceptions, or revise the model.
 
 This mode never modifies the YAML. It produces analysis only.
 
@@ -93,13 +126,14 @@ Rules:
 6. use `compensation` as an ordered undo saga for cancellation boundaries, not as generic error handling;
 7. preserve the handle lifecycle invariant: every launched handle must be awaited, cancelled, or explicitly detached before any reachable final state;
 8. never add native parallel regions, async transitions, or in-FSM fork/join semantics to bypass the control-plane/data-plane split;
-9. when the target data plane is unclear, write an open point naming the missing decision: worker mechanism, queue, scheduler, persistence, timeout emission, cancellation semantics, or compensation ownership;
+9. when the target data plane is unclear, write an open point naming the missing decision: worker mechanism, queue, scheduler, persistence, timeout emission, cancellation semantics, worker workspace isolation, conflict resolution between contradictory worker results, or compensation ownership;
 10. before adding an ordering dependency, state whether it is required by consumed data, a shared mutable resource, external authority, or a capacity explicitly supplied by the task; if none applies, do not invent sequential work. Treat shared writes as a mutation dependency, not as permission to invent a lock, single-writer limit, or serialization policy;
 11. one `fan_out_launch` creates one batch handle. Keep work-item identities and terminal statuses in the batch/result manifest; never model one workflow handle per item;
 12. at every fan-in and hierarchical reduction, reconcile task-specific expected identities against all observed records, represented identities, terminal-status counts, duplicates, unknown identities, and unresolved identities. When raw outputs cannot safely fit one synthesis context, use bounded hierarchical groups instead of one reducer over all raw outputs; preserve that accounting at each group summary and reconcile the summary identities again at the final reducer. Unknown records remain visible for reconciliation but cannot satisfy a join for expected identities. Do not copy identity-source names from an unrelated example;
 13. keep join readiness separate from report completeness. `all`, `quorum`, or `first` may wake the control plane but never by itself authorizes a `complete` label. Missing, duplicate, unknown, failed, cancelled, or timed-out accounting blocks `complete`; if refusal versus visibly incomplete output is undecided, keep that publication policy in open points;
 14. declare capacity only when the task supplies a real bounded resource. POM may record control-plane input limits such as synthesis-context size; workers, API quotas, queues, scheduling, retries, persistence, rate limiting, and backpressure remain Target Project data-plane responsibilities;
-15. in `scenarios` mode, cover full reconciliation plus missing, duplicate (including equal-count missing-plus-duplicate), failed, cancelled or timed-out, unknown-identity, partial-refused, and visibly-incomplete branches. Scenarios assert accounting and labels without choosing an unresolved publication policy.
+15. before modeling any `fan_out_launch`, answer three questions with the user and record every undecided one as a named open point: where each worker does its work, how worker results are merged, and what happens when two workers produce contradictory results for the same identity. Parallel workers sharing one mutable workspace overwrite each other, and that failure is operational, not a modeling detail the data plane discovers later. POM does not choose the isolation mechanism and does not model workspaces; the decision must be visible in the model instead of implied;
+16. in `scenarios` mode, cover full reconciliation plus missing, duplicate (including equal-count missing-plus-duplicate), failed, cancelled or timed-out, unknown-identity, partial-refused, and visibly-incomplete branches. Scenarios assert accounting and labels without choosing an unresolved publication policy.
 
 Validation note: POM Source currently validates the handle lifecycle subset most strongly. Treat the rest of the Dynamic Workflow fields as an accepted contract that may require project-specific review until validator coverage expands.
 
@@ -129,6 +163,7 @@ Do NOT install dependencies in the target project as part of `implement` mode.
 - Never modify YAML in modes other than `design`.
 - Never install libraries on behalf of the user.
 - Never execute the workflow. POM does not provide a runtime engine and does not track live instances.
+- `runtime_loop` is the runtime contract of this workflow, not the contract of an experiment that measures it. Experiment budgets, gates, signals, and exits stay in the accepted criteria of `prompts/28-loop-goal-define-criteria.md`. Do not collapse the two, and do not copy a threshold from one into the other.
 - For Dynamic Workflow, never implement target data-plane infrastructure unless the user separately asks for target code changes after the model is accepted.
 - Always state which mode is in use at the start of the response.
 - When the validator reports findings, restate them in the response — do not bury them in a file the user has to open separately.

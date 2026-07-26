@@ -20,6 +20,10 @@ coverage is still partial.
 | `re_entry_allowed` attribute on terminal states | **Implemented** | Schema + validator + applied to `spec-evolution.complete` and `ticket-lifecycle.closed` |
 | Validator Error rules (E000–E017) | **Implemented** | `scripts/lint-workflows.mjs` |
 | Validator Warning rules (W001–W004) | **Implemented** | `scripts/lint-workflows.mjs` |
+| Model provenance (`metadata.provenance: observed \| speculative`) | **Implemented** | Declared in `design` mode by `prompts/27-workflow-modeling.md`; documented in `templates/WORKFLOW_TEMPLATE.yaml`. Documentary only: the validator does not enforce it, because a wrong declaration is not machine-detectable. |
+| Fan-out isolation and merge decisions | **Implemented as required open points** | `prompts/27-workflow-modeling.md` Dynamic Workflow rules 9 and 15; worker workspace, merge policy, and worker disagreement must be answered or recorded as named open points before a `fan_out_launch` is modeled. POM never models the workspace itself. |
+| Verification evidence on guards (`guards[].evidence`) | **Implemented** | Optional block; validator rules E090, E091 and warnings W005, W006 in `scripts/lib/workflow-lint-core.mjs`. W005 covers model judgement without declared context independence; W006 covers a fan-in guard with no declared evidence at all. |
+| Runtime loop contract (`runtime_loop`) | **Implemented** | Optional top-level block; validator rules E100–E106 and warnings W007, W008. Records trigger, goal, evidence, feedback, and stop with escalation. Distinct from the experiment contract in `prompts/28-loop-goal-define-criteria.md`. |
 | Validation report (`<name>.validation.md`) | **Implemented** | Markdown output of `lint-workflows.mjs` |
 | Broken-fixture coverage (one per E and W rule, plus positive `re_entry_allowed`) | **Implemented** | `tests/workflow-validator/` fixtures and integration tests |
 | Skill card with five modes | **Implemented** | `skills/workflow.md` |
