@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="POM Wiki Reader">
+  <title>Agent Graph Patterns - POM Wiki Reader</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">POM</span>
+      <span>POM Wiki Reader</span>
+    </a>
+    <a class="source-link" href="../agent-graph-patterns.md" target="_blank" rel="noopener noreferrer">Markdown source</a>
+  </header>
+
+  <div class="layout">
+    <aside class="site-nav" aria-label="Wiki pages">
+      <label class="search-label" for="page-search">Search wiki</label>
+      <input id="page-search" type="search" placeholder="Search title and content" autocomplete="off">
+      <p id="search-status" class="search-status" aria-live="polite"></p>
+      <nav id="page-nav">
+        <a href="index.html" data-title="POM Wiki - Index" data-nav-title="POM Wiki - Index" title="POM Wiki - Index">POM Wiki - Index</a>
+<a href="overview.html" data-title="POM Overview" data-nav-title="POM Overview" title="POM Overview">POM Overview</a>
+<a href="operating-memory.html" data-title="Operating Memory" data-nav-title="Operating Memory" title="Operating Memory">Operating Memory</a>
+<a href="wiki-method.html" data-title="Persistent Wiki Method" data-nav-title="Persistent Wiki Method" title="Persistent Wiki Method">Persistent Wiki Method</a>
+<a href="reader-capabilities.html" data-title="Reader Capabilities" data-nav-title="Reader Capabilities" title="Reader Capabilities">Reader Capabilities</a>
+<a href="adoption-and-installation.html" data-title="Adoption And Installation" data-nav-title="Adoption And Installation" title="Adoption And Installation">Adoption And Installation</a>
+<a href="skills-and-prompts.html" data-title="Skills And Prompts" data-nav-title="Skills And Prompts" title="Skills And Prompts">Skills And Prompts</a>
+<a href="templates-and-governance.html" data-title="Templates And Governance" data-nav-title="Templates And Governance" title="Templates And Governance">Templates And Governance</a>
+<a href="experiments-and-extension.html" data-title="Experiments And Extension" data-nav-title="Experiments And Extension" title="Experiments And Extension">Experiments And Extension</a>
+<a href="current-specs.html" data-title="Current POM Specs" data-nav-title="Current POM Specs" title="Current POM Specs">Current POM Specs</a>
+<a href="loop-goal-workflow-tutorial.html" data-title="Loop/Goal Workflow Tutorial" data-nav-title="Loop/Goal Tutorial" title="Loop/Goal Workflow Tutorial">Loop/Goal Tutorial</a>
+<a href="loop-goal-scope-examples.html" data-title="Loop/Goal Scope Examples" data-nav-title="Loop/Goal Scope Examples" title="Loop/Goal Scope Examples">Loop/Goal Scope Examples</a>
+<a href="agent-graph-patterns.html" data-title="Agent Graph Patterns" data-nav-title="Agent Graph Patterns" title="Agent Graph Patterns" aria-current="page">Agent Graph Patterns</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <article class="page">
+        <header class="page-head">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span title="Agent Graph Patterns">Agent Graph Patterns</span></nav>
+          <p class="eyebrow">Persistent Wiki</p>
+          <h1>Agent Graph Patterns</h1>
+          <p class="dek">A workflow whose work is produced by agents, run in parallel, or reentered by a runtime fails differently from a domain workflow. The state machine still validates, the diagram still looks right, and the system still...</p>
+          <div class="meta">
+            <span>Source: agent-graph-patterns.md</span>
+            <span>Generated: 2026-07-26</span>
+          </div>
+        </header>
+        <aside class="generated-notice">
+          <strong>Generated reader view.</strong> Edit the Markdown source, then regenerate this static site. The HTML is not canonical Operating Memory.
+        </aside>
+        <h2 id="summary">Summary <a class="heading-anchor" href="#summary" aria-label="Copy link to Summary">#</a></h2>
+<p>A workflow whose work is produced by agents, run in parallel, or re-entered by a runtime fails differently from a domain workflow. The state machine still validates, the diagram still looks right, and the system still degrades — quietly, because the parts that broke were never written down.</p>
+<p>POM models three of those parts explicitly: who judges produced work and on what context (<code>guards[].evidence</code>), how a runtime re-enters the workflow and what closes a cycle (<code>runtime_loop</code>), and whether the model describes an observed process or a designed one (<code>metadata.provenance</code>). A fourth is enforced as a question rather than a field: before any <code>fan_out_launch</code>, the worker workspace, the merge policy, and the disagreement policy must be decided or recorded as named open points.</p>
+<p>All of it is optional. A ticket lifecycle needs none of it, and all 130 workflow and pipeline YAML files that predate the change raise none of the new codes.</p>
+<h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
+<p>Two verified examples ship under <code>templates/examples/workflow/agent-graph/</code>, with a <code>README.md</code> cataloguing them. Both validate at zero errors and zero warnings, and <code>tests/workflow-validator/integration/test-verification-and-runtime-loop.mjs</code> lints them on every <code>pom:test</code> run so they cannot rot silently.</p>
+<p>The canonical procedure is <code>prompts/27-workflow-modeling.md</code>, reachable through <code>skills/workflow.md</code>. Rule coverage is recorded in <code>specs/SPEC-0006-workflow-modeling.md</code>.</p>
+<h2 id="when-the-guard-is-not-actually-verifying">When The Guard Is Not Actually Verifying <a class="heading-anchor" href="#when-the-guard-is-not-actually-verifying" aria-label="Copy link to When The Guard Is Not Actually Verifying">#</a></h2>
+<p><code>templates/examples/workflow/agent-graph/security-sweep.yaml</code> runs one agent per source file looking for missing authorization checks, then gates publication behind a guard:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>YAML</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-yaml">guards:
+  - name: findings_confirmed
+    description: |
+      Every reported finding was confirmed, and every expected file identity
+      is accounted for.</code></pre>
+</figure>
+<p>That reads like a verification. Nothing in the model says who confirms the findings. If the confirming agent is the one that produced them, the graph is not verifying anything — it is approving itself at the single point where one decision covers the output of every worker in the batch. The validator says so:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">- **W006** `transitions[2]` (from=collecting, guard=findings_confirmed) —
+  A guard on a transition leaving an await state declares no evidence block,
+  so the fan-in verification has no declared source of truth.</code></pre>
+</figure>
+<p>The shipped example resolves it by naming the source of truth and the context it runs on:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>YAML</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-yaml">    evidence:
+      source: model_judgment
+      independent_context: true
+      description: |
+        One verifier per finding. It receives the file and the authorization
+        rule said to be violated, and never the conversation of the worker
+        that produced the finding.</code></pre>
+</figure>
+<p>Declare <code>model_judgment</code> without <code>independent_context: true</code> and the validator raises W005 instead. The warning is not there to be silenced: <code>prompts/27-workflow-modeling.md</code> forbids declaring an independence the target project cannot actually run, and directs the gap to an open point.</p>
+<p>Prefer <code>source: deterministic</code> wherever a test run, schema validation, query, diff, or build result can decide. A model judging a model is a fallback, not a default.</p>
+<h2 id="where-the-loop-stops-being-a-loop">Where The Loop Stops Being A Loop <a class="heading-anchor" href="#where-the-loop-stops-being-a-loop" aria-label="Copy link to Where The Loop Stops Being A Loop">#</a></h2>
+<p><code>templates/examples/workflow/agent-graph/nightly-test-repair.yaml</code> takes the red suite on main, forms a hypothesis, patches, and runs again. The state graph for that is ten minutes of work and the validator accepts it.</p>
+<p>What the graph never said is what starts a cycle, what evidence decides success, what a failed cycle hands to the next one, and who owns the run when the bound is spent. Those four gaps are the difference between a managed process and an unbounded retry with no owner:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>YAML</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-yaml">runtime_loop:
+  trigger:
+    kind: schedule
+    description: |
+      The 02:00 nightly job starts a cycle when the suite on main is red.
+      The agent deciding to continue is not a trigger.
+  goal: |
+    The suite on main is green again without modifying the tests themselves.
+  evidence: |
+    Exit code of `npm test` plus the JUnit report, and no test deleted or
+    marked skip relative to the starting commit.
+  feedback: |
+    The names of the still-failing tests, the first line of each error, and
+    the diff attempted in the previous cycle. Not the transcript.
+  stop:
+    on_success: green
+    on_exhaustion: escalated
+    escalation: |
+      The owning team of the module receives the branch with the last diff
+      and the tests still red.</code></pre>
+</figure>
+<p>The clause &quot;without modifying the tests themselves&quot; carries real weight. It is the guard against this agent's known failure mode, which is discovering that the fastest route to a green suite is deleting the tests that fail. The <code>evidence</code> line makes the clause checkable instead of aspirational. Without the block, that condition lives in whoever wrote the prompt and disappears at the first rewrite.</p>
+<p>Omit <code>feedback</code> and the validator raises W007: the next cycle restarts without knowing what went wrong, which is a <code>while (true)</code> wearing an architecture. Omit <code>stop.escalation</code> and it raises W008: the budget runs out at three in the morning and the work sits unowned until somebody notices.</p>
+<p><code>runtime_loop</code> declares what happens at exhaustion; it counts nothing. The counting stays with <code>loop_guard</code> and <code>timeout</code> on the states that repeat, and with the target project's runtime.</p>
+<h2 id="where-parallel-workers-collide">Where Parallel Workers Collide <a class="heading-anchor" href="#where-parallel-workers-collide" aria-label="Copy link to Where Parallel Workers Collide">#</a></h2>
+<p>Before any <code>fan_out_launch</code> is modeled, three questions must be answered or recorded as named open points: where each worker does its work, how results are merged, and what happens when two workers contradict each other on the same identity.</p>
+<p>This is not a validator rule, because POM does not model workspaces and does not choose the isolation mechanism. It is a refusal to leave the decision implicit. The precedent is public: Bun's Zig-to-Rust port fanned a large migration across many agents and the first run failed operationally, because the agents shared git commands in one workspace and overwrote each other. The fix was structural — forbid the unsafe commands, give each group its own isolated worktree — not better prompting.</p>
+<p>The shipped sweep example answers what it can and leaves the rest visible:</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>YAML</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-yaml">metadata:
+  open_points:
+    - &quot;Merge policy: findings are collected per file identity. The dedup rule for two workers reporting the same line is undecided.&quot;
+    - &quot;Worker disagreement: if a worker and its verifier disagree on the same finding, whether the finding is dropped, escalated, or published as contested is undecided.&quot;</code></pre>
+</figure>
+<p>A related failure sits on the timeout path. Closing the sweep when the batch overruns leaves workers running and spending; the handle-lifecycle rule E089 refuses a final state reached with active handles, so the example routes through a <code>cancelling</code> state that declares <code>cancel_handles</code>.</p>
+<h2 id="the-model-nobody-watched-run">The Model Nobody Watched Run <a class="heading-anchor" href="#the-model-nobody-watched-run" aria-label="Copy link to The Model Nobody Watched Run">#</a></h2>
+<p><code>metadata.provenance</code> records whether a model was drawn from an observed process — runs, traces, logs, an existing implementation, a procedure people already follow — or designed from intention alone.</p>
+<p>Both are legitimate; modeling ahead of implementation is ordinary work. What is not legitimate is silence, because six months later a speculative model is read as a description of how the process actually behaves. <code>design</code> mode also asks which parts nobody has confirmed, and those become open points rather than invisible assumptions inside an authoritative-looking file.</p>
+<p>Both shipped examples declare <code>speculative</code>, which is the honest value for a teaching model.</p>
+<h2 id="when-none-of-this-applies">When None Of This Applies <a class="heading-anchor" href="#when-none-of-this-applies" aria-label="Copy link to When None Of This Applies">#</a></h2>
+<p>Most workflows are domain workflows and need none of it. No agent produces the work, so there is no self-review to fear. No runtime re-enters on its own, so there is no cycle to contract. No fan-out, so there are no workers to isolate.</p>
+<p>That is why every block is optional and none of them warns when absent. The rules activate only where a model declares itself agent-shaped — an <code>await</code>, a model-judged guard, a <code>runtime_loop</code> — which is exactly where these systems are known to break.</p>
+<h2 id="sources">Sources <a class="heading-anchor" href="#sources" aria-label="Copy link to Sources">#</a></h2>
+<ul><li><code>prompts/27-workflow-modeling.md</code> — canonical procedure, <code>design</code> and <code>validate</code> modes</li><li><code>skills/workflow.md</code> — skill card and key rules</li><li><code>templates/WORKFLOW_TEMPLATE.yaml</code> — schema of the three blocks</li><li><code>templates/examples/workflow/agent-graph/</code> — the two verified examples and their README</li><li><code>specs/SPEC-0006-workflow-modeling.md</code> — rule coverage and status</li><li><code>scripts/lib/workflow-lint-agent-rules.mjs</code> — the validators for E090/E091, E100-E106, W005-W008</li></ul>
+        <nav class="page-pager" aria-label="Previous and next pages">
+    <a class="pager-prev" href="loop-goal-scope-examples.html" title="Loop/Goal Scope Examples"><span>Previous</span>Loop/Goal Scope Examples</a>
+    <span></span>
+  </nav>
+      </article>
+    </main>
+
+    <aside class="outline" aria-label="Page outline">
+      <p class="outline-title">On This Page</p>
+      <nav><a class="level-2" href="#summary">Summary</a>
+<a class="level-2" href="#current-state">Current State</a>
+<a class="level-2" href="#when-the-guard-is-not-actually-verifying">When The Guard Is Not Actually Verifying</a>
+<a class="level-2" href="#where-the-loop-stops-being-a-loop">Where The Loop Stops Being A Loop</a>
+<a class="level-2" href="#where-parallel-workers-collide">Where Parallel Workers Collide</a>
+<a class="level-2" href="#the-model-nobody-watched-run">The Model Nobody Watched Run</a>
+<a class="level-2" href="#when-none-of-this-applies">When None Of This Applies</a>
+<a class="level-2" href="#sources">Sources</a></nav>
+    </aside>
+  </div>
+
+  <script src="search-index.js"></script>
+  <script src="reader.js"></script>
+  
+</body>
+</html>

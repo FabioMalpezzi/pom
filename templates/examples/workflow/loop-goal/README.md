@@ -1,32 +1,34 @@
 # Workflow examples — loop/goal pattern family
 
-Esempi canonici di workflow POM per il pattern **loop/goal** (agenti che iterano `percepire → ragionare → agire → osservare` verso un obiettivo, eventualmente con retry bounded e composizione via sub-workflow). Distinti dagli altri esempi di `templates/examples/workflow/` perché modellano **pattern strutturali agentici**, non workflow di dominio.
+Canonical POM workflow examples for the **loop/goal** pattern: agents that iterate `perceive → reason → act → observe` toward a goal, possibly with bounded retry and composition through sub-workflows. They differ from the other examples in `templates/examples/workflow/` because they model **structural agentic patterns**, not domain workflows.
 
-## Quando usarli
+## When to use them
 
-- Quando un agente AI (o un controllore agent-shaped) deve essere modellato come FSM in un progetto target.
-- Come riferimento per la skill `loop-goal` (oggi `experiments/agent-loop-fsm/skills-candidate/loop-goal.md`, candidate alla promozione canonica).
-- Come fixture per testare validator, generatore Mermaid, generatore XState, e runtime POM.
+- When an AI agent, or any agent-shaped controller, has to be modeled as an FSM in a target project.
+- As the reference examples for the canonical `loop-goal` skill (`skills/loop-goal.md`).
+- As fixtures for testing the validator, the Mermaid generator, the XState generator, and POM runtimes.
 
-Per workflow di dominio classici (ticket lifecycle, document approval, spec evolution, ecc.), vedi gli esempi nella cartella padre `templates/examples/workflow/`.
+For classic domain workflows (ticket lifecycle, document approval, spec evolution, and so on) see the examples in the parent folder `templates/examples/workflow/`.
 
-## Catalogo
+## Catalogue
 
-| File | Pattern | Caratteristiche strutturali | Riferimento |
+| File | Pattern | Structural characteristics | Reference |
 |---|---|---|---|
-| `agent-orchestrator.yaml` | ReAct minimal (Yao et al., 2022) | 6 stati, 7 transizioni, loop edge `observing → reasoning`, 2 terminali (`done`, `failed`). Pattern compatto con tre stati attivi `reasoning / acting / observing`. | Esperimento `agent-loop-fsm` H1 iter 1 |
-| `agent-orchestrator-goal-lifecycle.yaml` | Goal Lifecycle (Plan-and-Solve, Reflexion) | 6 stati, 9 transizioni, replan loop `reflecting → planning`, due eventi convergenti sullo stesso target (`step_done`/`step_error` → `reflecting`). Più ricco di ReAct: separa pianificazione da esecuzione. | Esperimento `agent-loop-fsm` H1 iter 2 |
-| `agent-loop-table.yaml` | SPAO (Perception → Planning → Action → Observation) | 6 stati, 7 transizioni, transition table piatta. Niente `invoke`, niente composizione, una sola superficie. | Esperimento `agent-loop-fsm` H2 |
-| `agent-retry-bounded.yaml` | Bounded retry via self-transition guarded | 5 stati, 5 transizioni (incluso 1 self), 2 guard mutuamente esclusivi (`has_attempts_left`, `no_attempts_left`). Counter nel `context`; H6 `loop_guard` lo renderebbe dichiarativo. | Esperimento `agent-loop-fsm` H3 |
-| `agent-supervisor.yaml` | Supervisor + sub-workflow autonomo | 5 stati, 6 transizioni, 1 `state-invoke` su `agent-orchestrator-goal-lifecycle.yaml` con `on_completion` per dispatch sui terminali. Composizione sincrona a due livelli. | Esperimento `agent-loop-fsm` H4 |
-| `agent-iteration-record.yaml` | Iteration Record + verifica bounded | 8 stati, 9 transizioni, `loop_guard.max_visits: 50`, verifica con evidenza prima della decisione e fallimento esplicito se il record non è disponibile. | Self-test dell’estensione Iteration Record |
+| `agent-orchestrator.yaml` | ReAct minimal (Yao et al., 2022) | 6 states, 7 transitions, loop edge `observing → reasoning`, 2 terminals (`done`, `failed`). A compact pattern with three active states: `reasoning / acting / observing`. | Experiment `agent-loop-fsm` H1 iter 1 |
+| `agent-orchestrator-goal-lifecycle.yaml` | Goal Lifecycle (Plan-and-Solve, Reflexion) | 6 states, 9 transitions, replan loop `reflecting → planning`, two events converging on the same target (`step_done` / `step_error` → `reflecting`). Richer than ReAct: it separates planning from execution. | Experiment `agent-loop-fsm` H1 iter 2 |
+| `agent-loop-table.yaml` | SPAO (Perception → Planning → Action → Observation) | 6 states, 7 transitions, flat transition table. No `invoke`, no composition, a single surface. | Experiment `agent-loop-fsm` H2 |
+| `agent-retry-bounded.yaml` | Bounded retry through a guarded self-transition | 5 states, 5 transitions (one of them a self-transition), 2 mutually exclusive guards (`has_attempts_left`, `no_attempts_left`). The counter lives in `context`; H6 `loop_guard` would make it declarative. | Experiment `agent-loop-fsm` H3 |
+| `agent-supervisor.yaml` | Supervisor plus autonomous sub-workflow | 5 states, 6 transitions, one `state-invoke` on `agent-orchestrator-goal-lifecycle.yaml` with `on_completion` dispatching on the child terminals. Two-level synchronous composition. | Experiment `agent-loop-fsm` H4 |
+| `agent-iteration-record.yaml` | Iteration Record plus bounded verification | 8 states, 9 transitions, `loop_guard.max_visits: 50`, evidence-based verification before the decision, and an explicit failure when the record is unavailable. | Self-test of the Iteration Record extension |
 
-## Verifica
+## Verification
 
-Tutti i workflow validano con `pom:workflow:lint` (0 errori, 0 warning) e generano Mermaid parsabile via `pom:workflow:mermaid` + `mmdc`. Tre di essi (`agent-orchestrator`, `agent-orchestrator-goal-lifecycle`, `agent-supervisor`) compilano correttamente in XState v5 via `pom:workflow:xstate`.
+Every workflow validates with `pom:workflow:lint` (0 errors, 0 warnings) and produces parsable Mermaid through `pom:workflow:mermaid` plus `mmdc`. Three of them (`agent-orchestrator`, `agent-orchestrator-goal-lifecycle`, `agent-supervisor`) compile correctly to XState v5 through `pom:workflow:xstate`.
 
 ## Provenance
 
-Modellati durante l'esperimento `agent-loop-fsm` (vedi `experiments/agent-loop-fsm/EXPERIMENT.md` per il contesto e `experiments/agent-loop-fsm/RESULTS.md` per i risultati di H1–H5, tutte confermate al 100% clean fit). Promossi a `templates/examples/workflow/loop-goal/` il 2026-05-30, in anticipo rispetto alla chiusura dell'esperimento, perché i pattern strutturali hanno valore generale separabile dalla skill candidata che li adotta.
+Modeled during the `agent-loop-fsm` experiment, **closed on 2026-05-30** with all five planned hypotheses (H1–H5) confirmed at 100% clean fit. See `experiments/agent-loop-fsm/EXPERIMENT.md` for the context and `experiments/agent-loop-fsm/RESULTS.md` for the results. H6 and H7 were deliberately delegated to the separate `schema-loop-guard-timeout` experiment that produced SPEC-0007.
 
-Per ogni workflow esiste un design note di classificazione fit in `experiments/agent-loop-fsm/design/<name>.fit.md`. Per `agent-loop-table.yaml` e `agent-supervisor.yaml` esiste anche un fit.md generato automaticamente (`*-auto.fit.md`) e per `agent-supervisor.yaml` un set di scenari di test generato automaticamente (`agent-supervisor.scenarios.md`) — entrambi prodotti dal runtime esterno in `experiments/agent-loop-fsm/runtime-candidate/`.
+These examples were promoted to `templates/examples/workflow/loop-goal/` on 2026-05-30 and recorded at the time as an explicit exception to the rule that nothing reaches canonical paths before its originating experiment closes. That exception is now historical: the experiment is closed, and the skill that adopts these patterns, `skills/loop-goal.md`, is canonical.
+
+Each workflow has a fit-classification design note in `experiments/agent-loop-fsm/design/<name>.fit.md`. `agent-loop-table.yaml` and `agent-supervisor.yaml` also have an automatically generated fit note (`*-auto.fit.md`), and `agent-supervisor.yaml` has an automatically generated set of test scenarios (`agent-supervisor.scenarios.md`) — all produced by the external runtime in `experiments/agent-loop-fsm/runtime-candidate/`.

@@ -1,0 +1,47 @@
+workflow: runtime_loop_no_stop
+version: 1
+description: |
+  runtime_loop with no stop mapping.
+initial_state: working
+
+states:
+  - name: working
+    description: |
+      A cycle is running.
+    is_final: false
+  - name: done
+    description: |
+      Success terminal.
+    is_final: true
+  - name: escalated
+    description: |
+      The run stopped without success and was handed to its owner.
+    is_final: true
+
+events:
+  - name: evidence_passed
+    description: |
+      The cycle evidence passed.
+  - name: budget_gone
+    description: |
+      The cycle budget is exhausted.
+
+transitions:
+  - from: working
+    to: done
+    event: evidence_passed
+  - from: working
+    to: escalated
+    event: budget_gone
+
+runtime_loop:
+  trigger:
+    kind: event
+    description: |
+      An inbound event starts another cycle.
+  goal: |
+    The submitted artifact passes every declared check.
+  evidence: |
+    The project test suite.
+  feedback: |
+    The failing check names and their messages.

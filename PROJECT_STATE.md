@@ -44,6 +44,15 @@ _Current operational state. Update at every significant session or when prioriti
 
 ### Current State
 
+Workflow modeling now describes agent-shaped graphs, not only domain ones, through
+three optional blocks: `guards[].evidence` (E090/E091, W005 for model judgement
+without declared context independence, W006 for a fan-in guard with no evidence),
+the top-level `runtime_loop` contract (E100–E106, W007/W008), and
+`metadata.provenance`. Modeling a `fan_out_launch` also requires deciding worker
+workspace, merge, and disagreement or recording them as open points. Backward
+compatible: the 130 pre-existing workflow YAML files raise no new code. Rationale
+in `CHANGELOG.md` and `wiki/log.md`.
+
 Prompt governance now has automated bidirectional catalog/link coverage and static contract guards for loop/goal prompts, standalone config guards, and reconciliation with disabled Decision Records. Canonical loop/goal prompts 28–31 and `skills/loop-goal.md` are portable current procedures without embedded promotion history; loop/goal modeling requires accepted criteria, and invalid workflows stop before fit classification. Loop/goal guidance now requires verification and evidence for each active or advancing iteration, and recommends a target-owned Iteration Record for autonomous, persistent, resumable, or artifact-mutating loops without adding a YAML primitive.
 
 `skills/mcp-interface.md` and `prompts/35-mcp-interface.md` provide the current POM procedure for designing, auditing, reshaping, and verifying MCP interfaces. The procedure adapts AXI ergonomics to version-specific MCP contracts, keeps runtime ownership in Target Projects, separates tool/resource/prompt audits, requires approval before any public-contract change, distinguishes transport authorization from JSON-RPC and tool execution errors, and applies the POM verification gate. Token-efficiency claims require host-visible token measurements rather than serialized size alone.
@@ -53,23 +62,15 @@ Prompt governance now has automated bidirectional catalog/link coverage and stat
 POM v0.2.0 is released and tagged. The loop/goal and workflow extension
 work has been integrated into `main`:
 
-- `skills/loop-goal.md` is canonical, with six modes:
-  `define-criteria`, `model`, `audit`, `scenarios`, `runtime-guide`,
-  and `conclude`.
-- Prompts `28` through `31` are canonical for loop/goal criteria,
-  audit, scenarios, and conclusion.
-- `decisions/ADR-0003-workflow-vs-loop-goal-skill.md` defines
-  `loop-goal` as a separate agentic subtype of the generic `workflow`
-  skill.
-- Six verified loop/goal workflow examples live under
-  `templates/examples/workflow/loop-goal/`: ReAct minimal, Goal
-  Lifecycle, flat SPAO, bounded retry, supervisor+invoke, and Iteration Record with bounded verification.
+- `skills/loop-goal.md` is canonical with six modes (`define-criteria`,
+  `model`, `audit`, `scenarios`, `runtime-guide`, `conclude`), backed by
+  prompts `28`–`31`, `decisions/ADR-0003-workflow-vs-loop-goal-skill.md`,
+  and six verified examples under `templates/examples/workflow/loop-goal/`.
 - SPEC-0007 is complete: `loop_guard` and `timeout` are validated schema
-  primitives. Target projects still own counters, timers, scheduling,
+  primitives; target projects own counters, timers, scheduling,
   persistence, and timeout event emission.
-- The external TypeScript runtime under
-  `experiments/agent-loop-fsm/runtime-candidate/` remains evidence of
-  executability, not a POM runtime.
+- The external TypeScript runtime under `experiments/agent-loop-fsm/runtime-candidate/`
+  is evidence of executability, not a POM runtime.
 
 On 2026-06-05 POM gained a source-level bootstrap/router skill inspired
 by the comparison with Superpowers, without adding a POM runtime:

@@ -70,4 +70,13 @@ export const ERROR_HELP = {
   E087: 'Cancel only handles that are declared and active on the current reachable path.',
   E088: 'Detach only handles that are declared and active on the current reachable path.',
   E089: 'Before any final state is reachable, await, cancel, or detach every active handle on that path.',
+  E090: 'Make guards[].evidence a mapping and set evidence.source to deterministic, model_judgment, or human.',
+  E091: 'Set guards[].evidence.independent_context to true or false, not to a string or a number.',
+  E100: 'Change runtime_loop to a mapping object, or remove it: the block is optional.',
+  E101: 'Add runtime_loop.trigger.kind with one of user_request, schedule, event, evidence_failure.',
+  E102: 'Add runtime_loop.goal describing the observable state a cycle tries to reach, not an instruction to keep improving.',
+  E103: 'Add runtime_loop.evidence naming the check that decides success. "The agent says it is done" is not evidence.',
+  E104: 'Add a runtime_loop.stop mapping with on_success and on_exhaustion.',
+  E105: 'Set runtime_loop.stop.on_success to a declared state name.',
+  E106: 'Set runtime_loop.stop.on_exhaustion to a declared state name, so an exhausted budget still lands somewhere.',
 };

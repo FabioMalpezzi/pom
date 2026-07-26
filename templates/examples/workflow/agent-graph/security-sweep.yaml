@@ -1,0 +1,130 @@
+workflow: security_sweep
+version: 1
+description: |
+  One agent per source file hunts for missing authorization checks, and a
+  fan-in guard decides whether the report may be published.
+
+  This example exists to show three things a purely domain state machine
+  never had to express. First, the fan-in guard declares where its pass/fail
+  decision comes from: without the `evidence` block the validator raises
+  W006, because a single guard here decides what an entire parallel run
+  produced. Second, the judgement is declared as running on an independent
+  context, so the verifier is not the worker agreeing with itself. Third,
+  the timeout path cancels the batch instead of walking away from workers
+  that are still running and still costing money — the handle-lifecycle
+  rule E089 refuses a final state reached with active handles.
+
+  The three fan-out decisions required before modeling `fan_out_launch` —
+  where each worker works, how results merge, what happens when two workers
+  disagree — are answered in metadata.open_points rather than left implicit.
+
+initial_state: scoping
+
+states:
+  - name: scoping
+    description: |
+      Enumerate the source files in scope for this sweep.
+    is_final: false
+
+  - name: sweeping
+    description: |
+      Launch one target-owned worker per file and continue without blocking.
+    is_final: false
+    fan_out_launch:
+      workflow: file-audit.yaml
+      over: source_files
+      handle: sweep_batch
+
+  - name: collecting
+    description: |
+      Wait for the batch and reconcile the reported findings against the
+      expected file identities.
+    is_final: false
+    await:
+      handles: [sweep_batch]
+      join: all
+      timeout: 45min
+      on_timeout: sweep_timed_out
+
+  - name: cancelling
+    description: |
+      Stop the workers still running before closing the sweep.
+    is_final: false
+    cancel_handles: [sweep_batch]
+
+  - name: published
+    description: |
+      The report was published to the team.
+    is_final: true
+
+  - name: abandoned
+    description: |
+      The sweep was closed without a report because the batch overran its
+      time budget.
+    is_final: true
+
+events:
+  - name: scope_ready
+    description: |
+      The file list is complete.
+  - name: batch_ready
+    description: |
+      Every worker reported a terminal status.
+  - name: sweep_timed_out
+    description: |
+      The await wake-up event emitted by the target runtime when the batch
+      overruns its time budget.
+  - name: workers_cancelled
+    description: |
+      The still-active workers have been stopped.
+
+guards:
+  - name: findings_confirmed
+    description: |
+      Every reported finding was confirmed, and every expected file identity
+      is accounted for.
+    evidence:
+      source: model_judgment
+      independent_context: true
+      description: |
+        One verifier per finding. It receives the file and the authorization
+        rule said to be violated, and never the conversation of the worker
+        that produced the finding.
+
+transitions:
+  - from: scoping
+    to: sweeping
+    event: scope_ready
+  - from: sweeping
+    to: collecting
+    event: batch_ready
+  - from: collecting
+    to: published
+    event: batch_ready
+    guard: findings_confirmed
+  - from: collecting
+    to: cancelling
+    event: sweep_timed_out
+  - from: cancelling
+    to: abandoned
+    event: workers_cancelled
+
+invariants:
+  - description: |
+      A report is published only after every expected file identity is
+      accounted for. Join readiness alone never authorizes publication.
+  - description: |
+      No final state is reached while sweep_batch is still active.
+
+metadata:
+  owner: security engineering
+  provenance: speculative
+  open_points:
+    - "Worker workspace: each worker reads one file and writes no shared state in this model. If a future variant lets workers write, the isolation mechanism must be decided before that change."
+    - "Merge policy: findings are collected per file identity. The dedup rule for two workers reporting the same line is undecided."
+    - "Worker disagreement: if a worker and its verifier disagree on the same finding, whether the finding is dropped, escalated, or published as contested is undecided."
+    - "Publication policy on partial results: whether an incomplete sweep may publish a visibly partial report or must refuse is undecided."
+  tags:
+    - agent-graph
+    - fan-out
+    - verification-evidence

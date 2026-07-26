@@ -1,0 +1,44 @@
+workflow: evidence_independent
+version: 1
+description: |
+  A guard judged by a model on an independent context, plus a deterministic
+  guard. Valid, no warnings.
+initial_state: working
+states:
+  - name: working
+    description: |
+      Work in progress.
+    is_final: false
+  - name: accepted
+    description: |
+      Accepted terminal.
+    is_final: true
+  - name: rejected
+    description: |
+      Rejected terminal.
+    is_final: true
+events:
+  - name: submitted
+    description: |
+      Work submitted for judgement.
+  - name: refused
+    description: |
+      Work refused.
+guards:
+  - name: review_passed
+    description: |
+      The artifact was reviewed and accepted.
+    evidence:
+      source: model_judgment
+      independent_context: true
+      description: |
+        A reviewer that receives the artifact and the acceptance rules, never
+        the executor's conversation.
+transitions:
+  - from: working
+    to: accepted
+    event: submitted
+    guard: review_passed
+  - from: working
+    to: rejected
+    event: refused

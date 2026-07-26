@@ -1,0 +1,48 @@
+workflow: fanin_with_evidence
+version: 1
+description: |
+  A fan-in guard that declares a deterministic source of truth.
+initial_state: launching
+states:
+  - name: launching
+    description: |
+      Launch the target-owned batch.
+    is_final: false
+    fan_out_launch:
+      workflow: child-workflow.yaml
+      over: items
+      handle: batch
+  - name: awaiting
+    description: |
+      Wait for the batch handle.
+    is_final: false
+    await:
+      handles: [batch]
+      join: all
+  - name: published
+    description: |
+      Results published.
+    is_final: true
+events:
+  - name: launched
+    description: |
+      Batch launched.
+  - name: batch_ready
+    description: |
+      Batch reported ready.
+guards:
+  - name: all_items_reconciled
+    description: |
+      Every expected identity is accounted for.
+    evidence:
+      source: deterministic
+      description: |
+        The batch manifest reconciliation report decides pass or fail.
+transitions:
+  - from: launching
+    to: awaiting
+    event: launched
+  - from: awaiting
+    to: published
+    event: batch_ready
+    guard: all_items_reconciled

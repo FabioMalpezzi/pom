@@ -11,6 +11,8 @@
 #   - guards (named, with description; predicates that condition a transition)
 #   - transitions (from, to, event, optional guard)
 #   - invariants (textual; checked by humans and by the validator when possible)
+#   - runtime_loop (optional; how the runtime re-enters the workflow and what
+#     closes a cycle)
 #
 # Conventions:
 #   - state, event, and guard names are snake_case;
@@ -45,6 +47,10 @@ states:
     # When true, the validator suppresses W003 on this state.
     # Default false. Has no effect on non-final states (open point).
     re_entry_allowed: false
+  - name: rejected
+    description: |
+      Failure terminal. A model with no failure terminal usually hides one.
+    is_final: true
 
   # Optional: invoke declares a synchronous child workflow that runs
   # while the parent is in this state. When the child reaches a
@@ -78,6 +84,17 @@ states:
   # project's data plane owns workers, queues, schedulers, persistence,
   # cancellation mechanics, and real concurrent execution.
   #
+  # Before declaring a fan_out_launch, three decisions must be visible
+  # somewhere — in the state description, in the target project's docs, or
+  # in metadata.open_points while they are still undecided:
+  #   - where each worker does its work (shared or isolated workspace);
+  #   - how worker results are merged;
+  #   - what happens when two workers contradict each other on the same
+  #     identity.
+  # POM does not model workspaces and does not pick the isolation
+  # mechanism. It refuses to leave the decision implicit, because parallel
+  # workers sharing one mutable workspace overwrite each other.
+  #
   # Handle lifecycle invariant: every launched handle must be awaited,
   # cancelled, or explicitly detached before any reachable final state.
   - name: launching_batch
@@ -110,12 +127,43 @@ events:
   - name: complete
     description: |
       ...
+  - name: reject
+    description: |
+      What real-world action sends the item to the failure terminal.
 
 guards:
   - name: has_required_fields
     description: |
       Predicate condition for the transition to fire.
       The validator only checks that the name resolves; the actual predicate lives in target code.
+
+  # Optional: evidence declares where the guard's pass/fail decision comes
+  # from. design mode requires it for any guard that judges work produced by
+  # an agent or by a model.
+  #
+  #   source: deterministic  - a test, schema check, query, diff, or build
+  #                            result decides. Prefer this when available.
+  #           model_judgment - a model decides.
+  #           human          - a person decides.
+  #
+  #   independent_context is meaningful only for model_judgment. true means
+  #   the judging context is separate from the context that produced the
+  #   work. A verifier handed the executor's own context is not verifying, it
+  #   is agreeing with itself, so the validator raises W005 when a
+  #   model_judgment guard does not declare independence.
+  #
+  #   At a fan-in the stakes are highest: a guard leaving an await state
+  #   decides what an entire parallel run produced. The validator raises W006
+  #   when such a guard declares no evidence at all.
+  - name: review_passed
+    description: |
+      The produced artifact was reviewed and accepted.
+    evidence:
+      source: model_judgment
+      independent_context: true
+      description: |
+        A reviewer that receives the artifact and the acceptance rules, and
+        never the executor's conversation.
 
 transitions:
   - from: draft
@@ -127,6 +175,9 @@ transitions:
   - from: in_progress
     to: done
     event: complete
+  - from: in_progress
+    to: rejected
+    event: reject
 
   # Optional: transition-level invoke declares a synchronous child
   # workflow triggered when the event fires from the source state.
@@ -161,9 +212,63 @@ invariants:
   - description: |
       Example: "Every accepted item must eventually reach done or rejected."
 
+# Optional runtime loop contract.
+#
+# The state graph says which transitions are legal. It does not say what
+# starts another cycle, what evidence decides success, what a failed cycle
+# hands to the next one, or who receives the run when the budget is gone.
+# Those are the parts a loop needs to be a managed process instead of
+# "keep trying", and they belong here.
+#
+# The block is optional; declare it when the workflow is re-entered by a
+# runtime rather than driven start-to-finish by a caller. Once declared it
+# must be complete: trigger, goal, evidence, and stop are validated
+# (E100-E106), and missing feedback or escalation raise W007 and W008.
+#
+# This is the runtime loop, not the experiment loop. An experiment that
+# measures this workflow keeps its own budget, gates, signals, and exits in
+# its criteria contract (prompts/28-loop-goal-define-criteria.md); do not
+# collapse the two.
+runtime_loop:
+  trigger:
+    # user_request | schedule | event | evidence_failure
+    kind: evidence_failure
+    description: |
+      What actually starts another cycle. "The agent decides to continue" is
+      not a trigger.
+  goal: |
+    The observable state a cycle is trying to reach. Not "keep improving".
+  evidence: |
+    The test, schema check, query, diff, or review that decides whether the
+    cycle succeeded. "The agent says it is done" is not evidence.
+  feedback: |
+    What the next cycle receives when the evidence fails: a compact,
+    actionable description of what was wrong. Not the whole transcript, and
+    not a bare retry.
+  stop:
+    on_success: done
+    on_exhaustion: rejected
+    escalation: |
+      Who receives the run when it stops without success. A loop with no
+      named owner at exhaustion is a cost leak.
+
 # Optional metadata block for documentation and indexing.
 metadata:
   owner: team or role
+
+  # provenance declares where this model came from:
+  #   observed    - drawn from runs, traces, logs, an existing implementation,
+  #                 or a manual procedure people already follow;
+  #   speculative - designed from intention alone, not yet confirmed by a run.
+  # Both are legitimate. Declaring it stops an untested design from being read
+  # later as a description of how the process actually behaves.
+  provenance: observed
+
+  # open_points holds decisions the model deliberately did not make.
+  # design mode writes gaps here instead of inventing business rules.
+  open_points:
+    - "Who may reopen a done item, and under which authority."
+
   tags:
     - example
     - draft

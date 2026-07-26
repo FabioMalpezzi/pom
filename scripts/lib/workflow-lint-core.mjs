@@ -2,6 +2,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 import yaml from '../require-yaml.mjs';
 import { validateDynamicWorkflowHandles } from '../workflow-dynamic-handles.mjs';
+import { validateVerificationEvidence, validateRuntimeLoop } from './workflow-lint-agent-rules.mjs';
 
 export function err(code, where, extra) {
   return { code, where, extra: extra ?? '' };
@@ -391,10 +392,25 @@ export function validateWorkflowModel(model, sourceDir = '.') {
   const transitionInvokeErrors = validateTransitionInvokes(model, sourceDir);
   const temporal = validateTemporalPrimitives(model, stateNames);
   const dynamicHandles = validateDynamicWorkflowHandles(model);
-  errors.push(...ctxSchemaErrors, ...stateInvokeErrors, ...transitionInvokeErrors, ...temporal.errors, ...dynamicHandles.errors);
+  const evidence = validateVerificationEvidence(model);
+  const runtimeLoop = validateRuntimeLoop(model, stateNames);
+  errors.push(
+    ...ctxSchemaErrors,
+    ...stateInvokeErrors,
+    ...transitionInvokeErrors,
+    ...temporal.errors,
+    ...dynamicHandles.errors,
+    ...evidence.errors,
+    ...runtimeLoop.errors,
+  );
   const warnings = errors.some((e) => ['E004', 'E005'].includes(e.code))
     ? []
-    : [...validateWarnings(model, stateNames), ...temporal.warnings];
+    : [
+      ...validateWarnings(model, stateNames),
+      ...temporal.warnings,
+      ...evidence.warnings,
+      ...runtimeLoop.warnings,
+    ];
   return { errors, warnings };
 }
 

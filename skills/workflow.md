@@ -33,12 +33,16 @@ Pass the mode as the first instruction to the agent.
 
 - The YAML model is the source of authority and is a finite-state machine definition. `templates/WORKFLOW_TEMPLATE.yaml` is a reference starting point, not a required file to copy; `pom:workflow:lint` validates any target workflow YAML that follows the schema for states, events, guards, transitions, invokes, temporal primitives, and Dynamic Workflow handle lifecycle. Diagrams, validation reports, scenarios, and code are derived.
 - `design` mode never invents business rules; missing rules become open points in the YAML and in the conversation.
+- `design` mode declares `metadata.provenance` before drafting: `observed` when the process has actually run, `speculative` when it is designed from intention alone. Both are legitimate; an undeclared speculative model freezes untested assumptions.
 - `validate` mode reports findings with severity (Error / Warning / Info); only Errors block downstream modes.
+- A guard that judges work produced by an agent or a model declares `evidence.source` (`deterministic`, `model_judgment`, `human`). Model judgement must also declare `independent_context`: a verifier sharing the executor's context agrees with itself instead of verifying. The validator raises W005 for undeclared independence and W006 for a fan-in guard with no evidence at all. Neither warning is cleared by declaring independence that the target project cannot actually run.
 - `diagram` mode uses the stable Mermaid tooling. `scenarios` mode is prompt-driven: it derives files under `workflows/generated/` from the YAML and never modifies the YAML.
+- A workflow re-entered by a runtime declares `runtime_loop`: trigger, goal, evidence, feedback, and stop with an escalation. It is validated once declared (E100-E106, W007, W008) and stays distinct from the experiment contract that measures the workflow, which lives in the loop/goal criteria.
 - `implement` mode reads `pom.config.json` (language, framework, test runner) before proposing patterns. It proposes alternatives with criteria; the user picks one.
 - `implement` mode never installs a library on its own. If a library is proposed, the decision is recorded as an ADR.
 - The skill works only when `pom.config.json` declares `workflows.enabled: true`. Otherwise it stops and refers the user to `skills/config.md`.
 - Dynamic Workflow modeling is an opt-in profile of this same skill. It requires `workflows.dynamic.enabled: true` and records only the control plane: `fan_out_launch`, `await`, joins, timeout wake-ups, handle lifecycle, cancellation, detachment, suspend/resume boundaries, and compensation.
+- Before any `fan_out_launch`, three decisions must be visible or recorded as open points: where each worker does its work, how results are merged, and what happens when two workers contradict each other on the same identity. POM does not pick the isolation mechanism; it refuses to leave the decision implicit.
 - The skill does not execute the workflow, does not track live instances, and does not own target-project workers, queues, schedulers, timers, persistence, or runtime concurrency. For target implementation seams, POM ships optional TypeScript and Python runtime templates: `templates/WORKFLOW_RUNTIME_TEMPLATE.ts` and `templates/WORKFLOW_RUNTIME_TEMPLATE.py`.
 
 ## Reference Templates

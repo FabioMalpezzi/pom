@@ -4,6 +4,20 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-07-26] add | agent graph patterns page with worked cases
+
+Added `wiki/agent-graph-patterns.md` and linked it from the Workflow patterns area of the index. The earlier entry below recorded the rules; this page shows them failing and being fixed on two shipped examples, with real validator output: a fan-in guard that verifies nothing until it declares its evidence, a nightly repair loop that is an unbounded retry until it declares trigger, evidence, feedback, and escalation, and the fan-out questions with the public Bun precedent. It also states when none of it applies, so the page does not read as a recommendation to add ceremony to domain workflows.
+
+Promoted the two examples to `templates/examples/workflow/agent-graph/` with an Italian catalogue README, and extended `tests/workflow-validator/integration/test-verification-and-runtime-loop.mjs` so both are linted on every `pom:test` run and cannot rot.
+
+Sources used: `templates/examples/workflow/agent-graph/`, `prompts/27-workflow-modeling.md`, `skills/workflow.md`, `templates/WORKFLOW_TEMPLATE.yaml`, `specs/SPEC-0006-workflow-modeling.md`, and `scripts/lib/workflow-lint-agent-rules.mjs`.
+
+## [2026-07-26] update | record verification evidence, runtime loop, and fan-out isolation
+
+Updated the workflow skill and spec synthesis with three optional blocks that describe an agent-shaped graph rather than a purely domain one: `guards[].evidence` with the W005 self-review warning and the W006 fan-in warning, the top-level `runtime_loop` contract validated by E100-E106 with W007 and W008, and `metadata.provenance` for observed versus speculative models. Also recorded the three questions that must be answered or left as named open points before a `fan_out_launch` is modeled: where each worker works, how results merge, and what happens when two workers disagree. Stated that all three blocks are optional and that existing models validate unchanged.
+
+Sources used: `prompts/27-workflow-modeling.md`, `skills/workflow.md`, `templates/WORKFLOW_TEMPLATE.yaml`, `scripts/lib/workflow-lint-rules.mjs`, `scripts/lib/workflow-lint-core.mjs`, `specs/SPEC-0006-workflow-modeling.md`, and `tests/workflow-validator/integration/test-verification-and-runtime-loop.mjs`.
+
 ## [2026-07-23] update | explain Dynamic Workflow fan-in guidance
 
 Updated the workflow skill synthesis with concrete fan-in cases: independent audits, shared-write mutation, quorum readiness versus completeness, equal-count missing-plus-duplicate reconciliation, bounded hierarchical reduction, and task-supplied capacity. Clarified that these are control-plane agent instructions, while runtime execution remains Target Project-owned and static fan-in lint remains deferred.
