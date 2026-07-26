@@ -1,0 +1,53 @@
+workflow: checkout_flow
+version: 1
+description: |
+  Member workflow of PIPELINE_TEMPLATE.yaml. It exists so the pipeline
+  references files that actually resolve and validate: a member pointing at a
+  missing workflow is an error (E023), and a canonical template should not
+  ship failing its own validator.
+
+  What matters to the pipeline is the terminal vocabulary declared below,
+  because handoff between members happens on terminal-state names.
+
+initial_state: checkout
+
+states:
+  - name: checkout
+    description: |
+      The shopper is entering delivery and billing details.
+    is_final: false
+  - name: checkout_confirmed
+    description: |
+      Success terminal. The pipeline hands off to the next member.
+    is_final: true
+  - name: checkout_canceled
+    description: |
+      Abandon terminal. The pipeline ends here.
+    is_final: true
+
+events:
+  - name: details_confirmed
+    description: |
+      The step completed successfully.
+  - name: checkout_dropped
+    description: |
+      The shopper abandoned this step.
+
+transitions:
+  - from: checkout
+    to: checkout_confirmed
+    event: details_confirmed
+  - from: checkout
+    to: checkout_canceled
+    event: checkout_dropped
+
+invariants:
+  - description: |
+      A member knows nothing about the pipeline or its siblings. It only
+      guarantees that it reaches one of its declared terminals.
+
+metadata:
+  owner: team or role
+  provenance: speculative
+  tags:
+    - template-child

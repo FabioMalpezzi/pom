@@ -44,6 +44,17 @@ sequence:
       - state: checkout_canceled
         next: null
 
+  # Last member: every "next" is null, so the pipeline terminates here
+  # whichever way this member ends. A chain whose last hop points outside
+  # the sequence is an error (E026), not a shorthand for "and then
+  # something else happens".
+  - workflow: workflows/payment-flow.yaml
+    completes_on:
+      - state: payment_settled
+        next: null
+      - state: payment_declined
+        next: null
+
 # Optional metadata block.
 metadata:
   owner: team or role

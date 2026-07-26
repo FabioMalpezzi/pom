@@ -133,6 +133,40 @@ function scenarioShippedExamples() {
   );
 }
 
+function scenarioCanonicalTemplates() {
+  console.log("\nScenario 6: the canonical templates pass their own validator");
+
+  // POM tells target projects that the model is the source of authority and
+  // that the validator is the judge. A canonical template failing that
+  // validator contradicts the method it teaches, so both templates and the
+  // child workflows they reference must stay clean.
+  const templates = [
+    "../../../templates/WORKFLOW_TEMPLATE.yaml",
+    "../../../templates/PIPELINE_TEMPLATE.yaml",
+    "../../../templates/workflows/validation-flow.yaml",
+    "../../../templates/workflows/child-workflow.yaml",
+    "../../../templates/workflows/cart-flow.yaml",
+    "../../../templates/workflows/checkout-flow.yaml",
+    "../../../templates/workflows/payment-flow.yaml",
+  ];
+  for (const template of templates) {
+    const result = runLint(template);
+    const name = template.split("/").pop();
+    assert(
+      `${name} validates with no errors and no warnings`,
+      result.status === 0 && result.stdout.includes("| Warnings | 0 |"),
+      result.stdout + result.stderr,
+    );
+  }
+
+  const pipeline = runLint("../../../templates/PIPELINE_TEMPLATE.yaml");
+  assert(
+    "every pipeline member handoff resolves inside the sequence",
+    !pipeline.stdout.includes("**E026**"),
+    pipeline.stdout,
+  );
+}
+
 function scenarioBackwardCompatibility() {
   console.log("\nScenario 4: models that declare neither block are unaffected");
 
@@ -151,6 +185,7 @@ scenarioVerificationEvidence();
 scenarioFanInVerification();
 scenarioRuntimeLoop();
 scenarioShippedExamples();
+scenarioCanonicalTemplates();
 scenarioBackwardCompatibility();
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);

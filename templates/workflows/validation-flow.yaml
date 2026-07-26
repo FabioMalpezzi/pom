@@ -1,0 +1,54 @@
+workflow: validation_flow
+version: 1
+description: |
+  Child workflow invoked by WORKFLOW_TEMPLATE.yaml. It exists so the template
+  references a file that actually resolves and validates: an invoke pointing
+  at a missing child is an error (E031/E041), and a canonical template should
+  not ship failing its own validator.
+
+  Keep it minimal. What matters here is the terminal vocabulary the parent
+  maps in on_completion.
+
+initial_state: checking
+
+states:
+  - name: checking
+    description: |
+      The submitted item is being checked against the acceptance rules.
+    is_final: false
+  - name: validated
+    description: |
+      The item satisfies the rules. Mapped by the parent to validation_passed.
+    is_final: true
+  - name: refused
+    description: |
+      The item does not satisfy the rules. Mapped by the parent to
+      validation_failed.
+    is_final: true
+
+events:
+  - name: rules_satisfied
+    description: |
+      Every acceptance rule passed.
+  - name: rules_violated
+    description: |
+      At least one acceptance rule failed.
+
+transitions:
+  - from: checking
+    to: validated
+    event: rules_satisfied
+  - from: checking
+    to: refused
+    event: rules_violated
+
+invariants:
+  - description: |
+      Every run reaches exactly one terminal, so the parent always receives a
+      mapped next_event.
+
+metadata:
+  owner: team or role
+  provenance: speculative
+  tags:
+    - template-child
