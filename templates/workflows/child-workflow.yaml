@@ -1,0 +1,54 @@
+workflow: batch_item
+version: 1
+description: |
+  Per-item child workflow launched by the fan_out_launch example in
+  WORKFLOW_TEMPLATE.yaml. One instance handles one work item.
+
+  The validator does not check that a fan_out_launch path resolves, but the
+  template ships this file anyway: an example that points at nothing teaches
+  nothing, and the batch manifest needs every item to reach a terminal with a
+  status the fan-in can reconcile.
+
+initial_state: processing
+
+states:
+  - name: processing
+    description: |
+      The worker is handling its assigned item.
+    is_final: false
+  - name: item_done
+    description: |
+      The item was handled. Counted as a terminal status in the manifest.
+    is_final: true
+  - name: item_failed
+    description: |
+      The item could not be handled. Accounted for as failed, never silently
+      dropped from the manifest.
+    is_final: true
+
+events:
+  - name: work_finished
+    description: |
+      The worker finished its item.
+  - name: work_failed
+    description: |
+      The worker could not finish its item.
+
+transitions:
+  - from: processing
+    to: item_done
+    event: work_finished
+  - from: processing
+    to: item_failed
+    event: work_failed
+
+invariants:
+  - description: |
+      Every launched item reaches a terminal, so every expected identity
+      appears in the batch manifest.
+
+metadata:
+  owner: team or role
+  provenance: speculative
+  tags:
+    - template-child

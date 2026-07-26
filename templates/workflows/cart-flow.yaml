@@ -1,0 +1,53 @@
+workflow: cart_flow
+version: 1
+description: |
+  Member workflow of PIPELINE_TEMPLATE.yaml. It exists so the pipeline
+  references files that actually resolve and validate: a member pointing at a
+  missing workflow is an error (E023), and a canonical template should not
+  ship failing its own validator.
+
+  What matters to the pipeline is the terminal vocabulary declared below,
+  because handoff between members happens on terminal-state names.
+
+initial_state: cart
+
+states:
+  - name: cart
+    description: |
+      The shopper is filling the cart.
+    is_final: false
+  - name: cart_completed
+    description: |
+      Success terminal. The pipeline hands off to the next member.
+    is_final: true
+  - name: cart_abandoned
+    description: |
+      Abandon terminal. The pipeline ends here.
+    is_final: true
+
+events:
+  - name: items_selected
+    description: |
+      The step completed successfully.
+  - name: cart_left
+    description: |
+      The shopper abandoned this step.
+
+transitions:
+  - from: cart
+    to: cart_completed
+    event: items_selected
+  - from: cart
+    to: cart_abandoned
+    event: cart_left
+
+invariants:
+  - description: |
+      A member knows nothing about the pipeline or its siblings. It only
+      guarantees that it reaches one of its declared terminals.
+
+metadata:
+  owner: team or role
+  provenance: speculative
+  tags:
+    - template-child

@@ -20,12 +20,24 @@
 #   - descriptions are domain-level (what the state means, not how it is implemented);
 #   - guards are referenced by name from transitions; their semantics live in the description and in target code;
 #   - the file is the source of authority; Mermaid, validation report, scenarios, and code are derived.
+#
+# This template validates clean: `pom:workflow:lint` reports zero errors and
+# zero warnings on it, and the child workflows it references ship beside it
+# under templates/workflows/. That is deliberate. POM tells target projects
+# that the model is the source of authority and that the validator is the
+# judge; a canonical template failing its own validator would contradict the
+# method it teaches. Constructs that cannot be wired into one coherent example
+# are shown in commented blocks rather than left as broken references.
 
 workflow: example_workflow      # snake_case unique name
 version: 1                       # integer, bumped on incompatible model changes
 description: |
   Short paragraph describing the business process this workflow models.
   Plain language; the reader should understand the domain after reading it.
+
+  The example below is one coherent flow rather than a bag of syntax
+  fragments: an item is drafted, submitted, validated by a child workflow,
+  then checked by a fan-out batch before it can be marked done.
 
 initial_state: draft             # must appear in states[]
 
@@ -34,23 +46,11 @@ states:
     description: |
       Domain-level description of what it means to be in this state.
     is_final: false
+
   - name: in_progress
     description: |
-      ...
+      The item is being worked on and is not yet ready for validation.
     is_final: false
-  - name: done
-    description: |
-      ...
-    is_final: true
-    # Optional: re_entry_allowed declares a terminal state that admits
-    # a documented exception out-transition (reopen, supersede, ...).
-    # When true, the validator suppresses W003 on this state.
-    # Default false. Has no effect on non-final states (open point).
-    re_entry_allowed: false
-  - name: rejected
-    description: |
-      Failure terminal. A model with no failure terminal usually hides one.
-    is_final: true
 
   # Optional: invoke declares a synchronous child workflow that runs
   # while the parent is in this state. When the child reaches a
@@ -115,21 +115,60 @@ states:
       join: all                 # all | quorum | first
       # k: 2                    # required when join: quorum
       timeout: 30min
-      on_timeout: timeout_elapsed
+      on_timeout: timeout_elapsed   # an EVENT name, not a state
     # Optional lifecycle exits for active handles.
-    # cancel_handles: [child_batch]
     # detach_handles: [child_batch]
+
+  # The timeout branch cannot close the workflow directly: reaching a final
+  # state while child_batch is still active raises E089, because it leaves
+  # workers running and spending. Cancel first, then terminate.
+  - name: cancelling_batch
+    description: |
+      Stops the workers still active before the workflow terminates.
+    is_final: false
+    cancel_handles: [child_batch]
+
+  - name: done
+    description: |
+      Success terminal.
+    is_final: true
+    # Optional: re_entry_allowed declares a terminal state that admits
+    # a documented exception out-transition (reopen, supersede, ...).
+    # When true, the validator suppresses W003 on this state.
+    # Default false. Has no effect on non-final states (open point).
+    re_entry_allowed: false
+
+  - name: rejected
+    description: |
+      Failure terminal. A model with no failure terminal usually hides one.
+    is_final: true
 
 events:
   - name: submit
     description: |
       What real-world action triggers this transition.
-  - name: complete
+  - name: send_for_validation
     description: |
-      ...
-  - name: reject
+      The item is handed to the validation child workflow.
+  - name: validation_passed
     description: |
-      What real-world action sends the item to the failure terminal.
+      Parent-side event mapped from the child's `validated` terminal.
+  - name: validation_failed
+    description: |
+      Parent-side event mapped from the child's `refused` terminal.
+  - name: batch_launched
+    description: |
+      The batch was launched and the control plane may continue.
+  - name: batch_ready
+    description: |
+      Every launched worker reported a terminal status.
+  - name: timeout_elapsed
+    description: |
+      Wake-up event emitted by the target runtime when the await budget
+      is spent. POM declares it; the runtime emits it.
+  - name: batch_cancelled
+    description: |
+      The still-active workers have been stopped.
 
 guards:
   - name: has_required_fields
@@ -172,12 +211,35 @@ transitions:
     guard: has_required_fields   # optional
     description: |
       Optional prose explaining why this transition exists and any nuance not obvious from from/to/event.
+
   - from: in_progress
-    to: done
-    event: complete
-  - from: in_progress
+    to: validating
+    event: send_for_validation
+
+  - from: validating
+    to: launching_batch
+    event: validation_passed
+
+  - from: validating
     to: rejected
-    event: reject
+    event: validation_failed
+
+  - from: launching_batch
+    to: awaiting_batch
+    event: batch_launched
+
+  - from: awaiting_batch
+    to: done
+    event: batch_ready
+    guard: review_passed
+
+  - from: awaiting_batch
+    to: cancelling_batch
+    event: timeout_elapsed
+
+  - from: cancelling_batch
+    to: rejected
+    event: batch_cancelled
 
   # Optional: transition-level invoke declares a synchronous child
   # workflow triggered when the event fires from the source state.
@@ -195,22 +257,31 @@ transitions:
   # Use case: precondition that requires its own sub-workflow before
   # the parent can decide which state to enter (e.g., submit_for_review
   # -> validation_flow -> accepted | rejected).
-  - from: drafting
-    event: submit_for_review
-    invoke:
-      workflow: workflows/validation-flow.yaml
-      on_completion:
-        - terminal_state: validated
-          target: accepted
-        - terminal_state: refused
-          target: rejected
+  #
+  # Shown commented out because this example already reaches the child
+  # through the state-level invoke on `validating`. Wiring both styles into
+  # one flow would teach the syntax at the cost of a model nobody would
+  # actually write. Uncomment it in a model that needs the transition form,
+  # and declare `submit_for_review` and `accepted` there.
+  #
+  # - from: draft
+  #   event: submit_for_review
+  #   invoke:
+  #     workflow: workflows/validation-flow.yaml
+  #     on_completion:
+  #       - terminal_state: validated
+  #         target: accepted
+  #       - terminal_state: refused
+  #         target: rejected
 
 invariants:
   - description: |
       Plain-text rule that must hold across the workflow.
       Example: "A done item cannot return to draft."
   - description: |
-      Example: "Every accepted item must eventually reach done or rejected."
+      Example: "Every validated item must eventually reach done or rejected."
+  - description: |
+      No final state is reached while child_batch is still active.
 
 # Optional runtime loop contract.
 #
@@ -268,6 +339,7 @@ metadata:
   # design mode writes gaps here instead of inventing business rules.
   open_points:
     - "Who may reopen a done item, and under which authority."
+    - "Worker workspace, merge policy, and worker disagreement for the batch: undecided in this example, and required before a real fan_out_launch."
 
   tags:
     - example
