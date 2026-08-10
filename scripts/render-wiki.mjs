@@ -143,6 +143,7 @@ function loadPages(config) {
     const rendered = renderMarkdown(parsed.body, config, {
       out: config.out,
       pageFile: file,
+      bodyLine: parsed.bodyLine,
       readerFiles,
       source: config.source,
     });
@@ -197,8 +198,12 @@ function rank(index) {
 function splitFrontmatter(markdown) {
   const normalized = markdown.replace(/\r\n/g, "\n");
   const match = normalized.match(/^---\n([\s\S]*?)\n---[ \t]*\n?/);
-  if (!match) return { metadata: {}, body: markdown };
-  return { metadata: parseFrontmatter(match[1]), body: normalized.slice(match[0].length) };
+  if (!match) return { metadata: {}, body: markdown, bodyLine: 1 };
+  return {
+    metadata: parseFrontmatter(match[1]),
+    body: normalized.slice(match[0].length),
+    bodyLine: match[0].split("\n").length,
+  };
 }
 
 function parseFrontmatter(rawMetadata) {
@@ -264,8 +269,14 @@ function renderMarkdown(markdown, config, context = {}) {
   const outline = [];
   const usedIds = new Map();
   let i = 0;
+  let previous = -1;
 
   while (i < lines.length) {
+    // Safety net: every branch below must consume at least one line. If one ever
+    // fails to, stop with the offending location instead of growing `html`
+    // forever until the runtime throws an opaque RangeError.
+    if (i === previous) throw new Error(`${describeLine(context, i)}: renderer made no progress on: ${lines[i].trim()}`);
+    previous = i;
     const line = lines[i];
 
     if (!line.trim()) {
@@ -343,7 +354,8 @@ function renderMarkdown(markdown, config, context = {}) {
     }
 
     const paragraph = [];
-    while (i < lines.length && isParagraphLine(lines[i])) {
+    while (i < lines.length && isParagraphLine(lines, i)) {
+      if (isTableLine(lines[i])) warnOrphanTableRow(context, i, lines[i]);
       paragraph.push(lines[i].trim());
       i += 1;
     }
@@ -353,16 +365,31 @@ function renderMarkdown(markdown, config, context = {}) {
   return { html: html.join("\n"), outline };
 }
 
-function isParagraphLine(line) {
+function isParagraphLine(lines, index) {
+  const line = lines[index];
   return (
     line.trim() &&
     !line.startsWith("```") &&
     !/^(#{1,4})\s+/.test(line) &&
-    !isTableLine(line) &&
+    !isTableStart(lines, index) &&
     !/^\s*-\s+/.test(line) &&
     !/^\s*\d+\.\s+/.test(line) &&
     !/^>\s?/.test(line)
   );
+}
+
+// A `| ... |` line that starts no table is almost always an authoring mistake:
+// a row separated from its table by a blank line. Render it as text like any
+// Markdown renderer would, but name it so the author can find it.
+function warnOrphanTableRow(context, index, line) {
+  console.warn(
+    `Warning: ${describeLine(context, index)}: table row is not part of a table (no header separator follows); rendered as text: ${line.trim()}`,
+  );
+}
+
+function describeLine(context, index) {
+  const file = context.pageFile || "markdown";
+  return `${file}:${(context.bodyLine || 1) + index}`;
 }
 
 function isTableStart(lines, index) {
