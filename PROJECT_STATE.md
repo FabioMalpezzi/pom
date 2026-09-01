@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-2026-07-22
+2026-09-02
 
 ---
 
@@ -43,6 +43,16 @@ POM (Project Operating Memory) is a meta-method that gives any AI-assisted softw
 _Current operational state. Update at every significant session or when priorities, risks, or next actions change._
 
 ### Current State
+
+POM 0.3.0 closes the September 2026 self-audit. The repository now runs its own
+governance lint through a root `pom.config.json` (decisions, wiki, and structured
+tasks enabled) and passes it with zero errors; the previously stubbed
+`scripts/to-xstate.mjs` is restored and tested; the pre-commit hook restages the
+indexes and reader output that lint regenerates; `pom-update.mjs` refuses to
+replace a Git-ignored vendored `pom/`; the README skill table is generated from
+`skills/README.md`; experiment evidence has a size and tracking convention with
+`npm run pom:experiments:clean`; the test runner lives in `scripts/run-tests.mjs`
+and the suite has 1498 assertions across 22 files. Details in `CHANGELOG.md`.
 
 Workflow modeling now describes agent-shaped graphs, not only domain ones, through
 three optional blocks: `guards[].evidence` (E090/E091, W005 for model judgement
@@ -139,6 +149,9 @@ Continue maintaining the promoted lean bootstrap and skill-only Pi package from 
 
 ### Next Actions
 
+- [ ] **Skill catalog review**: the September audit found thin boundaries between `validate`/`check`/`guard`, `diagnose`/`root-cause`, and `improve`/`extend`/`prune`; decide with the `prune` skill whether to merge or sharpen them (see the audit summary in the session that produced 0.3.0 and the catalog in `skills/README.md`).
+- [ ] **Remaining lint warnings**: `tests-root-file` no longer applies after moving the runner; `completion-verification-exception` on TASK-0001 stays until a committed test covers the task-plan error case.
+- [ ] **Lint fixture coverage**: SPEC-0006 now records that E000-E017, W001-W004, and E050-E058 have no committed broken fixtures; add them or record the decision not to.
 - [x] **Close fan-in accounting experiment**: within the five-attempt limit, minimally promoted the supported procedure to `prompts/27-workflow-modeling.md`. The final frozen 8-fixture sample had four lexical matcher false negatives but no critical semantic violation on direct inspection; the hierarchical response used bounded groups and final summary reconciliation. `skills/workflow.md`, canonical schema/validator, implementation guide, and `SPEC-0008` remain unchanged.
 - [ ] **Behavioral evaluation follow-ups**: optionally re-freeze the baseline after negation-aware `transcriptExcludes` hardening, broaden deferred-record detection, run five-repetition Pi acceptance, and verify durable `pi install`/removal. P0–P3 are closed; these follow-ups do not reopen the rejected Task Plan contract or active extension.
 - [x] **Lato workflow — promuovere il contratto Dynamic Workflow** (priorità 3b): dottrina control-plane/data-plane registrata in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; SPEC-0006 aggiornato con `fan_out_launch`/`await`/`join`/`timeout`/`react`/`compensation`. Il contratto è dentro il workflow come control plane; l'esecuzione concorrente reale resta nel data plane del target. La copertura validator completa può crescere a partire dalle regole handle lifecycle E080-E089.

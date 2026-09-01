@@ -16,3 +16,5 @@ node_modules/
 .env.*.local
 experiments/task-plan-contracts/evidence/*/*/
 experiments/pi-package/staging/
+# Local Claude Code permission settings are per machine, not project memory
+.claude/settings.local.json

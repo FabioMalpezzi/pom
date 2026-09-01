@@ -43,7 +43,7 @@ pi list                                       # show registered packages and ski
 pi remove git:github.com/FabioMalpezzi/pom    # remove from settings
 ```
 
-Install writes Pi settings only, never your project files. Until these changes reach the default branch, install from the current branch by appending `@exp/pom-skill-evolution` to the git source.
+Install writes Pi settings only, never your project files. The package is on the default branch, so no branch suffix is needed in the git source.
 
 ### Install POM In A Project
 
