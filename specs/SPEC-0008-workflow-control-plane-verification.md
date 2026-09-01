@@ -130,7 +130,7 @@ objects, real timers, queue records, or data-plane payloads.
 
 ### Graph Construction
 
-Add a reusable module:
+Add a reusable module (planned, not implemented: this path does not exist in POM Source yet):
 
 ```text
 scripts/workflow-control-plane-graph.mjs
@@ -147,13 +147,13 @@ Responsibilities:
 
 ### Model Checker
 
-Add either a new internal module:
+Add either a new internal module (planned, not implemented: this path does not exist in POM Source yet):
 
 ```text
 scripts/workflow-model-check.mjs
 ```
 
-or an equivalent internal module called by `scripts/lint-workflows.mjs`.
+or an equivalent internal module called by `scripts/lint-workflows.mjs` (which exists today and carries the validator rules).
 
 The checker must verify at least:
 

@@ -57,6 +57,19 @@ The work must proceed through experiments. No candidate may move into canonical 
 | Workstreams | Behavioral evals; lean bootstrap; Task Plan contracts; Pi package |
 | Task | Evidence-backed POM skill and Pi integration increment |
 
+## Steps
+
+The work is organized in phases; each phase section below lists its tasks, gates, and evidence. The step list is the phase sequence:
+
+- [x] Phase P0 - Freeze baseline and experiment contracts
+- [x] Phase P1 - Real behavioral evaluation capability
+- [x] Phase P2A - Measured `using-pom` bootstrap reduction (promoted)
+- [x] Phase P2B - Task Plans with global constraints and contracts (closed, not promoted)
+- [x] Phase P3 - Pi package (skill-only promotion; extension rejected)
+- [ ] Phase P4 - Promotion, cross-checks, and release
+
+A phase is checked here when its gate was decided, whether the candidate was promoted or rejected; the Outcome section records the decision and the remaining follow-ups.
+
 ## Global Constraints
 
 These constraints bind every workstream and must be copied into experiment criteria, implementation briefs, and reviews where applicable.

@@ -17,6 +17,20 @@ Prepare and validate the first baseline for the POM web wiki agent extension: a 
 
 The task does not implement the final web UI. It creates the minimum contract, fixtures, and verification shape needed to prove that a wiki event can become a structured proposal without modifying durable POM files automatically.
 
+## Assumptions And Success Criteria
+
+Assumptions:
+
+- An active Codex session can read a JSON event file and answer with a structured proposal without a dedicated runner.
+- Source Authority and Artifact Policy from `SPEC-0005` apply unchanged to proposals: no durable POM file is edited automatically.
+- Codex-specific behavior can be isolated in the prompt and adapter layer, keeping the event and proposal schemas agent-neutral.
+
+Success criteria:
+
+- A `wiki-event` schema and an `agent-proposal` schema exist with at least three fixture events, one per initial use case.
+- The baseline prompt forbids direct file edits and yields one structured proposal per event.
+- At least one live event from the mini UI produces a recorded proposal and a human-reviewed promotion, with no automatic write to canonical Markdown.
+
 ## Placement
 
 | Level | Value |
@@ -65,6 +79,10 @@ The task does not implement the final web UI. It creates the minimum contract, f
 - [x] `npm run pom:lint` passes.
 - [x] `npm run pom:test` passes if code or test fixtures are added outside the experiment scaffold.
 - [x] Security/privacy check confirms that fixture events do not contain secrets or external private data.
+
+### Exception
+
+Exception reason: _none_
 
 ## Test Structure
 

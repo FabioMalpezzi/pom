@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Date | 2026-03-15 |
+| Status | Accepted |
 | Category | governance |
 | Area | wiki |
 | Summary | Adopt a persistent LLM-maintained wiki as the project's consolidated knowledge base to avoid rediscovering context from scratch every session |
@@ -52,6 +53,34 @@ A persistent wiki avoids the "rediscovery problem" where every session starts fr
 - [x] Create wiki/index.md and wiki/log.md
 - [x] Create first batch of wiki pages
 - [ ] Review wiki after 2 weeks of use
+
+## Completion Verification
+
+This ADR cannot be marked Accepted without passing semantic validation. Verification is mandatory and automatic.
+
+### Step 0 — Goal-backward check
+
+- [x] What must be TRUE for this decision to be valid?
+  - A new session can answer "what is the current state of topic X" from the wiki without re-reading the raw sources.
+  - The wiki holds synthesis only; decisions and code behavior stay in their authoritative homes.
+- [x] For each truth, does supporting evidence or reasoning EXIST?
+  - `wiki/index.md` links every page; `wiki/processes/ticket-lifecycle.md` summarizes the lifecycle and links `decisions/ADR-0005-sla-model.md` instead of restating it.
+  - `npm run pom:lint` reports zero broken wiki links and zero unreferenced pages.
+
+### Thesis
+
+- Thesis 1: Resuming work on the ticket lifecycle now starts from one wiki page that names the states, the SLA rules, and the open questions, instead of from a search across meeting notes and Slack. The first session after adoption answered the "why does the SLA clock pause on resolved?" question from the wiki alone.
+
+### Antithesis
+
+| Antithesis | Confutation |
+|---|---|
+| The wiki will rot like every previous wiki did. | Previous wikis rotted because humans had to maintain cross-references and consistency. Here the agent updates the affected pages in the same session that changes the source, and the lint flags broken links and unreferenced pages. |
+| A good README is enough for a project this size. | The project already has more than twenty topics with cross-references (entities, processes, SLA rules, integrations); a single README cannot hold them without becoming the scattered document it was meant to replace. |
+
+### Exception
+
+Exception reason: _none_
 
 ## Evolution Rule
 

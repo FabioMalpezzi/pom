@@ -25,7 +25,7 @@ coverage is still partial.
 | Verification evidence on guards (`guards[].evidence`) | **Implemented** | Optional block; validator rules E090, E091 and warnings W005, W006 in `scripts/lib/workflow-lint-core.mjs`. W005 covers model judgement without declared context independence; W006 covers a fan-in guard with no declared evidence at all. |
 | Runtime loop contract (`runtime_loop`) | **Implemented** | Optional top-level block; validator rules E100–E106 and warnings W007, W008. Records trigger, goal, evidence, feedback, and stop with escalation. Distinct from the experiment contract in `prompts/28-loop-goal-define-criteria.md`. |
 | Validation report (`<name>.validation.md`) | **Implemented** | Markdown output of `lint-workflows.mjs` |
-| Broken-fixture coverage (one per E and W rule, plus positive `re_entry_allowed`) | **Implemented** | `tests/workflow-validator/` fixtures and integration tests |
+| Broken-fixture coverage | **Partial** | `tests/workflow-validator/` integration tests exercise broken fixtures for E060-E073/W060 (temporal primitives), E082-E089 (handle lifecycle), E090-E091/W005-W006 (guard evidence), and E100-E106/W007-W008 (runtime loop), plus the canonical templates as positive cases. The base rules E000-E017, W001-W004 and the context-injection rules E050-E058 have no committed broken fixture; they are covered only by the canonical examples passing. |
 | Skill card with five modes | **Implemented** | `skills/workflow.md` |
 | Canonical prompt for the skill | **Implemented** | `prompts/27-workflow-modeling.md` |
 | Validator Info rules (cycles, naming conventions) | **Target for promotion** | Not implemented; explicitly out of scope of the stable validator pass |
@@ -500,7 +500,7 @@ Use case in mind: a precondition that requires its own sub-workflow before the p
 
 A child workflow may declare a `context_schema:` block that documents its **input** (what the parent must provide at invocation) and **output_by_terminal** (what the parent reads back, one set of fields per terminal). The parent, on `invoke:`, may declare `input:` (map of `child_field: parent_path`) and on each `on_completion[]` entry an `assign:` (map of `parent_field: child_path`).
 
-The two channels — `input` in, `assign` out — are the **only** boundary between parent and child. There is no shared context, no mid-flight event passing, no callbacks. Full design rationale is in `CONTEXT-INJECTION.md` (closed decision).
+The two channels — `input` in, `assign` out — are the **only** boundary between parent and child. There is no shared context, no mid-flight event passing, no callbacks. Full design rationale is in `decisions/ADR-0002-workflow-context-injection.md` (closed decision).
 
 Child declares its interface:
 
@@ -561,17 +561,78 @@ New Error rules:
 
 The four invariants of the composition model remain enforced: no async (E029/E036/E046), no shared global state (no schema slot for it; only `input` / `assign` channels), no inheritance (no `extends:` slot), no runtime in POM (the validator runs, the workflow does not).
 
-## Promotion Path
+## Canonical Locations
 
-If promoted, this draft becomes `SPEC-0006-workflow-modeling.md` and the artefacts move out of `experiments/workflow-modeling/`:
+The capability is promoted out of `experiments/workflow-modeling/`; the stable artefacts live at these paths:
 
-| From | To |
+| Artifact | Path |
 |---|---|
-| `specs/SPEC-0006-workflow-modeling.md` | `specs/SPEC-0006-workflow-modeling.md` |
-| `skills/workflow.md` | `skills/workflow.md` |
-| `templates/WORKFLOW_TEMPLATE.yaml` | `templates/WORKFLOW_TEMPLATE.yaml` |
-| `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` | `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` |
-| `scripts/lint-workflows.mjs` | `scripts/lint-workflows.ts` |
-| (new) | `prompts/27-workflow-modeling.md` |
+| Spec | `specs/SPEC-0006-workflow-modeling.md` |
+| Skill card | `skills/workflow.md` |
+| Canonical prompt | `prompts/27-workflow-modeling.md` |
+| Workflow template | `templates/WORKFLOW_TEMPLATE.yaml` |
+| Pipeline template | `templates/PIPELINE_TEMPLATE.yaml` |
+| Example workflows | `templates/workflows/`, `templates/examples/workflow/` |
+| Implementation guide | `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` |
+| Integration guide | `templates/WORKFLOW_INTEGRATION_GUIDE.md` |
+| Validator | `scripts/lint-workflows.mjs` with `scripts/lib/workflow-lint-core.mjs` and `scripts/lib/workflow-lint-rules.mjs` (JavaScript modules; there is no `.ts` validator) |
+| Diagram and XState export | `scripts/mermaid.mjs`, `scripts/to-mermaid.mjs`, `scripts/to-xstate.mjs` |
+| Tests | `tests/workflow-validator/` |
 
-Promotion proceeds through `skills/extend.md` and `prompts/12-extend-pom.md`, after `skills/challenge.md` review.
+Further changes to the method go through `skills/extend.md` and `prompts/12-extend-pom.md`, after `skills/challenge.md` review.
+
+## Impacts
+
+| Area | Impact |
+|---|---|
+| Wiki | Method pages describe workflow modeling as YAML-first with derived diagrams, reports, and scenarios. |
+| Decisions | `ADR-0002` (context injection), `ADR-0003` (`workflow` vs `loop-goal` skill), `ADR-0004` (Dynamic Workflow control plane). |
+| Docs | `docs/workflow-xstate-compatibility.md`. |
+| Mockups | none |
+| Code | Validator, renderers, templates, skill, and prompt listed under Canonical Locations; target projects own every runtime. |
+
+## Linked Tasks
+
+- No task plan: the capability was built and promoted through `experiments/workflow-modeling/`, `experiments/schema-loop-guard-timeout/` (SPEC-0007), `experiments/agent-loop-fsm/` (ADR-0003), and `experiments/dynamic-workflows/` (ADR-0004). The next increment is `specs/SPEC-0008-workflow-control-plane-verification.md` (Draft).
+
+## Completion Verification
+
+This spec cannot be marked Complete without passing the completion verification gate. Verification is mandatory and automatic.
+
+### Step 0 — Goal-backward check
+
+- [x] What must be TRUE for the purpose of this spec to be met?
+  - A workflow can be written as YAML from the template and validated without any runtime.
+  - Error rules stop invalid models and warning rules surface doubtful ones, with a readable report.
+  - Diagrams are derived from the YAML, never hand-drawn.
+  - The composition, temporal, and dynamic extensions keep the four pillars (no async, no shared state, no inheritance, no runtime in POM).
+- [x] For each truth, what must EXIST?
+  - `templates/WORKFLOW_TEMPLATE.yaml` and `templates/workflows/*.yaml` exist and pass `scripts/lint-workflows.mjs`.
+  - Rule families E000-E017, W001-W004, E029/E036/E046, E050-E058, E060-E073/W060, E080-E089, E090-E091/W005-W006, E100-E106/W007-W008 are implemented in `scripts/lib/workflow-lint-core.mjs` and `scripts/lib/workflow-lint-rules.mjs`; the Implementation Status table above records which families also have committed broken fixtures.
+  - `scripts/to-mermaid.mjs` renders diagrams from the YAML; `pom:workflow:lint --mermaid-dir` refreshes them.
+  - No script in POM Source executes a workflow; `ADR-0004` and the Dynamic Workflow Contract section keep execution in the target data plane.
+
+### This spec has code implementation
+
+- [x] Positive scenario tests: `tests/workflow-validator/integration/test-verification-and-runtime-loop.mjs` Scenario 6 "the canonical templates pass their own validator" (`WORKFLOW_TEMPLATE.yaml`, `PIPELINE_TEMPLATE.yaml`, every file under `templates/workflows/`) and Scenario 5 "the shipped agent-graph examples stay clean"; `test-temporal-primitives.mjs` Scenario 1 "loop_guard and timeout validate statically" (valid example passes with no warnings); `test-dynamic-handles.mjs` Scenario 1 "Dynamic Workflow handles have explicit lifecycle" (valid handle workflows pass).
+- [x] Error/misuse scenario tests: broken fixtures under `tests/workflow-validator/fixtures/` and the experiment fixture folders fail with the expected code, one per rule, for E060-E073/W060, E082-E089, E090-E091/W005-W006, and E100-E106/W007-W008; `test-dynamic-handles.mjs` Scenario 2 "Workflow lint diagnostics are actionable" checks the report for a missing child file.
+- [x] Tests run and pass: `node scripts/run-tests.mjs` runs the three files above; each must report 0 failed (observed: 25, 20, and 49 passed assertions, 0 failed).
+- [ ] Known coverage gap, declared not hidden: E000-E017, W001-W004, and E050-E058 have no committed broken fixture. A manual probe (a parent whose `assign` names an output field the child does not declare) fails with E056 as specified, but that probe is not in `tests/`. Adding those fixtures is recorded as follow-up in `ADR-0002`.
+
+### Exception
+
+Exception reason: _none_
+
+## Sources And Decisions
+
+- Source: `experiments/workflow-modeling/EXPERIMENT.md`
+- Source: `docs/workflow-xstate-compatibility.md`
+- Source: `experiments/dynamic-workflows/design/CONTRACT.md`
+- ADR: `decisions/ADR-0002-workflow-context-injection.md`
+- ADR: `decisions/ADR-0003-workflow-vs-loop-goal-skill.md`
+- ADR: `decisions/ADR-0004-dynamic-workflow-control-plane.md`
+- Spec: `specs/SPEC-0007-loop-guard-timeout.md`
+
+## Evolution Rule
+
+This spec is a living document. Incremental changes are tracked with Git. If a change alters a structural decision, create or update a linked ADR.

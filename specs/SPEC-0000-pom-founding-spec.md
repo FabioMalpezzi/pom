@@ -1,4 +1,4 @@
-# Spec — POM, Project Operating Memory
+# Spec - POM, Project Operating Memory
 
 | Field | Value |
 |---|---|

@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete
+Complete with exceptions
 
 ## Origin
 
@@ -16,6 +16,20 @@ Complete
 ## Objective
 
 Make `scripts/lint-doc-governance.ts` understand the `taskPlans` configuration so POM can validate task-plan locations without assuming `tasks/` for every project.
+
+## Assumptions And Success Criteria
+
+Assumptions:
+
+- Task plans are Markdown files under one configurable root; a regex on the repository-relative path selects them.
+- Required sections are read from the configured task template (`##` headings), so localized templates work without code changes.
+- Existing projects must not be forced to move task plans: defaults stay conservative and objective rules only produce errors.
+
+Success criteria:
+
+- `taskPlans.root`, `taskPlans.taskPathPattern`, `taskPlans.indexPath`, and `taskPlans.requireTemplateSections` are read from `pom.config.json` and validated.
+- A project with task plans outside `tasks/` lints clean with the right configuration.
+- Missing template sections are reported only when `requireTemplateSections` is true.
 
 ## Placement
 
@@ -38,10 +52,51 @@ Make `scripts/lint-doc-governance.ts` understand the `taskPlans` configuration s
 
 ## Verification
 
-- [x] `npm run pom:lint` passes in `/Users/fabio/WA/pom`.
-- [x] A sample config with `taskPlans.root = "tasks"` and `recommendedPath = "tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md"` is accepted.
-- [x] A sample config with a different root, for example `docs/delivery/tasks`, is accepted.
-- [x] Missing or malformed task plans produce warnings, not hard failures, unless the rule is objective.
+A task cannot be marked Complete without passing the completion verification gate. This verification is mandatory and automatic.
+
+### Step 0 — Goal-backward check
+
+- [x] What must be TRUE for the objective to be met?
+  - The lint reads the `taskPlans` block from `pom.config.json` instead of assuming `tasks/`.
+  - Required task sections come from the configured template, not from a hard-coded list.
+  - A non-default task root lints clean and gets its own generated index.
+- [x] For each truth, what must EXIST?
+  - `scripts/lib/lint-config.ts` merges and validates `taskPlans.root`, `taskPlans.taskPathPattern`, `taskPlans.indexPath`, and `taskPlans.requireTemplateSections`.
+  - `scripts/lib/lint-context.ts` derives `requiredTaskPlanSections` from `templatePaths.taskPlan`; `scripts/lib/lint-tasks.ts` applies the pattern, the index path, and the section check.
+  - `examples/pom-config-existing-adr-root.json` shows the block for an existing project.
+
+### Scenario tests
+
+- [x] Positive case: `tests/completion-verification/integration/test-lint-completion-verification.mjs`, Scenario 5 "localized templates and configured indexes work": a task plan under `tasks/area/P0/` checked against a localized task template with `requireTemplateSections: true` produces no `task-required-section` finding and is linked from the configured `tasks/TASKS_INDEX.md`.
+- [x] Positive case: `tests/spec-0001/integration/test-modular-assembly.mjs`, Scenario 6 "docs lint skips specialized governance roots under docs/": `taskPlans.root` set to `docs/tasks` with its own index path lints with exit code zero.
+- [ ] Error/misuse case: no committed test asserts the `task-status` warning or the `task-required-section` error. See Exception.
+- [x] Tests run and pass: `node scripts/run-tests.mjs` (both files above report 0 failed).
+
+### Cross-cutting checks
+
+- [x] `npm run pom:lint` on this repository, with `taskPlans.requireTemplateSections: true`, reports `task-required-section` for a task plan missing a template section; that is the misuse path observed manually.
+- [x] No security or privacy surface: the change reads repository-local Markdown and JSON only.
+
+### Exception
+
+Exception reason: the error/misuse scenario tests for `task-status` and `task-required-section` are not committed in `tests/`; the misuse path was verified only by running the lint on this repository. Remove this exception and close as Complete once an integration test under `tests/` asserts both findings.
+
+## Test Structure
+
+| Item | Value |
+|---|---|
+| Existing test structure | Integration tests under `tests/<area>/integration/` |
+| Chosen structure | existing |
+| E2E test path | none |
+| Fixture path | temporary projects created inside the integration tests |
+| Evidence path | none |
+
+## User Use Cases
+
+- As a maintainer of an existing project, I want to keep my task plans where they already are, so that adopting POM does not force a migration.
+- Positive case 1: a project with task plans under `docs/tasks/` maps that root and gets a generated `docs/tasks/TASKS_INDEX.md`.
+- Positive case 2: a project with a localized task template maps it in `templates.taskPlan` and its task plans pass the section check.
+- Handled-error case: a task plan without a Status section receives a `task-status` warning instead of a hard failure; a missing template section is an error only when `requireTemplateSections` is true.
 
 ## Risks And Privacy/Security
 
