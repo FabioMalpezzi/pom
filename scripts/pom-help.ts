@@ -2,6 +2,7 @@
 
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { detectLanguage as detectCliLanguage } from "./lib/cli-args.ts";
 
 const ROOT = process.cwd();
 
@@ -13,37 +14,11 @@ function readText(path: string): string {
   return readFileSync(join(ROOT, path), "utf8");
 }
 
-function readRawArg(name: string): string | undefined {
-  const exactIndex = process.argv.findIndex((arg) => arg === `--${name}`);
-  if (exactIndex >= 0) {
-    const value = process.argv[exactIndex + 1];
-    return value && !value.startsWith("--") ? value : "";
-  }
-  const inlinePrefix = `--${name}=`;
-  const inline = process.argv.find((arg) => arg.startsWith(inlinePrefix));
-  return inline ? inline.slice(inlinePrefix.length) : undefined;
-}
-
-function normalizeLanguage(value: string): "en" | "it" | undefined {
-  const normalized = value.toLowerCase();
-  if (normalized.startsWith("it")) return "it";
-  if (normalized.startsWith("en")) return "en";
-  return undefined;
-}
-
 function detectLanguage(): "en" | "it" {
-  const arg = readRawArg("lang");
-  if (arg !== undefined) {
-    const normalized = arg ? normalizeLanguage(arg) : undefined;
-    if (!normalized) {
-      console.error("Missing or unsupported --lang value. Use en or it.");
-      process.exit(1);
-    }
-    return normalized;
-  }
-
-  const envLanguage = process.env.POM_LANG || process.env.LC_ALL || process.env.LC_MESSAGES || process.env.LANG || "";
-  return normalizeLanguage(envLanguage) || "en";
+  return detectCliLanguage((message) => {
+    console.error(message);
+    process.exit(1);
+  });
 }
 
 function printHelp(): void {
@@ -131,8 +106,14 @@ function printHelp(): void {
   console.log("Source-only commands (POM repository itself, not installed in target projects):");
   console.log("");
   console.log("- npm run pom:test");
-  console.log("  Discover tests/<area>/integration/*.mjs and run them in sequence.");
+  console.log("  Run scripts/run-tests.mjs: discover tests/<area>/integration/*.mjs and run them in sequence.");
   console.log("  Defined only in the POM source package.json. The installer does not propagate it to targets.");
+  console.log("");
+  console.log("- npm run pom:skills:sync [-- --check]");
+  console.log("  Regenerate the README.md skill table from skills/README.md; --check only reports drift.");
+  console.log("");
+  console.log("- npm run pom:experiments:clean [-- --delete] [--root experiments/<topic>]");
+  console.log("  List Git-ignored evidence under experiments/ with sizes and flag tracked files above 1 MB; deletes only with --delete.");
   console.log("");
   console.log("Direct skill usage:");
   console.log("");
@@ -238,8 +219,14 @@ function printHelpIt(): void {
   console.log("Comandi solo nel repo POM sorgente (non installati nei progetti target):");
   console.log("");
   console.log("- npm run pom:test");
-  console.log("  Scopre tests/<area>/integration/*.mjs e li esegue in sequenza.");
+  console.log("  Esegue scripts/run-tests.mjs: scopre tests/<area>/integration/*.mjs e li esegue in sequenza.");
   console.log("  Definito solo nel package.json del repo POM. L'installer non lo propaga ai target.");
+  console.log("");
+  console.log("- npm run pom:skills:sync [-- --check]");
+  console.log("  Rigenera la tabella skill di README.md da skills/README.md; con --check segnala solo le differenze.");
+  console.log("");
+  console.log("- npm run pom:experiments:clean [-- --delete] [--root experiments/<topic>]");
+  console.log("  Elenca le evidenze ignorate da Git sotto experiments/ con le dimensioni e segnala i file tracciati sopra 1 MB; cancella solo con --delete.");
   console.log("");
   console.log("Uso diretto delle skill:");
   console.log("");

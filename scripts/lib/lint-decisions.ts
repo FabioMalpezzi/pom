@@ -202,5 +202,6 @@ function writeAdrIndex(context: LintContext, entries: AdrIndexEntry[]): void {
 
   if (!existsSync(absolutePath) || readFileSync(absolutePath, "utf8") !== content) {
     writeFileSync(absolutePath, content);
+    console.log(`POM lint: regenerated ${indexPath} from ADR metadata.`);
   }
 }

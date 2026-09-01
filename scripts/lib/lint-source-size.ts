@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { LintContext } from "./lint-context.ts";
 import { walkFiles } from "./lint-helpers.ts";
+import { isPomSourceRoot } from "./pom-source.mjs";
 
 const TARGET_MAX_LINES = 800;
 const HARD_MAX_LINES = 1000;
@@ -40,15 +41,6 @@ export function checkSourceFileSizes(context: LintContext): void {
       );
     }
   }
-}
-
-function isPomSourceRoot(root: string): boolean {
-  return [
-    "bootstrap-pom.mjs",
-    "scripts/install-pom.ts",
-    "skills/README.md",
-    "WIKI_METHOD.md",
-  ].every((path) => existsSync(join(root, path)));
 }
 
 function isTrackedSourceCandidate(path: string): boolean {

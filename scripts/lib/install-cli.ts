@@ -2,6 +2,7 @@ import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { detectLanguage as detectCliLanguage, hasArg } from "./cli-args.ts";
 import { isPresetName, isProfileName, presets, profiles, type AdoptionConfig, type OwnershipMode, type PresetName, type ProfileName } from "./install-model.ts";
 
 const ROOT = process.cwd();
@@ -10,36 +11,15 @@ function pathExists(path: string): boolean {
   return existsSync(join(ROOT, path));
 }
 
-function readRawArg(name: string): string | undefined {
-  const exactIndex = process.argv.findIndex((arg) => arg === `--${name}`);
-  if (exactIndex >= 0) {
-    const value = process.argv[exactIndex + 1];
-    return value && !value.startsWith("--") ? value : "";
-  }
-  const inlinePrefix = `--${name}=`;
-  const inline = process.argv.find((arg) => arg.startsWith(inlinePrefix));
-  return inline ? inline.slice(inlinePrefix.length) : undefined;
-}
-
-function normalizeLanguage(value: string): "en" | "it" | undefined {
-  const normalized = value.toLowerCase();
-  if (normalized.startsWith("it")) return "it";
-  if (normalized.startsWith("en")) return "en";
-  return undefined;
-}
-
 function detectLanguage(): "en" | "it" {
-  const arg = readRawArg("lang");
-  if (arg !== undefined) {
-    const normalized = arg ? normalizeLanguage(arg) : undefined;
-    if (!normalized) {
-      throw new Error("Missing or unsupported --lang value. Use en or it.");
-    }
-    return normalized;
-  }
+  return detectCliLanguage((message) => {
+    throw new Error(message);
+  });
+}
 
-  const envLanguage = process.env.POM_LANG || process.env.LC_ALL || process.env.LC_MESSAGES || process.env.LANG || "";
-  return normalizeLanguage(envLanguage) || "en";
+/** True when the installer was asked to skip pulling a Git-managed `pom/`. */
+export function readNoPullArg(): boolean {
+  return hasArg("no-pull");
 }
 
 function printLogo(): void {
