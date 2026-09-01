@@ -1,3 +1,7 @@
+---
+navTitle: Ticket Lifecycle
+---
+
 # Ticket Lifecycle
 
 ## Summary

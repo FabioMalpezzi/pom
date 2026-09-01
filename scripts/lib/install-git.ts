@@ -2,6 +2,38 @@ import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync } from "node:fs";
 import { join } from "node:path";
 
+/**
+ * Brings a Git-managed `pom/` checkout to the latest `main`.
+ *
+ * The sequence is the same one `templates/POM_UPDATE_TEMPLATE.mjs` uses, so
+ * installer and updater agree on what "update pom/" means: switch to `main`
+ * when possible, fast-forward pull, and fall back to a submodule update when
+ * the checkout is a submodule. Returns `true` when `pom/` was updated, `false`
+ * when every strategy failed; the caller decides whether that is fatal.
+ */
+export function updatePomCheckout(pomPath: string, run: (message: string) => void = console.log): boolean {
+  try {
+    execFileSync("git", ["-C", pomPath, "checkout", "main"], { stdio: "pipe" });
+  } catch {
+    // Detached submodules or vendored checkouts may not have a local main branch.
+  }
+
+  try {
+    run("> git -C pom pull origin main --ff-only");
+    execFileSync("git", ["-C", pomPath, "pull", "origin", "main", "--ff-only"], { stdio: "inherit" });
+    return true;
+  } catch {
+    run("Direct pull failed. Trying submodule update...");
+  }
+
+  try {
+    execFileSync("git", ["submodule", "update", "--remote", pomPath], { stdio: "inherit" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function pullPomIfGitRepo(root: string): void {
   const pomPath = join(root, "pom");
   if (!existsSync(join(pomPath, ".git"))) return;
@@ -14,14 +46,7 @@ export function pullPomIfGitRepo(root: string): void {
   }
 
   console.log("Pulling latest POM changes...");
-  try {
-    execFileSync("git", ["-C", pomPath, "checkout", "main"], { stdio: "pipe" });
-  } catch {
-    // may already be on main
-  }
-  try {
-    execFileSync("git", ["-C", pomPath, "pull", "origin", "main", "--ff-only"], { stdio: "inherit" });
-  } catch {
+  if (!updatePomCheckout(pomPath)) {
     console.log("Warning: could not pull pom/. Continuing with existing version.");
   }
 }

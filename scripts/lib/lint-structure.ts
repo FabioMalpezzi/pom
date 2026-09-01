@@ -131,6 +131,7 @@ export function ensureFolderIndex(
   const absolutePath = join(context.root, indexPath);
   mkdirSync(dirname(absolutePath), { recursive: true });
   writeFileSync(absolutePath, lines.join("\n"));
+  console.log(`POM lint: generated missing folder index ${indexPath}.`);
 }
 
 export function isGeneratedGovernanceIndex(context: LintContext, path: string): boolean {

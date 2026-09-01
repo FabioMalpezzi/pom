@@ -50,7 +50,7 @@ Rules:
 
 During the experiment:
 - keep notes, code, data, reports, and references separate;
-- record only necessary evidence;
+- record only necessary evidence: track the run-level summary the experiment cites, keep raw runs and dumps Git-ignored, and keep tracked evidence files under 1 MB (see the Evidence convention in `templates/EXPERIMENT_TEMPLATE.md`);
 - do not promote partial results as project truth;
 - if security/privacy/license risks appear, stop and report them.
 

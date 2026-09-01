@@ -1,11 +1,16 @@
-# ADR-0004 — Dynamic Workflow Control Plane
+# ADR-0004 - Dynamic Workflow Control Plane
 
 | Field | Value |
 |---|---|
 | Date | 2026-05-31 |
 | Status | Accepted |
+| Category | architecture |
 | Area | workflow modeling / dynamic workflows |
-| Supersedes | n/a |
+| Summary | Dynamic Workflows are an additive control-plane extension of SPEC-0006: POM models launch, await, join, timeout, cancel, suspend, resume, and compensation boundaries; the target project owns the data plane that executes concurrent work |
+| Replaces | none |
+| Replaced by | none |
+| Driver | technical constraint |
+| Scope | architecture / workflow modeling |
 
 ## Decision
 
@@ -104,6 +109,11 @@ instead of relying on ignored fields.
 - Fit evidence: `experiments/dynamic-workflows/design/fit.md`
 - Evaluation: `experiments/dynamic-workflows/design/evaluation-dynamic-workflows.md`
 - Spec: `specs/SPEC-0006-workflow-modeling.md`
+
+## Follow-up
+
+- [ ] Add explicit validator rules for the Dynamic Workflow fields that are still contract-only (`fan_out_launch`, `await` with `join`/`k`/`timeout`, `react`, `compensation`), following the handle lifecycle rules E080-E089 already implemented. The candidate design is `specs/SPEC-0008-workflow-control-plane-verification.md` (Draft).
+- [ ] Keep the TypeScript and Python reference executors under `experiments/dynamic-workflows/runtime/` aligned with the contract when validator rules are added; they remain examples, not a POM runtime.
 
 ## Completion Verification
 

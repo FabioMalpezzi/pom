@@ -1,0 +1,125 @@
+{
+  "pomVersion": "0.3.0",
+  "installation": {
+    "pomRoot": ".",
+    "note": "This is the POM Source repository running POM on itself. Templates, scripts, skills, and prompts live at the repository root, not under pom/."
+  },
+  "ownership": {
+    "mode": "owned",
+    "localOnly": false,
+    "preserveExistingConventions": true
+  },
+  "adoption": {
+    "profile": "full",
+    "wiki": "enabled",
+    "decisions": "enabled",
+    "analysis": "disabled",
+    "docs": "optional",
+    "mockups": "disabled",
+    "planning": "light",
+    "tasks": "structured",
+    "tests": "existing"
+  },
+  "root": {
+    "allowedMarkdown": ["README.md", "AGENTS.MD", "CONTEXT.md", "CHANGELOG.md", "PROJECT_STATE.md", "WIKI_METHOD.md"]
+  },
+  "artifactPolicy": {
+    "approvalRequired": [],
+    "generated": ["decisions/DECISIONS_INDEX.md", "wiki/_site/**"],
+    "historical": []
+  },
+  "analysis": {
+    "root": "analysis",
+    "allowedDirs": [],
+    "allowMarkdownAtRoot": false,
+    "indexPath": "analysis/ANALYSIS_INDEX.md"
+  },
+  "templates": {
+    "adr": "templates/ADR_TEMPLATE.md",
+    "currentPlan": "templates/CURRENT_PLAN_TEMPLATE.md",
+    "doc": "templates/DOC_TEMPLATE.md",
+    "experiment": "templates/EXPERIMENT_TEMPLATE.md",
+    "mockManifest": "templates/MOCK_MANIFEST_TEMPLATE.md",
+    "openDiscussion": "templates/OPEN_DISCUSSION_TEMPLATE.md",
+    "reconciliation": "templates/RECONCILIATION_TEMPLATE.md",
+    "taskPlan": "templates/TASK_PLAN_TEMPLATE.md",
+    "wikiIndex": "templates/WIKI_INDEX_TEMPLATE.md",
+    "wikiLog": "templates/WIKI_LOG_TEMPLATE.md",
+    "wikiPage": "templates/WIKI_PAGE_TEMPLATE.md",
+    "workflowRuntimeTypeScript": "templates/WORKFLOW_RUNTIME_TEMPLATE.ts",
+    "workflowRuntimePython": "templates/WORKFLOW_RUNTIME_TEMPLATE.py"
+  },
+  "documentation": {
+    "officialRoot": "docs",
+    "existingRoots": [],
+    "knownRootCandidates": ["docs", "doc"],
+    "preferExistingStructure": true,
+    "requireApprovalBeforeMigratingDocs": true,
+    "severity": "warning"
+  },
+  "source": {
+    "roots": ["scripts"],
+    "knownRootCandidates": ["src", "apps", "packages", "services", "frontend", "backend"],
+    "preferExistingStructure": true,
+    "requireApprovalBeforeMigratingSources": true,
+    "severity": "warning"
+  },
+  "wiki": {
+    "root": "wiki",
+    "baseIndexSections": ["## Overview"],
+    "categorySections": {},
+    "projectIndexSections": [],
+    "logEntryPattern": "^## \\[\\d{4}-\\d{2}-\\d{2}\\] [a-z0-9_-]+ \\| .+",
+    "minPageLength": 120
+  },
+  "decisions": {
+    "root": "decisions",
+    "adrPathPattern": "^decisions/ADR-\\d{4}-.+\\.md$",
+    "datePattern": "\\| Date \\|\\s*\\d{4}-\\d{2}-\\d{2}\\s*\\|",
+    "indexPath": "decisions/DECISIONS_INDEX.md",
+    "categoryField": "Category",
+    "areaField": "Area",
+    "docsPathsRequiringAdr": [],
+    "requireTemplateSections": true
+  },
+  "taskPlans": {
+    "root": "tasks",
+    "taskPathPattern": "^tasks/TASK-\\d{4}-.+\\.md$",
+    "indexPath": "tasks/README.md",
+    "requireTemplateSections": true
+  },
+  "mockups": {
+    "packagesDir": "mockups/packages",
+    "manifestName": "MOCK_MANIFEST.md",
+    "manifestTypePattern": "## Type\\s+[\\s\\S]*?(Complete|Partial)",
+    "manifestDatePattern": "## Date\\s+[\\s\\S]*?\\d{4}-\\d{2}-\\d{2}",
+    "reconciliationSearchDir": "analysis",
+    "reconciliationFilePattern": "mock.*reconciliation.*\\.md$",
+    "skipReconciliationText": "Does not require functional reconciliation"
+  },
+  "tests": {
+    "root": "tests",
+    "areas": [],
+    "recommendedLayout": ["e2e", "integration", "fixtures", "evidence"],
+    "crossSystemDir": "cross-system",
+    "preferExistingStructure": true,
+    "requireApprovalBeforeMigratingExistingTests": true,
+    "severity": "warning"
+  },
+  "handoff": {
+    "projectStatePath": "PROJECT_STATE.md",
+    "severity": "warning",
+    "maxLines": 220,
+    "triggerPaths": [],
+    "forbiddenHeadings": ["## Log", "## Timeline", "## Changelog", "## History"]
+  },
+  "workflows": {
+    "enabled": false,
+    "root": "workflows/",
+    "generatedRoot": "workflows/generated/",
+    "namingConvention": "snake_case",
+    "note": "POM Source ships the workflow tooling but does not model its own workflows. Workflow YAML used by tests lives under tests/workflow-validator/fixtures/."
+  },
+  "skillUsage": {},
+  "promptUsage": {}
+}

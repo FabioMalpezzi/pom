@@ -57,7 +57,9 @@ export function checkWikiDocuments(context: LintContext): void {
       continue;
     }
 
-    const h1Matches = text.match(/^# .+/gm) ?? [];
+    // Count headings outside fenced code, so a `# comment` line in a shell
+    // example is not reported as a second title.
+    const h1Matches = stripMarkdownCode(text).match(/^# .+/gm) ?? [];
     if (h1Matches.length === 0) {
       context.add("error", "wiki-missing-h1", "Each wiki page must have one H1 title.", page);
     } else if (h1Matches.length > 1) {

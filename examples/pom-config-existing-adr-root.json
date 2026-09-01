@@ -1,4 +1,9 @@
 {
+  "ownership": {
+    "mode": "team",
+    "localOnly": false,
+    "preserveExistingConventions": true
+  },
   "adoption": {
     "profile": "adopt",
     "wiki": "enabled",

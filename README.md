@@ -6,7 +6,7 @@ This README is POM's canonical entry point and operating overview. Detailed proc
 
 POM is designed to be reused on new or existing projects. It does not impose a single application structure and does not assume that every project has mockups, source code, tests, or official docs. For existing projects, POM should first map the current structure in `pom.config.json`; migration to canonical folders is a later explicit decision, not a prerequisite.
 
-Version: `0.2.0`
+Version: `0.3.0`
 
 Release notes: see `CHANGELOG.md`.
 
@@ -227,7 +227,7 @@ pi remove git:github.com/FabioMalpezzi/pom       # remove from settings
 
 Once loaded, a natural POM request (for example "adopt POM in this repo" or "defer this work") makes the agent read `skills/using-pom.md`, consult the `skills/README.md` catalog, and follow the selected skill's linked prompt. This is skill-only: it does not run code, call a model, or write to your project; in a repository without POM it stays inert, and it reloads `using-pom` after compaction.
 
-**The Pi package does not replace installing POM in a project.** They are complementary: the Pi package gives the *agent* the POM method (skills) in every Pi session, while the project install below gives the *project* its Operating Memory — `pom.config.json`, the always-loaded POM section in `AGENTS.md` (harness-agnostic, shared with teammates), and the memory folders. Skills read `pom.config.json` to respect disabled modules, so a project you actually govern with POM still needs the bootstrap below. (Until these changes reach the default branch, append `@exp/pom-skill-evolution` to the git source.)
+**The Pi package does not replace installing POM in a project.** They are complementary: the Pi package gives the *agent* the POM method (skills) in every Pi session, while the project install below gives the *project* its Operating Memory — `pom.config.json`, the always-loaded POM section in `AGENTS.md` (harness-agnostic, shared with teammates), and the memory folders. Skills read `pom.config.json` to respect disabled modules, so a project you actually govern with POM still needs the bootstrap below.
 
 ### First install (recommended)
 
@@ -240,7 +240,7 @@ node bootstrap-pom.mjs --preset owned
 
 Do not install POM by running `git clone https://github.com/FabioMalpezzi/pom.git .` in a project root. This repository is the POM Source. The bootstrap is the supported install path because it keeps the reusable method under `pom/` and leaves project-owned files at the target project root.
 
-If your goal is to improve POM itself, clone this repository as its own working repository and do not run the bootstrap. Use the source repository commands such as `npm run pom:lint`, `npm run pom:test`, and `npm run pom:wiki:render`.
+If your goal is to improve POM itself, clone this repository as its own working repository and do not run the bootstrap. Use the source repository commands such as `npm run pom:lint`, `npm run pom:test`, `npm run pom:wiki:render`, `npm run pom:skills:sync` (regenerates the README skill table from `skills/README.md`), and `npm run pom:experiments:clean` (reports Git-ignored experiment evidence and removes it only with `--delete`).
 
 When asking an AI agent to install this method, say `POM - Project Operating Memory from FabioMalpezzi/pom` and ask it to run the bootstrap from the target project root. That wording distinguishes POM from Maven `pom.xml`, Page Object Model, and other common meanings.
 
@@ -356,7 +356,7 @@ git diff
 
 `pom:update` also does not change adoption mode. If called with `--preset`, `--profile`, or `--ownership`, it stops and tells you to use `pom:init` instead. Changing mode is a governance decision, not a framework update.
 
-If `pom/` has local changes, `pom:update` stops and suggests `pom/skills/sync.md` instead of overwriting them. For vendored copies, unrelated parent-project changes outside `pom/` do not block the update.
+If `pom/` has local changes, `pom:update` stops and suggests `pom/skills/sync.md` instead of overwriting them. For vendored copies, unrelated parent-project changes outside `pom/` do not block the update. A vendored `pom/` that Git ignores is refused as well, because an ignored folder always looks clean and local edits could not be detected before it is replaced: track `pom/` or update it by hand.
 
 For agent-driven updates, use the sync skill:
 
@@ -532,6 +532,7 @@ The hook:
 
 - runs `npm run pom:lint`;
 - blocks the commit if lint fails;
+- restages tracked files that lint regenerated (folder indexes, the ADR index, `wiki/_site/`), so the commit carries the regenerated output; untracked or ignored files are never added;
 - if `PROJECT_STATE.md` exists and governed project-memory files are staged, prints a non-blocking reminder to update it when the restart context changed.
 
 The hook does not synthesize or rewrite `PROJECT_STATE.md`: that remains the agent's responsibility, because it requires project understanding. Claude Code can use the optional `pom-post-action-validator` agent when installed; Codex can use `pom/skills/validate.md` for the same read-only audit.
@@ -823,37 +824,42 @@ Lint reads the `documentation` and `source` sections of `pom.config.json`. Exist
 
 POM skills are short operational aliases for the main prompts. They do not replace prompts: they help the agent choose the correct workflow.
 
-| Skill | Prompt |
-|---|---|
-| `using-pom` | bootstrap and route POM-aware work |
-| `help` | skill selection and explanation |
-| `clarify` | clarify ambiguous work |
-| `seed` | bootstrap a new project |
-| `adopt` | adopt POM in an existing project |
-| `pulse` | project state |
-| `guard` | governance and lint |
-| `plan` | task plan |
-| `check` | review/verification |
-| `handoff` | session closeout |
-| `reader-notes` | process Project Reader notes |
-| `diagnose` | focused POM troubleshooting |
-| `root-cause` | Target Project bug and failure investigation |
-| `zero-tech-debt` | scoped end-state refactor |
-| `challenge` | adversarial thesis/antithesis review |
-| `config` | lint configuration |
-| `spike` | temporary experiments |
-| `wiki` | build, query, lightweight lint, and stale wiki maintenance |
-| `extend` | controlled POM extension |
-| `improve` | controlled POM self-improvement loop |
-| `prune` | reduce POM method bloat |
-| `status` | document type and status classification |
-| `defer` | park work without implementation |
-| `sync` | refresh or align POM in a target project |
-| `finish-branch` | finish branch, PR, merge, keep, discard, or cleanup decisions |
-| `reconcile` | resolve source/project memory divergence |
-| `validate` | read-only governance audit |
-| `workflow` | design, validate, diagram, and implement domain workflows, including opt-in Dynamic Workflow control planes |
-| `loop-goal` | model, audit, test, and conclude opt-in agent-shaped loop/goal workflows in Target Projects; YAML FSM schema/validator defines control flow, while TypeScript/Python templates are optional starting points for execution, persistence, timers, retry, tools, and side effects |
+<!-- POM:SKILL-CATALOG:START -->
+Generated from `skills/README.md` by `npm run pom:skills:sync`. Edit the catalog there, not this table.
+
+| Skill | Purpose | Canonical prompt |
+|---|---|---|
+| `using-pom` | bootstrap a POM-aware session and route to the right skill | `prompts/32-using-pom.md` |
+| `help` | choose and explain POM skills | `skills/README.md` |
+| `clarify` | clarify ambiguous work before creating memory or changing method | `prompts/20-clarify-pom-work.md` |
+| `seed` | start POM on a new project | `prompts/01-bootstrap-new-project.md` |
+| `adopt` | adopt POM in an existing project | `prompts/02-adopt-existing-project.md` |
+| `pulse` | create or update `PROJECT_STATE.md` | `prompts/03-create-project-state.md` |
+| `guard` | set governance, lint, and decisions | `prompts/04-create-doc-governance.md` |
+| `plan` | turn specs/ADRs into verifiable tasks | `prompts/05-create-task-plan-from-spec.md` |
+| `check` | verify a phase, workstream, or task | `prompts/06-review-task-phase.md` |
+| `handoff` | close a session by updating memory and status | `prompts/07-update-project-after-work.md` |
+| `reader-notes` | process human Project Reader notes through source-backed edits and outcome recording | `prompts/26-process-reader-notes.md` |
+| `diagnose` | debug failing or confusing POM workflows with a focused feedback loop | `prompts/22-diagnose-pom-problem.md` |
+| `root-cause` | investigate Target Project bugs, test failures, build failures, and unexpected behavior before fixes | `prompts/34-root-cause-debugging.md` |
+| `mcp-interface` | design, audit, reshape, or verify MCP interfaces for agent ergonomics | `prompts/35-mcp-interface.md` |
+| `zero-tech-debt` | reshape a scoped change around the intended product and architecture end state | `prompts/23-zero-tech-debt.md` |
+| `challenge` | run adversarial thesis/antithesis review before accepting or completing non-code work | `prompts/24-challenge-antithesis.md` |
+| `config` | create or update `pom.config.json` | `prompts/08-create-pom-config.md` |
+| `spike` | manage temporary experiments and consolidation | `prompts/09-run-temporary-experiment.md` |
+| `wiki` | build, query, check, or maintain the wiki | `prompts/10-build-wiki.md`, `prompts/11-review-stale-wiki.md`, `prompts/13-query-wiki.md`, `prompts/14-lint-wiki.md` |
+| `extend` | extend POM with config, templates, prompts, skills, or lint | `prompts/12-extend-pom.md` |
+| `improve` | run a controlled self-improvement loop for method/governance changes | `prompts/25-self-improvement-loop.md` |
+| `prune` | simplify, merge, demote, delete, or config-gate POM method bloat | `prompts/21-prune-pom-method.md` |
+| `status` | classify document type and choose the least misleading status | `prompts/15-classify-document-status.md` |
+| `defer` | park important work without implementing it | `prompts/16-defer-work.md` |
+| `sync` | refresh an existing POM installation or align source POM changes with a target project's `pom/` | `prompts/17-sync-pom-framework.md` |
+| `finish-branch` | finish branch, PR, merge, keep, discard, or cleanup decisions | `prompts/33-finish-branch.md` |
+| `reconcile` | classify and resolve a divergence between a source and project memory | `prompts/19-reconcile-memory.md` |
+| `validate` | audit POM governance after significant actions | `prompts/18-post-action-validator.md` |
+| `workflow` | design, validate, diagram, scenarios, and implement domain workflows declared as YAML state models | `prompts/27-workflow-modeling.md` |
+| `loop-goal` | define-criteria, model, audit, scenarios, conclude for opt-in agent loop/goal workflows and experiments in Target Projects (the four-agent cycle); when to use vs `workflow` -> `ADR-0003` | `prompts/28-loop-goal-define-criteria.md`, `prompts/29-loop-goal-audit.md`, `prompts/30-loop-goal-scenarios.md`, `prompts/31-loop-goal-conclude.md` |
+<!-- POM:SKILL-CATALOG:END -->
 
 ### Skill Usage Tracking
 

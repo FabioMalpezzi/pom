@@ -7,8 +7,10 @@ export function checkGitWorkflow(context: LintContext): void {
   const changed = gitChangedFiles(context.root, onError);
   if (changed.size === 0) return;
 
+  const wikiRoot = (context.config.wiki.root || "wiki").replace(/\/$/, "");
+  const wikiLogPath = `${wikiRoot}/log.md`;
   const changedWiki = context.wikiGovernanceEnabled
-    ? [...changed].filter((path) => path.startsWith("wiki/") && path.endsWith(".md"))
+    ? [...changed].filter((path) => path.startsWith(`${wikiRoot}/`) && path.endsWith(".md"))
     : [];
   const officialDocsRoot = context.config.documentation.officialRoot.replace(/\/$/, "");
   const changedDocs = context.docsGovernanceEnabled
@@ -27,12 +29,12 @@ export function checkGitWorkflow(context: LintContext): void {
       )
     : [];
 
-  if (changedWiki.length > 0 && !changed.has("wiki/log.md")) {
+  if (changedWiki.length > 0 && !changed.has(wikiLogPath)) {
     context.add(
       "warning",
       "wiki-log-changed",
-      "There are wiki changes without an update to wiki/log.md.",
-      "wiki/log.md",
+      `There are wiki changes without an update to ${wikiLogPath}.`,
+      wikiLogPath,
     );
   }
 

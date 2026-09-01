@@ -25,11 +25,17 @@ function output(cmd, args) {
   }
 }
 
+// This file is copied to the target root as pom-update.mjs and must run even
+// when pom/ is stale, minimal, or missing, so it keeps its own copies of the
+// argument helpers. Keep them aligned with pom/scripts/lib/cli-args.ts.
 function readArg(name) {
   const index = process.argv.findIndex((arg) => arg === `--${name}`);
-  if (index >= 0 && process.argv[index + 1]) return process.argv[index + 1];
+  if (index >= 0) {
+    const value = process.argv[index + 1];
+    return value && !value.startsWith("--") ? value : "";
+  }
   const inline = process.argv.find((arg) => arg.startsWith(`--${name}=`));
-  if (inline) return inline.split("=").slice(1).join("=");
+  if (inline) return inline.slice(`--${name}=`.length);
   return undefined;
 }
 
@@ -168,6 +174,16 @@ function ensurePomIsCleanVendoredCopy() {
     process.exit(1);
   }
 
+  // An ignored pom/ reports a clean status whatever it contains, so Git cannot
+  // tell local edits from a pristine copy. Refuse rather than delete blindly.
+  if (pomIsIgnoredByGit()) {
+    printSyncSuggestion(
+      "vendored pom/ is ignored by Git (.gitignore or exclude), so local changes cannot be verified before replacing it. Track pom/ or update it manually.",
+      "vendored",
+    );
+    process.exit(1);
+  }
+
   const status = output("git", ["status", "--porcelain", "--", POM_DIR]);
   if (status === undefined) {
     printSyncSuggestion("could not inspect vendored pom/ with Git.", "vendored");
@@ -179,6 +195,15 @@ function ensurePomIsCleanVendoredCopy() {
     console.error(shortStatus.trimEnd());
     printSyncSuggestion("vendored pom/ has local changes.", "vendored");
     process.exit(1);
+  }
+}
+
+function pomIsIgnoredByGit() {
+  try {
+    execFileSync("git", ["check-ignore", "-q", "--", POM_DIR], { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -265,7 +290,8 @@ function updatePom() {
 }
 
 function refreshProject() {
-  run("node", ["--experimental-strip-types", "pom/scripts/install-pom.ts", "--profile", "refresh"]);
+  // pom/ was already updated above; --no-pull stops the installer from pulling again.
+  run("node", ["--experimental-strip-types", "pom/scripts/install-pom.ts", "--profile", "refresh", "--no-pull"]);
 
   if (hasPackageScript("pom:lint")) {
     run("npm", ["run", "pom:lint"]);

@@ -9,8 +9,9 @@ import {
   EXISTING_AGENT_INSTRUCTION_FILES,
   FALLBACK_AGENT_INSTRUCTION_FILE,
 } from "./lib/install-agent-targets.ts";
-import { chooseProfile, customizeAdoption, readOwnershipArg, readPresetArg, readProfileArg } from "./lib/install-cli.ts";
+import { chooseProfile, customizeAdoption, readNoPullArg, readOwnershipArg, readPresetArg, readProfileArg } from "./lib/install-cli.ts";
 import { pullPomIfGitRepo } from "./lib/install-git.ts";
+import { isPomSourceRoot } from "./lib/pom-source.mjs";
 import {
   isOwnershipMode,
   isProfileName,
@@ -122,46 +123,33 @@ function resolvePomSectionTemplate(): string {
   return resolveTemplate("AGENTS_POM_SECTION_TEMPLATE.md");
 }
 
-function resolveLintScript(): string {
-  if (pathExists("pom/scripts/lint-doc-governance.ts")) return "pom/scripts/lint-doc-governance.ts";
-  if (pathExists("scripts/lint-doc-governance.ts")) return "scripts/lint-doc-governance.ts";
-  return "pom/scripts/lint-doc-governance.ts";
+/**
+ * Resolves a POM script path for `package.json`: the installed `pom/` copy
+ * wins, the POM Source layout is the fallback, and the `pom/` form is kept as
+ * the expected value when neither exists yet.
+ */
+function resolvePomScript(relativePath: string): string {
+  const installed = `pom/${relativePath}`;
+  if (pathExists(installed)) return installed;
+  if (pathExists(relativePath)) return relativePath;
+  return installed;
 }
 
-function resolveHelpScript(): string {
-  if (pathExists("pom/scripts/pom-help.ts")) return "pom/scripts/pom-help.ts";
-  if (pathExists("scripts/pom-help.ts")) return "scripts/pom-help.ts";
-  return "pom/scripts/pom-help.ts";
-}
-
-function resolveWikiRenderScript(): string {
-  if (pathExists("pom/scripts/render-wiki.mjs")) return "pom/scripts/render-wiki.mjs";
-  if (pathExists("scripts/render-wiki.mjs")) return "scripts/render-wiki.mjs";
-  return "pom/scripts/render-wiki.mjs";
-}
-
-function resolveProjectReaderScript(): string {
-  if (pathExists("pom/scripts/project-reader/server.mjs")) return "pom/scripts/project-reader/server.mjs";
-  if (pathExists("scripts/project-reader/server.mjs")) return "scripts/project-reader/server.mjs";
-  return "pom/scripts/project-reader/server.mjs";
-}
-
-function resolveWorkflowLintScript(): string {
-  if (pathExists("pom/scripts/lint-workflows.mjs")) return "pom/scripts/lint-workflows.mjs";
-  if (pathExists("scripts/lint-workflows.mjs")) return "scripts/lint-workflows.mjs";
-  return "pom/scripts/lint-workflows.mjs";
-}
-
-function resolveWorkflowMermaidScript(): string {
-  if (pathExists("pom/scripts/to-mermaid.mjs")) return "pom/scripts/to-mermaid.mjs";
-  if (pathExists("scripts/to-mermaid.mjs")) return "scripts/to-mermaid.mjs";
-  return "pom/scripts/to-mermaid.mjs";
-}
-
-function resolveWorkflowXstateScript(): string {
-  if (pathExists("pom/scripts/to-xstate.mjs")) return "pom/scripts/to-xstate.mjs";
-  if (pathExists("scripts/to-xstate.mjs")) return "scripts/to-xstate.mjs";
-  return "pom/scripts/to-xstate.mjs";
+/** The `pom:*` scripts every target project gets, in the order they are documented. */
+function expectedPomScripts(): Record<string, string> {
+  const tsScript = (path: string) => `node --experimental-strip-types ${resolvePomScript(path)}`;
+  const jsScript = (path: string) => `node ${resolvePomScript(path)}`;
+  return {
+    "pom:init": tsScript("scripts/install-pom.ts"),
+    "pom:update": "node pom-update.mjs",
+    "pom:help": tsScript("scripts/pom-help.ts"),
+    "pom:lint": tsScript("scripts/lint-doc-governance.ts"),
+    "pom:reader": jsScript("scripts/project-reader/server.mjs"),
+    "pom:wiki:render": jsScript("scripts/render-wiki.mjs"),
+    "pom:workflow:lint": jsScript("scripts/lint-workflows.mjs"),
+    "pom:workflow:mermaid": jsScript("scripts/to-mermaid.mjs"),
+    "pom:workflow:xstate": jsScript("scripts/to-xstate.mjs"),
+  };
 }
 
 function resolveUpdateScriptTemplate(): string {
@@ -331,29 +319,9 @@ function installPomUpdateScript(): void {
 
 function upsertPackageScripts(): void {
   const packagePath = "package.json";
+  const expectedScripts = expectedPomScripts();
   if (!pathExists(packagePath)) {
-    const lintScript = resolveLintScript();
-    const helpScript = resolveHelpScript();
-    const wikiRenderScript = resolveWikiRenderScript();
-    const projectReaderScript = resolveProjectReaderScript();
-    const workflowLintScript = resolveWorkflowLintScript();
-    const workflowMermaidScript = resolveWorkflowMermaidScript();
-    const workflowXstateScript = resolveWorkflowXstateScript();
-    const content: PackageJson = {
-      private: true,
-      type: "module",
-      scripts: {
-        "pom:init": "node --experimental-strip-types pom/scripts/install-pom.ts",
-        "pom:update": "node pom-update.mjs",
-        "pom:help": `node --experimental-strip-types ${helpScript}`,
-        "pom:lint": `node --experimental-strip-types ${lintScript}`,
-        "pom:reader": `node ${projectReaderScript}`,
-        "pom:wiki:render": `node ${wikiRenderScript}`,
-        "pom:workflow:lint": `node ${workflowLintScript}`,
-        "pom:workflow:mermaid": `node ${workflowMermaidScript}`,
-        "pom:workflow:xstate": `node ${workflowXstateScript}`,
-      },
-    };
+    const content: PackageJson = { private: true, type: "module", scripts: expectedScripts };
     writeText(packagePath, `${JSON.stringify(content, null, 2)}\n`);
     console.log("Created package.json with pom:init, pom:update, pom:help, pom:lint, pom:reader, pom:wiki:render, and pom:workflow:* scripts.");
     return;
@@ -367,29 +335,6 @@ function upsertPackageScripts(): void {
   }
 
   const scripts = { ...(parsed.scripts ?? {}) };
-  const lintScript = resolveLintScript();
-  const helpScript = resolveHelpScript();
-  const wikiRenderScript = resolveWikiRenderScript();
-  const projectReaderScript = resolveProjectReaderScript();
-  const workflowLintScript = resolveWorkflowLintScript();
-  const workflowMermaidScript = resolveWorkflowMermaidScript();
-  const workflowXstateScript = resolveWorkflowXstateScript();
-  const initCommand = pathExists("pom/scripts/install-pom.ts")
-    ? "node --experimental-strip-types pom/scripts/install-pom.ts"
-    : "node --experimental-strip-types scripts/install-pom.ts";
-
-  const expectedScripts: Record<string, string> = {
-    "pom:init": initCommand,
-    "pom:update": "node pom-update.mjs",
-    "pom:help": `node --experimental-strip-types ${helpScript}`,
-    "pom:lint": `node --experimental-strip-types ${lintScript}`,
-    "pom:reader": `node ${projectReaderScript}`,
-    "pom:wiki:render": `node ${wikiRenderScript}`,
-    "pom:workflow:lint": `node ${workflowLintScript}`,
-    "pom:workflow:mermaid": `node ${workflowMermaidScript}`,
-    "pom:workflow:xstate": `node ${workflowXstateScript}`,
-  };
-
   let changed = false;
   for (const [name, expected] of Object.entries(expectedScripts)) {
     if (!scripts[name]) {
@@ -437,6 +382,7 @@ function installPreCommitHook(config: ProjectConfig): void {
   mkdirSync(dirname(hookPath), { recursive: true });
   const current = existsSync(hookPath) ? readFileSync(hookPath, "utf8") : "#!/bin/sh\n";
   const governedPathArgs = governedMemoryPaths(config).map(shellQuote).join(" ");
+  const generatedPathArgs = generatedArtifactPaths(config).map(shellQuote).join(" ");
   const projectStatePath = shellQuote(configuredPath(config, "handoff.projectStatePath", "PROJECT_STATE.md"));
   const hookBlock = `${HOOK_START_MARKER}
 echo "POM pre-commit: running npm run pom:lint"
@@ -445,6 +391,18 @@ pom_lint_status=$?
 if [ "$pom_lint_status" -ne 0 ]; then
   echo "POM pre-commit: pom:lint failed. Fix findings and rerun npm run pom:lint."
   exit "$pom_lint_status"
+fi
+
+# pom:lint may regenerate tracked indexes and the wiki reader. Restage them so
+# the commit carries the regenerated output; untracked or ignored files are
+# never added here.
+pom_regenerated="$(git diff --name-only -- ${generatedPathArgs} 2>/dev/null)"
+if [ -n "$pom_regenerated" ]; then
+  for pom_generated_path in ${generatedPathArgs}; do
+    git add --update -- "$pom_generated_path" 2>/dev/null
+  done
+  echo "POM pre-commit: restaged regenerated POM artifacts:"
+  printf '%s\\n' "$pom_regenerated" | sed 's/^/  /'
 fi
 
 if [ -f ${projectStatePath} ]; then
@@ -492,7 +450,15 @@ function createOrUpdateConfig(adoption: AdoptionConfig, ownership: OwnershipMode
   }
   config.adoption = adoption;
   alignDecisionDefaults(config);
-  writeText(configPath, `${JSON.stringify(config, null, 2)}\n`);
+
+  // Rewrite only when something changed, so a rerun with the same mode does
+  // not touch the file or claim an update it did not make.
+  const next = `${JSON.stringify(config, null, 2)}\n`;
+  if (next === readText(configPath)) {
+    console.log(`${configPath} already has the ${adoption.profile} adoption profile.`);
+    return config;
+  }
+  writeText(configPath, next);
   console.log(`Updated ${configPath} adoption profile to ${adoption.profile}.`);
   return config;
 }
@@ -579,17 +545,44 @@ function configString(config: ProjectConfig, path: string, fallback: string): st
 
 function governedMemoryPaths(config: ProjectConfig): string[] {
   const paths = [
-    "wiki",
+    configuredPath(config, "wiki.root", "wiki"),
     configuredPath(config, "decisions.root", "decisions"),
     configuredPath(config, "documentation.officialRoot", "docs"),
     configuredPath(config, "analysis.root", "analysis"),
     firstPathSegment(configuredPath(config, "mockups.packagesDir", "mockups/packages")),
     configuredPath(config, "taskPlans.root", "tasks"),
     "pom.config.json",
-    "CURRENT_PLAN.md",
+    configuredPath(config, "handoff.currentPlanPath", "CURRENT_PLAN.md"),
     "specs",
   ];
   return [...new Set(paths.filter(Boolean))];
+}
+
+/**
+ * Paths that `pom:lint` may regenerate (folder indexes, the ADR index, the
+ * wiki reader). The pre-commit hook restages tracked files under these paths
+ * after lint, so the commit carries the regenerated output instead of leaving
+ * it as an unstaged change. Glob suffixes such as `wiki/_site/**` collapse to
+ * their directory prefix, which is what a Git pathspec needs.
+ */
+function generatedArtifactPaths(config: ProjectConfig): string[] {
+  const declared = isRecord(config.artifactPolicy) && Array.isArray(config.artifactPolicy.generated)
+    ? config.artifactPolicy.generated.filter((value): value is string => typeof value === "string")
+    : [];
+  const decisionsRoot = configuredPath(config, "decisions.root", "decisions");
+  const analysisRoot = configuredPath(config, "analysis.root", "analysis");
+  const tasksRoot = configuredPath(config, "taskPlans.root", "tasks");
+  const wikiRoot = configuredPath(config, "wiki.root", "wiki");
+  const implied = [
+    configuredPath(config, "decisions.indexPath", defaultDecisionIndexPath(decisionsRoot)),
+    configuredPath(config, "analysis.indexPath", `${analysisRoot}/ANALYSIS_INDEX.md`),
+    configuredPath(config, "taskPlans.indexPath", `${tasksRoot}/README.md`),
+    `${wikiRoot}/_site`,
+  ];
+  const pathspecs = [...declared, ...implied]
+    .map((value) => value.replace(/\\/g, "/").replace(/[*?].*$/, "").replace(/^\/+|\/+$/g, ""))
+    .filter((value) => value && value !== ".");
+  return [...new Set(pathspecs)];
 }
 
 function firstPathSegment(path: string): string {
@@ -724,14 +717,7 @@ function escapeRegex(value: string): string {
 }
 
 function isPomRepositoryRoot(): boolean {
-  return (
-    pathExists("WIKI_METHOD.md") &&
-    pathExists("templates/AGENTS_POM_SECTION_TEMPLATE.md") &&
-    pathExists("prompts") &&
-    pathExists("skills") &&
-    pathExists("scripts/install-pom.ts") &&
-    !pathExists("pom")
-  );
+  return isPomSourceRoot(ROOT) && !pathExists("pom");
 }
 
 async function main(): Promise<void> {
@@ -761,7 +747,9 @@ async function main(): Promise<void> {
 
   ensureGitRepository();
 
-  if (adoption.profile === "refresh") {
+  // pom-update.mjs pulls pom/ itself and passes --no-pull, so the refresh does
+  // not fetch twice.
+  if (adoption.profile === "refresh" && !readNoPullArg()) {
     pullPomIfGitRepo(ROOT);
   }
 

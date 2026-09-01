@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { createGenericSourceContext, hasProjectReaderConfig } from "./generic-adapter.mjs";
 import { createPomSourceContext } from "./pom-adapter.mjs";
+import { isPomSourceRoot } from "../../lib/pom-source.mjs";
 
 export function createSourceContext({ root, profile = "auto" } = {}) {
   const projectRoot = resolve(String(root || "."));
@@ -15,10 +16,5 @@ export function createSourceContext({ root, profile = "auto" } = {}) {
 }
 
 function looksLikePomProject(root) {
-  return existsSync(join(root, "pom.config.json")) || (
-    existsSync(join(root, "WIKI_METHOD.md")) &&
-    existsSync(join(root, "skills")) &&
-    existsSync(join(root, "prompts")) &&
-    existsSync(join(root, "templates"))
-  );
+  return existsSync(join(root, "pom.config.json")) || isPomSourceRoot(root);
 }

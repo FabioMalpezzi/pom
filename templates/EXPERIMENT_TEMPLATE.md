@@ -50,6 +50,13 @@ Describe how the experiment stays separate from stable source and memory.
 - Observed result
 - Links to logs, screenshots, benchmarks, or notes
 
+Evidence convention:
+
+- track only the run-level summary this document cites (a report, a table, a short log excerpt);
+- keep raw runs, transcripts, dumps, and dependencies under `experiments/<topic>/evidence/` ignored by Git and local;
+- keep every tracked evidence file under 1 MB; summarize instead of committing the raw file;
+- in the POM Source repository, `npm run pom:experiments:clean` lists the ignored weight and removes it with `--delete` once the experiment has closed.
+
 ## Risks
 
 | Area | Risk | Mitigation |
