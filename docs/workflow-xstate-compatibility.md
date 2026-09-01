@@ -152,9 +152,9 @@ These are POM's "documentation discipline" markers; XState is a runtime library 
 - **Lossless conversion XState → POM** is *not* achievable in general: any XState machine that uses compound states, parallel regions, entry/exit actions, services, or context cannot be flattened into POM YAML without losing semantics. POM YAML can only represent the flat-FSM subset of XState.
 - **Practical reading**: POM YAML is a tightly scoped specification language for the flat-FSM portion of XState, plus documentation slots XState does not have. A project using XState can keep the POM YAML as the source of authority for the flat-FSM shape, generate the XState config from it on demand, and add XState-only concerns (actions, invoked services, context, hierarchy) directly in the XState code that consumes the generated config.
 
-## PoC: `to-xstate.mjs`
+## Transformer: `scripts/to-xstate.mjs`
 
-`to-xstate.mjs` in this folder is a small transformer (no dependencies beyond the experiment's local `js-yaml`) that turns a POM workflow or pipeline YAML into an XState v5 input MachineConfig JSON, preserving POM-specific metadata under `meta`. It does **not** call `createMachine()`; runtime validation against XState is left as a follow-up (would require installing `xstate` as a dependency).
+`scripts/to-xstate.mjs` (`npm run pom:workflow:xstate`, loaded through the guarded `js-yaml` dependency) is a small transformer that turns a POM workflow or pipeline YAML into an XState v5 input MachineConfig JSON, preserving POM-specific metadata under `meta`. It does **not** call `createMachine()`; runtime validation against XState is left as a follow-up (would require installing `xstate` as a dependency).
 
 Round-2 coverage (added after the synchronous composition primitives landed):
 
@@ -180,8 +180,8 @@ The JSON output of the transformer is in the **MachineConfig** shape that the St
 
 1. Run the transformer on a POM YAML:
    ```bash
-   node xstate-compat/to-xstate.mjs examples/loan-application/loan-application.yaml \
-     --out /tmp/loan-application.xstate.json
+   npm run pom:workflow:xstate -- workflows/loan-application.yaml \
+     --out workflows/generated/loan-application.xstate.json
    ```
 2. Open `stately.ai`, sign in, create a new machine, choose "Import" → JSON, paste the file content.
 3. The editor renders the machine with all states, transitions, `invoke` blocks, `onDone` branches, and guards as XState v5 normally would. The synthetic `__invoking_*` and `__member_*` states are explicit and labeled with the synthetic flag in their `meta`.
