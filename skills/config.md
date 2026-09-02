@@ -99,6 +99,17 @@ Then complete activation:
 `POM_CONFIG_TEMPLATE.json` ships this section with `enabled: false`, so
 new projects have the shape available without reading SPEC-0006 first.
 
+`loopGoal.evaluationRoots` (default `["experiments"]`) lists the directories
+`pom:lint` scans for loop/goal evaluations: Markdown files whose frontmatter
+declares `type: loop-goal-evaluation`, `evaluator`, `independent_context`,
+`criteria_path`, and `criteria_commit` (full SHA). The check runs only when
+both `workflows.enabled` and `workflows.loopGoal.enabled` are true and reports
+a malformed frontmatter or missing criteria file
+(`loop-goal-evaluation-frontmatter`), a commit that does not exist or never
+changed the criteria (`loop-goal-criteria-commit`), criteria changed after the
+freeze (`loop-goal-criteria-drift`), and an evaluator that shared the
+producer's context (`loop-goal-evaluation-dependent`, a warning).
+
 ## Template Localization
 
 Use project-owned templates when the project needs documents in a language other than English or a different local document shape.

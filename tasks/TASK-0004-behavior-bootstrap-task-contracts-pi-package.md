@@ -2,7 +2,7 @@
 
 ## Status
 
-In progress
+Complete with exceptions
 
 ## Origin
 
@@ -66,7 +66,7 @@ The work is organized in phases; each phase section below lists its tasks, gates
 - [x] Phase P2A - Measured `using-pom` bootstrap reduction (promoted)
 - [x] Phase P2B - Task Plans with global constraints and contracts (closed, not promoted)
 - [x] Phase P3 - Pi package (skill-only promotion; extension rejected)
-- [ ] Phase P4 - Promotion, cross-checks, and release (promotion, deterministic verification, and release shipped in 0.3.0; the five-repetition Pi acceptance and the durable `pi install`/removal check are still open)
+- [x] Phase P4 - Promotion, cross-checks, and release (promotion, deterministic verification, and release shipped in 0.3.0; the five-repetition Pi acceptance and the durable `pi install`/removal check ran on 2026-09-02, see Outcome)
 
 A phase is checked here when its gate was decided, whether the candidate was promoted or rejected; the Outcome section records the decision and the remaining follow-ups.
 
@@ -471,7 +471,7 @@ Expected results:
 - [x] Update `README.md` and Pi installation guidance from tested commands (`README.md`, "Pi" install section with `pi install` and `pi -e`).
 - [x] Update `PROJECT_STATE.md` with the promoted boundaries and remaining harness gaps.
 - [x] Recalculate bootstrap checksum if bootstrap installation artifacts change (not needed for this task: `bootstrap-pom.mjs` was unchanged; the 0.3.1 checksum refresh belongs to a separate fix).
-- [ ] Decide the next POM version and create a release only after package install from the release candidate has been tested (0.3.0 was released; the durable `pi install`/removal check from the release candidate was not run — only the temporary `-e` load was verified).
+- [x] Decide the next POM version and create a release only after package install from the release candidate has been tested (0.3.0 was released; on 2026-09-02 `pi install <repo> -l --approve` wrote the package into the project `.pi/settings.json` of a scratch project and `pi remove <repo> -l --approve` left `packages: []`; the global `git:github.com/FabioMalpezzi/pom@main` package is listed by `pi list`).
 - [ ] Use `skills/sync.md` separately for Target Projects that need the new POM version.
 
 ## Verification
@@ -484,7 +484,7 @@ A task cannot be marked Complete without passing the completion verification gat
 - [ ] P1 proves the evaluator catches a planted violation before it judges candidates.
 - [ ] P2A and P2B do not alter canonical method files before evidence and approval.
 - [ ] P3 consumes the accepted bootstrap contract rather than creating a divergent Pi-only router.
-- [ ] P4 reads frozen evidence and reports gaps instead of inferring completion.
+- [x] P4 reads frozen evidence and reports gaps instead of inferring completion.
 
 ### Step 0 - Goal-backward check
 
@@ -576,7 +576,11 @@ P2A, P2B, and P3 are all closed (2026-07-15):
 
 Remaining follow-ups: the `transcriptExcludes` negation-aware hardening landed in the evaluator but the frozen P1 baseline number predates it (re-baseline optional); broaden the Fix-E deferred-record detection; five-repetition Pi acceptance and a durable `pi install`/removal check were deferred (temporary `-e` load verified). No promotion bundled unrelated Project Reader work.
 
-P4 is partly done: the promotions, `npm run pom:test` and `npm run pom:lint`, the changelog, README, and Project State updates, and the 0.3.0 release shipped. The task stays In progress until the five-repetition Pi acceptance and the durable install/removal check run, or until it is closed as Complete with exceptions naming them; that choice is recorded in `PROJECT_STATE.md` Next Actions.
+P4 is done with one named exception. The five-repetition Pi acceptance ran on 2026-09-02 (Pi 0.84.4, suite `core`, variant `canonical`, 50 sessions; run-level report in `experiments/pom-skill-behavior-evals/evidence/2026-09-02-p4-acceptance/report.json`): overall pass rate 0.96, critical 0.978, no skipped or indeterminate sessions, the same critical rate as the frozen 2026-07-14 baseline with a better overall rate (0.88 then). The durable install/removal check ran in a scratch project: `pi install <repo> -l --approve` recorded the package in the project `.pi/settings.json`, `pi remove <repo> -l --approve` emptied it, and `pi list` shows the global git package. Note that `pi list` does not print project-local packages, so the settings file is the evidence for the local scope.
+
+### Exception
+
+Exception reason: the P4.3 expectation "critical behavioral scenarios pass in every repetition" was not met literally. One of the 45 critical outcomes failed: `root-cause-before-fix-en`, repetition 1, where the agent gathered failure evidence before loading the selected skill card (an ordering violation, not a wrong route). The frozen baseline accepted the same 0.978 critical rate with a different flaky scenario, so the result is parity, not regression; the exception is recorded rather than the threshold relaxed after seeing the result.
 
 ## Done Criteria
 

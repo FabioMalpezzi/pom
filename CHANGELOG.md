@@ -2,6 +2,24 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## 0.5.0 - 2026-09-02
+
+### Added
+
+- **One experiment contract** (`templates/EXPERIMENT_TEMPLATE.md`, `prompts/09-run-temporary-experiment.md`, `skills/spike.md`, `skills/loop-goal.md`, `prompts/28-31`): the experiment template gains `## Budget And Stop Rule` for every experiment and an optional `## Criteria` section (system under test, observation boundary, gates, signals, the four exits, budget, decision owner and date, `status: proposed | accepted` with the freeze-before-evidence rule). Loop/goal work uses that section as its criteria contract; a standalone `criteria.md` remains only as a frozen copy when `workflows.loopGoal.criteriaPath` is configured. One outcome vocabulary everywhere: technical verdict `confirmed | refuted | inconclusive`, promotion decision `adopt | refine | reject`.
+- **Evaluation frontmatter and its lint** (`prompts/31-loop-goal-conclude.md`, `scripts/lib/lint-loop-goal.ts`, `workflows.loopGoal.evaluationRoots`): every loop/goal evaluation declares `type`, `evaluator`, `independent_context`, `criteria_path`, and `criteria_commit`; when loop/goal is enabled, `pom:lint` verifies the frontmatter, that the commit exists and froze the criteria file, that the criteria did not change afterwards (`loop-goal-criteria-drift`), and warns when the evaluator shared the producer's context. 38 assertions in `tests/doc-governance/`.
+- **`loop_guard` and `timeout` in the workflow template** (`templates/WORKFLOW_TEMPLATE.yaml`): a bounded revision state with a named exhaustion exit and a sign-off state with a timeout, both integrated in the flow and validating at zero errors and zero warnings.
+- **Worked criteria and evaluation examples** (`templates/examples/workflow/loop-goal/EXAMPLE_CRITERIA.md`, `EXAMPLE_EVALUATION.md`) in English, with a real `criteria_commit`.
+- **Glossary entries** (`CONTEXT.md`): Coordinator, Experiment Criteria Contract, Technical Verdict, Promotion Decision, and the five things called "loop" with the term to use for each.
+
+### Changed
+
+- **`loop-goal` has four modes** (`skills/loop-goal.md`): `define-criteria`, `audit`, `criteria-scenarios`, `conclude`; modeling and implementation guidance go through `skills/workflow.md` instead of two alias modes; `scenarios` was renamed to avoid the clash with the workflow skill.
+- **Tutorial corrected** (`wiki/loop-goal-workflow-tutorial.md`): the budget table no longer proposes `loop_guard` limits as the experiment budget, and trend wording matches the criteria prompt.
+- **Generic ignore rule for raw evidence** (`.gitignore`): `experiments/*/evidence/*/*/` replaces three per-experiment rules; tracked summaries are unaffected.
+- **TASK-0004 closed as Complete with exceptions**: the five-repetition Pi acceptance ran (50 sessions, overall 0.96, critical 0.978, parity with the frozen baseline) and the durable install/removal check passed; the one exception is a single ordering miss in a critical scenario, recorded instead of relaxing the threshold.
+- Experiment folders promoted under `tests/` in 0.4.0 are removed from `experiments/`, which now point at the copies.
+
 ## 0.4.0 - 2026-09-02
 
 ### Added

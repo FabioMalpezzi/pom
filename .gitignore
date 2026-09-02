@@ -11,8 +11,9 @@ node_modules/
 .env.local
 .env.*.local
 
-# Local Claude Code permission settings are per machine, not project memory
+# Local Claude Code permission settings and agent worktrees are per machine, not project memory
 .claude/settings.local.json
+.claude/worktrees/
 
 # Experiment evidence: only the run-level summaries an experiment cites are tracked
 # (see the Evidence convention in templates/EXPERIMENT_TEMPLATE.md).

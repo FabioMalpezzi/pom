@@ -2,6 +2,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-09-02] update | POM 0.5.0
+
+Bumped the index to POM v0.5.0: one experiment contract shared by `spike` and `loop-goal`, four loop-goal modes, evaluation frontmatter verified by lint, `loop_guard` and `timeout` shown in the workflow template. Details in `CHANGELOG.md`.
+
+Sources used: `CHANGELOG.md`, `skills/loop-goal.md`, `templates/EXPERIMENT_TEMPLATE.md`.
+
 ## [2026-09-02] update | POM 0.4.0: installation guides, specs status, reading path
 
 `docs/installation.md` and `docs/project-reader.md` are now the installation and reader authority; `wiki/adoption-and-installation.md` points at them and its agent install prompt names the guide instead of the README. `wiki/current-specs.md` records SPEC-0004, SPEC-0005, and SPEC-0008 as Deferred and ADR-0001 as superseded by ADR-0005 (file-based Project Reader instead of a persistent agent session). The routing table lives only in `skills/README.md`; `prompts/32-using-pom.md` keeps the key routes.
