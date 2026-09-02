@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete with exceptions
+Complete
 
 ## Origin
 
@@ -69,17 +69,13 @@ A task cannot be marked Complete without passing the completion verification gat
 
 - [x] Positive case: `tests/completion-verification/integration/test-lint-completion-verification.mjs`, Scenario 5 "localized templates and configured indexes work": a task plan under `tasks/area/P0/` checked against a localized task template with `requireTemplateSections: true` produces no `task-required-section` finding and is linked from the configured `tasks/TASKS_INDEX.md`.
 - [x] Positive case: `tests/spec-0001/integration/test-modular-assembly.mjs`, Scenario 6 "docs lint skips specialized governance roots under docs/": `taskPlans.root` set to `docs/tasks` with its own index path lints with exit code zero.
-- [ ] Error/misuse case: no committed test asserts the `task-status` warning or the `task-required-section` error. See Exception.
-- [x] Tests run and pass: `node scripts/run-tests.mjs` (both files above report 0 failed).
+- [x] Error/misuse case: `tests/doc-governance/integration/test-lint-rules.mjs`, scenario "task plans (lint-tasks.ts)": a task plan without a Status section and one with a placeholder status both produce the `task-status` warning, and a task plan missing a template section with `requireTemplateSections: true` produces the `task-required-section` error.
+- [x] Tests run and pass: `node scripts/run-tests.mjs` (the three files above report 0 failed).
 
 ### Cross-cutting checks
 
-- [x] `npm run pom:lint` on this repository, with `taskPlans.requireTemplateSections: true`, reports `task-required-section` for a task plan missing a template section; that is the misuse path observed manually.
+- [x] `npm run pom:lint` on this repository, with `taskPlans.requireTemplateSections: true`, reports `task-required-section` for a task plan missing a template section; the same path is now asserted by the committed test above.
 - [x] No security or privacy surface: the change reads repository-local Markdown and JSON only.
-
-### Exception
-
-Exception reason: the error/misuse scenario tests for `task-status` and `task-required-section` are not committed in `tests/`; the misuse path was verified only by running the lint on this repository. Remove this exception and close as Complete once an integration test under `tests/` asserts both findings.
 
 ## Test Structure
 

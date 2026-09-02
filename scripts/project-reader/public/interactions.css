@@ -205,6 +205,24 @@
     border: 0;
   }
 
+  /* Collapsed navigation becomes a compact full-width top bar instead of a
+     64px column that leaves the rest of the row empty. */
+  .app-shell.sidebar-floating:not(.sidebar-hovered) .sidebar {
+    width: 100%;
+    /* Keep the pin clear of the fixed annotation strip on the right. */
+    padding: 8px calc(12px + var(--agent-collapsed-width)) 8px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .app-shell.sidebar-floating:not(.sidebar-hovered) .sidebar .brand {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 0;
+    padding: 0;
+  }
+
   .agent-panel {
     position: fixed;
     width: min(100vw, 380px);

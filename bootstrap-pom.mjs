@@ -217,7 +217,14 @@ function main() {
     }
   } else {
     console.log(`Cloning POM from ${repo}...`);
-    run("git", ["clone", repo, POM_DIR]);
+    // Ask for main explicitly: a local or forked source may have another branch
+    // checked out, and pom/ must start from the same line pom:update follows.
+    try {
+      run("git", ["clone", "--branch", "main", repo, POM_DIR]);
+    } catch {
+      console.log("Branch main not found in the source; cloning its default branch instead.");
+      run("git", ["clone", repo, POM_DIR]);
+    }
   }
 
   const installScript = `${POM_DIR}/scripts/install-pom.ts`;

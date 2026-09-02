@@ -44,7 +44,8 @@ _Current operational state. Update at every significant session or when prioriti
 
 ### Current State
 
-POM 0.3.0 closes the September 2026 self-audit. The repository now runs its own
+POM 0.3.1 (bootstrap clones `main`, reader top bar at narrow widths, TASK-0001
+Complete) follows POM 0.3.0, which closes the September 2026 self-audit. The repository now runs its own
 governance lint through a root `pom.config.json` (decisions, wiki, and structured
 tasks enabled) and passes it with zero errors; the previously stubbed
 `scripts/to-xstate.mjs` is restored and tested; the pre-commit hook restages the
@@ -151,9 +152,9 @@ Continue maintaining the promoted lean bootstrap and skill-only Pi package from 
 ### Next Actions
 
 - [x] **Skill catalog review**: `guard` merged into `config`, `help` removed, `extend`/`improve`/`prune` became modes of `method`, `check`/`validate` boundary written into both cards, `release` and `migrate` added (28 skills, see `skills/README.md`).
-- [ ] **Remaining lint warnings**: `tests-root-file` no longer applies after moving the runner; `completion-verification-exception` on TASK-0001 stays until a committed test covers the task-plan error case.
+- [x] **Remaining lint warnings**: none; TASK-0001 is Complete since `tests/doc-governance/integration/test-lint-rules.mjs` covers its error case (0.3.1).
 - [x] **Lint fixture coverage**: every core validator rule (E000-E017, W001-W004, E050-E058) has a committed broken fixture in `tests/workflow-validator/fixtures/core.*`; SPEC-0006 records the coverage as implemented.
-- [ ] **Project Reader narrow layout**: at widths around 400 px the three panels overlap (observed during the 0.3.0 runtime verification); functional behavior was correct.
+- [x] **Project Reader narrow layout**: the overlap was a paused-pane artifact (no animation frames in an unfocused cmux pane); the collapsed navigation below 760 px is now a compact full-width top bar, verified at 400, 800, and 1400 px (0.3.1).
 - [x] **Close fan-in accounting experiment**: within the five-attempt limit, minimally promoted the supported procedure to `prompts/27-workflow-modeling.md`. The final frozen 8-fixture sample had four lexical matcher false negatives but no critical semantic violation on direct inspection; the hierarchical response used bounded groups and final summary reconciliation. `skills/workflow.md`, canonical schema/validator, implementation guide, and `SPEC-0008` remain unchanged.
 - [ ] **Behavioral evaluation follow-ups**: optionally re-freeze the baseline after negation-aware `transcriptExcludes` hardening, broaden deferred-record detection, run five-repetition Pi acceptance, and verify durable `pi install`/removal. P0–P3 are closed; these follow-ups do not reopen the rejected Task Plan contract or active extension.
 - [x] **Lato workflow — promuovere il contratto Dynamic Workflow** (priorità 3b): dottrina control-plane/data-plane registrata in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; SPEC-0006 aggiornato con `fan_out_launch`/`await`/`join`/`timeout`/`react`/`compensation`. Il contratto è dentro il workflow come control plane; l'esecuzione concorrente reale resta nel data plane del target. La copertura validator completa può crescere a partire dalle regole handle lifecycle E080-E089.

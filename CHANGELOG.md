@@ -2,6 +2,17 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## 0.3.1 - 2026-09-02
+
+### Fixed
+
+- **Bootstrap clones `main` explicitly** (`bootstrap-pom.mjs`, `checksums/bootstrap-pom.mjs.sha256`): a local or forked `--repo` source with another branch checked out used to give `pom/` that branch instead of the line `pom:update` follows. The clone now asks for `main` and falls back to the source's default branch with a printed note when `main` does not exist. The published checksum was regenerated for the new file.
+- **Project Reader navigation at narrow widths** (`scripts/project-reader/public/interactions.css`): below 760 px the collapsed navigation was a 64 px column, 109 px tall, leaving the rest of its row empty; it is now a compact full-width top bar (55 px) with the pin kept clear of the fixed annotation strip. Verified with viewport emulation at 400, 800, and 1400 px. The panel overlap reported during the 0.3.0 verification turned out to be a paused pane: an unfocused cmux browser pane runs no animation frames, so the 240 ms width transitions of both side panels froze mid-way; with the pane focused the previous layout was already correct.
+
+### Changed
+
+- **TASK-0001 closed as Complete** (`tasks/TASK-0001-lint-taskplans-mapping.md`): the error case it lacked, `task-status` warnings and the `task-required-section` error, is asserted by `tests/doc-governance/integration/test-lint-rules.mjs`, so the exception recorded in 0.3.0 is removed and `pom:lint` on this repository reports no warnings.
+
 ## 0.3.0 - 2026-09-02
 
 ### Added
