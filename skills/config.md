@@ -45,7 +45,7 @@ When configuring analysis, task plans, and tests, fill these fields when applica
 
 - `analysis.root`, `analysis.recommendedPath`, `analysis.namespaceConvention`;
 - `taskPlans.root`, `taskPlans.taskPathPattern`, `taskPlans.recommendedPath`, `taskPlans.namespaceConvention`, `taskPlans.indexPath`;
-- `tests.root`, `tests.recommendedPath`, `tests.namespaceConvention`, `tests.recommendedLayout`, `tests.crossSystemDir`.
+- `tests.root`, `tests.recommendedPath`, `tests.namespaceConvention`, `tests.recommendedLayout`, `tests.crossSystemDir`, `tests.supportDir` (shared test helpers such as a harness; default `lib`).
 
 Default namespace guidance for new POM-owned material:
 

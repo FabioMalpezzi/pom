@@ -1,6 +1,6 @@
 # POM Agent Harness Reference
 
-Use this reference when installing, testing, or debugging POM integration with a coding-agent harness. The goal is to make the agent load `using-pom` early enough to route work before changing files.
+Use this reference when installing, testing, or debugging POM integration with a coding-agent harness. The goal is to make the agent load `using-pom` early enough to route work before changing files. This file is the only home of the session-start contract and the tool mapping; the installed POM section, `skills/using-pom.md`, and `prompts/32-using-pom.md` point here instead of repeating them.
 
 ## Integration Contract
 
@@ -37,7 +37,7 @@ If a harness lacks one of these tools, use the closest available primitive and s
 
 ## Session-Start Smoke
 
-Run these in a clean session for each harness being claimed as supported:
+Run these in a clean session for each harness being claimed as supported. Behavioral smoke prompts for future harness evals live in `tests/skill-bootstrap/fixtures/routing-smoke.json` in the POM Source repository: English and Italian prompts for `adopt`, `wiki`, `pulse`, `validate`, `plan`, `spike`, `sync`, `finish-branch`, `root-cause`, `mcp-interface`, and disabled-module negative cases.
 
 ```text
 Read pom/skills/using-pom.md and route this request before acting. Adopt POM in this existing repository without moving current files.

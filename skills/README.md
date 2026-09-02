@@ -6,48 +6,19 @@ disable-model-invocation: true
 
 # POM Skills
 
-POM skills are short operational cards derived from prompts in `prompts/`.
+POM skills are short operational cards derived from prompts in `prompts/`. They give the main workflows short names and point to the canonical prompt and relevant templates; they do not replace prompts.
 
-Purpose:
+Each card carries a YAML frontmatter block with `name` and `description`. The POM Source is a skill-only Pi package (`pi.skills` in `package.json` registers this folder), and other harnesses with skill discovery read the same fields. In every harness the description is only a trigger: read the card and its linked prompt before acting.
 
-- make the main workflows recognizable with short names;
-- help the agent choose the correct prompt;
-- prepare for a future conversion into runtime skills without losing project transparency.
-
-Skills do not replace prompts. Each skill points to the canonical prompt and relevant templates.
-
-Each skill file includes a YAML frontmatter block with `name` and `description` fields. Agents that support skill discovery can use this to invoke skills automatically when the user's request matches the description. Agents that do not support frontmatter continue to read the `## When To Use` section as before.
-
-`using-pom` is the bootstrap/router skill. It uses this file as the catalog and `prompts/references/agent-harnesses.md` for session-start behavior, instruction targets, and tool mapping when POM is integrated with Codex, Claude Code, Gemini CLI, Cursor, OpenCode, GitHub Copilot, or another harness.
+`using-pom` is the bootstrap/router skill. It routes from this catalog. Harness integration (session-start contract, instruction targets, tool mapping, smoke prompts) lives in `prompts/references/agent-harnesses.md`.
 
 ## Configuration
 
-Before applying a skill, read `pom.config.json` when present.
+The rule "read `pom.config.json` before applying POM conventions or touching governed artifacts" is stated once, in the installed POM section (`templates/agents/00-core.md`, Adoption Profile). This catalog only adds what routing needs from the config:
 
-The config defines project-specific conventions, including:
-
-- repository ownership and operating posture (`ownership`);
-- Decision Record roots and patterns (`decisions`);
-- documentation roots (`documentation`);
-- source roots (`source`);
-- analysis roots, recommended paths, and namespace conventions (`analysis`);
-- task-plan roots, patterns, recommended paths, and namespace conventions (`taskPlans`);
-- test structure, recommended paths, and namespace conventions (`tests`);
-- opt-in workflow modeling, opt-in Dynamic Workflow control-plane modeling, and opt-in loop/goal modeling (`workflows`);
-- wiki taxonomies;
-- mockup package roots and reconciliation search;
-- warning severity;
-- handoff rules for `PROJECT_STATE.md`.
-
-For existing projects, prefer mapping current folders and file patterns in config before proposing a migration to POM's canonical examples.
-
-If `ownership.mode` is missing or `unknown`, clarify it before making structural assumptions:
-
-- `owned`: POM may become part of project governance.
-- `team`: POM should preserve existing conventions unless the user approves changes.
-- `external_overlay`: POM is local understanding memory only and must not govern upstream docs, tests, source layout, release process, or PR contents.
-
-If a skill proposes a convention that differs from `pom.config.json`, ask for confirmation before proceeding and update the config if approved.
+- `ownership.mode` decides posture: `owned` (POM may become project governance), `team` (preserve existing conventions unless the user approves changes), `external_overlay` (local understanding memory only; never govern upstream docs, tests, source layout, release process, or PR contents). If it is missing or `unknown`, clarify it before making structural assumptions.
+- Roots, patterns, taxonomies, template overrides, severities, and handoff rules live in the config; the `config` skill and `prompts/08-create-pom-config.md` document the fields. For existing projects, map current folders in config first; migration is a later explicit decision.
+- If a skill proposes a convention that differs from `pom.config.json`, ask for confirmation before proceeding and update the config if approved.
 
 For new POM-owned analysis/task/test material, the portable default is:
 
@@ -57,9 +28,9 @@ tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md
 tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}
 ```
 
-Existing project structures should be mapped first, not moved by default.
-
 ## Available Skills
+
+The `Use` column is the routing signal: match the request against it, then read the card and its prompt. This is the only complete routing table; the installed POM section and `prompts/32-using-pom.md` carry the key routes only.
 
 | Skill | Use | Prompt |
 |---|---|---|
@@ -67,7 +38,7 @@ Existing project structures should be mapped first, not moved by default.
 | `clarify` | clarify ambiguous work before creating memory or changing method | `prompts/20-clarify-pom-work.md` |
 | `seed` | start POM on a new project | `prompts/01-bootstrap-new-project.md` |
 | `adopt` | adopt POM in an existing project | `prompts/02-adopt-existing-project.md` |
-| `pulse` | create or update `PROJECT_STATE.md` | `prompts/03-create-project-state.md` |
+| `pulse` | create or update `PROJECT_STATE.md`; resume after a pause, a restart-context change, or a changed current state | `prompts/03-create-project-state.md` |
 | `plan` | turn specs/ADRs into verifiable tasks | `prompts/05-create-task-plan-from-spec.md` |
 | `check` | verify that completed work is really done: goal achieved, tests, lint, consistency, risks | `prompts/06-review-task-phase.md` |
 | `handoff` | close a session by updating memory and status | `prompts/07-update-project-after-work.md` |
@@ -77,13 +48,13 @@ Existing project structures should be mapped first, not moved by default.
 | `mcp-interface` | design, audit, reshape, or verify MCP interfaces for agent ergonomics | `prompts/35-mcp-interface.md` |
 | `zero-tech-debt` | reshape a scoped change around the intended product and architecture end state | `prompts/23-zero-tech-debt.md` |
 | `challenge` | run adversarial thesis/antithesis review before accepting or completing non-code work | `prompts/24-challenge-antithesis.md` |
-| `config` | create or update `pom.config.json`; set or revise governance, lint, decision records, mock manifests, and agent rules | `prompts/08-create-pom-config.md`, `prompts/04-create-doc-governance.md` |
-| `spike` | manage temporary experiments and consolidation | `prompts/09-run-temporary-experiment.md` |
+| `config` | create or update `pom.config.json`; set or revise governance, lint, decision records, mock manifests, and agent rules beyond the installer | `prompts/08-create-pom-config.md`, `prompts/04-create-doc-governance.md` |
+| `spike` | manage temporary experiments and consolidation, including the Git branch/worktree choice for risky or exploratory work | `prompts/09-run-temporary-experiment.md` |
 | `wiki` | build, query, check, or maintain the wiki | `prompts/10-build-wiki.md`, `prompts/11-review-stale-wiki.md`, `prompts/13-query-wiki.md`, `prompts/14-lint-wiki.md` |
-| `method` | change POM itself in `extend`, `improve`, or `prune` mode | `prompts/12-extend-pom.md`, `prompts/25-self-improvement-loop.md`, `prompts/21-prune-pom-method.md` |
+| `method` | change POM itself in `extend`, `improve`, or `prune` mode; start in `prune` when the change may add method weight | `prompts/12-extend-pom.md`, `prompts/25-self-improvement-loop.md`, `prompts/21-prune-pom-method.md` |
 | `status` | classify document type and choose the least misleading status | `prompts/15-classify-document-status.md` |
 | `defer` | park important work without implementing it | `prompts/16-defer-work.md` |
-| `sync` | refresh an existing POM installation or align source POM changes with a target project's `pom/` | `prompts/17-sync-pom-framework.md` |
+| `sync` | refresh an existing POM installation or align source POM changes with a target project's `pom/`; also for a dirty `pom/`, a submodule update, or a vendored copy | `prompts/17-sync-pom-framework.md` |
 | `finish-branch` | finish branch, PR, merge, keep, discard, or cleanup decisions | `prompts/33-finish-branch.md` |
 | `release` | close a numbered version: changelog, version references, checksums, tag, memory updates | `prompts/36-release.md` |
 | `migrate` | move an adopted project's folders toward canonical roots with approval and lint before and after | `prompts/37-migrate-structure.md` |
@@ -97,6 +68,8 @@ Existing project structures should be mapped first, not moved by default.
 Since 0.3.0: `guard` is part of `config` (governance setup beyond the installer); `help` is gone, because `using-pom` routes from this catalog; `extend`, `improve`, and `prune` are the three modes of `method`. Requests that name the old skills route to these.
 
 ## Rule
+
+"What POM skill should I use?" is answered from the table above by `using-pom`; there is no separate skill for it.
 
 When a request matches a skill, the agent must read the skill card and then the linked canonical prompt.
 

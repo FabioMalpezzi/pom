@@ -6,13 +6,12 @@ Before the first POM-related action in a session, after compaction, or whenever 
 
 Ordering that keeps routing safe:
 
-- read `pom.config.json` before creating, moving, or judging governed artifacts, and before editing project sources;
+- the `pom.config.json` read required by Adoption Profile above comes first;
 - load the selected skill (read its card, then its linked prompt) before gathering evidence, editing, or claiming completion;
-- treat YAML frontmatter descriptions as triggers only, never as the procedure;
 - state which POM skill is being used and why;
 - for harness session-start behavior or tool mapping, read `pom/prompts/references/agent-harnesses.md`.
 
-Key routes (read the skill card before acting; see `README.md` for the full catalog):
+Key routes (read the skill card before acting; the full catalog with routing signals is `pom/skills/README.md`):
 
 | Situation | Skill |
 |---|---|
@@ -21,8 +20,11 @@ Key routes (read the skill card before acting; see `README.md` for the full cata
 | Target Project bug, test/build failure, or unexpected behavior | `root-cause` |
 | Design, audit, reshape, or verify an MCP server interface | `mcp-interface` |
 | Park or postpone work without implementing | `defer` |
+| Spec, ADR, or analysis must become verifiable work | `plan` |
 | Verify a completed phase, task, spec, or ADR | `check` |
+| Read-only governance audit after a significant POM action | `validate` |
 | Wiki build, query, or maintenance | `wiki` |
 | Restart, handoff, or current-state memory | `pulse` or `handoff` |
 | Temporary experiment or risky Git worktree/branch | `spike` |
+| Installed POM refresh, dirty `pom/`, or source/target alignment | `sync` |
 | Finish branch, PR, merge, keep, discard, or cleanup | `finish-branch` |

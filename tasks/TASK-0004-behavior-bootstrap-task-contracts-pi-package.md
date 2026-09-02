@@ -66,7 +66,7 @@ The work is organized in phases; each phase section below lists its tasks, gates
 - [x] Phase P2A - Measured `using-pom` bootstrap reduction (promoted)
 - [x] Phase P2B - Task Plans with global constraints and contracts (closed, not promoted)
 - [x] Phase P3 - Pi package (skill-only promotion; extension rejected)
-- [ ] Phase P4 - Promotion, cross-checks, and release
+- [ ] Phase P4 - Promotion, cross-checks, and release (promotion, deterministic verification, and release shipped in 0.3.0; the five-repetition Pi acceptance and the durable `pi install`/removal check are still open)
 
 A phase is checked here when its gate was decided, whether the candidate was promoted or rejected; the Outcome section records the decision and the remaining follow-ups.
 
@@ -467,11 +467,11 @@ Expected results:
 
 ### Task P4.4 - Release and Target Project impact
 
-- [ ] Update `CHANGELOG.md` with user-visible behavior only after verification.
-- [ ] Update `README.md` and Pi installation guidance from tested commands.
-- [ ] Update `PROJECT_STATE.md` with the promoted boundaries and remaining harness gaps.
-- [ ] Recalculate bootstrap checksum if bootstrap installation artifacts change.
-- [ ] Decide the next POM version and create a release only after package install from the release candidate has been tested.
+- [x] Update `CHANGELOG.md` with user-visible behavior only after verification (0.3.0: "Compact always-loaded POM section", "Pi package (skill-only)").
+- [x] Update `README.md` and Pi installation guidance from tested commands (`README.md`, "Pi" install section with `pi install` and `pi -e`).
+- [x] Update `PROJECT_STATE.md` with the promoted boundaries and remaining harness gaps.
+- [x] Recalculate bootstrap checksum if bootstrap installation artifacts change (not needed for this task: `bootstrap-pom.mjs` was unchanged; the 0.3.1 checksum refresh belongs to a separate fix).
+- [ ] Decide the next POM version and create a release only after package install from the release candidate has been tested (0.3.0 was released; the durable `pi install`/removal check from the release candidate was not run — only the temporary `-e` load was verified).
 - [ ] Use `skills/sync.md` separately for Target Projects that need the new POM version.
 
 ## Verification
@@ -575,6 +575,8 @@ P2A, P2B, and P3 are all closed (2026-07-15):
 - **P3 (Pi package) — PROMOTED skill-only; extension REJECTED.** Live Pi acceptance showed native skill discovery alone routes correctly, stays inert in non-POM repos, and reloads after compaction, so no active extension and no Decision Record are needed. The root `package.json` now carries a `pi` manifest; `tests/pi-package/` was added; `npm run pom:test` is 900 passed / 0 failed.
 
 Remaining follow-ups: the `transcriptExcludes` negation-aware hardening landed in the evaluator but the frozen P1 baseline number predates it (re-baseline optional); broaden the Fix-E deferred-record detection; five-repetition Pi acceptance and a durable `pi install`/removal check were deferred (temporary `-e` load verified). No promotion bundled unrelated Project Reader work.
+
+P4 is partly done: the promotions, `npm run pom:test` and `npm run pom:lint`, the changelog, README, and Project State updates, and the 0.3.0 release shipped. The task stays In progress until the five-repetition Pi acceptance and the durable install/removal check run, or until it is closed as Complete with exceptions naming them; that choice is recorded in `PROJECT_STATE.md` Next Actions.
 
 ## Done Criteria
 

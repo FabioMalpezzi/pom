@@ -35,7 +35,7 @@ POM requires Git for history, rollback, and comparison. Check `git status` befor
 
 ## Adoption Profile
 
-Read `pom.config.json` before applying POM conventions or creating, moving, or judging governed artifacts. If it has an `adoption` section, respect it:
+Read `pom.config.json` before applying POM conventions, before creating, moving, or judging governed artifacts, and before editing project sources. This is the one place that states the rule; skills and prompts only point here. If it has an `adoption` section, respect it:
 
 - `disabled` means POM must not create or require that module (for example, do not create `wiki/`, ADRs, or task-plan files for a disabled module even when the request is tempting);
 - `optional` means ask before creating the module unless immediate project work clearly requires it;

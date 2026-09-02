@@ -52,6 +52,15 @@ These prompts are intentionally generic: they can be copied into other repositor
 |---|---|
 | `references/agent-harnesses.md` | session-start contract, instruction targets, tool mapping, and smoke prompts for agent harness integrations |
 
+## Prompt Styles
+
+Two styles are admitted. Pick one per prompt and do not mix them in the same file:
+
+- **Pasteable prompt** (`32` to `35`): a short framing paragraph, then one ```text block written in the first person that a user can paste into any harness as-is. Numbered steps, routing cues, and the expected output live inside the block.
+- **Procedure with headings** (`36` and `37`): a prose procedure the agent reads rather than pastes, organized as `## Goal`, `## Preconditions`, numbered steps, and verification. Use it when the workflow needs branches, tables, or checks that do not fit one pasteable block.
+
+Both styles start with an English `# Prompt` title, are owned by one skill card, and carry no session history or version notes.
+
 ## Work Planning Hierarchy
 
 The hierarchy is logical, not physical. Verification happens at every level.

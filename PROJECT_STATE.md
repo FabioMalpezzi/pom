@@ -12,185 +12,89 @@ _Stable facts about the project. Update only when the project's direction, stack
 
 ### Project Purpose
 
-POM (Project Operating Memory) is a meta-method that gives any AI-assisted software project a shared, version-controlled operating memory: skills, prompts, templates, governance, and ADRs that live in the target repo and are loaded by the coding agent on demand. POM is **method**, not runtime: the artifacts it ships travel with the target project; no central server, no LLM inside POM itself.
+POM (Project Operating Memory) is a meta-method that gives any AI-assisted software project a shared, version-controlled operating memory: skills, prompts, templates, governance, and decision records that live in the target repository and are loaded by the coding agent on demand. POM is **method**, not runtime: the artifacts it ships travel with the target project; no central server, no LLM inside POM itself.
 
 ### Key Constraints And Decisions
 
-- **No runtime in POM**. POM provides schema, templates, prompts, skills. Execution lives in the target project's own stack (see `templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` Pattern A/B/C for workflow runtimes).
-- **No async / no shared state / no inheritance** — the four pillars of POM workflow modeling (SPEC-0006).
-- **No promotion to canonical paths (`skills/`, `prompts/`, `specs/`, `decisions/`) before the originating experiment closes** — discipline declared in `templates/WORKFLOW_INTEGRATION_GUIDE.md`. The single explicit exception (workflow examples in `templates/examples/workflow/loop-goal/`) is documented in the commit message of `8da0a25`.
-- **No client names in public artifacts** — confidentiality rule documented in the auto-memory and enforced by commit `2ef139e`.
+- **No runtime in POM.** POM provides schema, templates, prompts, skills, and validators. Execution lives in the target project's own stack (`templates/WORKFLOW_IMPLEMENTATION_GUIDE.md` Patterns A/B/C; `decisions/ADR-0004-dynamic-workflow-control-plane.md` for the control-plane/data-plane split).
+- **No async, no shared state, no inheritance** inside a workflow model — the pillars of `specs/SPEC-0006-workflow-modeling.md`.
+- **No promotion to canonical paths** (`skills/`, `prompts/`, `specs/`, `decisions/`, `templates/`) before the originating experiment closes and the change is approved (`prompts/09-run-temporary-experiment.md`, `templates/WORKFLOW_INTEGRATION_GUIDE.md`).
+- **No client names in committed artifacts.** POM lives inside client projects and must not name them (`AGENTS.MD` privacy rule).
+- **Method changes go through `skills/method.md`** (`extend`, `improve`, `prune`), starting in `prune` when a change may add weight.
+- **The reading surface is the file-based Project Reader**, not a persistent agent session (`decisions/ADR-0005-file-based-project-reader-replaces-persistent-agent-session.md`).
+- **`loop-goal` is a separate skill composed on top of `workflow`** (`decisions/ADR-0003-workflow-vs-loop-goal-skill.md`).
 
 ### Files To Always Read When Resuming
 
 - `README.md`
+- `AGENTS.MD`
 - `CONTEXT.md`
 - `PROJECT_STATE.md`
-- `CHANGELOG.md` (recent entries)
-- `experiments/<active topic>/EXPERIMENT.md` for any open experiment
+- `CHANGELOG.md` (most recent release)
+- `skills/README.md`
+- `decisions/DECISIONS_INDEX.md`
+- `wiki/index.md` and `wiki/log.md`
+- `experiments/<topic>/EXPERIMENT.md` for any experiment still under evaluation
 
 ### Do Not Do Without Decision
 
-- Promote anything to canonical paths if the originating experiment has not closed (except where explicitly documented).
-- Add a runtime dependency (LLM client, FSM library, scheduler) to the POM source repo itself.
+- Promote anything to canonical paths if the originating experiment has not closed.
+- Add a runtime dependency (LLM client, FSM library, scheduler, server) to the POM Source repository.
 - Mention client identities in any committed POM artifact.
-- Force-push to `main` or rewrite tag history (e.g. `v0.2.0`).
+- Force-push to `main` or rewrite tag history.
+- Reopen the rejected candidates: the Task Plan contract fields (`experiments/task-plan-contracts/`) and the active Pi extension (`experiments/pi-package/`).
 
 ---
 
 ## Dynamic Context
 
-_Current operational state. Update at every significant session or when priorities, risks, or next actions change._
+_Current operational state. Update at every significant session or when priorities, risks, or next actions change. If this section grows beyond the maxLines limit, compact it: remove completed actions, archive closed decisions to the configured decisions root or `wiki/log.md`, delete resolved risks. Do not let this section become a log._
 
 ### Current State
 
-POM 0.3.1 (bootstrap clones `main`, reader top bar at narrow widths, TASK-0001
-Complete) follows POM 0.3.0, which closes the September 2026 self-audit. The repository now runs its own
-governance lint through a root `pom.config.json` (decisions, wiki, and structured
-tasks enabled) and passes it with zero errors; the previously stubbed
-`scripts/to-xstate.mjs` is restored and tested; the pre-commit hook restages the
-indexes and reader output that lint regenerates; `pom-update.mjs` refuses to
-replace a Git-ignored vendored `pom/`; the README skill table is generated from
-`skills/README.md`; experiment evidence has a size and tracking convention with
-`npm run pom:experiments:clean`; the test runner lives in `scripts/run-tests.mjs`
-and the skill catalog is consolidated to 28 skills with the new `release` and
-`migrate` procedures. Details in `CHANGELOG.md`.
+POM 0.4.0 is released and tagged (installation guides in `docs/`, one routing table, shared test harness, hardened bootstrap and hook). The repository runs its own governance lint through the root `pom.config.json` (decisions, wiki, structured tasks enabled) and `pom:lint` reports no errors; `npm run pom:test` is green. The catalog holds 28 skills, generated into the README from `skills/README.md`, and every skill points to a canonical prompt.
 
-Workflow modeling now describes agent-shaped graphs, not only domain ones, through
-three optional blocks: `guards[].evidence` (E090/E091, W005 for model judgement
-without declared context independence, W006 for a fan-in guard with no evidence),
-the top-level `runtime_loop` contract (E100–E106, W007/W008), and
-`metadata.provenance`. Modeling a `fan_out_launch` also requires deciding worker
-workspace, merge, and disagreement or recording them as open points. Backward
-compatible: the 130 pre-existing workflow YAML files raise no new code. Rationale
-in `CHANGELOG.md` and `wiki/log.md`.
+Stable and installed in target projects: the adoption installer and updater with presets (`owned`, `team`, `overlay`, `minimal`), the doc-governance lint with ADR, task-plan, and completion gates, the wiki with its generated reader, the Project Reader with file-based annotations, and the workflow tooling (validator with core, temporal, handle-lifecycle, guard-evidence, and runtime-loop rules; Mermaid and XState transformers).
 
-Prompt governance now has automated bidirectional catalog/link coverage and static contract guards for loop/goal prompts, standalone config guards, and reconciliation with disabled Decision Records. Canonical loop/goal prompts 28–31 and `skills/loop-goal.md` are portable current procedures without embedded promotion history; loop/goal modeling requires accepted criteria, and invalid workflows stop before fit classification. Loop/goal guidance now requires verification and evidence for each active or advancing iteration, and recommends a target-owned Iteration Record for autonomous, persistent, resumable, or artifact-mutating loops without adding a YAML primitive.
+Opt-in per target project: workflow modeling (`workflows.enabled`), Dynamic Workflow control planes (`workflows.dynamic.enabled`), loop/goal modeling (`workflows.loopGoal.enabled`), and the Pi skill-only package. Runtime execution, persistence, timers, and concurrency stay target-owned in every case.
 
-`skills/mcp-interface.md` and `prompts/35-mcp-interface.md` provide the current POM procedure for designing, auditing, reshaping, and verifying MCP interfaces. The procedure adapts AXI ergonomics to version-specific MCP contracts, keeps runtime ownership in Target Projects, separates tool/resource/prompt audits, requires approval before any public-contract change, distinguishes transport authorization from JSON-RPC and tool execution errors, and applies the POM verification gate. Token-efficiency claims require host-visible token measurements rather than serialized size alone.
-
-`tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md` has completed P0 through P3. Real Pi sessions froze the five-repetition behavioral baseline at critical 0.978, and the planted `broken-no-bootstrap` degradation was detected at critical 0.59. The lean bootstrap and skill-only Pi package were promoted; the proposed Task Plan contract and active Pi extension were rejected by their gates. Remaining follow-ups are optional re-baselining after negation-aware matcher hardening, broader deferred-record detection, five-repetition Pi acceptance, and a durable install/removal check.
-
-POM v0.2.0 is released and tagged. The loop/goal and workflow extension
-work has been integrated into `main`:
-
-- `skills/loop-goal.md` is canonical with six modes (`define-criteria`,
-  `model`, `audit`, `scenarios`, `runtime-guide`, `conclude`), backed by
-  prompts `28`–`31`, `decisions/ADR-0003-workflow-vs-loop-goal-skill.md`,
-  and six verified examples under `templates/examples/workflow/loop-goal/`.
-- SPEC-0007 is complete: `loop_guard` and `timeout` are validated schema
-  primitives; target projects own counters, timers, scheduling,
-  persistence, and timeout event emission.
-- The external TypeScript runtime under `experiments/agent-loop-fsm/runtime-candidate/`
-  is evidence of executability, not a POM runtime.
-
-On 2026-06-05 POM gained a source-level bootstrap/router skill inspired
-by the comparison with Superpowers, without adding a POM runtime:
-`skills/using-pom.md`, `prompts/32-using-pom.md`, and
-`prompts/references/agent-harnesses.md` now route POM-aware work before
-action, require skill bodies rather than frontmatter descriptions as the
-procedure, map common tool names across Codex, Claude Code, Gemini CLI,
-Cursor, OpenCode, and GitHub Copilot, and explicitly guard disabled
-adoption modules. The installed agent instruction templates now point
-agents to `pom/skills/using-pom.md` before the first POM-related action
-when the route is unclear, and to the harness reference when
-session-start behavior or tool mapping matters.
-
-The same change added deterministic skill-bootstrap checks under
-`tests/skill-bootstrap/`: English and Italian smoke fixtures for
-`adopt`, `wiki`, `pulse`, `validate`, `plan`, plus Git/experiment
-routing through `spike` and POM refresh routing through `sync`. These are
-offline structural evals, not yet live harness transcripts.
-
-POM now also has a small branch-delivery procedure: `skills/spike.md`
-contains explicit Git isolation rules for risky experiments and
-worktrees, while `skills/finish-branch.md` and
-`prompts/33-finish-branch.md` guide verified merge, PR, keep, discard,
-and cleanup decisions after branch or experiment work.
-
-POM also has a Target Project debugging procedure:
-`skills/root-cause.md` and `prompts/34-root-cause-debugging.md` route
-bugs, test failures, build failures, performance issues, and unexpected
-behavior through evidence-first root-cause investigation before fixes.
-`skills/diagnose.md` remains scoped to POM method/tooling defects.
-
-On 2026-06-08 the Project Reader gained a reusable core, POM/generic
-adapters, lazy `/api/tree?path=...`, virtualized lists, a command
-palette, standalone `project-reader open/search`, and cmux-targetable
-`?path=` deep links for large Target Projects and non-POM repositories.
-
-On 2026-06-22 workflow adoption was clarified for Target Projects:
-ordinary workflow modeling remains opt-in through `workflows.enabled`,
-Dynamic Workflow control-plane modeling is a separate opt-in profile
-through `workflows.dynamic.enabled`, and loop/goal modeling is a separate
-opt-in profile through `workflows.loopGoal.enabled`. The `workflow` and
-`loop-goal` skills still leave execution, persistence, tools, timers,
-retries, side effects, and runtime concurrency to the Target Project.
-POM now provides TypeScript and Python runtime seam templates for those
-Target Project adapters under `templates/WORKFLOW_RUNTIME_TEMPLATE.*`.
-
-The 2026-06-05 critical review cleanup aligned the public skill maps
-with the installed skill index, removed stale candidate-status prose from
-the canonical loop/goal criteria prompt, split large POM Source files
-below the 800-line working target, and added `source-size-*` lint checks
-for operational POM Source code files. The source-size guard does not
-apply to Target Project application files.
-
-On 2026-05-30 the method gained a **fourth named agent and a full experiment lifecycle**, designed in confronto with the user:
-- `define-criteria` was re-framed from an extractive interview into a **reasoned confronto** (the agent proposes, motivates, shows consequences on the objective, accepts off-grid questions), with an explicit boundary (the agent proposes and challenges but does not decide for the user, and must declare when it has over-steered) and **continuous + final auditing** (local consequences shown inline at every answer; cross-checks reconciled in section 7).
-- the confronto now **leaves a trace** in a separate `*.dialog.md` file (consequences signalled, off-grid questions, user calibrations) — both an anti-shortcut safeguard (the conversational auditing otherwise leaves no trace and is the part most easily skipped when the same agent "changes hat") and raw material for future improvement.
-- the fourth agent, `conclude-loop-goal-experiment`, is an **independent adversarial evaluator**: it reads only the artifacts (frozen `criteria.md`, `.fit.md`, scenarios, runtime output), never the criteria-definition dialog, and tries to falsify rather than confirm. If budget remains it leaves improvement **advice for the Coordinator** (never for the user, never retroactive); on a next round `define-criteria` reads that advice into the confronto.
-
-The four-agent lifecycle had its **first real dialog-mode run** on the `exp/dynamic-workflows` branch (closed 2026-05-30). That experiment stress-tested the FSM schema against Anthropic's Dynamic Workflows and produced — as a **workflow-domain deliverable** (not a loop-goal artifact) — an additive **Dynamic Workflow contract**: control-plane FSM + delegated external data plane, with `fan_out_launch` / `await`{`join`: all/quorum/first, `timeout`/`on_timeout`, `react`} / `cancel`+`compensation` / `suspend`/`resume` propagated. See `experiments/dynamic-workflows/design/CONTRACT.md`. The contract is recorded in SPEC-0006 and ADR-0004 as workflow control-plane doctrine. Handle lifecycle rules E080-E089 are implemented; additional validator coverage for the rest of the accepted contract can be added when target projects need stricter automation.
+Deferred with explicit reactivation criteria: the external-overlay `.pom/` layout (SPEC-0004), the web wiki agent extension (SPEC-0005), and the control-plane model checker (SPEC-0008).
 
 ### Current Objective
 
-Maintain the closed fan-in accounting improvement in `prompts/27-workflow-modeling.md`. The experiment promoted only compact agent instructions for dependency classification, one batch handle, layered identity accounting, readiness versus completeness, task-supplied capacity, control/data-plane ownership, and fan-in scenarios. The full prose candidate and structured schema/validator were not promoted.
+Keep the 0.3.x line honest and portable: close the open follow-ups of TASK-0004, keep the deferred specs deferred until a target project asks for them, and let method changes enter only through `skills/method.md` with evidence.
 
-Continue maintaining the promoted lean bootstrap and skill-only Pi package from `tasks/TASK-0004-behavior-bootstrap-task-contracts-pi-package.md`, while keeping the rejected Task Plan contract and active Pi extension out of the method. Treat the remaining evaluator and durable-install checks as explicit follow-ups rather than unfinished P1–P3 work.
+### Priorities
+
+| Priority | Activity | Status | Dependencies |
+|---|---|---|---|
+| 1 | Close TASK-0004 (five-repetition Pi acceptance, durable `pi install`/removal check) | Open | Pi and model credentials available locally |
+| 2 | Align `wiki/current-specs.md` with ADR-0005 and the deferred specs | Open | none |
+| 3 | Keep experiment evidence within the tracked-size convention | Open | `.gitignore` entry for `experiments/fan-in-accounting/evidence-raw/` |
 
 ### Next Actions
 
-- [x] **Skill catalog review**: `guard` merged into `config`, `help` removed, `extend`/`improve`/`prune` became modes of `method`, `check`/`validate` boundary written into both cards, `release` and `migrate` added (28 skills, see `skills/README.md`).
-- [x] **Remaining lint warnings**: none; TASK-0001 is Complete since `tests/doc-governance/integration/test-lint-rules.mjs` covers its error case (0.3.1).
-- [x] **Lint fixture coverage**: every core validator rule (E000-E017, W001-W004, E050-E058) has a committed broken fixture in `tests/workflow-validator/fixtures/core.*`; SPEC-0006 records the coverage as implemented.
-- [x] **Project Reader narrow layout**: the overlap was a paused-pane artifact (no animation frames in an unfocused cmux pane); the collapsed navigation below 760 px is now a compact full-width top bar, verified at 400, 800, and 1400 px (0.3.1).
-- [x] **Close fan-in accounting experiment**: within the five-attempt limit, minimally promoted the supported procedure to `prompts/27-workflow-modeling.md`. The final frozen 8-fixture sample had four lexical matcher false negatives but no critical semantic violation on direct inspection; the hierarchical response used bounded groups and final summary reconciliation. `skills/workflow.md`, canonical schema/validator, implementation guide, and `SPEC-0008` remain unchanged.
-- [ ] **Behavioral evaluation follow-ups**: optionally re-freeze the baseline after negation-aware `transcriptExcludes` hardening, broaden deferred-record detection, run five-repetition Pi acceptance, and verify durable `pi install`/removal. P0–P3 are closed; these follow-ups do not reopen the rejected Task Plan contract or active extension.
-- [x] **Lato workflow — promuovere il contratto Dynamic Workflow** (priorità 3b): dottrina control-plane/data-plane registrata in `decisions/ADR-0004-dynamic-workflow-control-plane.md`; SPEC-0006 aggiornato con `fan_out_launch`/`await`/`join`/`timeout`/`react`/`compensation`. Il contratto è dentro il workflow come control plane; l'esecuzione concorrente reale resta nel data plane del target. La copertura validator completa può crescere a partire dalle regole handle lifecycle E080-E089.
-- [x] **Esperimento H6/H7** (priorità 1): adottato. SPEC-0007 è completa; validator E060-E073/W060, esempi, fixture, test automatico e guida Pattern A/B/C sono presenti.
-- [x] **Dynamic Workflow follow-up — handle lifecycle**: regole statiche E080-E089 aggiunte al validator per `fan_out_launch.handle`, `await.handles`, `cancel_handles`, `detach_handles` e terminali senza handle attivi impliciti; esempi e fixture in `experiments/dynamic-workflows/`; test automatici in `tests/workflow-validator/integration/test-dynamic-handles.mjs` e `tests/dynamic-workflows/integration/test-reference-executors.mjs`. I reference executor TypeScript e Python rimuovono gli handle attesi, propagano `detach`/`cancel` alle FSM figlie e rifiutano terminali con handle ancora attivi.
-- [x] **Integrare i rami verso `main`** (priorità 8): `exp/dynamic-workflows` è stato mergiato in `main`; il ramo includeva già `exp/agent-loop-fsm` e le modifiche H6/H7. Verifica post-merge: `npm run pom:test` e `npm run pom:lint` passati.
-- [x] **Bootstrap POM per agenti e eval bilingui**: `using-pom` aggiunto come router canonico; descrizioni frontmatter rese trigger-oriented; fixture inglesi/italiane e casi negativi per moduli disabilitati, Git, esperimenti e sync aggiunti. Verifica: `npm run pom:test` e `npm run pom:lint` passati il 2026-06-05.
-- [x] **Git isolation e chiusura branch**: `spike` esteso con rilevamento worktree/submodule e preferenza per workspace nativi; `finish-branch` aggiunto per chiudere branch con opzioni merge, PR, keep, discard e cleanup.
-- [x] **Debug Target Project a radice causa**: `root-cause` aggiunto come skill opzionale per bug, test failure, build failure, performance issue e comportamenti inattesi; `diagnose` resta riservato a difetti del metodo POM.
-- [x] **Pulizia revisione critica POM**: prompt `loop-goal` ripulito da note candidate, README/guide/wiki allineati alle skill correnti, file sorgente sopra target splittati, lint dimensionale aggiunto e testato.
-
-(Spunto non azionabile, registrato a parte: Prolog è un fit naturale per *validare/verificare* i workflow — non per eseguirli; valutazione esplorativa, non una cosa da fare.)
+- [ ] **TASK-0004 P4 closure**: run the five-repetition Pi acceptance and the durable `pi install`/removal check from a release build, then close the task Complete; if they cannot run, close it Complete with exceptions naming both. Optional in the same pass: re-freeze the behavioral baseline under the negation-aware `transcriptExcludes` check and broaden the deferred-record detection in the evaluator.
+- [ ] **Wiki current specs**: update `wiki/current-specs.md` so ADR-0001 shows as superseded by ADR-0005 and SPEC-0004, SPEC-0005, SPEC-0008 show as Deferred with their reactivation criteria.
+- [ ] **Fan-in raw evidence**: add `experiments/fan-in-accounting/evidence-raw/` to `.gitignore` and stop tracking the six `report.json` files that were moved there; the tracked summaries are `report.summary.json` in each `evidence-structured/<run>/` folder.
+- [ ] **SPEC-0004 overlay layout**: reactivate only when a second external-repository trial or an adopter needs the `.pom/` local-only layout or the overlay wiki page set; the ownership parameter and lint posture already exist.
+- [ ] **SPEC-0008 control-plane checks**: reactivate only when a target project modeling Dynamic Workflows needs malformed `join`/`k`/`on_timeout` or reachable dead ends caught statically; Level 1 first, and renumber the proposed E090/E091 codes, which now belong to the guard `evidence` block.
+- [ ] **Self-improvement loop, cross-project case** (optional): run `method improve` once on another POM-managed project or a representative fixture and record the case in `experiments/self-improvement-loop/EXPERIMENT.md`.
 
 ### Open Decisions
 
-- Whether the wiki tutorial under `wiki/loop-goal-workflow-tutorial.md`
-  is enough for loop/goal adoption, or whether a separate public guide
-  under `docs/` is useful.
-- Whether the `runtime-candidate/` should ever become a "reference runtime" documented in `templates/`, or whether it remains in the experiment folder as historical evidence (current direction: the latter, consistent with "no runtime in POM").
-- **Whether to generalize the criterion-definition method beyond loop/goal to all POM experiments** (idea raised by the user 2026-05-30). The structure is already mostly generic — `define-criteria` covers ten POM scopes, of which loop/goal is only a sub-type; the generic layer (reasoned confronto, coherence auditor, trace, independent adversarial evaluator, advice loop) is separable from the loop/goal-specific layer (FSM modeling, fit classification, backlog primitives, terminal-coverage scenarios, runtime). It would relate to the existing lighter `prompts/09-run-temporary-experiment.md` / `skills/spike.md` via a rigor threshold (light exploration below, measurable-hypothesis experiment above), not replace them. **Agreed direction: experiment and bring the loop/goal criterion to regime first, then evaluate if and how to extend** — generalizing an as-yet-unproven method would violate POM's "no promotion before evidence". A clean way to do both at once: treat "generalize the criterion" as itself a POM experiment (scope 1) and use it as the first dialog-mode exercise of the criterion.
+- Whether `wiki/loop-goal-workflow-tutorial.md` is enough for loop/goal adoption, or whether a separate public guide under `docs/` is useful.
+- Whether the runtime candidates under `experiments/agent-loop-fsm/runtime-candidate/` and `experiments/dynamic-workflows/runtime/` should ever become documented reference runtimes in `templates/`, or remain experiment evidence (current direction: the latter, consistent with "no runtime in POM").
+- Whether the criteria-definition method of `loop-goal` (reasoned dialogue with trace, coherence audit, independent adversarial evaluator) should be generalized to all POM experiments. Agreed direction: bring the loop/goal criterion to regime first, then evaluate the extension as its own experiment, with `prompts/09-run-temporary-experiment.md` and `skills/spike.md` kept for light exploration below a rigor threshold.
 
 ### Blockers / Risks
 
-- **Fan-in accounting enforcement remains intentionally limited.** The canonical prompt carries the supported procedure, while static fan-in schema/lint remains deferred because the experiment showed that structural validity alone does not prove semantic provenance or scenario truth.
-- The main Dynamic Workflow risk is confusing contract ownership with runtime ownership: the Dynamic Workflow contract belongs to the workflow control plane and is opt-in through `workflows.dynamic.enabled`, while real concurrent execution belongs to the target data plane. Validator coverage is partial, not the contract itself.
-- Secondary risk: the loop/goal lifecycle is powerful but heavy and is opt-in through `workflows.loopGoal.enabled`. Use `workflow` by default for ordinary domain workflows; use `loop-goal` only when the controller is agent-shaped and measured criteria matter.
-- Branch delivery guidance is procedural, not a project release policy. Target projects still own branch naming, PR templates, protected branches, and release automation.
-- New bootstrap evals are deterministic structural checks, not real harness
-  transcripts. True agent-behavior evals for Claude Code, Codex, Gemini,
-  Cursor, and OpenCode remain a future distribution/integration step.
+- **Fan-in accounting enforcement is intentionally limited**: the canonical prompt carries the supported procedure, while static fan-in schema and lint stay deferred because the experiment showed that structural validity alone does not prove semantic provenance or scenario truth.
+- **Contract ownership versus runtime ownership** can be confused for Dynamic Workflows: the contract belongs to the workflow control plane, real concurrent execution to the target data plane; validator coverage is partial, the contract is not.
+- **loop/goal is heavy** and opt-in: use `workflow` for ordinary domain workflows and `loop-goal` only when the controller is agent-shaped and measured criteria matter.
+- **Behavioral evidence is Pi-only**: the frozen baseline and the bootstrap gates were measured on Pi with one default model; claims about other harnesses rest on deterministic structural tests, not on real transcripts.
+- **Branch delivery guidance is procedural**, not a release policy: target projects own branch naming, PR templates, protected branches, and release automation.
 
 ### To Clarify
 
-- Dynamic Workflow validator coverage can still expand for `join`, `k`,
-  `react`, compensation ordering, and lifecycle propagation evidence.
-  The contract itself is accepted as workflow control plane; real data
-  plane execution remains target-owned. The handle lifecycle itself is
-  no longer open: terminal states require every active handle to be
-  awaited, cancelled, or explicitly detached.
+- Dynamic Workflow validator coverage can still grow for `join`, `k`, `react`, compensation ordering, and lifecycle propagation evidence; the handle lifecycle itself is closed (every active handle is awaited, cancelled, or detached before a terminal).

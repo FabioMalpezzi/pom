@@ -59,7 +59,7 @@ If an AI agent is doing the install, ask for `POM - Project Operating Memory fro
 Use this prompt when the agent starts from no reliable local context:
 
 ```text
-Install POM - Project Operating Memory from https://github.com/FabioMalpezzi/pom in this target project. Treat that repository's README as the installation authority for this turn. Fetch or read the README first, then follow its Installation section. Do not use Maven, Page Object Model, or a remembered POM workflow. Do not clone the repository into the project root; use the bootstrap from the target project root. If I have not stated a preset, ask me to choose one of owned, team, overlay, or minimal.
+Install POM - Project Operating Memory from https://github.com/FabioMalpezzi/pom in this target project. Treat that repository's docs/installation.md as the installation authority for this turn. Fetch or read that guide first, then follow it. Do not use Maven, Page Object Model, or a remembered POM workflow. Do not clone the repository into the project root; use the bootstrap from the target project root. If I have not stated a preset, ask me to choose one of owned, team, overlay, or minimal.
 ```
 
 Use:
@@ -292,7 +292,8 @@ Workflow modeling is separate from the adoption profile. Target projects opt in 
 
 | Source | Use |
 |---|---|
-| `README.md` | Installation, presets, profile meanings, ownership, update flow, and overlay summary. |
+| `docs/installation.md` | Installation authority: Pi package, bootstrap, presets, update flow, overlay, manual and non-npm installs, pre-commit hook. |
+| `README.md` | Quickstart: bootstrap command, preset table, and links to the official documents. |
 | `templates/POM_CONFIG_TEMPLATE.json` | Default config fields for ownership, adoption, roots, templates, wiki, decisions, tests, handoff, and opt-in workflow modeling. |
 | `skills/config.md` | Configuration procedure for mapping project roots and enabling workflow modeling safely. |
 | `prompts/01-bootstrap-new-project.md` | New project setup. |

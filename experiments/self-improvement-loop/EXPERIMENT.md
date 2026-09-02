@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-05-24 |
 | Type | spike / governance / agent |
-| Status | under evaluation |
+| Status | consolidated — loop promoted as the `improve` mode of `skills/method.md` |
 | Branch / Path | experiments/self-improvement-loop |
 | Isolation | experiment folder |
 | Owner | POM maintainer |
@@ -13,7 +13,7 @@ This experiment evaluates whether POM should gain one reusable procedure for sel
 
 POM Source is one such project: it uses POM to maintain and improve the POM method itself.
 
-A canonical prompt (`prompts/25-self-improvement-loop.md`) and a short alias skill (`skills/improve.md`) exist, but the workflow remains under evaluation for cross-project usefulness. This experiment tracks evidence and guards against unreviewed self-modification.
+The loop is promoted: `prompts/25-self-improvement-loop.md` is the canonical procedure and `skills/method.md` exposes it as the `improve` mode. This record keeps the case log and the evidence behind that promotion. References below to `skills/extend.md`, `skills/prune.md`, and `skills/improve.md` describe the skill catalog at the time of the cases; those three cards are now the `extend`, `prune`, and `improve` modes of `skills/method.md`.
 
 This is not a spec, and it does not authorize automatic changes to prompts, skills, templates, lint, or governed documents.
 
@@ -201,16 +201,16 @@ Execute the loop on another POM-managed project or a representative fixture, the
 | Authority | An experimental diagnosis is treated as normative | Keep this file non-authoritative until a stable synthesis is promoted |
 | Portability | The loop works only in POM Source | Verify it in another POM-managed project or representative fixture |
 
-## Expected Outcome
+## Outcome
 
-Future decision after evaluation:
+Decision: promote the loop as a stable prompt and skill mode; close the experiment.
 
-- discard the loop if it duplicates existing workflows;
-- archive a synthesis in `analysis/` if useful but not stable;
-- update the wiki if the outcome is consolidated knowledge;
-- create a stable prompt if the loop is a reusable procedure;
-- add a short skill only if it becomes recurring;
-- update templates or lint only if a stable and verifiable shape emerges.
+- Case 0001 and Case 0002 ran the loop on POM Source itself and promoted `prompts/25-self-improvement-loop.md` plus a short alias skill (`skills/improve.md`).
+- The duplication risk named in the hypotheses materialized as catalog weight rather than as a defect of the procedure: `extend`, `improve`, and `prune` overlapped as three separate cards. The 0.3.0 skill-catalog consolidation resolved it by merging them into one `method` skill with three modes, which starts in `prune` when a change may add weight (`CHANGELOG.md` 0.3.0, `skills/method.md`). The loop therefore did not duplicate `extend` or `prune`; it became their sibling mode.
+- The loop did not bypass approval or the Completion Verification Gate in either case: both promotions were verified with `npm run pom:lint` and recorded here before the canonical files changed.
+- The second evidence item — one case on another POM-managed project or a fixture — was not executed. The promotion rests on the POM Source cases and on the catalog consolidation; a cross-project case remains a useful follow-up, not a gate.
+
+Promotion path: clean reimplementation in `prompts/` and `skills/`, already applied; no experiment file moved into stable source.
 
 ## Candidate Consolidation
 
@@ -226,6 +226,6 @@ Future decision after evaluation:
 
 - [x] Execute the first real self-improvement loop case in POM Source.
 - [x] Promote a canonical prompt (`prompts/25-self-improvement-loop.md`) and a short alias skill (`skills/improve.md`).
-- [ ] Execute or simulate the same loop in another POM-managed project (or fixture).
-- [ ] Confirm the loop does not duplicate `extend`, `prune`, `diagnose`, `validate`, or `challenge`.
-- [ ] Decide whether the prompt/skill stay, are simplified, or are removed/demoted.
+- [ ] Execute or simulate the same loop in another POM-managed project (or fixture) — optional, strengthens the evidence.
+- [x] Confirm the loop does not duplicate `extend`, `prune`, `diagnose`, `validate`, or `challenge` — resolved by merging `extend`, `improve`, and `prune` into `skills/method.md`; `diagnose`, `validate`, and `challenge` stay routed from the procedure.
+- [x] Decide whether the prompt/skill stay, are simplified, or are removed/demoted — they stay: `prompts/25-self-improvement-loop.md` canonical, `skills/method.md` `improve` mode.

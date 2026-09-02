@@ -18,11 +18,8 @@ description: Use when starting POM work, choosing a POM skill, or operating in a
 
 ## Key Rules
 
-- Read the canonical prompt before any POM action.
-- Read `pom.config.json` when present before creating, moving, or judging governed artifacts.
-- Use `skills/README.md` as the skill catalog; do not route from memory alone.
-- Use skill descriptions only as triggers; read the full skill card and linked prompt before acting.
-- Respect disabled adoption modules. Do not create wiki, decisions, task plans, docs, tests, analysis, or mockups just because POM supports them.
+- Read the canonical prompt before any POM action: it fixes the order (locate POM, read `pom.config.json`, read the catalog, route, load the selected skill) and the disabled-module guard.
+- Route from the `skills/README.md` catalog, whose `Use` column is the routing signal; do not route from memory alone.
 - For session-start hooks, agent instruction files, or tool mapping, read `prompts/references/agent-harnesses.md`.
 
 ## Output

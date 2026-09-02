@@ -35,7 +35,7 @@ POM requires Git for history, rollback, and comparison. Check `git status` befor
 
 ## Adoption Profile
 
-Read `pom.config.json` before applying POM conventions or creating, moving, or judging governed artifacts. If it has an `adoption` section, respect it:
+Read `pom.config.json` before applying POM conventions, before creating, moving, or judging governed artifacts, and before editing project sources. This is the one place that states the rule; skills and prompts only point here. If it has an `adoption` section, respect it:
 
 - `disabled` means POM must not create or require that module (for example, do not create `wiki/`, ADRs, or task-plan files for a disabled module even when the request is tempting);
 - `optional` means ask before creating the module unless immediate project work clearly requires it;
@@ -43,4 +43,4 @@ Read `pom.config.json` before applying POM conventions or creating, moving, or j
 
 ## POM Skills — Router
 
-`pom/skills/` is the operating index for POM workflows. Before the first POM-related action in a session, after compaction, or whenever the correct skill is unclear, read `pom/skills/using-pom.md`: it routes by intent, enforces the adoption guard above, and points to the selected skill card and canonical prompt. Then read `pom/skills/README.md` as the full catalog and route from it — do not route from memory alone. Read the skill card first, then its linked prompt; treat YAML frontmatter descriptions as triggers only, never as the procedure. State which POM skill is being used and why. For harness session-start behavior or tool mapping, read `pom/prompts/references/agent-harnesses.md`. For POM commands, run `npm run pom:help`.
+`pom/skills/` is the operating index for POM workflows. Before the first POM-related action in a session, after compaction, or whenever the correct skill is unclear, read `pom/skills/using-pom.md`: it routes by intent, enforces the adoption guard above, and points to the selected skill card and canonical prompt. Then read `pom/skills/README.md` as the full catalog (its `Use` column is the routing signal) and route from it — do not route from memory alone. Read the skill card first, then its linked prompt. State which POM skill is being used and why. For harness session-start behavior or tool mapping, read `pom/prompts/references/agent-harnesses.md`. For POM commands, run `npm run pom:help`.

@@ -3,12 +3,12 @@
 | Field | Value |
 |---|---|
 | Date | 2026-05-19 |
-| Status | Accepted |
+| Status | Superseded |
 | Category | architecture |
 | Area | wiki / AI / integrations |
 | Summary | The web wiki must use a persistent connection to an active AI coding agent session as the primary path, not repeated cold one-shot runs |
 | Replaces | none |
-| Replaced by | none |
+| Replaced by | ADR-0005 |
 | Driver | technical constraint |
 | Scope | wiki / AI / integrations |
 

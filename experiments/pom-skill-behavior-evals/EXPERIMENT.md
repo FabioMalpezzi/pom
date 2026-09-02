@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-07-13 |
 | Type | LLM model / benchmark / research |
-| Status | under evaluation |
+| Status | closed — evaluator accepted, baseline frozen; no canonical change promoted |
 | Branch / Path | `exp/pom-skill-evolution` / `experiments/pom-skill-behavior-evals/` |
 | Isolation | branch + experiment-local runner and fixtures |
 | Owner | POM maintainer |

@@ -4,7 +4,7 @@
 |---|---|
 | Data | 2026-05-19 |
 | Tipo | research / architettura / agente |
-| Stato | lightweight reader promoted; agent-session work deferred |
+| Stato | chiuso — Project Reader file-based promosso; sessione agente persistente non perseguita (ADR-0005) |
 | Branch / Path | experiments/wiki-agent-orchestration |
 | Isolamento | local manifest |
 | Owner | POM maintainer |
@@ -551,16 +551,16 @@ Il secondo ciclo dovrebbe usare un evento di metodo, non un bug della UI. Un buo
 - Non fare aggiornamenti automatici alla fonte Markdown senza approvazione.
 - Non progettare subito un sistema multi-agente completo.
 
-## Esito Atteso
+## Esito
 
-Decisione futura da prendere dopo il prototipo:
+Decisione: mantenere la procedura file + CLI e promuoverla come tooling stabile; non perseguire la sessione agente persistente.
 
-- scartare l'idea;
-- mantenere solo una procedura file + CLI;
-- creare una spec per un POM wiki assistant;
-- creare un task plan per un prototipo Codex `exec`;
-- creare un secondo task plan per Codex `app-server`, OpenCode server o Pi RPC;
-- aggiornare la wiki solo con la sintesi consolidata.
+- Il target leggero (sito Node locale, ricerca `rg`, annotazioni JSON nel repository, comando `claim-next` per l'agente) è stato promosso in `scripts/project-reader/` ed è poi cresciuto con un core riusabile, adapter POM/generico, caricamento pigro dell'albero, palette comandi e CLI `project-reader open/search` (vedi `CHANGELOG.md` 0.3.0). Le annotazioni aperte arrivano all'agente tramite `skills/reader-notes.md` e l'avviso di lint `lint-reader-notes`.
+- Il primo spike (baseline Codex con file + CLI, `TASK-0003`) ha validato il contratto evento/proposta; quel contratto è conservato come evidenza e riusato dal formato delle annotazioni.
+- Il target "sessione streaming persistente" e il Project Cockpit non sono stati costruiti: la correzione di scope del 2026-05-20 li ha giudicati troppo ampi per POM e nessun progetto target ne ha chiesto la ripresa. `ADR-0005` sostituisce `ADR-0001` registrando che il reader file-based con annotazioni ha preso il posto della sessione agente persistente; `SPEC-0005` è rinviata con criteri di riattivazione espliciti (bisogno concreto di un progetto target, agente con interfaccia di sessione compatibile, regole di privacy e approvazione per proposte generate da LLM).
+- Le query LLM dirette dal reader restano fuori: se servissero, sono un esperimento separato per i motivi già registrati in `wiki/experiments-and-extension.md`.
+
+Percorso di promozione: reimplementazione pulita in `scripts/project-reader/`, già applicata; contratti, fixture ed evidenze restano sotto questo esperimento come memoria preparatoria.
 
 ## Follow-up
 
