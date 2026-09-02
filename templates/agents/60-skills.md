@@ -27,4 +27,5 @@ Key routes (read the skill card before acting; the full catalog with routing sig
 | Restart, handoff, or current-state memory | `pulse` or `handoff` |
 | Temporary experiment or risky Git worktree/branch | `spike` |
 | Installed POM refresh, dirty `pom/`, or source/target alignment | `sync` |
+| Two agents building and reviewing multi-turn work as controller and executor | `tandem` |
 | Finish branch, PR, merge, keep, discard, or cleanup | `finish-branch` |

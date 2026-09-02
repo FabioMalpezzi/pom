@@ -140,6 +140,8 @@ In overlay mode, POM governs the operator's understanding of the project. It mus
 
 If the correct skill is not obvious, start with `pom/skills/using-pom.md`: it routes the request and checks adoption constraints in `pom.config.json`. Show the installed commands and skill index with `npm run pom:help`; it prints the reference and exits immediately, with no interactive input.
 
+For multi-turn work that deserves an independent reviewer, `npm run pom:tandem` coordinates two coding agents (`pi`, `codex`, or `claude`, in persistent sessions): an executor that writes in the project root and a controller that reviews in its own Git worktree, with `init`, `task add`, `send`, `review`, `respond`, `status`, `note`, `session reset`, and `close`. The procedure is `pom/skills/tandem.md`; a reading guide is `wiki/tandem-collaboration.md` in the POM Source.
+
 ### What The Bootstrap Does
 
 The bootstrap script:

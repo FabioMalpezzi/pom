@@ -6,7 +6,7 @@ This README is POM's canonical entry point and operating overview. Detailed proc
 
 POM is designed to be reused on new or existing projects. It does not impose a single application structure and does not assume that every project has mockups, source code, tests, or official docs. For existing projects, POM should first map the current structure in `pom.config.json`; migration to canonical folders is a later explicit decision, not a prerequisite.
 
-Version: `0.7.0`
+Version: `0.7.1`
 
 Release notes: see `CHANGELOG.md`.
 
@@ -409,6 +409,22 @@ Generated from `skills/README.md` by `npm run pom:skills:sync`. Edit the catalog
 The schema is extensible: additional fields can be added without breaking existing entries.
 
 Treat this as optional telemetry, not a global operating rule. If a project wants it, the agent can update the matching counter and `lastUsed` timestamp when it reads a skill card or canonical prompt. If the project does not use tracking, do not add noise to `pom.config.json` just because a skill was consulted.
+
+## Two-Agent Collaboration (tandem)
+
+When a piece of work spans several turns and deserves a reviewer that did not write it, the `tandem` skill runs two coding agents on it: an **executor** that writes the code and a **controller** that reviews it in its own Git worktree, with a **coordinator** (the agent running the skill, or the user from the chat) carrying only the difference between them through `npm run pom:tandem`. Claude Code, Pi, and Codex are interchangeable in every seat; each role keeps a persistent session, so nothing is replayed. The cycle per task, in five commands:
+
+```bash
+npm run pom:tandem -- init --topic <slug> --controller pi --executor claude --cap 4 [--setup "npm ci"]
+npm run pom:tandem -- task add --topic <slug> --id T1 --title "<title>" --done "<criteria>"
+npm run pom:tandem -- send --topic <slug> --role executor --task T1 --message "<assignment>"
+npm run pom:tandem -- review --topic <slug> --task T1 --deliverable <path-or-ref>
+npm run pom:tandem -- respond --topic <slug> --task T1      # on REVISE, then review again
+```
+
+The controller answers `VERDICT: APPROVE|REVISE` plus numbered findings; the executor answers each with `F<n>: FIXED|DISPUTED`. A reply outside the contract exits `2`, the cycle cap exits `3` and escalates to the user, a controller that touched the executor workspace exits `4`. The coordinator quotes every verdict and every answer verbatim in its chat: the user reads the review there, not in the script output. `close` writes the outcome into `collaboration/<slug>/BRIEF.md`.
+
+Skill card: `skills/tandem.md`; procedure: `prompts/38-tandem.md`; reading guide: `wiki/tandem-collaboration.md`.
 
 ## Extending POM
 
