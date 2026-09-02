@@ -206,7 +206,7 @@ try {
   result = tandem(["review", "--topic", "demo", "--task", "T2", "--deliverable", "[[NOVERDICT]] src/a.js"]);
   assert("no verdict exits 2", result.status === 2, `${result.status} ${result.stderr}`);
   assert("no verdict is explained", result.stderr.includes("indeterminate"), result.stderr);
-  assert("LEDGER records indeterminate", read("demo", "LEDGER.md").includes("controller | task T2 | cycle 0 | indeterminate (no VERDICT line)"));
+  assert("LEDGER records indeterminate", read("demo", "LEDGER.md").includes("controller | task T2 | cycle 0 | indeterminate (the first non-empty line is not `VERDICT: APPROVE` or `VERDICT: REVISE`)"));
   assert("counters unchanged", state("demo").tasks[1].cycles === 0 && state("demo").tasks[1].status === "pending");
 
   section("Scenario 9: four REVISE verdicts reach the cap and escalate");
@@ -226,30 +226,30 @@ try {
   result = tandem(["respond", "--topic", "demo", "--task", "T2"]);
   assert("respond without --findings reuses the last review", result.status === 0 && result.stdout.includes("F1: FIXED"), result.stderr);
   call = lastCall();
-  assert("respond goes to the executor with the findings and the contract", call.backend === "claude" && call.args[call.args.length - 1].includes("FINDINGS:") && call.args[call.args.length - 1].includes("For each finding reply `F<n>: FIXED"), call.args[call.args.length - 1]);
+  assert("respond goes to the executor with the findings and the contract", call.backend === "claude" && call.args[call.args.length - 1].includes("FINDINGS:") && call.args[call.args.length - 1].includes("For each finding N reply on its own line `F<N>: FIXED"), call.args[call.args.length - 1]);
   assert("respond keeps the escalated status", state("demo").tasks[1].status === "escalated");
   assert("LEDGER records the executor answer", read("demo", "LEDGER.md").includes("executor | task T2 | cycle 4 | respond (F1:FIXED)"));
-  result = tandem(["respond", "--topic", "demo", "--task", "T1", "--findings", "1. minor - README - typo - fixed wording"]);
-  assert("respond with inline findings sets in_progress", result.status === 0 && state("demo").tasks[0].status === "in_progress", result.stderr);
+  result = tandem(["respond", "--topic", "demo", "--task", "T1", "--findings", "1. minor | README | typo | fixed wording"]);
+  assert("respond on an approved task is refused with exit 1", result.status === 1 && result.stderr.includes("task already approved; run review to reopen it only if the deliverable changed") && state("demo").tasks[0].status === "approved", `${result.status} ${result.stderr}`);
 
   section("Scenario 10: phase budget");
   result = tandem(["init", "--topic", "budget", "--controller", "claude:opus", "--executor", "codex:gpt-5", "--phase-budget", "2"]);
   assert("init with --phase-budget exits 0", result.status === 0, result.stderr);
   tandem(["task", "add", "--topic", "budget", "--id", "B1", "--title", "Budgeted"]);
   result = tandem(["review", "--topic", "budget", "--task", "B1", "--deliverable", "[[REVISE]] x"]);
-  assert("first REVISE consumes one unit", result.status === 0 && state("budget").phaseBudgetRemaining === 1, `${result.status} ${result.stderr}`);
+  assert("first REVISE consumes one unit of the task's phase entry", result.status === 0 && state("budget").phaseBudgetRemaining["-"] === 1, `${result.status} ${result.stderr}`);
   result = tandem(["review", "--topic", "budget", "--task", "B1", "--deliverable", "[[REVISE]] x"]);
   assert("budget at zero exits 3 and stalls the task", result.status === 3 && result.stderr.includes("phase budget exhausted") && state("budget").tasks[0].status === "stalled", `${result.status} ${result.stderr}`);
-  assert("status shows the remaining budget", tandem(["status", "--topic", "budget"]).stdout.includes("phase budget: 0 remaining of 2"));
+  assert("status shows the remaining budget per phase", tandem(["status", "--topic", "budget"]).stdout.includes("phase budget: 2 per phase (-: 0 remaining of 2)"));
   call = readLog().filter((entry) => entry.backend === "claude").pop();
   assert("claude controller runs in its own worktree with acceptEdits", call.cwd === join(root, "collaboration", "budget", ".controller-worktree") && call.args.includes("acceptEdits"), call.cwd);
 
   section("Scenario 11: close writes the outcome and removes the worktree");
   result = tandem(["close", "--topic", "demo"]);
   assert("close exits 0", result.status === 0, result.stderr);
-  assert("close prints the summary", result.stdout.includes("Tasks: 2 | approved: 0 | escalated: 1 | cycles used: 4"), result.stdout);
+  assert("close prints the summary", result.stdout.includes("Tasks: 2 | approved: 1 | escalated: 1 | cycles used: 4"), result.stdout);
   brief = read("demo", "BRIEF.md");
-  assert("BRIEF Outcome lists the verdict per task", brief.includes("| T1 | Fix the loop bound | no final verdict (in progress) | 0/4 |") && brief.includes("| T2 | Second task | cap reached, escalated to the user | 4/4 |"));
+  assert("BRIEF Outcome lists the verdict per task", brief.includes("| T1 | Fix the loop bound | APPROVE | 0/4 |") && brief.includes("| T2 | Second task | cap reached, escalated to the user | 4/4 |"));
   assert("BRIEF Outcome leaves promotion to the user", brief.includes("to be decided by the user"));
   assert("BRIEF status is closed", brief.includes("| Status | closed |"));
   assert("controller worktree removed", !existsSync(worktree) && !git(root, ["worktree", "list"]).includes(worktree));
@@ -271,12 +271,14 @@ try {
   assert("pi without a model omits --model and runs in the controller worktree", !call.args.includes("--model") && call.cwd === join(root, "collaboration", "nomodel", ".controller-worktree"), JSON.stringify(call));
 
   section("Scenario 13: contract helpers");
-  assert("parseVerdict reads APPROVE", parseVerdict("VERDICT: APPROVE\nFINDINGS:\n(none)") === "APPROVE");
-  assert("parseVerdict reads REVISE after a preamble and markdown", parseVerdict("Sure.\n**VERDICT: REVISE**\nFINDINGS:") === "REVISE");
-  assert("parseVerdict returns null without a verdict", parseVerdict("All good I think") === null);
+  assert("parseVerdict reads APPROVE", parseVerdict("VERDICT: APPROVE\nFINDINGS:\n(none)").verdict === "APPROVE");
+  assert("parseVerdict reads REVISE in bold on the first line", parseVerdict("\n**VERDICT: REVISE**\nFINDINGS:").verdict === "REVISE");
+  assert("parseVerdict rejects a verdict after a preamble", parseVerdict("Sure.\n**VERDICT: REVISE**\nFINDINGS:").verdict === null);
+  assert("parseVerdict returns null without a verdict", parseVerdict("All good I think").verdict === null);
   assert("parseFindingReplies splits FIXED and DISPUTED", JSON.stringify(parseFindingReplies("F1: FIXED bound\nF2: DISPUTED tests pass").map((item) => item.status)) === '["FIXED","DISPUTED"]');
   const message = reviewMessage({ taskId: "T1", title: "t", deliverable: "d", checked: "commit abc" });
   assert("reviewMessage carries the fixed contract", message.includes("Reply with exactly: a first line `VERDICT: APPROVE` or `VERDICT: REVISE`") && message.includes("Checked revision: commit abc."));
+  assert("reviewMessage repeats the title as definition of done", message.includes("Definition of done: t\n"));
 } finally {
   try {
     for (const line of git(root, ["worktree", "list", "--porcelain"]).split("\n")) {

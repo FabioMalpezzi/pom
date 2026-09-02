@@ -2,6 +2,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-09-02] update | POM 0.7.0
+
+Bumped the index to POM v0.7.0: the tandem skill hardened after an adversarial review (first-line verdict, explicit session reset, guarded paths, fingerprint over ignored files, closed-tandem guards, per-phase budget, `note`, `--done`, `--setup`, `--guard-ignore`). Details in `CHANGELOG.md`.
+
+Sources used: `CHANGELOG.md`, `skills/tandem.md`, `prompts/38-tandem.md`.
+
 ## [2026-09-02] update | POM 0.6.1
 
 Bumped the index to POM v0.6.1: the tandem coordinator relays every controller verdict and executor response verbatim in its chat, and the script prints replies between delimiters. Details in `CHANGELOG.md`.

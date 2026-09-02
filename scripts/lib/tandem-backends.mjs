@@ -22,7 +22,8 @@
 
 import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 
 export const BACKENDS = ["pi", "codex", "claude"];
 /** Tools Claude Code may use without prompting in a tandem role (shell, read, edit). */
@@ -46,6 +47,45 @@ export function parseAgentSpec(spec) {
 /** Session ids that are chosen up front (pi, claude) rather than returned by the backend (codex). */
 export function initialSessionId(backend) {
   return backend === "codex" ? null : randomUUID();
+}
+
+/**
+ * Recognises the two Claude Code errors that mean the session id cannot be
+ * used any more: the id is held by another process, or `--resume` names a
+ * conversation that no longer exists. The caller then starts a new session.
+ * @returns {string | null} a short reason, or null
+ */
+export function claudeSessionError(stderr, stdout) {
+  const text = `${stderr}\n${stdout}`;
+  if (/already in use/i.test(text)) return "session id already in use";
+  if (/No conversation found/i.test(text)) return "no conversation found for the session id";
+  return null;
+}
+
+/**
+ * Whether pi still has the session on disk: the session folder exists and
+ * holds a file that names the id (in its name or its content).
+ */
+export function piSessionExists(sessionDir, sessionId) {
+  if (!sessionId || !existsSync(sessionDir)) return false;
+  const stack = [sessionDir];
+  while (stack.length) {
+    const folder = stack.pop();
+    for (const entry of readdirSync(folder)) {
+      const path = join(folder, entry);
+      if (statSync(path).isDirectory()) {
+        stack.push(path);
+        continue;
+      }
+      if (entry.includes(sessionId)) return true;
+      try {
+        if (readFileSync(path, "utf8").includes(sessionId)) return true;
+      } catch {
+        // unreadable file: not a session record
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -130,7 +170,7 @@ function parseJsonLoose(text) {
  * Runs one backend call synchronously.
  * @param {{ command: string, args: string[] }} invocation
  * @param {{ cwd: string, timeout?: number, env?: Record<string, string> }} options
- * @returns {{ status: number | null, stdout: string, stderr: string, command: string, args: string[] }}
+ * @returns {{ status: number | null, stdout: string, stderr: string, command: string, args: string[], timedOut: boolean }}
  */
 export function runBackend(invocation, { cwd, timeout, env }) {
   const fake = process.env.POM_TANDEM_FAKE_BACKEND;
@@ -145,8 +185,11 @@ export function runBackend(invocation, { cwd, timeout, env }) {
     ...(timeout ? { timeout } : {}),
   });
   if (result.error) {
-    const reason = result.error.code === "ENOENT" ? `executable "${invocation.command}" not found in PATH` : result.error.message;
-    return { status: null, stdout: result.stdout ?? "", stderr: `${result.stderr ?? ""}\n${reason}`.trim(), command, args };
+    const timedOut = result.error.code === "ETIMEDOUT";
+    const reason = result.error.code === "ENOENT"
+      ? `executable "${invocation.command}" not found in PATH`
+      : timedOut ? `backend timed out after ${timeout} ms` : result.error.message;
+    return { status: null, stdout: result.stdout ?? "", stderr: `${result.stderr ?? ""}\n${reason}`.trim(), command, args, timedOut };
   }
-  return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "", command, args };
+  return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "", command, args, timedOut: false };
 }
