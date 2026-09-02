@@ -17,7 +17,7 @@ This changelog records public-facing POM releases. Fine-grained development hist
 - **`loop-goal` has four modes** (`skills/loop-goal.md`): `define-criteria`, `audit`, `criteria-scenarios`, `conclude`; modeling and implementation guidance go through `skills/workflow.md` instead of two alias modes; `scenarios` was renamed to avoid the clash with the workflow skill.
 - **Tutorial corrected** (`wiki/loop-goal-workflow-tutorial.md`): the budget table no longer proposes `loop_guard` limits as the experiment budget, and trend wording matches the criteria prompt.
 - **Generic ignore rule for raw evidence** (`.gitignore`): `experiments/*/evidence/*/*/` replaces three per-experiment rules; tracked summaries are unaffected.
-- **TASK-0004 closed as Complete with exceptions**: the five-repetition Pi acceptance ran (50 sessions, overall 0.96, critical 0.978, parity with the frozen baseline) and the durable install/removal check passed; the one exception is a single ordering miss in a critical scenario, recorded instead of relaxing the threshold.
+- **TASK-0004 closed as Complete**: the five-repetition Pi acceptance ran (50 sessions, overall 0.96, critical 0.978, parity with the frozen baseline, one ordering miss in a critical scenario recorded in the task) and the durable install/removal check passed; the acceptance bar applied at closure is parity with the frozen baseline.
 - Experiment folders promoted under `tests/` in 0.4.0 are removed from `experiments/`, which now point at the copies.
 
 ## 0.4.0 - 2026-09-02
