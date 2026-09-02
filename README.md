@@ -48,8 +48,9 @@ Use the smallest workflow that matches your situation:
 | Render the wiki reader | `npm run pom:wiki:render` |
 | Browse the project locally | `npm run pom:reader -- --port 4173` |
 | Browse, search, and annotate the project locally | POM Project Reader server |
-| Extend POM | `skills/extend.md` |
-| Reduce method bloat | `skills/prune.md` |
+| Change POM itself (extend, improve, prune) | `skills/method.md` |
+| Close a numbered version | `skills/release.md` |
+| Move adopted folders toward canonical roots | `skills/migrate.md` |
 | Diagnose a POM problem | `skills/diagnose.md` |
 | Debug a Target Project problem | `skills/root-cause.md` |
 | Rework a patch around the intended final shape | `skills/zero-tech-debt.md` |
@@ -830,14 +831,12 @@ Generated from `skills/README.md` by `npm run pom:skills:sync`. Edit the catalog
 | Skill | Purpose | Canonical prompt |
 |---|---|---|
 | `using-pom` | bootstrap a POM-aware session and route to the right skill | `prompts/32-using-pom.md` |
-| `help` | choose and explain POM skills | `skills/README.md` |
 | `clarify` | clarify ambiguous work before creating memory or changing method | `prompts/20-clarify-pom-work.md` |
 | `seed` | start POM on a new project | `prompts/01-bootstrap-new-project.md` |
 | `adopt` | adopt POM in an existing project | `prompts/02-adopt-existing-project.md` |
 | `pulse` | create or update `PROJECT_STATE.md` | `prompts/03-create-project-state.md` |
-| `guard` | set governance, lint, and decisions | `prompts/04-create-doc-governance.md` |
 | `plan` | turn specs/ADRs into verifiable tasks | `prompts/05-create-task-plan-from-spec.md` |
-| `check` | verify a phase, workstream, or task | `prompts/06-review-task-phase.md` |
+| `check` | verify that completed work is really done: goal achieved, tests, lint, consistency, risks | `prompts/06-review-task-phase.md` |
 | `handoff` | close a session by updating memory and status | `prompts/07-update-project-after-work.md` |
 | `reader-notes` | process human Project Reader notes through source-backed edits and outcome recording | `prompts/26-process-reader-notes.md` |
 | `diagnose` | debug failing or confusing POM workflows with a focused feedback loop | `prompts/22-diagnose-pom-problem.md` |
@@ -845,18 +844,18 @@ Generated from `skills/README.md` by `npm run pom:skills:sync`. Edit the catalog
 | `mcp-interface` | design, audit, reshape, or verify MCP interfaces for agent ergonomics | `prompts/35-mcp-interface.md` |
 | `zero-tech-debt` | reshape a scoped change around the intended product and architecture end state | `prompts/23-zero-tech-debt.md` |
 | `challenge` | run adversarial thesis/antithesis review before accepting or completing non-code work | `prompts/24-challenge-antithesis.md` |
-| `config` | create or update `pom.config.json` | `prompts/08-create-pom-config.md` |
+| `config` | create or update `pom.config.json`; set or revise governance, lint, decision records, mock manifests, and agent rules | `prompts/08-create-pom-config.md`, `prompts/04-create-doc-governance.md` |
 | `spike` | manage temporary experiments and consolidation | `prompts/09-run-temporary-experiment.md` |
 | `wiki` | build, query, check, or maintain the wiki | `prompts/10-build-wiki.md`, `prompts/11-review-stale-wiki.md`, `prompts/13-query-wiki.md`, `prompts/14-lint-wiki.md` |
-| `extend` | extend POM with config, templates, prompts, skills, or lint | `prompts/12-extend-pom.md` |
-| `improve` | run a controlled self-improvement loop for method/governance changes | `prompts/25-self-improvement-loop.md` |
-| `prune` | simplify, merge, demote, delete, or config-gate POM method bloat | `prompts/21-prune-pom-method.md` |
+| `method` | change POM itself in `extend`, `improve`, or `prune` mode | `prompts/12-extend-pom.md`, `prompts/25-self-improvement-loop.md`, `prompts/21-prune-pom-method.md` |
 | `status` | classify document type and choose the least misleading status | `prompts/15-classify-document-status.md` |
 | `defer` | park important work without implementing it | `prompts/16-defer-work.md` |
 | `sync` | refresh an existing POM installation or align source POM changes with a target project's `pom/` | `prompts/17-sync-pom-framework.md` |
 | `finish-branch` | finish branch, PR, merge, keep, discard, or cleanup decisions | `prompts/33-finish-branch.md` |
+| `release` | close a numbered version: changelog, version references, checksums, tag, memory updates | `prompts/36-release.md` |
+| `migrate` | move an adopted project's folders toward canonical roots with approval and lint before and after | `prompts/37-migrate-structure.md` |
 | `reconcile` | classify and resolve a divergence between a source and project memory | `prompts/19-reconcile-memory.md` |
-| `validate` | audit POM governance after significant actions | `prompts/18-post-action-validator.md` |
+| `validate` | audit governed memory read-only after significant actions: project state, wiki, task status, decisions, orphans | `prompts/18-post-action-validator.md` |
 | `workflow` | design, validate, diagram, scenarios, and implement domain workflows declared as YAML state models | `prompts/27-workflow-modeling.md` |
 | `loop-goal` | define-criteria, model, audit, scenarios, conclude for opt-in agent loop/goal workflows and experiments in Target Projects (the four-agent cycle); when to use vs `workflow` -> `ADR-0003` | `prompts/28-loop-goal-define-criteria.md`, `prompts/29-loop-goal-audit.md`, `prompts/30-loop-goal-scenarios.md`, `prompts/31-loop-goal-conclude.md` |
 <!-- POM:SKILL-CATALOG:END -->
@@ -880,7 +879,7 @@ Treat this as optional telemetry, not a global operating rule. If a project want
 
 ## Extending POM
 
-Use `skills/extend.md` when POM needs to be extended.
+Use `skills/method.md` in `extend` mode when POM needs to be extended, and in `prune` mode first when the change may add method weight.
 
 POM is extended by levels. First choose the smallest necessary level, avoiding turning a local adaptation into a general rule.
 

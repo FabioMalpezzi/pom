@@ -1,0 +1,36 @@
+# E051: context_schema.input[] entry has no type.
+workflow: core_minimal
+version: 1
+description: |
+  A single piece of work is open and then closed.
+initial_state: open
+
+states:
+  - name: open
+    description: |
+      The work is open.
+    is_final: false
+  - name: closed
+    description: |
+      The work is closed.
+    is_final: true
+
+events:
+  - name: finish
+    description: |
+      The work is finished.
+
+guards:
+  - name: is_ready
+    description: |
+      The work is ready to be closed.
+
+transitions:
+  - from: open
+    to: closed
+    event: finish
+    guard: is_ready
+
+context_schema:
+  input:
+    - name: item_id

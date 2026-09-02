@@ -103,6 +103,9 @@ function printHelp(): void {
   console.log("11. Render a workflow as an XState v5 MachineConfig JSON (for stately.ai)");
   console.log("    npm run pom:workflow:xstate -- workflows/<name>.yaml --out workflows/generated/<name>.xstate.json");
   console.log("");
+  console.log("12. Show this command guide");
+  console.log("    npm run pom:help [-- --lang en|it]");
+  console.log("");
   console.log("Source-only commands (POM repository itself, not installed in target projects):");
   console.log("");
   console.log("- npm run pom:test");
@@ -127,6 +130,8 @@ function printHelp(): void {
   console.log("  - Use `pom/skills/root-cause.md` to debug Target Project bugs and failures before fixes.");
   console.log("  - Use `pom/skills/validate.md` to audit governance after significant work.");
   console.log("  - Use `pom/skills/reconcile.md` to resolve a divergence between a source and memory.");
+  console.log("  - Use `pom/skills/release.md` to close a numbered version with changelog, version references, and tag.");
+  console.log("  - Use `pom/skills/method.md` to extend, improve, or prune POM itself.");
   console.log("  - Use `pom/skills/finish-branch.md` to close branch, PR, merge, keep, discard, or cleanup decisions.");
   console.log("");
 
@@ -216,6 +221,9 @@ function printHelpIt(): void {
   console.log("11. Render di un workflow come XState v5 MachineConfig JSON (per stately.ai)");
   console.log("    npm run pom:workflow:xstate -- workflows/<nome>.yaml --out workflows/generated/<nome>.xstate.json");
   console.log("");
+  console.log("12. Mostrare questa guida ai comandi");
+  console.log("    npm run pom:help [-- --lang en|it]");
+  console.log("");
   console.log("Comandi solo nel repo POM sorgente (non installati nei progetti target):");
   console.log("");
   console.log("- npm run pom:test");
@@ -237,6 +245,8 @@ function printHelpIt(): void {
   console.log("  - Usa `pom/skills/challenge.md` per una verifica avversaria di tesi e antitesi.");
   console.log("  - Usa `pom/skills/root-cause.md` per diagnosticare bug e failure del progetto prima dei fix.");
   console.log("  - Usa `pom/skills/validate.md` dopo lavoro significativo, prima di handoff o commit.");
+  console.log("  - Usa `pom/skills/release.md` per chiudere una versione numerata con changelog, riferimenti di versione e tag.");
+  console.log("  - Usa `pom/skills/method.md` per estendere, migliorare o snellire POM stesso.");
   console.log("  - Usa `pom/skills/finish-branch.md` per chiudere decisioni di branch, PR, merge, keep, discard o cleanup.");
   console.log("");
 

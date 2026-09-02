@@ -1,0 +1,36 @@
+# Child workflow with a context_schema, invoked by the core.*-E055/E056/E057
+# fixtures and by core.valid-invoke.yaml.
+workflow: core_child_with_schema
+version: 1
+description: |
+  Checks one item and accepts it.
+initial_state: checking
+
+states:
+  - name: checking
+    description: |
+      The item is being checked.
+    is_final: false
+  - name: accepted
+    description: |
+      The item passed the check.
+    is_final: true
+
+events:
+  - name: check_done
+    description: |
+      The check finished.
+
+transitions:
+  - from: checking
+    to: accepted
+    event: check_done
+
+context_schema:
+  input:
+    - name: item_id
+      type: string
+  output_by_terminal:
+    accepted:
+      - name: verdict
+        type: string

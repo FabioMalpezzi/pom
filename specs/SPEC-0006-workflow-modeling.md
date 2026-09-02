@@ -25,7 +25,7 @@ coverage is still partial.
 | Verification evidence on guards (`guards[].evidence`) | **Implemented** | Optional block; validator rules E090, E091 and warnings W005, W006 in `scripts/lib/workflow-lint-core.mjs`. W005 covers model judgement without declared context independence; W006 covers a fan-in guard with no declared evidence at all. |
 | Runtime loop contract (`runtime_loop`) | **Implemented** | Optional top-level block; validator rules E100–E106 and warnings W007, W008. Records trigger, goal, evidence, feedback, and stop with escalation. Distinct from the experiment contract in `prompts/28-loop-goal-define-criteria.md`. |
 | Validation report (`<name>.validation.md`) | **Implemented** | Markdown output of `lint-workflows.mjs` |
-| Broken-fixture coverage | **Partial** | `tests/workflow-validator/` integration tests exercise broken fixtures for E060-E073/W060 (temporal primitives), E082-E089 (handle lifecycle), E090-E091/W005-W006 (guard evidence), and E100-E106/W007-W008 (runtime loop), plus the canonical templates as positive cases. The base rules E000-E017, W001-W004 and the context-injection rules E050-E058 have no committed broken fixture; they are covered only by the canonical examples passing. |
+| Broken-fixture coverage | **Implemented** | `tests/workflow-validator/` integration tests exercise broken fixtures for E000-E017/W001-W004 (base rules, `core.*` fixtures in `test-core-rule-fixtures.mjs`; W001 via `runtime-loop-unreachable-stop-W001.yaml`), E050-E058 (context injection, `core.*` fixtures with the `core.child-*` child workflows), E060-E073/W060 (temporal primitives), E082-E089 (handle lifecycle), E090-E091/W005-W006 (guard evidence), and E100-E106/W007-W008 (runtime loop), plus the canonical templates and the `core.valid-*` base models as positive cases. No rule in these ranges was found unreachable: every code has a committed fixture that reports it. |
 | Skill card with five modes | **Implemented** | `skills/workflow.md` |
 | Canonical prompt for the skill | **Implemented** | `prompts/27-workflow-modeling.md` |
 | Validator Info rules (cycles, naming conventions) | **Target for promotion** | Not implemented; explicitly out of scope of the stable validator pass |
@@ -579,7 +579,7 @@ The capability is promoted out of `experiments/workflow-modeling/`; the stable a
 | Diagram and XState export | `scripts/mermaid.mjs`, `scripts/to-mermaid.mjs`, `scripts/to-xstate.mjs` |
 | Tests | `tests/workflow-validator/` |
 
-Further changes to the method go through `skills/extend.md` and `prompts/12-extend-pom.md`, after `skills/challenge.md` review.
+Further changes to the method go through `skills/method.md` (`extend` mode) and `prompts/12-extend-pom.md`, after `skills/challenge.md` review.
 
 ## Impacts
 

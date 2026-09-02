@@ -42,7 +42,7 @@ Routing signals:
 
 | User intent | Skill |
 |---|---|
-| "What POM skill should I use?" / "Quale skill POM serve?" | `help` |
+| "What POM skill should I use?" / "Quale skill POM serve?" | answer from `skills/README.md` (this skill routes; no separate skill) |
 | ambiguous POM request or artifact | `clarify` |
 | new or empty project setup | `seed` |
 | existing project adoption without moving structure | `adopt` |
@@ -59,8 +59,11 @@ Routing signals:
 | installed POM refresh or source/target alignment | `sync` |
 | Git branch/worktree choice for risky exploratory work | `spike` |
 | completed branch, PR, merge, keep, discard, or cleanup decision | `finish-branch` |
+| close a numbered version: changelog, version references, tag | `release` |
+| move adopted project folders toward canonical roots | `migrate` |
+| governance, lint, decision-record, or agent-rule setup beyond the installer | `config` |
 | dirty `pom/`, submodule update, vendored POM copy, or source-to-target POM propagation | `sync` |
-| POM method change | `extend`, or `prune` first if the change may add method weight |
+| POM method change (extend, improve, or prune) | `method`, starting in `prune` mode if the change may add method weight |
 | divergence between source and memory | `reconcile` |
 | document type or status is unclear | `status` |
 | domain state-machine workflow | `workflow` |

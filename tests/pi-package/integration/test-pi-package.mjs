@@ -54,7 +54,7 @@ for (const f of skillFiles) {
 }
 assert("every exported skill document has valid metadata", invalidSkillMetadata.length === 0, invalidSkillMetadata.join(", "));
 assert("skills/README.md stays out of model invocation", skillMetadata.get("README.md")?.["disable-model-invocation"] === true);
-assert("POM improve uses a collision-safe Pi skill name", skillMetadata.get("improve.md")?.name === "pom-improve");
+assert("POM method uses a collision-safe Pi skill name", skillMetadata.get("method.md")?.name === "pom-method");
 const names = [...skillMetadata.values()].map((metadata) => metadata.name);
 assert("exported Pi skill names are unique", new Set(names).size === names.length);
 

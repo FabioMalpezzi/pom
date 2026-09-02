@@ -1,0 +1,44 @@
+workflow: core_broken_E056
+version: 1
+description: |
+  Parent that invokes a child workflow while checking.
+initial_state: open
+
+states:
+  - name: open
+    description: |
+      The work is open.
+    is_final: false
+  - name: checking
+    description: |
+      The child workflow checks the item.
+    is_final: false
+    invoke:
+      workflow: core.child-with-schema.yaml
+      input:
+        item_id: context.item_id
+      on_completion:
+        - terminal_state: accepted
+          next_event: child_accepted
+          assign:
+            verdict: child.missing_output
+  - name: closed
+    description: |
+      The work is closed.
+    is_final: true
+
+events:
+  - name: start_check
+    description: |
+      The check starts.
+  - name: child_accepted
+    description: |
+      The child accepted the item.
+
+transitions:
+  - from: open
+    to: checking
+    event: start_check
+  - from: checking
+    to: closed
+    event: child_accepted

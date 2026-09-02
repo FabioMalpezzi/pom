@@ -43,15 +43,13 @@ Further evaluation should focus on consultation quality: whether the reader help
 |---|---|
 | `skills/spike.md` | Experiment isolation and consolidation rules. |
 | `prompts/09-run-temporary-experiment.md` | Full temporary experiment workflow. |
-| `skills/extend.md` | Smallest-level extension rule. |
+| `skills/method.md` | Smallest-level extension rule (`extend` mode), bounded improvement loop (`improve`), and method-weight reduction (`prune`). |
 | `prompts/12-extend-pom.md` | Controlled POM extension workflow. |
-| `skills/prune.md` | Route for reducing method bloat if the proposed feature adds too much process. |
 | `README.md` | Extending POM and temporary experiment rules. |
 | `scripts/project-reader/README.md` | Local POM Project Reader launch, search, and annotation workflow. |
 | `scripts/project-reader/document-sources.mjs` | Project Reader document allowlist and optional POM config classification. |
 | `scripts/project-reader/wiki-tools.mjs` | File-based annotation CLI and `rg` search implementation. |
 | `prompts/25-self-improvement-loop.md` | Canonical procedure for the loop. |
-| `skills/improve.md` | Short alias for the loop prompt. |
 | `experiments/self-improvement-loop/EXPERIMENT.md` | Evaluation evidence and case logs for the loop. |
 
 ## Linked Decisions

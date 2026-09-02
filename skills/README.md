@@ -64,14 +64,12 @@ Existing project structures should be mapped first, not moved by default.
 | Skill | Use | Prompt |
 |---|---|---|
 | `using-pom` | bootstrap a POM-aware session and route to the right skill | `prompts/32-using-pom.md` |
-| `help` | choose and explain POM skills | `skills/README.md` |
 | `clarify` | clarify ambiguous work before creating memory or changing method | `prompts/20-clarify-pom-work.md` |
 | `seed` | start POM on a new project | `prompts/01-bootstrap-new-project.md` |
 | `adopt` | adopt POM in an existing project | `prompts/02-adopt-existing-project.md` |
 | `pulse` | create or update `PROJECT_STATE.md` | `prompts/03-create-project-state.md` |
-| `guard` | set governance, lint, and decisions | `prompts/04-create-doc-governance.md` |
 | `plan` | turn specs/ADRs into verifiable tasks | `prompts/05-create-task-plan-from-spec.md` |
-| `check` | verify a phase, workstream, or task | `prompts/06-review-task-phase.md` |
+| `check` | verify that completed work is really done: goal achieved, tests, lint, consistency, risks | `prompts/06-review-task-phase.md` |
 | `handoff` | close a session by updating memory and status | `prompts/07-update-project-after-work.md` |
 | `reader-notes` | process human Project Reader notes through source-backed edits and outcome recording | `prompts/26-process-reader-notes.md` |
 | `diagnose` | debug failing or confusing POM workflows with a focused feedback loop | `prompts/22-diagnose-pom-problem.md` |
@@ -79,20 +77,24 @@ Existing project structures should be mapped first, not moved by default.
 | `mcp-interface` | design, audit, reshape, or verify MCP interfaces for agent ergonomics | `prompts/35-mcp-interface.md` |
 | `zero-tech-debt` | reshape a scoped change around the intended product and architecture end state | `prompts/23-zero-tech-debt.md` |
 | `challenge` | run adversarial thesis/antithesis review before accepting or completing non-code work | `prompts/24-challenge-antithesis.md` |
-| `config` | create or update `pom.config.json` | `prompts/08-create-pom-config.md` |
+| `config` | create or update `pom.config.json`; set or revise governance, lint, decision records, mock manifests, and agent rules | `prompts/08-create-pom-config.md`, `prompts/04-create-doc-governance.md` |
 | `spike` | manage temporary experiments and consolidation | `prompts/09-run-temporary-experiment.md` |
 | `wiki` | build, query, check, or maintain the wiki | `prompts/10-build-wiki.md`, `prompts/11-review-stale-wiki.md`, `prompts/13-query-wiki.md`, `prompts/14-lint-wiki.md` |
-| `extend` | extend POM with config, templates, prompts, skills, or lint | `prompts/12-extend-pom.md` |
-| `improve` | run a controlled self-improvement loop for method/governance changes | `prompts/25-self-improvement-loop.md` |
-| `prune` | simplify, merge, demote, delete, or config-gate POM method bloat | `prompts/21-prune-pom-method.md` |
+| `method` | change POM itself in `extend`, `improve`, or `prune` mode | `prompts/12-extend-pom.md`, `prompts/25-self-improvement-loop.md`, `prompts/21-prune-pom-method.md` |
 | `status` | classify document type and choose the least misleading status | `prompts/15-classify-document-status.md` |
 | `defer` | park important work without implementing it | `prompts/16-defer-work.md` |
 | `sync` | refresh an existing POM installation or align source POM changes with a target project's `pom/` | `prompts/17-sync-pom-framework.md` |
 | `finish-branch` | finish branch, PR, merge, keep, discard, or cleanup decisions | `prompts/33-finish-branch.md` |
+| `release` | close a numbered version: changelog, version references, checksums, tag, memory updates | `prompts/36-release.md` |
+| `migrate` | move an adopted project's folders toward canonical roots with approval and lint before and after | `prompts/37-migrate-structure.md` |
 | `reconcile` | classify and resolve a divergence between a source and project memory | `prompts/19-reconcile-memory.md` |
-| `validate` | audit POM governance after significant actions | `prompts/18-post-action-validator.md` |
+| `validate` | audit governed memory read-only after significant actions: project state, wiki, task status, decisions, orphans | `prompts/18-post-action-validator.md` |
 | `workflow` | design, validate, diagram, scenarios, and implement domain workflows declared as YAML state models | `prompts/27-workflow-modeling.md` |
 | `loop-goal` | define-criteria, model, audit, scenarios, conclude for opt-in agent loop/goal workflows and experiments in Target Projects (the four-agent cycle); when to use vs `workflow` -> `ADR-0003` | `prompts/28-loop-goal-define-criteria.md`, `prompts/29-loop-goal-audit.md`, `prompts/30-loop-goal-scenarios.md`, `prompts/31-loop-goal-conclude.md` |
+
+## Renamed Or Merged Skills
+
+Since 0.3.0: `guard` is part of `config` (governance setup beyond the installer); `help` is gone, because `using-pom` routes from this catalog; `extend`, `improve`, and `prune` are the three modes of `method`. Requests that name the old skills route to these.
 
 ## Rule
 

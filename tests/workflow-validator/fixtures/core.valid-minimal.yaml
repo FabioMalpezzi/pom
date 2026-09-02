@@ -1,0 +1,34 @@
+# Minimal workflow used as the base for the core-rule broken fixtures
+# (E001-E017, W002-W004, E050-E054). Every core.broken-*/core.warn-* fixture
+# is this file with exactly one rule condition broken.
+workflow: core_minimal
+version: 1
+description: |
+  A single piece of work is open and then closed.
+initial_state: open
+
+states:
+  - name: open
+    description: |
+      The work is open.
+    is_final: false
+  - name: closed
+    description: |
+      The work is closed.
+    is_final: true
+
+events:
+  - name: finish
+    description: |
+      The work is finished.
+
+guards:
+  - name: is_ready
+    description: |
+      The work is ready to be closed.
+
+transitions:
+  - from: open
+    to: closed
+    event: finish
+    guard: is_ready

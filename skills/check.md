@@ -1,6 +1,6 @@
 ---
 name: check
-description: Use when a phase, workstream, task, spec, or ADR is claimed complete and needs verification.
+description: Use when a phase, task, spec, or ADR is claimed complete and the work itself must be verified - goal achieved, tests, lint, consistency, risks.
 ---
 
 # Skill - check
@@ -10,6 +10,8 @@ description: Use when a phase, workstream, task, spec, or ADR is claimed complet
 - Verification of a completed phase, workstream, or task.
 - Review before closing work.
 - Check tests, lint, consistency, and risks.
+
+Boundary: `check` verifies the work. `validate` verifies the memory about the work (project state, wiki, task status, decisions, orphan artifacts); run it after a significant closure, not instead of this skill.
 
 ## Canonical Prompt
 

@@ -1,0 +1,36 @@
+# E010: the same guard name is declared twice.
+workflow: core_minimal
+version: 1
+description: |
+  A single piece of work is open and then closed.
+initial_state: open
+
+states:
+  - name: open
+    description: |
+      The work is open.
+    is_final: false
+  - name: closed
+    description: |
+      The work is closed.
+    is_final: true
+
+events:
+  - name: finish
+    description: |
+      The work is finished.
+
+guards:
+  - name: is_ready
+    description: |
+      The work is ready to be closed.
+
+  - name: is_ready
+    description: |
+      Declared a second time.
+
+transitions:
+  - from: open
+    to: closed
+    event: finish
+    guard: is_ready
