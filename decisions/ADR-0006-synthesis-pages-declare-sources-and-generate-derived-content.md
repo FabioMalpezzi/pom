@@ -67,7 +67,7 @@ Both stay within POM's constraints. They are deterministic, need no model, and r
 
 - [x] Implement both mechanisms with integration tests.
 - [x] Apply them to POM Source's own overview.
-- [ ] Apply them to the target project that exposed the gap and re-verify its overview against the nine ADRs and the current state.
+- [x] Apply them to the target project that exposed the gap and re-verify its overview against the nine ADRs and the current state (done 2026-09-02: the overview now declares `doc/adr/`, `PROJECT_STATE.md`, and `CURRENT_PLAN.md`, generates its state, decisions, and page blocks, and its prose was rewritten against ADR-0006 to ADR-0016).
 - [ ] After a few weeks of use, review whether `wiki-stale-synthesis` fires too often on pages that derive from fast-moving roots such as the whole decisions folder, and decide whether a per-source grace period is needed.
 
 ## Completion Verification
