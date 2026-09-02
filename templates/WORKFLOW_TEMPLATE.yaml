@@ -10,6 +10,10 @@
 #   - events (named, with description)
 #   - guards (named, with description; predicates that condition a transition)
 #   - transitions (from, to, event, optional guard)
+#   - loop_guard on a state (optional; bounds a retry loop by visits and/or
+#     duration, with a common exhaustion exit and named cause-specific exits)
+#   - timeout on a state (optional; bounds residence in a non-loop state and
+#     names the state entered when the duration elapses)
 #   - invariants (textual; checked by humans and by the validator when possible)
 #   - runtime_loop (optional; how the runtime re-enters the workflow and what
 #     closes a cycle)
@@ -36,8 +40,10 @@ description: |
   Plain language; the reader should understand the domain after reading it.
 
   The example below is one coherent flow rather than a bag of syntax
-  fragments: an item is drafted, submitted, validated by a child workflow,
-  then checked by a fan-out batch before it can be marked done.
+  fragments: an item is drafted, submitted, validated by a child workflow
+  (with a bounded revision loop when validation refuses it), checked by a
+  fan-out batch, then signed off by a person within a deadline before it
+  can be marked done.
 
 initial_state: draft             # must appear in states[]
 
@@ -76,6 +82,37 @@ states:
           next_event: validation_passed
         - terminal_state: refused
           next_event: validation_failed
+
+  # Optional: loop_guard bounds a loop as a whole. Declare it on the state
+  # the loop re-enters (here every refused validation comes back to
+  # revising, so revising counts the attempts). It needs at least one bound,
+  # max_visits and/or max_duration, and a common exhaustion exit; the
+  # cause-specific exits are optional and override on_exhaustion for one
+  # bound only.
+  #
+  # Invariants:
+  #   - max_visits is an integer >= 1;
+  #   - max_duration uses <N>s, <N>min, <N>h, <N>d, or ISO 8601; a bare "m"
+  #     is rejected as ambiguous (E063);
+  #   - on_exhaustion, on_visits_exhausted, and on_duration_exhausted are
+  #     declared states, and they count as reachable targets even without
+  #     a transition (E064, E065);
+  #   - a cause-specific exit for a bound that is not declared raises W060;
+  #   - a state declares loop_guard or timeout, never both (E073).
+  #
+  # POM validates the shape. The target runtime owns the visit counter, the
+  # clock, and the jump to the exhaustion state.
+  - name: revising
+    description: |
+      Validation refused the item and it is being reworked before another
+      attempt. Each refusal is one visit; the guard keeps "fix and resubmit"
+      from becoming "resubmit forever".
+    is_final: false
+    loop_guard:
+      max_visits: 3
+      max_duration: 2d
+      on_exhaustion: rejected                  # common exit; here it serves the duration bound
+      on_visits_exhausted: revision_exhausted  # named exit for the visit bound
 
   # Optional Dynamic Workflow control-plane fields. Use only when
   # pom.config.json declares workflows.dynamic.enabled: true.
@@ -128,6 +165,28 @@ states:
     is_final: false
     cancel_handles: [child_batch]
 
+  # Optional: timeout bounds residence in one non-loop state. Unlike the
+  # await.timeout above, whose on_timeout names an EVENT, a state-level
+  # timeout names the STATE entered when the duration elapses.
+  #
+  # Invariants:
+  #   - duration uses the same grammar as loop_guard.max_duration (E071);
+  #   - on_timeout is a declared state and counts as reachable (E072);
+  #   - never combined with loop_guard on the same state (E073).
+  #
+  # The target runtime owns the timer. The sign_off_timeout event and its
+  # transition below are how the runtime reports the expiry back into the
+  # graph; keep them consistent with timeout.on_timeout.
+  - name: awaiting_sign_off
+    description: |
+      A person confirms the batch outcome before the item is marked done.
+      Residence here is bounded: a sign-off nobody gives is a decision
+      nobody made, and the item must not wait for it forever.
+    is_final: false
+    timeout:
+      duration: 48h
+      on_timeout: rejected
+
   - name: done
     description: |
       Success terminal.
@@ -143,6 +202,13 @@ states:
       Failure terminal. A model with no failure terminal usually hides one.
     is_final: true
 
+  - name: revision_exhausted
+    description: |
+      Failure terminal for the revision budget: the item was refused
+      max_visits times. Kept apart from rejected so reports can tell
+      "refused once" from "refused until the budget ran out".
+    is_final: true
+
 events:
   - name: submit
     description: |
@@ -156,6 +222,9 @@ events:
   - name: validation_failed
     description: |
       Parent-side event mapped from the child's `refused` terminal.
+  - name: revision_ready
+    description: |
+      The reworked item is handed back to validation for another attempt.
   - name: batch_launched
     description: |
       The batch was launched and the control plane may continue.
@@ -169,6 +238,13 @@ events:
   - name: batch_cancelled
     description: |
       The still-active workers have been stopped.
+  - name: sign_off_given
+    description: |
+      A person confirmed the batch outcome.
+  - name: sign_off_timeout
+    description: |
+      Emitted by the target runtime when the sign-off timeout.duration
+      elapses. POM declares it; the runtime emits it.
 
 guards:
   - name: has_required_fields
@@ -220,16 +296,23 @@ transitions:
     to: launching_batch
     event: validation_passed
 
+  # A refusal does not end the item: it enters the bounded revision loop.
+  # Once the loop_guard on revising is exhausted, the runtime jumps to the
+  # declared exhaustion state; no transition is needed for that jump.
   - from: validating
-    to: rejected
+    to: revising
     event: validation_failed
+
+  - from: revising
+    to: validating
+    event: revision_ready
 
   - from: launching_batch
     to: awaiting_batch
     event: batch_launched
 
   - from: awaiting_batch
-    to: done
+    to: awaiting_sign_off
     event: batch_ready
     guard: review_passed
 
@@ -240,6 +323,17 @@ transitions:
   - from: cancelling_batch
     to: rejected
     event: batch_cancelled
+
+  - from: awaiting_sign_off
+    to: done
+    event: sign_off_given
+
+  # Mirrors timeout.on_timeout on awaiting_sign_off: the runtime emits
+  # sign_off_timeout when the duration elapses, and the graph lands where
+  # the primitive says it lands.
+  - from: awaiting_sign_off
+    to: rejected
+    event: sign_off_timeout
 
   # Optional: transition-level invoke declares a synchronous child
   # workflow triggered when the event fires from the source state.
@@ -282,6 +376,9 @@ invariants:
       Example: "Every validated item must eventually reach done or rejected."
   - description: |
       No final state is reached while child_batch is still active.
+  - description: |
+      No loop runs unbounded: a state that a retry re-enters declares a
+      loop_guard, and a state that waits for a person declares a timeout.
 
 # Optional runtime loop contract.
 #

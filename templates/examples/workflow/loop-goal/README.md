@@ -21,6 +21,17 @@ For classic domain workflows (ticket lifecycle, document approval, spec evolutio
 | `agent-supervisor.yaml` | Supervisor plus autonomous sub-workflow | 5 states, 6 transitions, one `state-invoke` on `agent-orchestrator-goal-lifecycle.yaml` with `on_completion` dispatching on the child terminals. Two-level synchronous composition. | Experiment `agent-loop-fsm` H4 |
 | `agent-iteration-record.yaml` | Iteration Record plus bounded verification | 8 states, 9 transitions, `loop_guard.max_visits: 50`, evidence-based verification before the decision, and an explicit failure when the record is unavailable. | Self-test of the Iteration Record extension |
 
+## Criteria and evaluation examples
+
+Two Markdown files show the experiment side of the `loop-goal` skill on a realistic case (bounded retry for flaky tool calls, the shape of `agent-retry-bounded.yaml`):
+
+| File | What it shows |
+|---|---|
+| `EXAMPLE_CRITERIA.md` | A complete accepted criteria contract in the shape of the `## Criteria` section of `templates/EXPERIMENT_TEMPLATE.md`: system under test, observation boundary, gates, signals with threshold/target/trend, the four exits, budget, decision owner and date. It is what `prompts/28-loop-goal-define-criteria.md` freezes. |
+| `EXAMPLE_EVALUATION.md` | The independent evaluation written against that contract by `prompts/31-loop-goal-conclude.md`, starting with the `loop-goal-evaluation` frontmatter (`evaluator`, `independent_context`, `criteria_path`, `criteria_commit`). Its `criteria_commit` is the real commit that froze `EXAMPLE_CRITERIA.md` in this repository. |
+
+They are examples of shape and rigor, not fixtures for the workflow validator.
+
 ## Verification
 
 Every workflow validates with `pom:workflow:lint` (0 errors, 0 warnings) and produces parsable Mermaid through `pom:workflow:mermaid` plus `mmdc`. Three of them (`agent-orchestrator`, `agent-orchestrator-goal-lifecycle`, `agent-supervisor`) compile correctly to XState v5 through `pom:workflow:xstate`.

@@ -1,5 +1,7 @@
 # Esperimento — Dynamic Workflows nel formalismo FSM di POM
 
+> Artifacts promoted: the folders `runtime/`, `workflows-candidate/`, and `broken-fixtures/` were moved under `tests/dynamic-workflows/fixtures/` and `tests/workflow-validator/fixtures/` in POM 0.4.0, each with a README naming this experiment and the source commit. The paths cited below refer to those copies.
+
 | Campo | Valore |
 |---|---|
 | Data | 2026-05-30 |

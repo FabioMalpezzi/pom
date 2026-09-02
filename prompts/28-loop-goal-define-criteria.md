@@ -4,7 +4,9 @@ Use this prompt before modeling or implementing an agent-shaped controller that 
 
 ## Purpose
 
-Create an accepted, measurable experiment contract before results can influence its criteria. The procedure is a reasoned dialogue between the user and the Coordinator, not a questionnaire or a form-completion exercise.
+Create an accepted, measurable experiment contract before results can influence its criteria. The procedure is a reasoned dialogue between the user and the Coordinator (the agent role that owns the experiment cycle, defined in `skills/loop-goal.md`), not a questionnaire or a form-completion exercise.
+
+The contract is the `## Criteria` section of the experiment's `EXPERIMENT.md`, in the shape of `templates/EXPERIMENT_TEMPLATE.md`; `templates/examples/workflow/loop-goal/EXAMPLE_CRITERIA.md` is a complete example. A separate `criteria.md` is only a frozen copy of that section, written when `workflows.loopGoal.criteriaPath` is configured.
 
 ```text
 I want to define the criteria for a loop/goal experiment before modeling or implementation begins.
@@ -15,12 +17,13 @@ I want to define the criteria for a loop/goal experiment before modeling or impl
 2. In a Target Project, continue only when both `workflows.enabled: true` and `workflows.loopGoal.enabled: true`. Otherwise stop and route to `skills/config.md`.
 3. Read `skills/loop-goal.md` and the current experiment brief or source description.
 4. Resolve locations from:
-   - `workflows.loopGoal.criteriaPath`;
+   - the experiment's `EXPERIMENT.md` (create it from `templates/EXPERIMENT_TEMPLATE.md` through `prompts/09-run-temporary-experiment.md` when it does not exist yet);
+   - `workflows.loopGoal.criteriaPath`, only when the project keeps a frozen `criteria.md` copy;
    - `workflows.loopGoal.dialogPath`;
    - `workflows.loopGoal.evidenceRoot`;
    - `workflows.loopGoal.artifactsRoot`.
    Use project conventions when a value is absent. POM Source examples are fallbacks, not Target Project requirements.
-5. If a criteria file already exists, do not overwrite it. Read it and ask whether this is a review, an amendment before acceptance, or a new experiment round.
+5. If a filled-in `## Criteria` section or a criteria file already exists, do not overwrite it. Read it and ask whether this is a review, an amendment before acceptance, or a new experiment round.
 6. If a previous independent evaluation contains advice for the Coordinator, read that advice as input to the dialogue. It does not change an earlier verdict and does not become a criterion without user agreement.
 
 ## Dialogue discipline
@@ -101,7 +104,7 @@ For every metric record:
 
 Prefer direct outcome measures. If a proxy is unavoidable, state what failure of the proxy would look like.
 
-Run or request the cheapest reliable baseline before freezing criteria. If measurement is not yet possible, mark the criteria `draft` and define the calibration step; do not invent a baseline.
+Run or request the cheapest reliable baseline before freezing criteria. If measurement is not yet possible, keep the criteria `proposed` and define the calibration step; do not invent a baseline.
 
 ## 5. Check coherence
 
@@ -119,32 +122,35 @@ For each warning, explain the consequence and resolve it with the user. Do not c
 
 Agree on all four exits:
 
-1. **Reached**: a Boolean expression over green gates and signal targets.
-2. **Stall**: a bounded number of experiment iterations without the required signal progress.
-3. **Budget exhausted**: the time, iteration, cost, or resource budget is consumed.
-4. **Falsified**: one specific observable event that makes the hypothesis false.
+1. **Reached** (`reached`): a Boolean expression over green gates and signal targets.
+2. **Stall** (`stalled`): a bounded number of experiment iterations without the required signal progress.
+3. **Budget exhausted** (`exhausted`): the time, iteration, cost, or resource budget is consumed.
+4. **Falsified** (`falsified`): one specific observable event that makes the hypothesis false.
 
 For falsification, write:
 - one falsifying example;
 - one similar but explicitly non-falsifying counterexample.
 
-Estimate limits low first and explain the trade-off. The user owns the final budget and thresholds. Distinguish the experiment budget from runtime workflow bounds such as `loop_guard` and `timeout`; map them only when the experiment design genuinely requires that relationship.
+Estimate limits low first and explain the trade-off. The user owns the final budget and thresholds. Write the budget as iterations, time, cost, and human attention (for example "5 modeling attempts", "45 minutes of wall clock", "one calibration checkpoint"). Distinguish the experiment budget from runtime workflow bounds such as `loop_guard` and `timeout`, which limit the workflow, not the experiment; map them only when the experiment design genuinely requires that relationship, and never copy a `loop_guard` value into the budget or the budget into a `loop_guard`.
+
+Agree on the decision owner (who takes the promotion decision, never the evaluator) and the decision date.
 
 ## 7. Propose the criteria contract
 
-Show the complete proposed `criteria.md` before writing it. It must contain:
+Show the complete proposed `## Criteria` section before writing it. It must contain:
 
-- status: `draft` or `accepted`;
+- `status: proposed` or `status: accepted`, with `accepted_on` once accepted;
 - SUT, experimenter, iteration, SUT goal, and observation boundary;
 - scope and objective;
 - out-of-scope items;
 - gates table;
-- signals table;
+- signals table with threshold, target, or expected trend;
 - baseline evidence or calibration plan;
-- reached, stall, budget, and falsification exits;
+- `reached`, `stalled`, `exhausted`, and `falsified` exits;
 - falsifying and non-falsifying examples;
-- unresolved warnings;
-- acceptance metadata once accepted.
+- budget of iterations, time, cost, and human attention;
+- decision owner and decision date;
+- unresolved warnings.
 
 Also propose a concise `criteria.dialog.md` containing only durable dialogue evidence:
 - material consequences raised by the Coordinator;
@@ -157,13 +163,14 @@ The dialogue trace is not a transcript and must not contain session history.
 
 ## Approval and write boundary
 
-Keep the criteria `draft` until the user explicitly accepts every material choice. Ask for approval of the complete contract and target paths before writing.
+Keep the criteria `proposed` until the user explicitly accepts every material choice. Ask for approval of the complete contract and target paths before writing.
 
 After explicit acceptance:
-1. write `criteria.md` with status `accepted` and acceptance metadata;
-2. write `criteria.dialog.md` beside it or at the configured path;
-3. do not modify accepted thresholds, exits, or objective retroactively;
-4. route any later material change to a new round or an explicitly approved amendment that preserves the prior accepted contract.
+1. write the `## Criteria` section of `EXPERIMENT.md` with `status: accepted` and `accepted_on`; when `workflows.loopGoal.criteriaPath` is configured, also write the identical frozen copy `criteria.md` there;
+2. commit the contract (the experiment document and the copy, when any) in a commit that touches the criteria file, and obtain the freezing SHA with `git log -1 --format=%H -- <criteria_path>`, where `<criteria_path>` is the repo-relative path the evaluation will cite (`EXPERIMENT.md` or `criteria.md`);
+3. write `criteria.dialog.md` beside it or at the configured path, and record the freezing SHA in its acceptance entry; do not write the SHA into the contract itself, which would change the file after the freezing commit;
+4. do not modify accepted thresholds, exits, budget, or objective retroactively; the lint rule `loop-goal-criteria-drift` reports a contract that changed after the commit the evaluation cites;
+5. route any later material change to a new round or an explicitly approved amendment that preserves the prior accepted contract.
 
 ## Verification
 
@@ -173,15 +180,17 @@ Before reporting completion, verify that:
 - every metric has a source, baseline or calibration, comparison rule, and objective link;
 - all four exits exist;
 - falsifying and non-falsifying examples are distinct;
+- the budget and the decision owner and date are recorded;
 - no material warning remains hidden;
 - the files match the approved proposal and configured paths;
+- the accepted contract is committed and the freezing SHA is recorded in the dialogue trace;
 - no workflow YAML, runtime code, or evidence result was produced before criteria acceptance.
 
 Final output:
 - accepted objective and scope;
-- criteria and dialogue paths;
+- criteria path, freezing commit SHA, and dialogue path;
 - gate and signal summary;
-- exit-condition summary;
+- exit-condition and budget summary;
 - baseline commands or remaining calibration;
-- next safe action: model the workflow from the accepted criteria.
+- next safe action: model the workflow from the accepted criteria with `skills/workflow.md` in `design` mode.
 ```

@@ -1,9 +1,11 @@
 # Prompt - Conclude a Loop/Goal Experiment
 
-Use this prompt for an independent, adversarial evaluation of a loop/goal experiment against criteria accepted before results were known. The evaluator recommends a technical verdict; the user retains the Adopt/Refine/Reject promotion decision through `prompts/09-run-temporary-experiment.md`.
+Use this prompt for an independent, adversarial evaluation of a loop/goal experiment against criteria accepted before results were known. The evaluator recommends a technical verdict (`confirmed`, `refuted`, or `inconclusive`); the user retains the promotion decision (`adopt`, `refine`, or `reject`) through `prompts/09-run-temporary-experiment.md`. A complete example is `templates/examples/workflow/loop-goal/EXAMPLE_EVALUATION.md`.
 
 ```text
 Independently and adversarially evaluate the loop/goal experiment governed by <CRITERIA_PATH>.
+
+`<CRITERIA_PATH>` is the repo-relative path of the criteria contract wherever it is located: the experiment's `EXPERIMENT.md` (its `## Criteria` section) or the frozen `criteria.md` copy at `workflows.loopGoal.criteriaPath`.
 
 ## Independence gate
 
@@ -11,8 +13,9 @@ This evaluation should run in a fresh session or separate agent that did not def
 
 If you are in the same context:
 - stop and request a fresh evaluator when possible;
-- if the user explicitly chooses to continue, label the result `non-independent evaluation` and explain the limitation;
-- adversarial posture alone does not satisfy structural independence.
+- if the user explicitly chooses to continue, declare `independent_context: false` in the evaluation frontmatter, label the result `non-independent evaluation`, and explain the limitation; the verdict still stands, and the lint rule `loop-goal-evaluation-dependent` flags it so the limitation stays visible;
+- adversarial posture alone does not satisfy structural independence;
+- never declare `independent_context: true` to silence the warning.
 
 Read experiment artifacts, not the criteria-definition conversation. Do not read `criteria.dialog.md`; the accepted contract must stand on its written terms.
 
@@ -20,16 +23,17 @@ Read experiment artifacts, not the criteria-definition conversation. Do not read
 
 1. Read `pom.config.json`.
 2. In a Target Project, continue only when both `workflows.enabled: true` and `workflows.loopGoal.enabled: true`. Otherwise stop and route to `skills/config.md`.
-3. Read `skills/loop-goal.md` and the criteria at `<CRITERIA_PATH>`.
-4. Confirm that the criteria status is `accepted`, contains acceptance metadata, and predates the evidence being judged. If not, return `inconclusive: criteria not frozen`.
-5. Resolve artifact and evidence roots from `workflows.loopGoal.artifactsRoot` and `workflows.loopGoal.evidenceRoot`, then read only relevant source artifacts:
+3. Read `skills/loop-goal.md` and the criteria contract at `<CRITERIA_PATH>`.
+4. Confirm that the criteria status is `accepted`, contains `accepted_on`, and predates the evidence being judged. If not, return `inconclusive: criteria not frozen`.
+5. Obtain the freezing commit with `git log -1 --format=%H -- <CRITERIA_PATH>` and compare it with the SHA recorded at acceptance (the Coordinator records it in the dialogue trace, which you do not read: ask for the SHA or take the latest commit that touches the contract). If the contract changed after acceptance, return `inconclusive: criteria changed after acceptance`.
+6. Resolve artifact and evidence roots from `workflows.loopGoal.artifactsRoot` and `workflows.loopGoal.evidenceRoot`, then read only relevant source artifacts:
    - workflow YAML and validator results;
    - `.fit.md` audits;
    - `.scenarios.md` files and executable test results;
    - runtime outputs, measurements, logs, and evidence manifests;
    - current experiment results or closure document.
-6. Use legacy numbered criteria only when the user explicitly identifies that experiment round.
-7. Record missing, unreadable, stale, or mismatched evidence before evaluating claims.
+7. Use legacy numbered criteria only when the user explicitly identifies that experiment round.
+8. Record missing, unreadable, stale, or mismatched evidence before evaluating claims.
 
 ## Adversarial posture
 
@@ -64,9 +68,9 @@ For every cited item record:
 - timestamp or version needed to prove ordering;
 - relation to the criterion.
 
-Compare actual consumption with the accepted iteration, time, cost, or resource budget. State whether the experiment stopped because it reached, stalled, exhausted budget, or was falsified.
+Compare actual consumption with the accepted iteration, time, cost, or resource budget. State which exit stopped the experiment: `reached`, `stalled`, `exhausted`, or `falsified`.
 
-If budget remains, you may record non-retroactive advice for a possible next round. Address it only to the Coordinator. Do not propose it directly to the user, open a new round, modify criteria, or let the advice affect the current verdict.
+If budget remains, you may record non-retroactive advice for a possible next round. Address it only to the Coordinator, the role that owns the experiment cycle (`skills/loop-goal.md`). Do not propose it directly to the user, open a new round, modify criteria, or let the advice affect the current verdict.
 
 ## Counter-analysis
 
@@ -82,6 +86,22 @@ If a material antithesis cannot be confuted, the experiment cannot be `confirmed
 Propose the evaluation path from configuration or the experiment's design directory. Ask for approval before writing if the path is new, ambiguous, or approval-required.
 
 Write only the evaluation artifact. Do not modify criteria, dialogue, workflow YAML, scenarios, evidence, results, decisions, or project state.
+
+The evaluation document starts with this YAML frontmatter:
+
+---
+type: loop-goal-evaluation
+evaluator: <agent or person identifier>
+independent_context: true | false
+criteria_path: <repo-relative path of the criteria contract (EXPERIMENT.md or criteria.md)>
+criteria_commit: <full SHA of the commit that froze the accepted criteria>
+---
+
+Rules for the frontmatter:
+- `independent_context: false` when the evaluator shares the executor's context; the verdict stands, the lint flags it;
+- `criteria_path` is `<CRITERIA_PATH>` exactly as it resolves from the repository root;
+- `criteria_commit` is the full SHA obtained with `git log -1 --format=%H -- <CRITERIA_PATH>` at acceptance time, never abbreviated or guessed;
+- the lint rules `loop-goal-evaluation-frontmatter`, `loop-goal-criteria-drift`, and `loop-goal-evaluation-dependent` verify that the frontmatter is complete, that the commit exists and touches the criteria file, that the file has not changed since that commit, and that dependent evaluations are visible.
 
 The evaluation must contain:
 
@@ -99,7 +119,8 @@ The evaluation must contain:
 ## Verification
 
 Before finishing, verify that:
-- the evaluator's independence is stated accurately;
+- the evaluator's independence is stated accurately in the frontmatter and in the declaration;
+- `criteria_path` and `criteria_commit` point to the contract that was actually used;
 - only accepted frozen criteria were used;
 - every criterion has a cited refutation attempt and disposition;
 - missing evidence is not treated as success;
@@ -109,5 +130,5 @@ Before finishing, verify that:
 - the evaluation did not alter source artifacts;
 - the user, not the evaluator, retains the promotion decision.
 
-Final response: state the evaluation path, technical verdict and reason, any falsification event, budget status, independence status, and that Adopt/Refine/Reject remains the user's decision.
+Final response: state the evaluation path, technical verdict and reason, any falsification event, the exit that stopped the experiment, independence status, and that the promotion decision (`adopt`, `refine`, or `reject`) remains the user's decision.
 ```

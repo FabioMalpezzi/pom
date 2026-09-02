@@ -15,8 +15,9 @@ complete taxonomy of possible agent loops.
 ## Current State
 
 The canonical `loop-goal` skill is the procedure for defining criteria,
-modeling, auditing, deriving scenarios, guiding implementation, and
-concluding loop/goal experiments. In a Target Project it is opt-in:
+auditing, deriving criteria scenarios, and concluding loop/goal
+experiments; modeling the YAML and guiding its implementation go through
+the generic `workflow` skill. In a Target Project it is opt-in:
 `pom.config.json` must enable both `workflows.enabled` and
 `workflows.loopGoal.enabled`. This page is a human reading guide: it
 helps a reader choose a starting pattern before using the skill.
@@ -126,17 +127,17 @@ state and output, not the child's private internal context.
 
 For an experiment or target adoption, the order matters:
 
-1. Define criteria with `loop-goal define-criteria`.
-2. Model the workflow YAML from the accepted criteria and the closest verified example.
+1. Define criteria with `loop-goal define-criteria`; the accepted contract is committed before anything else exists.
+2. Model the workflow YAML with `workflow design` from the accepted criteria and the closest verified example.
 3. Run `pom:workflow:lint`.
 4. Audit fit and conformance with `loop-goal audit`.
-5. Generate scenarios with `loop-goal scenarios`.
-6. Guide implementation with `loop-goal runtime-guide` and the workflow implementation guide; copy the TypeScript or Python runtime seam template only if it helps the target architecture.
-7. Conclude the experiment against the frozen criteria.
+5. Generate scenarios with `loop-goal criteria-scenarios`.
+6. Guide implementation with `workflow implement` and the workflow implementation guide; copy the TypeScript or Python runtime seam template only if it helps the target architecture.
+7. Conclude the experiment with `loop-goal conclude` against the frozen criteria; the evaluation cites the contract by path and by freezing commit.
 
-Do not skip criteria when the work is experimental. The criteria file is
-the measurement contract; without it, the audit can say the YAML is well
-formed but cannot say whether the experiment succeeded.
+Do not skip criteria when the work is experimental. The criteria contract
+is the measurement contract; without it, the audit can say the YAML is
+well formed but cannot say whether the experiment succeeded.
 
 ## Using Agent Goal Tracking
 
@@ -224,7 +225,13 @@ decision.
 Before choosing the YAML shape, define the experiment contract. This is
 not paperwork: it is the table that tells the loop what it is trying to
 prove, what must not regress, what progress looks like, and when to
-stop. The contract lives in `experiments/<topic>/design/criteria.md`.
+stop. The contract is the `## Criteria` section of the experiment's
+`EXPERIMENT.md`, in the shape given by `templates/EXPERIMENT_TEMPLATE.md`;
+a project may also keep a frozen copy as `criteria.md` at
+`workflows.loopGoal.criteriaPath`. A complete, realistic contract is
+`templates/examples/workflow/loop-goal/EXAMPLE_CRITERIA.md`, and the
+independent evaluation written against it is
+`templates/examples/workflow/loop-goal/EXAMPLE_EVALUATION.md`.
 
 Start with four context rows. They remove the most common ambiguity:
 
@@ -263,35 +270,41 @@ iterations. If it cannot move, it is probably a gate, not a signal.
 | Name | Short name for the progress measure. |
 | Measurement tool | The command, script, review rule, or artifact read that measures it. |
 | Direction | Expected direction: up, down, or stable. |
-| Trend | One of `assoluto`, `relativo`, or `statistico`, with a justified threshold. |
-| Baseline | Current value, or `TBD calibrata al run 1` when the first run must establish it. |
+| Threshold, target, or expected trend | The comparison rule that makes iterations comparable: a threshold, a target value, or the expected trend across iterations, with a justified value. |
+| Baseline | Current value, or "calibrate at run 1" when the first run must establish it. |
 | Link to objective | Why movement in this number means movement toward the objective. |
 
 Budget is also part of the contract. It should answer three separate
-questions:
+questions, each in experiment units:
 
 | Budget Row | What It Controls | Example Shape |
 |---|---|---|
-| Visit bound | How many iterations may run before stalling out. | `loop_guard.max_visits = 5` for five modeling attempts. |
-| Time bound | How much wall-clock time the experiment may consume. | `loop_guard.max_duration = 45min`. |
-| Human budget | How much user attention or decision time is acceptable. | "One calibration checkpoint plus final acceptance." |
+| Iteration budget | How many experiment iterations may run before the experiment is exhausted. | "5 modeling attempts". |
+| Time budget | How much wall-clock or calendar time the experiment may consume. | "45 minutes of wall clock". |
+| Human budget | How much user attention or decision time is acceptable. | "One calibration checkpoint plus final acceptance". |
+
+`loop_guard` and `timeout` in the workflow YAML limit the workflow, not
+the experiment: they bound how many times a state may be visited and how
+long it may be resident inside one run of the runtime loop. The
+experiment budget above counts experiment iterations across runs. Do not
+write one as the other.
 
 The exit table closes the loop. It should be written before modeling,
 because changing it after seeing the result moves the goalposts.
 
 | Exit | Required Definition |
 |---|---|
-| Reached | The exact condition under which the experiment succeeds. |
-| Stall exit | The visit or duration bound that stops a loop whose signal is not moving. |
-| Budget exit | The budget condition that stops even if no technical falsification occurred. |
-| Falsification | One concrete observation that falsifies the hypothesis, plus one similar observation that does not. |
+| `reached` | The exact condition under which the experiment succeeds. |
+| `stalled` | The number of experiment iterations without the required signal progress that stops the experiment. |
+| `exhausted` | The budget condition that stops even if no technical falsification occurred. |
+| `falsified` | One concrete observation that falsifies the hypothesis, plus one similar observation that does not. |
 
 Finally, run the consistency check. Four checks catch most bad
 contracts:
 
 | Check | What To Compare | Failure Smell |
 |---|---|---|
-| Budget vs loop guard | Visit count, expected iteration time, and duration budget. | The declared number of visits cannot fit inside the time budget. |
+| Budget vs runtime bounds | Iteration budget, expected iteration time, and time budget, against `loop_guard` and `timeout`. | The declared iterations cannot fit inside the time budget, or the budget is written as a `loop_guard` value. |
 | Signal vs gate | Every metric classified as progress or non-regression. | A "signal" has only pass/fail values and cannot show progress. |
 | Falsification vs backlog | The falsification event against accepted backlog primitives. | The experiment would be falsified by needing a primitive already admitted as expected work. |
 | Objective vs backlog | The objective against the original reason for opening the work. | The objective silently became narrower or stronger than what the backlog asked. |
@@ -307,7 +320,10 @@ usual fallback is `experiments/<topic>/design/criteria.dialog.md`; a
 Target Project must follow its configured path or declared convention
 instead of inheriting that source-specific location. Historical
 experiments may still use numbered
-`criteria-experiment-<N>-<HID>.dialog.md` traces. The evaluator reads the
+`criteria-experiment-<N>-<HID>.dialog.md` traces. At acceptance the
+contract is committed and the freezing commit SHA is recorded in the
+trace; the evaluation later cites that SHA as `criteria_commit`, and the
+lint reports a contract that changed after it. The evaluator reads the
 frozen criteria and evidence, not this dialogue trace; the trace exists
 so the reasoned dialogue is inspectable later and can improve the
 method.
@@ -334,7 +350,10 @@ being promoted as examples.
 | Source | Use |
 |---|---|
 | `skills/loop-goal.md` | Canonical operating procedure and modes for loop/goal work. |
-| `templates/examples/workflow/loop-goal/README.md` | Catalog of the six verified YAML examples. |
+| `templates/examples/workflow/loop-goal/README.md` | Catalog of the six verified YAML examples and the criteria and evaluation examples. |
+| `templates/EXPERIMENT_TEMPLATE.md` | The experiment document whose `## Criteria` section is the contract. |
+| `templates/examples/workflow/loop-goal/EXAMPLE_CRITERIA.md` | A complete accepted criteria contract. |
+| `templates/examples/workflow/loop-goal/EXAMPLE_EVALUATION.md` | An independent evaluation with the `loop-goal-evaluation` frontmatter. |
 | `experiments/agent-loop-fsm/RESULTS.md` | Evidence behind H1-H5 and the verified examples. |
 | `specs/SPEC-0006-workflow-modeling.md` | Workflow schema, composition rules, and Dynamic Workflow backlog doctrine. |
 | `specs/SPEC-0007-loop-guard-timeout.md` | Declarative loop bound and timeout primitives. |

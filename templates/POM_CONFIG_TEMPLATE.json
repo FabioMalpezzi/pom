@@ -1,5 +1,5 @@
 {
-  "pomVersion": "0.4.0",
+  "pomVersion": "0.5.0",
   "installation": {
     "pomRoot": "pom",
     "note": "Template paths assume POM is installed in the target project as pom/. Adapt paths if using a different installation layout."
@@ -134,7 +134,8 @@
       "criteriaPath": "design/criteria.md",
       "dialogPath": "design/criteria.dialog.md",
       "evidenceRoot": "evidence/",
-      "note": "When true, the loop-goal skill may define criteria, model, audit, derive scenarios, guide implementation, and conclude agent-shaped goal loops in the target project. It still relies on workflows.enabled and target-owned runtime code."
+      "evaluationRoots": ["experiments"],
+      "note": "When true, the loop-goal skill may define criteria, model, audit, derive scenarios, guide implementation, and conclude agent-shaped goal loops in the target project. It still relies on workflows.enabled and target-owned runtime code. evaluationRoots lists the directories pom:lint scans for Markdown evaluations with frontmatter type: loop-goal-evaluation; each one must freeze the criteria it judged (criteria_path + criteria_commit)."
     }
   },
   "skillUsage": {},

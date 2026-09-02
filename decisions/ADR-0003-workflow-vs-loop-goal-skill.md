@@ -72,6 +72,8 @@ Separating the two skills avoids two opposite mistakes: inflating `workflow` wit
 
 - [x] Promote `loop-goal` to a canonical skill card with its own prompts (this ADR was the declared prerequisite).
 - [ ] Keep the routing table in `skills/loop-goal.md` ("When To Use") aligned with this ADR when either skill gains a mode.
+- [x] Reduce `loop-goal` to the four modes it owns: `define-criteria`, `audit`, `criteria-scenarios` (renamed from `scenarios` so it no longer collides with the `workflow` mode of the same name), and `conclude`. The former `model` and `runtime-guide` modes were aliases of `prompts/27-workflow-modeling.md`; modeling and implementation guidance now go through `skills/workflow.md` (`design`, `implement`). The composition this ADR describes is unchanged; the mode lists quoted in Completion Verification reflect the state at acceptance.
+- [x] Make the `## Criteria` section of `EXPERIMENT.md` (`templates/EXPERIMENT_TEMPLATE.md`) the one experiment contract; a separate `criteria.md` remains only as a frozen copy at `workflows.loopGoal.criteriaPath`.
 
 ## Completion Verification
 

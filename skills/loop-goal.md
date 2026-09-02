@@ -35,16 +35,28 @@ In a Target Project, continue only when:
 
 Otherwise stop and route to `skills/config.md`. Resolve criteria, dialogue, evidence, and derived-artifact paths from `workflows.loopGoal` instead of assuming POM Source paths.
 
+## Roles
+
+- **Coordinator**: the agent role that owns the experiment cycle. It conducts the criteria dialogue with the user, freezes the accepted contract, runs the rounds, and is the only addressee of the evaluator's non-retroactive advice. It is not the evaluator and does not take the promotion decision.
+- **Evaluator**: an independent agent or person that judges the frozen contract against the evidence and returns a technical verdict.
+- **User**: accepts the criteria, owns budget and thresholds, and takes the promotion decision.
+
+## Criteria Contract
+
+The experiment contract is the `## Criteria` section of the experiment's `EXPERIMENT.md`, in the shape given by `templates/EXPERIMENT_TEMPLATE.md`: system under test, observation boundary, gates, signals with threshold/target/trend, the four exits (`reached`, `stalled`, `exhausted`, `falsified`), budget, decision owner and date, and `status: proposed | accepted` with the acceptance date. A loop/goal experiment always keeps an `EXPERIMENT.md`.
+
+A separate `criteria.md` is allowed only as a frozen copy of that section when the project configures `workflows.loopGoal.criteriaPath`. Audit, scenarios, and conclusion read the contract wherever it is located and cite its path. A complete example is `templates/examples/workflow/loop-goal/EXAMPLE_CRITERIA.md`.
+
 ## Lifecycle
 
 Follow this order:
 
-1. `define-criteria` — agree on and freeze measurable criteria;
-2. `model` — design workflow YAML from accepted criteria;
+1. `define-criteria` — agree on, freeze, and commit the criteria contract;
+2. model the workflow YAML from the accepted contract with `skills/workflow.md` in `design` mode;
 3. `audit` — assess structural fit and criteria conformity;
-4. `scenarios` — derive happy, failure, loop, misuse, and edge paths;
-5. implement and collect evidence in the Target Project when requested;
-6. `conclude` — independently and adversarially evaluate frozen criteria.
+4. `criteria-scenarios` — derive happy, failure, loop, misuse, and edge paths with criteria-exit coverage;
+5. implement and collect evidence in the Target Project when requested, with `skills/workflow.md` in `implement` mode;
+6. `conclude` — independently and adversarially evaluate the frozen contract.
 
 Do not model before criteria are explicitly accepted. Do not weaken criteria after evidence exists.
 
@@ -52,48 +64,62 @@ Do not model before criteria are explicitly accepted. Do not weaken criteria aft
 
 | Mode | Purpose | Canonical prompt |
 |---|---|---|
-| `define-criteria` | Define context, objective, gates, signals, baselines, and exits through reasoned dialogue. | `prompts/28-loop-goal-define-criteria.md` |
-| `model` | Design or revise the workflow YAML from accepted criteria. | `prompts/27-workflow-modeling.md` in `design` mode |
+| `define-criteria` | Define context, objective, gates, signals, baselines, exits, and budget through reasoned dialogue; freeze and commit the contract. | `prompts/28-loop-goal-define-criteria.md` |
 | `audit` | Classify structural fit and separately check criteria conformity. | `prompts/29-loop-goal-audit.md` |
-| `scenarios` | Derive path-based scenarios with terminal and criteria-exit coverage. | `prompts/30-loop-goal-scenarios.md` |
-| `runtime-guide` | Guide Target Project implementation without adding a POM runtime. | `prompts/27-workflow-modeling.md` in `implement` mode |
-| `conclude` | Independently attempt to falsify the experiment against frozen criteria. | `prompts/31-loop-goal-conclude.md` |
+| `criteria-scenarios` | Derive path-based scenarios with terminal and criteria-exit coverage. | `prompts/30-loop-goal-scenarios.md` |
+| `conclude` | Independently attempt to falsify the experiment against the frozen contract. | `prompts/31-loop-goal-conclude.md` |
+
+Modeling and implementation guidance are not modes of this skill: they go through `skills/workflow.md` (`design` and `implement`, both on `prompts/27-workflow-modeling.md`), which reads the accepted contract before drafting.
+
+## Five Things Called "Loop"
+
+Use one term for each so a sentence never mixes them:
+
+| Thing | Term to use | Where it lives |
+|---|---|---|
+| The controller's own perceive-decide-act-observe cycle | **runtime loop** | workflow YAML (`runtime_loop` declares its stop rules) and Target Project code |
+| One round of define-criteria, model, audit, scenarios, evidence, conclude | **experiment round**; one comparable measurement inside it is an **experiment iteration** | `EXPERIMENT.md`, `criteria.dialog.md`, evaluation |
+| The per-state visit bound | **`loop_guard`** (a loop bound, never "the loop") | workflow YAML, validated by `pom:workflow:lint` |
+| The target-owned record of one runtime iteration | **Iteration Record** | Target Project evidence; not a workflow primitive |
+| The evaluator's advice feeding a possible next round | **method improvement round** | `Advice to the Coordinator` in the evaluation, read by the next `define-criteria` |
 
 ## Key Rules
 
 - YAML is the Source Authority for control flow; diagrams, audits, scenarios, and runtime code are derived.
 - POM is a deterministic control-plane method, not a workflow runtime.
-- `loop_guard` and `timeout` are validated schema contracts; their counters, clocks, scheduling, and event emission remain Target Project responsibilities.
+- `loop_guard` and `timeout` are validated schema contracts; their counters, clocks, scheduling, and event emission remain Target Project responsibilities. They bound the runtime loop, not the experiment: the experiment budget lives in the criteria contract.
 - Never invent business rules, runtime behavior, evidence, baselines, or user approval.
 - Every iteration that advances or remains active must name its verification and evidence; automation is preferred, while semantic or human validation is allowed when the accepted criteria require it.
-- For autonomous, persistent, or artifact-mutating loops, use an explicit Iteration Record; keep it target-owned and do not add it to the workflow schema.
+- For autonomous, persistent, or artifact-mutating runtime loops, use an explicit Iteration Record; keep it target-owned and do not add it to the workflow schema.
 - The criteria dialogue must record material consequences and user calibrations in `criteria.dialog.md`; it is not a transcript.
-- Accepted `criteria.md` is frozen for the experiment round.
+- The accepted contract is frozen for the experiment round and committed at acceptance; the freezing commit is what the evaluation cites as `criteria_commit`.
 - Audit stops when the root or an invoked workflow fails validation and never edits YAML.
 - Scenarios use only declared workflow elements and expose missing behavior as a modeling gap.
-- The concluding evaluator runs in a fresh context when possible, reads evidence but not the criteria dialogue, and tries to falsify rather than confirm.
+- The concluding evaluator runs in a fresh context when possible, reads evidence but not the criteria dialogue, tries to falsify rather than confirm, and declares `independent_context` truthfully in the evaluation frontmatter.
 - Missing evidence yields `inconclusive`; an observed accepted falsification yields `refuted`.
 - Advice from the evaluator is non-retroactive and addressed only to the Coordinator for a possible next round.
-- The evaluator recommends a technical verdict; the user retains the Adopt/Refine/Reject promotion decision through `prompts/09-run-temporary-experiment.md`.
+- The evaluator recommends a technical verdict (`confirmed | refuted | inconclusive`); the user retains the Adopt/Refine/Reject promotion decision (`adopt | refine | reject`) through `prompts/09-run-temporary-experiment.md`.
 
 ## Output
 
 Depending on mode:
 
-- accepted `criteria.md` plus concise `criteria.dialog.md`;
-- validated workflow YAML;
+- accepted `## Criteria` section in `EXPERIMENT.md` (plus the frozen `criteria.md` copy when configured) and concise `criteria.dialog.md` with the freezing commit SHA;
 - derived `<name>.fit.md`;
 - derived `<name>.scenarios.md`;
-- Target Project implementation guidance and evidence;
-- independent evaluation with confirmed / refuted / inconclusive verdict.
+- independent evaluation with `loop-goal-evaluation` frontmatter and a `confirmed | refuted | inconclusive` verdict.
 
 ## Memory Impact
 
-The accepted criteria and workflow YAML are Operating Memory for the active experiment. Fit audits and scenarios are derived artifacts and may be regenerated when their source YAML changes. Runtime state is not POM memory.
+The accepted contract and workflow YAML are Operating Memory for the active experiment. Fit audits and scenarios are derived artifacts and may be regenerated when their source YAML changes. Runtime state is not POM memory.
 
 ## References
 
 - `skills/workflow.md`
+- `skills/spike.md`
+- `templates/EXPERIMENT_TEMPLATE.md`
+- `templates/examples/workflow/loop-goal/EXAMPLE_CRITERIA.md`
+- `templates/examples/workflow/loop-goal/EXAMPLE_EVALUATION.md`
 - `decisions/ADR-0003-workflow-vs-loop-goal-skill.md`
 - `decisions/ADR-0004-dynamic-workflow-control-plane.md`
 - `specs/SPEC-0006-workflow-modeling.md`

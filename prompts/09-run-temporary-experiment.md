@@ -46,7 +46,13 @@ Rules:
 - do not let stable source import from `experiments/`; if the project has ESLint, TypeScript, or equivalent tooling, prefer guardrails that exclude or forbid imports from experiment paths;
 - do not update wiki, docs, specs, or ADRs until the experiment is evaluated;
 - use Git to preserve history and make the experiment discardable;
-- if using an `experiments/` folder, create `EXPERIMENT.md` from `templates/EXPERIMENT_TEMPLATE.md`.
+- if using an `experiments/` folder, create `EXPERIMENT.md` from `templates/EXPERIMENT_TEMPLATE.md`; fill in its `## Budget And Stop Rule` section for every experiment.
+
+Criteria contract:
+- the `## Criteria` section of `EXPERIMENT.md` is the one experiment contract: system under test, observation boundary, gates, signals with threshold/target/trend, the four exits (`reached`, `stalled`, `exhausted`, `falsified`), budget, decision owner and date, `status: proposed | accepted`;
+- it is mandatory for loop/goal experiments (an agent-shaped controller that iterates toward a measurable goal): route the dialogue that produces and freezes it to `skills/loop-goal.md` and `prompts/28-loop-goal-define-criteria.md`, keep an `EXPERIMENT.md` for the experiment, and accept the contract before any workflow YAML, runtime code, or evidence exists;
+- it is optional for one-shot work, spikes, trials, and benchmarks, where the hypotheses plus the budget and stop rule are enough;
+- a separate `criteria.md` is only a frozen copy of the section, kept when the project configures `workflows.loopGoal.criteriaPath`.
 
 During the experiment:
 - keep notes, code, data, reports, and references separate;
@@ -64,8 +70,14 @@ experiments/<topic>/
   artifacts/
   references/
 
-At the end, propose a consolidation decision that respects the adoption profile:
-- discard the experiment and remove/abandon the branch;
+At the end, propose exactly one promotion decision, with its owner and date, and record it in the `## Outcome` section of `EXPERIMENT.md`:
+- `adopt`: promote the approved artifacts into the stable project;
+- `refine`: keep the experiment open for one more bounded round with an amended or new contract;
+- `reject`: discard the experiment and remove/abandon the branch.
+
+For a loop/goal experiment the decision follows the independent technical verdict (`confirmed`, `refuted`, or `inconclusive`) produced by `prompts/31-loop-goal-conclude.md`; the verdict is evidence for the decision, not the decision itself, and the user takes it.
+
+Then propose the consolidation actions that respect the adoption profile:
 - archive a synthesis in `analysis/` only when `adoption.analysis` permits it and use the configured analysis root;
 - update `wiki/` only when `adoption.wiki` is enabled and the result is current reusable knowledge;
 - create or update a spec only when governed documentation is enabled or the Target Project already owns an equivalent authoritative spec convention;
@@ -78,7 +90,7 @@ Never enable a disabled adoption module implicitly during consolidation. Ask bef
 If the experiment branch or worktree needs merge, PR, keep, discard, or cleanup handling after evaluation, use `skills/finish-branch.md`.
 
 Before consolidation:
-1. summarize results, costs, risks, licenses, privacy, and impacts;
+1. summarize results, costs, risks, licenses, privacy, and impacts, and state the stop reason (budget exhausted, stop rule fired, or a criteria exit);
 2. indicate which files would be promoted and where;
 3. state whether promotion should happen by selective cherry-pick, clean reimplementation on a feature branch, or moving specific artifacts out of `experiments/`;
 4. wait for approval.
@@ -86,6 +98,6 @@ Before consolidation:
 After consolidation:
 - run available lint/tests;
 - update `PROJECT_STATE.md` if the operating context changes;
-- state what was discarded and what was promoted.
+- state the promotion decision (`adopt`, `refine`, or `reject`), what was discarded, and what was promoted;
 - remove the worktree, abandon the experiment branch, or delete temporary artifacts when they are no longer needed.
 ```

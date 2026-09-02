@@ -4,6 +4,7 @@ import { createLintContext } from "./lib/lint-context.ts";
 import { checkDecisions } from "./lib/lint-decisions.ts";
 import { checkDocs, checkDocumentationRoots, checkSourceRoots } from "./lib/lint-docs-source.ts";
 import { checkGitWorkflow, checkProjectStateShape } from "./lib/lint-handoff.ts";
+import { checkLoopGoalEvaluations } from "./lib/lint-loop-goal.ts";
 import { checkMockReconciliation } from "./lib/lint-mockups.ts";
 import { checkReaderNotes } from "./lib/lint-reader-notes.ts";
 import { printResults } from "./lib/lint-reporter.ts";
@@ -38,6 +39,7 @@ checkWikiIndexCoverage(context);
 checkTestsLayout(context);
 checkProjectStateShape(context);
 checkGitWorkflow(context);
+checkLoopGoalEvaluations(context);
 checkSourceFileSizes(context);
 printResults(context.findings);
 

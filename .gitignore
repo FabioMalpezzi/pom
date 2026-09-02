@@ -11,17 +11,32 @@ node_modules/
 .env.local
 .env.*.local
 
-# Local Claude Code permission settings are per machine, not project memory
+# Local Claude Code permission settings and agent worktrees are per machine, not project memory
 .claude/settings.local.json
+.claude/worktrees/
 
 # Experiment evidence: only the run-level summaries an experiment cites are tracked
 # (see the Evidence convention in templates/EXPERIMENT_TEMPLATE.md).
+#
+# Raw runs, transcripts, and dumps live two levels below evidence/, one
+# directory per run: experiments/<topic>/evidence/<group>/<run>/. The
+# summaries beside them (evidence/<group>/report.json, evidence/README.md,
+# evidence/<group>/*.md) stay trackable.
+experiments/*/evidence/*/*/
+
+# workflow-modeling tracks derived artefacts (mermaid, xstate, runtime ports)
+# two levels deep, so the generic rule would silently hide new files there.
+!experiments/workflow-modeling/evidence/*/*/
+
+# wiki-agent-orchestration keeps its raw material one level below evidence/,
+# where the generic rule does not reach.
 experiments/wiki-agent-orchestration/evidence/agent-drafts/
 experiments/wiki-agent-orchestration/evidence/agent-turns/
 experiments/wiki-agent-orchestration/evidence/annotations/
 experiments/wiki-agent-orchestration/evidence/ui-events/
-experiments/pom-skill-behavior-evals/evidence/*/*/
-experiments/using-pom-bootstrap-diet/evidence/*/*/
-experiments/task-plan-contracts/evidence/*/*/
-experiments/pi-package/staging/
+
+# fan-in-accounting keeps its raw runs in a sibling folder, not under evidence/.
 experiments/fan-in-accounting/evidence-raw/
+
+# Not evidence: a staged copy of the package built by the pi-package experiment.
+experiments/pi-package/staging/

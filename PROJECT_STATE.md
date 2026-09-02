@@ -52,7 +52,7 @@ _Current operational state. Update at every significant session or when prioriti
 
 ### Current State
 
-POM 0.4.0 is released and tagged (installation guides in `docs/`, one routing table, shared test harness, hardened bootstrap and hook). The repository runs its own governance lint through the root `pom.config.json` (decisions, wiki, structured tasks enabled) and `pom:lint` reports no errors; `npm run pom:test` is green. The catalog holds 28 skills, generated into the README from `skills/README.md`, and every skill points to a canonical prompt.
+POM 0.5.0 is released and tagged (one experiment contract for spike and loop-goal, four loop-goal modes, evaluation frontmatter verified by lint, `loop_guard` and `timeout` in the workflow template); before it, 0.4.0 (installation guides in `docs/`, one routing table, shared test harness, hardened bootstrap and hook). The repository runs its own governance lint through the root `pom.config.json` (decisions, wiki, structured tasks enabled) and `pom:lint` reports no errors; `npm run pom:test` is green. The catalog holds 28 skills, generated into the README from `skills/README.md`, and every skill points to a canonical prompt.
 
 Stable and installed in target projects: the adoption installer and updater with presets (`owned`, `team`, `overlay`, `minimal`), the doc-governance lint with ADR, task-plan, and completion gates, the wiki with its generated reader, the Project Reader with file-based annotations, and the workflow tooling (validator with core, temporal, handle-lifecycle, guard-evidence, and runtime-loop rules; Mermaid and XState transformers).
 
@@ -74,7 +74,6 @@ Keep the 0.3.x line honest and portable: close the open follow-ups of TASK-0004,
 
 ### Next Actions
 
-- [ ] **TASK-0004 P4 closure**: run the five-repetition Pi acceptance and the durable `pi install`/removal check from a release build, then close the task Complete; if they cannot run, close it Complete with exceptions naming both. Optional in the same pass: re-freeze the behavioral baseline under the negation-aware `transcriptExcludes` check and broaden the deferred-record detection in the evaluator.
 - [ ] **Wiki current specs**: update `wiki/current-specs.md` so ADR-0001 shows as superseded by ADR-0005 and SPEC-0004, SPEC-0005, SPEC-0008 show as Deferred with their reactivation criteria.
 - [ ] **Fan-in raw evidence**: add `experiments/fan-in-accounting/evidence-raw/` to `.gitignore` and stop tracking the six `report.json` files that were moved there; the tracked summaries are `report.summary.json` in each `evidence-structured/<run>/` folder.
 - [ ] **SPEC-0004 overlay layout**: reactivate only when a second external-repository trial or an adopter needs the `.pom/` local-only layout or the overlay wiki page set; the ownership parameter and lint posture already exist.

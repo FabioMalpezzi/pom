@@ -2,6 +2,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-09-02] update | POM 0.5.0
+
+Bumped the index to POM v0.5.0: one experiment contract shared by `spike` and `loop-goal`, four loop-goal modes, evaluation frontmatter verified by lint, `loop_guard` and `timeout` shown in the workflow template. Details in `CHANGELOG.md`.
+
+Sources used: `CHANGELOG.md`, `skills/loop-goal.md`, `templates/EXPERIMENT_TEMPLATE.md`.
+
 ## [2026-09-02] update | POM 0.4.0: installation guides, specs status, reading path
 
 `docs/installation.md` and `docs/project-reader.md` are now the installation and reader authority; `wiki/adoption-and-installation.md` points at them and its agent install prompt names the guide instead of the README. `wiki/current-specs.md` records SPEC-0004, SPEC-0005, and SPEC-0008 as Deferred and ADR-0001 as superseded by ADR-0005 (file-based Project Reader instead of a persistent agent session). The routing table lives only in `skills/README.md`; `prompts/32-using-pom.md` keeps the key routes.
@@ -213,3 +219,9 @@ Sources used: `wiki/loop-goal-workflow-tutorial.md`, `skills/loop-goal.md`, and 
 Updated the loop/goal tutorial to distinguish POM Source fallback paths from Target Project paths configured through `workflows.loopGoal.dialogPath`.
 
 Sources used: `prompts/28-loop-goal-define-criteria.md`, `skills/loop-goal.md`, `templates/POM_CONFIG_TEMPLATE.json`, and `wiki/loop-goal-workflow-tutorial.md`.
+
+## [2026-09-02] update | one experiment contract and four loop-goal modes
+
+Aligned the loop/goal tutorial with the unified experiment contract: the `## Criteria` section of `EXPERIMENT.md` is the contract, budget is written in experiment units and kept apart from `loop_guard`/`timeout`, signals use threshold/target/expected trend, exits are `reached`/`stalled`/`exhausted`/`falsified`, and the operating sequence uses the four `loop-goal` modes plus `workflow design`/`workflow implement`. The tutorial now cites the criteria and evaluation examples under `templates/examples/workflow/loop-goal/`.
+
+Sources used: `templates/EXPERIMENT_TEMPLATE.md`, `skills/loop-goal.md`, `prompts/28-loop-goal-define-criteria.md`, `prompts/31-loop-goal-conclude.md`, and `templates/examples/workflow/loop-goal/README.md`.

@@ -124,7 +124,7 @@ Pairing `--mermaid-dir` with the validator guarantees that `workflows/generated/
 5. Run the validator until clean.
 6. Generate Mermaid for the team review.
 7. Pick a Pattern (A by default).
-8. Use `workflow implement` or `loop-goal runtime-guide` to produce code + tests.
+8. Use `workflow implement` (also for loop/goal models, whose implementation guidance goes through the `workflow` skill) to produce code + tests.
 9. Wire up suspend/restore at the persistence boundary.
 10. Add CI job for the validator.
 

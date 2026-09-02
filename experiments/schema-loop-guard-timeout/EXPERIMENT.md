@@ -1,5 +1,7 @@
 # Experiment — Schema Primitives For `loop_guard` And `timeout`
 
+> Artifacts promoted: the folders `examples/` and `broken-fixtures/` were moved under `tests/workflow-validator/fixtures/` in POM 0.4.0, each with a README naming this experiment and the source commit. The paths cited below refer to those copies.
+
 | Field | Value |
 |---|---|
 | Date | 2026-05-31 |

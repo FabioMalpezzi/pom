@@ -22,6 +22,7 @@ export type LintContext = {
   mockupsGovernanceEnabled: boolean;
   taskPlansGovernanceEnabled: boolean;
   testsGovernanceEnabled: boolean;
+  loopGoalGovernanceEnabled: boolean;
   allowedRootMarkdown: Set<string>;
   allowedAnalysisDirs: Set<string>;
   add: (severity: Severity, rule: string, message: string, file?: string) => void;
@@ -70,6 +71,7 @@ export function createLintContext(root: string): LintContext {
     mockupsGovernanceEnabled: config.adoption.mockups === "enabled",
     taskPlansGovernanceEnabled: !isExternalOverlay || config.adoption.tasks === "structured",
     testsGovernanceEnabled: config.adoption.tests !== "disabled" && !isExternalOverlay,
+    loopGoalGovernanceEnabled: config.workflows.enabled && config.workflows.loopGoal.enabled,
     allowedRootMarkdown: new Set(config.root.allowedMarkdown),
     allowedAnalysisDirs: new Set(config.analysis.allowedDirs),
     add,

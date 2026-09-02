@@ -12,8 +12,8 @@ Audit the POM loop/goal workflow at <WORKFLOW_PATH>.
 3. Read `skills/loop-goal.md`, this prompt, and the workflow at `<WORKFLOW_PATH>`.
 4. Run `node scripts/lint-workflows.mjs <WORKFLOW_PATH>` and record PASS/FAIL, errors, and warnings. If the root workflow fails validation, stop before classification, report the findings, and request correction; an invalid model cannot receive a fit verdict.
 5. Follow every `state.invoke.workflow` and `transition.invoke.workflow` reference. Resolve each path relative to its caller, read the sub-workflow, and validate it too. If an invoked workflow fails validation, stop before classifying the composition and report the findings.
-6. Locate the accepted `criteria.md` from `workflows.loopGoal.criteriaPath`, the project's declared convention, or the workflow's nearby design directory. Legacy numbered criteria files may be used only when no current `criteria.md` exists or the user explicitly identifies that round.
-7. If several plausible criteria files exist, ask which one governs the workflow. If none exists, continue with structural fit only and state that criteria conformity is not executable.
+6. Locate the accepted criteria contract wherever it is located: the `## Criteria` section of the experiment's `EXPERIMENT.md`, or the frozen `criteria.md` copy at `workflows.loopGoal.criteriaPath` when configured; otherwise the project's declared convention or the workflow's nearby design directory. Legacy numbered criteria files may be used only when no current contract exists or the user explicitly identifies that round.
+7. If several plausible contracts exist, ask which one governs the workflow. If none exists, or the contract is not `status: accepted`, continue with structural fit only and state that criteria conformity is not executable.
 
 ## Structural model
 
