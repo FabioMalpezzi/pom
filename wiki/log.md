@@ -2,6 +2,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-09-02] update | POM 0.7.2
+
+Bumped the index to POM v0.7.2: installer messages list the `pom:*` scripts they actually manage. Details in `CHANGELOG.md`.
+
+Sources used: `CHANGELOG.md`, `scripts/install-pom.ts`.
+
 ## [2026-09-02] update | POM 0.7.1
 
 Bumped the index to POM v0.7.1: tandem documented end to end (new `wiki/tandem-collaboration.md` with the real slugify run, skill map, guides, README, installation, help, key routes). Details in `CHANGELOG.md`.
