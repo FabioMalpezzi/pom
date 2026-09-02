@@ -1,6 +1,6 @@
 ---
 name: validate
-description: Use when a significant POM action needs a read-only governance audit.
+description: Use when governed memory must be audited read-only after a significant action - project state, wiki, task status, decisions, orphan artifacts - not to verify the work itself.
 ---
 
 # Skill - validate
@@ -12,6 +12,8 @@ description: Use when a significant POM action needs a read-only governance audi
 - After a major wiki update.
 - Before ending a significant work session when governed memory changed.
 - When asked to verify project governance state.
+
+Boundary: `validate` audits the memory. Verifying that the work itself is done (goal, tests, lint, risks) is `check`; when both are needed, `check` comes first and `validate` confirms the memory reflects the verified result.
 
 ## Canonical Prompt
 

@@ -2,6 +2,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-09-02] update | skill catalog consolidated in 0.3.0
+
+Rewrote the skill entries in `wiki/skills-and-prompts.md`: removed `help`, `guard`, `extend`, `improve`, and `prune`; added `method` (extend, improve, prune modes), `release`, and `migrate`; updated the sources table. `wiki/experiments-and-extension.md` now points to `skills/method.md` instead of the three merged cards.
+
+Sources used: `skills/README.md`, `skills/method.md`, `skills/release.md`, `skills/migrate.md`, `CHANGELOG.md`.
+
 ## [2026-09-02] update | self-audit fixes and POM 0.3.0
 
 Removed the stale `@exp/pom-skill-evolution` branch note from `wiki/adoption-and-installation.md` (the Pi package is on `main`), bumped the index to POM v0.3.0, and dropped the `## Summary` heading from this log so every H2 is a dated entry. The release itself restores `scripts/to-xstate.mjs`, makes the repository pass its own governance lint through a root `pom.config.json`, hardens installer and updater, generates the README skill table from `skills/README.md`, and adds the experiment evidence convention. Details in `CHANGELOG.md`.

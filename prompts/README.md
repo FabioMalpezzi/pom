@@ -43,6 +43,8 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `33-finish-branch.md` | finish branch, PR, merge, keep, discard, or cleanup decisions |
 | `34-root-cause-debugging.md` | investigate Target Project bugs, test failures, build failures, and unexpected behavior before fixes |
 | `35-mcp-interface.md` | design, audit, reshape, or verify MCP tools, resources, prompts, schemas, responses, and errors |
+| `36-release.md` | close a numbered version: reconcile changelog with history, align version references, checksums, tag, record in memory |
+| `37-migrate-structure.md` | move an adopted project's folders toward canonical roots with approval, dependents checklist, and lint before and after |
 
 ## References
 

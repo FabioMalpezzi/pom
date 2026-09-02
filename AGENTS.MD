@@ -33,7 +33,7 @@ own working repository and do not run the bootstrap as an install step.
 
 ## Extending POM
 
-Use `skills/extend.md` and `prompts/12-extend-pom.md` when changing the method.
+Use `skills/method.md` (modes `extend`, `improve`, `prune`) and its canonical prompts when changing the method.
 
 Choose the smallest fitting level:
 

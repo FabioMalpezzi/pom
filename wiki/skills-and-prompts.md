@@ -22,12 +22,6 @@ Complete skill catalog:
 - **Real use cases**: start a fresh session in a POM-managed project; resume after compaction; decide whether a request should use `adopt`, `wiki`, `plan`, `validate`, `spike`, `root-cause`, or `finish-branch`.
 - **Why it exists / importance**: prevents agents from acting from memory or frontmatter summaries, and makes POM integration more reliable across Codex, Claude Code, Gemini CLI, Cursor, OpenCode, GitHub Copilot, and instruction-file-only harnesses.
 
-### `help`
-
-- **Illustration**: skill-selection help and command orientation for humans and agents.
-- **Real use cases**: list available POM workflows; explain which skill fits a request; recover when a user asks "what can POM do here?"
-- **Why it exists / importance**: keeps the method discoverable without forcing users or agents to scan every prompt manually.
-
 ### `clarify`
 
 - **Illustration**: ambiguity reducer before memory creation, governance changes, or file edits.
@@ -51,12 +45,6 @@ Complete skill catalog:
 - **Illustration**: creates or refreshes `PROJECT_STATE.md`.
 - **Real use cases**: summarize current objective, blockers, risks, next actions, and files to read before another session resumes.
 - **Why it exists / importance**: keeps restart-critical context small, current, and separate from the full project history.
-
-### `guard`
-
-- **Illustration**: establishes governance, lint posture, and Decision Record discipline.
-- **Real use cases**: define which document types are governed; configure completion verification; decide when ADRs are required.
-- **Why it exists / importance**: turns POM from a loose folder set into verifiable Operating Memory with explicit closure rules.
 
 ### `plan`
 
@@ -130,23 +118,23 @@ Complete skill catalog:
 - **Real use cases**: create the initial wiki; identify stale wiki pages after source changes; answer a question from wiki memory; run lightweight wiki health checks.
 - **Why it exists / importance**: keeps reusable knowledge synthesized and linked to sources rather than scattered across notes and generated views.
 
-### `extend`
+### `method`
 
-- **Illustration**: controlled extension workflow for POM itself.
-- **Real use cases**: add a skill, prompt, template, lint rule, config option, or source-target alignment workflow.
-- **Why it exists / importance**: keeps POM extensible without letting every local preference become a general rule.
+- **Illustration**: the one entry point for changing POM itself, with three modes: `extend` adds or changes an element at the smallest fitting level, `improve` runs a bounded self-improvement loop with evidence, `prune` simplifies, merges, demotes, deletes, or config-gates elements that no longer protect memory or verification.
+- **Real use cases**: add a lint rule or skill; evaluate whether repeated agent failures imply a method change; remove two overlapping skills; demote a rule that belongs to one Target Project.
+- **Why it exists / importance**: keeps POM extensible and learnable from use while protecting it from process creep; starting in `prune` mode asks whether a change belongs in POM at all.
 
-### `improve`
+### `release`
 
-- **Illustration**: controlled self-improvement loop for method and governance changes.
-- **Real use cases**: evaluate whether repeated agent failures imply a new skill; measure whether a governance change improves outcomes; fold lessons back into prompts after evidence.
-- **Why it exists / importance**: lets POM learn from use while keeping improvements falsifiable and bounded.
+- **Illustration**: closes a numbered version: reconciles the changelog with real history, aligns every version reference, regenerates checksums, verifies, tags, and records the release in project state and wiki log.
+- **Real use cases**: cut POM 0.3.0 after a long unreleased stretch; release a Target Project that prints its version in several files; answer "what changed since the last release?".
+- **Why it exists / importance**: the September 2026 audit found 59 commits and two and a half months without a release and no procedure for closing one; a version nobody can trust is not memory.
 
-### `prune`
+### `migrate`
 
-- **Illustration**: reduces unnecessary method weight by simplifying, merging, demoting, deleting, or config-gating POM elements.
-- **Real use cases**: remove overlapping skills; demote a rule that only belongs to one Target Project; simplify an overgrown prompt.
-- **Why it exists / importance**: protects POM from process creep and keeps the method reusable.
+- **Illustration**: moves an adopted project's folders toward canonical roots, one module per commit, with approval, a dependents checklist, and lint and tests before and after.
+- **Real use cases**: unify `doc/` and `docs/`; move ADRs scattered across folders into the configured decisions root; relocate a wiki nested under a documentation root.
+- **Why it exists / importance**: adoption maps existing structure and never moves it; migration is the later explicit decision the README promises, and without a procedure it happened ad hoc or not at all.
 
 ### `status`
 
@@ -229,8 +217,10 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 | `prompts/README.md` | Prompt catalog and planning hierarchy. |
 | `skills/spike.md` | Experiment isolation rules. |
 | `prompts/09-run-temporary-experiment.md` | Full temporary experiment procedure. |
-| `skills/extend.md` | Extension-level selection rules. |
+| `skills/method.md` | Extension, improvement, and pruning modes for changing POM itself. |
 | `prompts/12-extend-pom.md` | Controlled POM extension procedure. |
+| `skills/release.md`, `prompts/36-release.md` | Version closure procedure. |
+| `skills/migrate.md`, `prompts/37-migrate-structure.md` | Structure migration procedure for adopted projects. |
 | `skills/reader-notes.md` | Skill card for processing human Project Reader notes. |
 | `prompts/26-process-reader-notes.md` | Canonical procedure for claiming, evaluating, applying, recording, and verifying Project Reader notes. |
 | `skills/challenge.md` | Skill card for adversarial thesis/antithesis review. |

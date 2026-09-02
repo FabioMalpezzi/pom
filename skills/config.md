@@ -1,6 +1,6 @@
 ---
 name: config
-description: Use when creating or updating pom.config.json for adoption, roots, lint, wiki, decisions, tasks, tests, docs, analysis, or mockups.
+description: Use when creating or updating pom.config.json, or when setting or revising project governance - lint, decision records, mock manifests, agent rules - beyond what the installer does.
 ---
 
 # Skill - config
@@ -11,14 +11,23 @@ description: Use when creating or updating pom.config.json for adoption, roots, 
 - Adapt lint to a new or existing project.
 - Classify repository ownership before mapping POM modules.
 - Reconcile decisions/docs/source/tests/task plans/wiki/analysis/mockups/handoff with local preferences.
+- Set up or revise documentation governance: which document types are governed, lint posture, decision-record discipline, mock manifests, agent operating rules (formerly the `guard` skill).
 
-## Canonical Prompt
+Use `skills/method.md` when the general POM method changes rather than this project's configuration.
 
-`prompts/08-create-pom-config.md`
+## Canonical Prompts
 
-## Main Template
+- `prompts/08-create-pom-config.md` for the configuration file;
+- `prompts/04-create-doc-governance.md` when governance, lint rules, decision records, mock manifests, or agent rules are being set or revised.
 
-`pom/templates/POM_CONFIG_TEMPLATE.json`
+## Main Templates
+
+- `pom/templates/POM_CONFIG_TEMPLATE.json`
+- `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md`, `pom/templates/ADR_TEMPLATE.md`, `pom/templates/MOCK_MANIFEST_TEMPLATE.md`, and `pom/templates/CI_GUIDE_TEMPLATE.md` (optional CI starting point) when governance is being set or revised.
+
+## Governance
+
+The installer sets up the pre-commit hook and package scripts (`npm run pom:init`). Use this skill when governance rules, lint configuration, or agent operating rules must be reviewed or changed beyond what the installer covers. Governance and lint must stay consistent with `pom.config.json`: if a project rule changes, update the config before or together with the rule. Add rules only when they prevent stale, contradictory, unverifiable, or misplaced memory. For existing projects, encode approved mappings to current structures before proposing folder migrations (`skills/migrate.md`).
 
 ## Config
 
@@ -110,4 +119,5 @@ Do not place translated or customized target-project templates under `pom/`, bec
 - base POM rules separated from project-specific rules;
 - analysis/task/test namespace convention stated or intentionally overridden;
 - lint run and result;
-- mapped roots and conventions explained for decisions/docs/source/tests/task plans/wiki/analysis/mockups/handoff.
+- mapped roots and conventions explained for decisions/docs/source/tests/task plans/wiki/analysis/mockups/handoff;
+- when governance changed: documented governance, updated agent rules, and the hook documented only after a successful lint.

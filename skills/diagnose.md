@@ -22,7 +22,7 @@ description: Use when a POM workflow, lint check, installer run, template, skill
 - Reproduce the problem before fixing it when possible.
 - List concrete hypotheses and test the highest-signal one first.
 - Add a regression test when the defect has a stable seam.
-- If the issue is caused by method bloat or overlap, route to `skills/prune.md`.
+- If the issue is caused by method bloat or overlap, route to `skills/method.md` in `prune` mode.
 
 ## Memory Impact
 
