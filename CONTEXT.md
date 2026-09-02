@@ -85,6 +85,22 @@ _Avoid_: downstream repo, consumer repo, client project
 The reusable POM repository containing the method, prompts, templates, skills, scripts, and examples.
 _Avoid_: upstream codebase, framework code
 
+**Experiment Criteria Contract**:
+The `## Criteria` section of an experiment's `EXPERIMENT.md`, accepted and committed before evidence exists: system under test, gates, signals, the four exits (`reached`, `stalled`, `exhausted`, `falsified`), budget, and decision owner.
+_Avoid_: criteria file, hypothesis list, success metrics
+
+**Coordinator**:
+The agent role that owns a loop/goal experiment cycle: it conducts the criteria dialogue with the user, freezes the contract, runs the rounds, and is the only addressee of the evaluator's non-retroactive advice.
+_Avoid_: evaluator, orchestrator, experiment owner, decision maker
+
+**Technical Verdict**:
+The evaluator's judgement of a frozen contract against the evidence: `confirmed`, `refuted`, or `inconclusive`.
+_Avoid_: result, promotion, pass/fail
+
+**Promotion Decision**:
+The user's decision on what the project does with an experiment: `adopt`, `refine`, or `reject`.
+_Avoid_: verdict, consolidation, merge decision
+
 ## Relationships
 
 - **POM** maintains **Operating Memory** through one or more **Memory Elements**.
@@ -97,6 +113,7 @@ _Avoid_: upstream codebase, framework code
 - **Source Authority** decides which source resolves a question; **Divergence** records when sources disagree.
 - **Artifact Policy** decides whether an artifact may be edited directly, needs approval, must be regenerated, or should stay historical.
 - **POM Source** supplies reusable rules, while each **Target Project** owns its memory products.
+- The **Coordinator** freezes an **Experiment Criteria Contract**; an independent evaluator returns a **Technical Verdict** on it; the user takes the **Promotion Decision**.
 
 ## Example Dialogue
 
@@ -112,3 +129,5 @@ _Avoid_: upstream codebase, framework code
 - "status" can mean **Project State**, document status, or issue state; resolved: use the specific term for the artifact being discussed.
 - "task" can mean any work item; resolved: use **Task Plan** when referring to POM-governed work and "issue" only for external issue trackers.
 - "project memory" was used broadly; resolved: use **Operating Memory** for the restart-critical context and **Memory Element** for durable artifacts that carry it.
+- "loop" names five different things in loop/goal work; resolved: **runtime loop** for the controller's own cycle, **experiment round** and **experiment iteration** for the experiment cycle and its comparable measurements, **`loop_guard`** for the per-state visit bound, **Iteration Record** for the target-owned record of one runtime iteration, and **method improvement round** for the evaluator's advice feeding a next round (see `skills/loop-goal.md`).
+- "outcome" of an experiment mixed judgement and action; resolved: **Technical Verdict** (`confirmed`, `refuted`, `inconclusive`) for what the evidence supports and **Promotion Decision** (`adopt`, `refine`, `reject`) for what the project does.

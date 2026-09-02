@@ -376,7 +376,7 @@ Generated from `skills/README.md` by `npm run pom:skills:sync`. Edit the catalog
 | `zero-tech-debt` | reshape a scoped change around the intended product and architecture end state | `prompts/23-zero-tech-debt.md` |
 | `challenge` | run adversarial thesis/antithesis review before accepting or completing non-code work | `prompts/24-challenge-antithesis.md` |
 | `config` | create or update `pom.config.json`; set or revise governance, lint, decision records, mock manifests, and agent rules beyond the installer | `prompts/08-create-pom-config.md`, `prompts/04-create-doc-governance.md` |
-| `spike` | manage temporary experiments and consolidation, including the Git branch/worktree choice for risky or exploratory work | `prompts/09-run-temporary-experiment.md` |
+| `spike` | manage temporary experiments and their promotion decision (`adopt`, `refine`, or `reject`), including the Git branch/worktree choice for risky or exploratory work | `prompts/09-run-temporary-experiment.md` |
 | `wiki` | build, query, check, or maintain the wiki | `prompts/10-build-wiki.md`, `prompts/11-review-stale-wiki.md`, `prompts/13-query-wiki.md`, `prompts/14-lint-wiki.md` |
 | `method` | change POM itself in `extend`, `improve`, or `prune` mode; start in `prune` when the change may add method weight | `prompts/12-extend-pom.md`, `prompts/25-self-improvement-loop.md`, `prompts/21-prune-pom-method.md` |
 | `status` | classify document type and choose the least misleading status | `prompts/15-classify-document-status.md` |
@@ -388,7 +388,7 @@ Generated from `skills/README.md` by `npm run pom:skills:sync`. Edit the catalog
 | `reconcile` | classify and resolve a divergence between a source and project memory | `prompts/19-reconcile-memory.md` |
 | `validate` | audit governed memory read-only after significant actions: project state, wiki, task status, decisions, orphans | `prompts/18-post-action-validator.md` |
 | `workflow` | design, validate, diagram, scenarios, and implement domain workflows declared as YAML state models | `prompts/27-workflow-modeling.md` |
-| `loop-goal` | define-criteria, model, audit, scenarios, conclude for opt-in agent loop/goal workflows and experiments in Target Projects (the four-agent cycle); when to use vs `workflow` -> `ADR-0003` | `prompts/28-loop-goal-define-criteria.md`, `prompts/29-loop-goal-audit.md`, `prompts/30-loop-goal-scenarios.md`, `prompts/31-loop-goal-conclude.md` |
+| `loop-goal` | define-criteria, audit, criteria-scenarios, conclude for opt-in agent loop/goal experiments in Target Projects; the contract is the `## Criteria` section of `EXPERIMENT.md`, modeling and implementation guidance go through `workflow`; when to use vs `workflow` -> `ADR-0003` | `prompts/28-loop-goal-define-criteria.md`, `prompts/29-loop-goal-audit.md`, `prompts/30-loop-goal-scenarios.md`, `prompts/31-loop-goal-conclude.md` |
 <!-- POM:SKILL-CATALOG:END -->
 
 ### Skill Usage Tracking

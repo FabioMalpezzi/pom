@@ -1,6 +1,6 @@
 # Prompt - Generate Loop/Goal Workflow Scenarios
 
-Use this prompt to derive path-based test scenarios from an agent-shaped loop/goal workflow. The scenarios are derived artifacts for a Target Project's test implementation; they do not replace executable tests.
+Use this prompt, the `criteria-scenarios` mode of `skills/loop-goal.md`, to derive path-based test scenarios from an agent-shaped loop/goal workflow. It differs from the `scenarios` mode of `skills/workflow.md` by adding criteria-exit coverage. The scenarios are derived artifacts for a Target Project's test implementation; they do not replace executable tests.
 
 ```text
 Generate test scenarios for the POM loop/goal workflow at <WORKFLOW_PATH>.
@@ -12,7 +12,7 @@ Generate test scenarios for the POM loop/goal workflow at <WORKFLOW_PATH>.
 3. Read `skills/loop-goal.md`, this prompt, and the workflow at `<WORKFLOW_PATH>`.
 4. Run `node scripts/lint-workflows.mjs <WORKFLOW_PATH>`. If validation fails, report the errors and do not present the scenario set as complete.
 5. Follow every `state.invoke.workflow` and `transition.invoke.workflow` reference. Resolve each path relative to its caller, read the sub-workflow, and validate it.
-6. Locate the accepted `criteria.md` from `workflows.loopGoal.criteriaPath`, the project's convention, or the nearby design directory. Use a legacy numbered criteria file only when no current contract exists or the user explicitly identifies that round.
+6. Locate the accepted criteria contract wherever it is located: the `## Criteria` section of the experiment's `EXPERIMENT.md`, or the frozen `criteria.md` copy at `workflows.loopGoal.criteriaPath` when configured; otherwise the project's convention or the nearby design directory. Use a legacy numbered criteria file only when no current contract exists or the user explicitly identifies that round.
 7. If criteria are missing, continue with workflow-path coverage and mark criteria-exit coverage not assessable.
 
 ## Scenario contract
@@ -49,10 +49,10 @@ Prefer meaningful path coverage over combinatorial exhaustion. Generate, in orde
 9. one error or misuse scenario for an invalid event, failed guard, malformed context, or prohibited operation that the contract says must be rejected.
 
 For accepted criteria, cover:
-- reached exit;
-- stall exit;
-- budget exit when representable by the workflow or its declared runtime boundary;
-- the observable falsification event;
+- `reached` exit;
+- `stalled` exit;
+- `exhausted` exit when representable by the workflow or its declared runtime boundary;
+- the observable falsification event (`falsified` exit);
 - each gate and signal whose evidence can be exercised by a scenario.
 
 Do not force experiment-level budget or evidence collection into the YAML when it is correctly owned outside the workflow. Mark that coverage as external and name the expected test or evidence source.
