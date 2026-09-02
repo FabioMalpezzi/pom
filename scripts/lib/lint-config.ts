@@ -107,6 +107,13 @@ export type LintConfig = {
     triggerPaths: string[];
     forbiddenHeadings: string[];
   };
+  workflows: {
+    enabled: boolean;
+    loopGoal: {
+      enabled: boolean;
+      evaluationRoots: string[];
+    };
+  };
 };
 
 const defaultConfig: LintConfig = {
@@ -230,6 +237,13 @@ const defaultConfig: LintConfig = {
     maxLines: 180,
     triggerPaths: [],
     forbiddenHeadings: ["## Log", "## Timeline", "## Changelog", "## History"],
+  },
+  workflows: {
+    enabled: false,
+    loopGoal: {
+      enabled: false,
+      evaluationRoots: ["experiments"],
+    },
   },
 };
 
@@ -403,6 +417,17 @@ function mergeConfig(base: LintConfig, raw: Record<string, unknown>, readers: Co
       maxLines: readNumber(raw, "handoff.maxLines", base.handoff.maxLines),
       triggerPaths: readStringArray(raw, "handoff.triggerPaths", base.handoff.triggerPaths),
       forbiddenHeadings: readStringArray(raw, "handoff.forbiddenHeadings", base.handoff.forbiddenHeadings),
+    },
+    workflows: {
+      enabled: readBoolean(raw, "workflows.enabled", base.workflows.enabled),
+      loopGoal: {
+        enabled: readBoolean(raw, "workflows.loopGoal.enabled", base.workflows.loopGoal.enabled),
+        evaluationRoots: readStringArray(
+          raw,
+          "workflows.loopGoal.evaluationRoots",
+          base.workflows.loopGoal.evaluationRoots,
+        ),
+      },
     },
   };
 }
