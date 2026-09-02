@@ -324,7 +324,7 @@ function upsertPackageScripts(): void {
   if (!pathExists(packagePath)) {
     const content: PackageJson = { private: true, type: "module", scripts: expectedScripts };
     writeText(packagePath, `${JSON.stringify(content, null, 2)}\n`);
-    console.log("Created package.json with pom:init, pom:update, pom:help, pom:lint, pom:reader, pom:wiki:render, and pom:workflow:* scripts.");
+    console.log(`Created package.json with ${Object.keys(expectedScripts).join(", ")}.`);
     return;
   }
 
@@ -353,13 +353,13 @@ function upsertPackageScripts(): void {
   }
 
   if (!changed) {
-    console.log("package.json already contains pom:init, pom:update, pom:help, pom:lint, pom:reader, and pom:wiki:render.");
+    console.log(`package.json already contains ${Object.keys(expectedScripts).join(", ")}.`);
     return;
   }
 
   parsed.scripts = scripts;
   writeText(packagePath, `${JSON.stringify(parsed, null, 2)}\n`);
-  console.log("Updated package.json with pom:init, pom:update, pom:help, pom:lint, pom:reader, and pom:wiki:render scripts.");
+  console.log(`Updated package.json with ${Object.keys(expectedScripts).filter((name) => scripts[name] === expectedScripts[name]).join(", ")}.`);
 }
 
 function createOrUpdateConfig(adoption: AdoptionConfig, ownership: OwnershipMode | undefined): ProjectConfig {

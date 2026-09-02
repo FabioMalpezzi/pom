@@ -2,6 +2,12 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## Unreleased
+
+### Fixed
+
+- **Installer messages list the scripts they actually manage** (`scripts/install-pom.ts`): the "created", "updated", and "already contains" lines named six scripts even when `pom:workflow:*` and `pom:tandem` were added; they now derive from the real script map.
+
 ## 0.7.1 - 2026-09-02
 
 ### Added
