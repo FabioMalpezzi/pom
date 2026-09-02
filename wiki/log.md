@@ -2,6 +2,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-09-02] update | POM 0.3.1
+
+Bumped the index to POM v0.3.1: bootstrap clones `main` explicitly, the Project Reader collapsed navigation is a compact top bar below 760 px, and TASK-0001 is Complete. Details in `CHANGELOG.md`.
+
+Sources used: `CHANGELOG.md`, `bootstrap-pom.mjs`, `scripts/project-reader/public/interactions.css`, `tasks/TASK-0001-lint-taskplans-mapping.md`.
+
 ## [2026-09-02] update | skill catalog consolidated in 0.3.0
 
 Rewrote the skill entries in `wiki/skills-and-prompts.md`: removed `help`, `guard`, `extend`, `improve`, and `prune`; added `method` (extend, improve, prune modes), `release`, and `migrate`; updated the sources table. `wiki/experiments-and-extension.md` now points to `skills/method.md` instead of the three merged cards.
