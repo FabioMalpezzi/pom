@@ -2,6 +2,18 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-09-02] update | POM 0.7.1
+
+Bumped the index to POM v0.7.1: tandem documented end to end (new `wiki/tandem-collaboration.md` with the real slugify run, skill map, guides, README, installation, help, key routes). Details in `CHANGELOG.md`.
+
+Sources used: `CHANGELOG.md`, `wiki/tandem-collaboration.md`.
+
+## [2026-09-02] add | tandem collaboration reading guide
+
+Added `wiki/tandem-collaboration.md`, a human reading guide to the `tandem` skill: roles and backend symmetry, persistent sessions, the controller's own worktree and the executor-workspace guard, the per-task cycle with cap and escalation, the two contracts, exit codes, the collaboration folder, the human-coordinated variant, how a review is read through the coordinator, and a condensed example. Linked from the index under a new "Agent collaboration" area and from `wiki/skills-and-prompts.md`, whose `tandem` section now lists the current commands and exit codes.
+
+Sources used: `skills/tandem.md`, `prompts/38-tandem.md`, `templates/TANDEM_BRIEF_TEMPLATE.md`, `scripts/tandem.mjs`, `scripts/lib/tandem-contract.mjs`, `scripts/lib/tandem-backends.mjs`, `scripts/lib/tandem-state.mjs`.
+
 ## [2026-09-02] update | POM 0.7.0
 
 Bumped the index to POM v0.7.0: the tandem skill hardened after an adversarial review (first-line verdict, explicit session reset, guarded paths, fingerprint over ignored files, closed-tandem guards, per-phase budget, `note`, `--done`, `--setup`, `--guard-ignore`). Details in `CHANGELOG.md`.

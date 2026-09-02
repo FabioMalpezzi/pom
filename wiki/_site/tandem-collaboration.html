@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="POM Wiki Reader">
+  <title>Tandem Collaboration - POM Wiki Reader</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">POM</span>
+      <span>POM Wiki Reader</span>
+    </a>
+    <a class="source-link" href="../tandem-collaboration.md" target="_blank" rel="noopener noreferrer">Markdown source</a>
+  </header>
+
+  <div class="layout">
+    <aside class="site-nav" aria-label="Wiki pages">
+      <label class="search-label" for="page-search">Search wiki</label>
+      <input id="page-search" type="search" placeholder="Search title and content" autocomplete="off">
+      <p id="search-status" class="search-status" aria-live="polite"></p>
+      <nav id="page-nav">
+        <a href="index.html" data-title="POM Wiki - Index" data-nav-title="POM Wiki - Index" title="POM Wiki - Index">POM Wiki - Index</a>
+<a href="overview.html" data-title="POM Overview" data-nav-title="POM Overview" title="POM Overview">POM Overview</a>
+<a href="operating-memory.html" data-title="Operating Memory" data-nav-title="Operating Memory" title="Operating Memory">Operating Memory</a>
+<a href="wiki-method.html" data-title="Persistent Wiki Method" data-nav-title="Persistent Wiki Method" title="Persistent Wiki Method">Persistent Wiki Method</a>
+<a href="reader-capabilities.html" data-title="Reader Capabilities" data-nav-title="Reader Capabilities" title="Reader Capabilities">Reader Capabilities</a>
+<a href="adoption-and-installation.html" data-title="Adoption And Installation" data-nav-title="Adoption And Installation" title="Adoption And Installation">Adoption And Installation</a>
+<a href="skills-and-prompts.html" data-title="Skills And Prompts" data-nav-title="Skills And Prompts" title="Skills And Prompts">Skills And Prompts</a>
+<a href="templates-and-governance.html" data-title="Templates And Governance" data-nav-title="Templates And Governance" title="Templates And Governance">Templates And Governance</a>
+<a href="experiments-and-extension.html" data-title="Experiments And Extension" data-nav-title="Experiments And Extension" title="Experiments And Extension">Experiments And Extension</a>
+<a href="current-specs.html" data-title="Current POM Specs" data-nav-title="Current POM Specs" title="Current POM Specs">Current POM Specs</a>
+<a href="loop-goal-workflow-tutorial.html" data-title="Loop/Goal Workflow Tutorial" data-nav-title="Loop/Goal Tutorial" title="Loop/Goal Workflow Tutorial">Loop/Goal Tutorial</a>
+<a href="loop-goal-scope-examples.html" data-title="Loop/Goal Scope Examples" data-nav-title="Loop/Goal Scope Examples" title="Loop/Goal Scope Examples">Loop/Goal Scope Examples</a>
+<a href="agent-graph-patterns.html" data-title="Agent Graph Patterns" data-nav-title="Agent Graph Patterns" title="Agent Graph Patterns">Agent Graph Patterns</a>
+<a href="tandem-collaboration.html" data-title="Tandem Collaboration" data-nav-title="Tandem" title="Tandem Collaboration" aria-current="page">Tandem</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <article class="page">
+        <header class="page-head">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a><span>/</span><span title="Tandem Collaboration">Tandem</span></nav>
+          <p class="eyebrow">Persistent Wiki</p>
+          <h1>Tandem Collaboration</h1>
+          <p class="dek">A tandem is a multiturn collaboration between two coding agents: an executor that writes the code and a controller that reviews it, with a coordinator carrying assignments, deliverables, and findings between them...</p>
+          <div class="meta">
+            <span>Source: tandem-collaboration.md</span>
+            <span>Generated: 2026-09-02</span>
+          </div>
+        </header>
+        <aside class="generated-notice">
+          <strong>Generated reader view.</strong> Edit the Markdown source, then regenerate this static site. The HTML is not canonical Operating Memory.
+        </aside>
+        <h2 id="summary">Summary <a class="heading-anchor" href="#summary" aria-label="Copy link to Summary">#</a></h2>
+<p>A tandem is a multi-turn collaboration between two coding agents: an <strong>executor</strong> that writes the code and a <strong>controller</strong> that reviews it, with a <strong>coordinator</strong> carrying assignments, deliverables, and findings between them through <code>scripts/tandem.mjs</code> (<code>npm run pom:tandem</code>). The review follows a fixed contract, each task has a cycle cap, and a stuck task becomes an escalation to the user instead of a fourth rewrite. This page is a human reading guide to the <code>tandem</code> skill: what it is, when it pays off, how the pieces fit, and what a run looks like.</p>
+<h2 id="current-state">Current State <a class="heading-anchor" href="#current-state" aria-label="Copy link to Current State">#</a></h2>
+<p>The <code>tandem</code> skill (<code>skills/tandem.md</code>, <code>prompts/38-tandem.md</code>) is installed in Target Projects together with the script and the brief template. Claude Code, Pi, and Codex are interchangeable in every seat: whichever agent runs the skill coordinates, and the other two take the roles. The controller works in its own Git worktree, synchronised with the deliverable under review and reset afterwards, and the script verifies after every review that the executor workspace is untouched. The collaboration's memory is <code>BRIEF.md</code> (goal, roles, rules, tasks, outcome; shape in <code>templates/TANDEM_BRIEF_TEMPLATE.md</code>), <code>LEDGER.md</code> (one line per turn), and <code>turns/</code> (message sent and full reply, one file per call) under <code>collaboration/&lt;slug&gt;/</code>, plus the persistent sessions of the backends. <code>init</code> writes a <code>.gitignore</code> that keeps the controller worktree, the session files, and <code>turns/</code> out of Git (<code>send</code>, <code>review</code>, and <code>respond</code> warn when that rule is missing); <code>init --track-turns</code> versions the turns on purpose, <code>BRIEF.md</code> and <code>LEDGER.md</code> stay tracked. These files are the restart point for a new coordinator.</p>
+<p>Use a tandem when a piece of work spans several turns and deserves a reviewer that did not write it, especially when that reviewer can be a different LLM. Do not use it for a single-turn review of an existing diff (<code>check</code> or <code>challenge</code>), for a Target Project bug hunt (<code>root-cause</code>), or in place of a measurable experiment with a criteria contract (<code>loop-goal</code>; a tandem may still run inside one).</p>
+<h2 id="details">Details <a class="heading-anchor" href="#details" aria-label="Copy link to Details">#</a></h2>
+<h3 id="three-roles-three-symmetric-backends">Three roles, three symmetric backends <a class="heading-anchor" href="#three-roles-three-symmetric-backends" aria-label="Copy link to Three roles, three symmetric backends">#</a></h3>
+<ul><li>The <strong>coordinator</strong> runs the skill and the script: writes the brief</li></ul>
+<p>with the user, sends the difference each turn, reads the exit codes, escalates. It never edits project files and never takes a role.</p>
+<ul><li>The <strong>executor</strong> is the only agent that writes project files, in the</li></ul>
+<p>project root on the collaboration branch, and answers every finding with <code>FIXED</code> or <code>DISPUTED</code>.</p>
+<ul><li>The <strong>controller</strong> returns a verdict with findings; it may run tests,</li></ul>
+<p>builds, and scripts in its own worktree, never produces the deliverable, never touches the executor's files.</p>
+<p>A backend is <code>claude</code>, <code>pi</code>, or <code>codex</code>, optionally with a model (<code>--controller pi:&lt;model&gt;</code>). Prefer a different LLM for the controller: a controller running the executor's own model tends to agree with it. Separate sessions of the same model are the minimum separation; the script warns and records <code>model_diversity: different | same</code> in the brief, it does not refuse.</p>
+<h3 id="persistent-sessions-keep-the-context">Persistent sessions keep the context <a class="heading-anchor" href="#persistent-sessions-keep-the-context" aria-label="Copy link to Persistent sessions keep the context">#</a></h3>
+<p>Each role keeps one non-interactive session in its backend, created on the first call and resumed afterwards, so the coordinator sends only the delta of each turn and never replays history:</p>
+<div class="table-wrap"><table><thead><tr><th>Backend</th><th>First call</th><th>Later calls</th></tr></thead><tbody><tr><td data-label="Backend">Pi</td><td data-label="First call"><code>pi -p --session-dir &lt;dir&gt; --session-id &lt;id&gt; &quot;&lt;msg&gt;&quot;</code></td><td data-label="Later calls">same command; Pi resumes by id</td></tr><tr><td data-label="Backend">Codex</td><td data-label="First call"><code>codex exec -s workspace-write -C &lt;cwd&gt; --json -o &lt;file&gt; &quot;&lt;msg&gt;&quot;</code></td><td data-label="Later calls"><code>codex exec ... resume &lt;thread&gt; &quot;&lt;msg&gt;&quot;</code>, thread id captured from the first reply</td></tr><tr><td data-label="Backend">Claude Code</td><td data-label="First call"><code>claude -p --session-id &lt;uuid&gt; ... &quot;&lt;msg&gt;&quot;</code></td><td data-label="Later calls"><code>claude -p --resume &lt;uuid&gt; ... &quot;&lt;msg&gt;&quot;</code></td></tr></tbody></table></div>
+<p>Claude roles run with shell, read, and edit tools pre-allowed, because print mode denies any tool that is not allowed up front. When a session is lost (Claude answers &quot;already in use&quot; or &quot;No conversation found&quot;, Codex returns no thread id, the Pi session file is missing) the script exits <code>1</code>, records the event in the ledger, and leaves the message unsent; the coordinator runs <code>session reset --topic &lt;slug&gt; --role &lt;role&gt;</code> and re-sends the current assignment with the brief context the role needs; the script never retries into a fresh session on its own.</p>
+<h3 id="the-controller-s-own-worktree">The controller's own worktree <a class="heading-anchor" href="#the-controller-s-own-worktree" aria-label="Copy link to The controller&#39;s own worktree">#</a></h3>
+<p>At <code>init</code> the script creates a Git worktree for the controller, by default <code>collaboration/&lt;slug&gt;/.controller-worktree/</code> (<code>--controller-worktree &lt;path&gt;</code> moves it outside the project root; a path inside the root but outside the tandem folder is refused). <code>--setup &quot;&lt;command&gt;&quot;</code> runs once there, at <code>init</code> and at <code>init --reopen</code>, for dependencies and builds; ignored files such as <code>node_modules</code> survive every reset, which is what makes the setup worth running once.</p>
+<p>At every <code>review</code> (and every <code>send</code> to the controller) the script takes a fingerprint of the executor workspace, synchronises the worktree with the executor's <code>HEAD</code> commit plus a patch of any uncommitted changes (<code>turns/NNN-controller-&lt;task&gt;.patch</code>, untracked files copied), runs the controller call, saves whatever the controller changed in its worktree as <code>turns/NNN-controller-&lt;task&gt;.left.patch</code> (noted in the ledger as &quot;controller left changes in its worktree (discarded)&quot;), resets the worktree, and takes the fingerprint again: if the executor workspace differs it exits <code>4</code>, listing the changed paths. The fingerprint covers tracked and untracked files by content and Git-ignored files by size and modification time (<code>*.log</code> and <code>*.pid</code> under ignored folders and every <code>collaboration/</code> folder excluded), and it runs even when the backend call fails. <code>--guard-ignore &lt;glob&gt;</code> (repeatable, saved in the brief) keeps paths that change on their own, such as a dev server log, out of the guard; it applies to ignored and untracked paths only, tracked files stay guarded whatever the glob.</p>
+<h3 id="the-cycle-per-task">The cycle per task <a class="heading-anchor" href="#the-cycle-per-task" aria-label="Copy link to The cycle per task">#</a></h3>
+<p>Tasks are a flat list added with <code>task add</code>, each with an optional phase label and a <code>--done &quot;&lt;criteria&gt;&quot;</code> definition of done that travels with every review. Per task: <code>send --role executor --task &lt;id&gt; --message &quot;&lt;assignment&gt;&quot;</code> (or <code>--message-file</code>) carries the assignment, the definition of done, and the constraints, nothing from earlier tasks unless this one depends on it; <code>review --task &lt;id&gt; --deliverable &lt;path-or-ref&gt;</code> gives the controller the definition of done, the deliverable, and the revision it was synchronised to; on <code>REVISE</code>, <code>respond --task &lt;id&gt;</code> hands the last findings to the executor, which answers in the response contract and applies fixes; then <code>review</code> again, until <code>APPROVE</code> or the cap.</p>
+<p>Each <code>REVISE</code> counts one cycle; the cap (default 4) is per task. When it is reached the task becomes <code>escalated</code>, the script exits <code>3</code>, and the tandem does not move on: the coordinator brings both positions to the user, whose decision goes into the ledger with <code>note</code>, not into the code. An optional <code>--phase-budget N</code> is a stop rule per phase label: every cycle consumes one unit, at zero the task becomes <code>stalled</code>. Raising the cap while a task is stuck defeats its purpose.</p>
+<h3 id="the-two-contracts">The two contracts <a class="heading-anchor" href="#the-two-contracts" aria-label="Copy link to The two contracts">#</a></h3>
+<p>The controller's reply must start with the verdict:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">VERDICT: APPROVE|REVISE
+FINDINGS:
+1. blocking|minor | &lt;location&gt; | &lt;what is wrong&gt; | &lt;evidence that would satisfy you&gt;
+2. ...</code></pre>
+</figure>
+<p>The verdict is the first non-empty line (Markdown emphasis tolerated); a verdict after a preamble, or two different verdicts in one reply, is non-conforming. The executor answers every finding on its own line:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">F&lt;n&gt;: FIXED &lt;what changed and its evidence&gt;
+F&lt;n&gt;: DISPUTED &lt;evidence&gt;</code></pre>
+</figure>
+<p>A reply without any <code>F&lt;n&gt;:</code> line, or a blocking finding disputed without evidence (fewer than twelve letters or digits), does not close the cycle. The texts of both contracts live in <code>scripts/lib/tandem-contract.mjs</code>, so the script and the skill say the same thing.</p>
+<h3 id="exit-codes">Exit codes <a class="heading-anchor" href="#exit-codes" aria-label="Copy link to Exit codes">#</a></h3>
+<div class="table-wrap"><table><thead><tr><th>Code</th><th>Meaning</th><th>What the coordinator does</th></tr></thead><tbody><tr><td data-label="Code"><code>0</code></td><td data-label="Meaning">Turn accepted and recorded.</td><td data-label="What the coordinator does">Continue.</td></tr><tr><td data-label="Code"><code>1</code></td><td data-label="Meaning">Usage error, backend error, timeout (<code>POM_TANDEM_TIMEOUT_MS</code>), or a lost session.</td><td data-label="What the coordinator does">Read the message; for a lost session, <code>session reset</code> and re-send.</td></tr><tr><td data-label="Code"><code>2</code></td><td data-label="Meaning">Non-conforming reply: no valid first-line verdict, two verdicts, an empty reply, no <code>F&lt;n&gt;:</code> lines, a blocking finding disputed without evidence. State unchanged.</td><td data-label="What the coordinator does">Repeat the turn quoting the contract; escalate if it happens again.</td></tr><tr><td data-label="Code"><code>3</code></td><td data-label="Meaning">Cycle cap or phase budget reached without <code>APPROVE</code>.</td><td data-label="What the coordinator does">Stop the task and escalate with both positions. Do not raise the cap.</td></tr><tr><td data-label="Code"><code>4</code></td><td data-label="Meaning">The executor workspace changed while the controller was reviewing.</td><td data-label="What the coordinator does">Stop the tandem and report the listed paths; the user decides.</td></tr></tbody></table></div>
+<h3 id="human-coordinated-variant">Human-coordinated variant <a class="heading-anchor" href="#human-coordinated-variant" aria-label="Copy link to Human-coordinated variant">#</a></h3>
+<p>The user can coordinate from the chat instead of a third agent. The agent of the current session takes one role, executor or controller, and the other role runs through the script as usual. For the role held by the session agent, <code>send</code> and <code>respond</code> are not used: the user hands assignments and findings over in the chat, the executor's <code>F&lt;n&gt;</code> answers go into the <code>--deliverable</code> text of the next <code>review</code>, and decisions are written to the ledger with <code>note</code>. Isolation does not change: in the executor seat the session agent writes only in the project root; in the controller seat it only reads and runs tests, and the user runs <code>review</code> so that the verdict passes through the contract.</p>
+<h3 id="how-a-review-is-read">How a review is read <a class="heading-anchor" href="#how-a-review-is-read" aria-label="Copy link to How a review is read">#</a></h3>
+<p>The user sees what the coordinator writes, not the script output. The script prints every reply between <code>=== &lt;role&gt; reply | task &lt;id&gt; | &lt;turn file&gt; ===</code> and <code>=== end of &lt;role&gt; reply ===</code>, and the coordinator quotes the verdict with its findings, and every executor response, verbatim in its chat before acting on them. Afterwards the same text is in the turn file named in the delimiter and the verdict is one line in <code>LEDGER.md</code>; <code>status --topic &lt;slug&gt;</code> shows roles, <code>model_diversity</code>, the task table with cycles, cap, phase budget, and escalated tasks; <code>close</code> writes the <code>## Outcome</code> section of the brief: one row per task with final verdict and cycles, what enters the project (a user decision, the script only records verdicts), and the open points.</p>
+<h3 id="a-complete-example">A complete example <a class="heading-anchor" href="#a-complete-example" aria-label="Copy link to A complete example">#</a></h3>
+<p>Taken from a real run on 2026-09-02 in a scratch project: Claude Code coordinated, Codex executed, Pi controlled (default models of each tool), cap 3. The replies below are the controller's and executor's own words, copied from the <code>turns/</code> files.</p>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">git switch -c collab/slugify
+npm run pom:tandem -- init --topic slugify --controller pi --executor codex --cap 3
+npm run pom:tandem -- task add --topic slugify --id T1 \
+  --title <span class="tok-string">&quot;Add slugify(text) in src/slugify.mjs with unit tests in tests/slugify.test.mjs runnable with npm test&quot;</span>
+npm run pom:tandem -- send --topic slugify --role executor --task T1 --message-file assignment-T1.md</code></pre>
+</figure>
+<p>The assignment spelled out the rules: lower-case, diacritics transliterated to ASCII, runs of non-alphanumerics collapsed to one dash, no leading or trailing dash, empty or non-string input returns an empty string, tests with <code>node:test</code>. The executor answered:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">Created:
+- src/slugify.mjs
+- tests/slugify.test.mjs
+- tests/index.js — compatibility entry point for the existing test script.
+Test command: `npm test`
+Result: 5 tests passed, 0 failed; exit code 0.</code></pre>
+</figure>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">npm run pom:tandem -- review --topic slugify --task T1 \
+  --deliverable <span class="tok-string">&quot;Files: src/slugify.mjs, tests/slugify.test.mjs, tests/index.js. Executor ran npm test: 5 passed. Verify the rules from the task and run the tests yourself in your worktree.&quot;</span></code></pre>
+</figure>
+<p>The controller ran the tests in its worktree, read the code, and found a gap the executor's own tests could not see:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">VERDICT: REVISE
+FINDINGS:
+1. blocking | src/slugify.mjs:7-10; tests/slugify.test.mjs:6-8 | Transliteration only strips decomposable combining marks; letters such as `ł`, `ø`, and `æ` are discarded or replaced by dashes (`Łódź` → `odz`, `smørrebrød` → `sm-rrebr-d`). The five existing tests pass but do not cover this gap. | Add representative non-decomposing Latin-letter tests and make them pass with expected transliterations such as `lodz` and `smorrebrod`.</code></pre>
+</figure>
+<figure class="code-figure code-highlight">
+  <figcaption><span>Bash</span><span>Syntax highlighted</span></figcaption>
+  <pre><code class="language-bash">npm run pom:tandem -- respond --topic slugify --task T1</code></pre>
+</figure>
+<p>The executor fixed the code in its workspace and answered in the response contract:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">F1: FIXED Added explicit ASCII mappings for non-decomposing Latin letters, including `ł`, `ø`, and `æ`, in `src/slugify.mjs`; added regression tests for `Łódź`, `smørrebrød`, and `Æsop` in `tests/slugify.test.mjs`. Both focused tests and `npm test` pass: 6 passed, 0 failed.</code></pre>
+</figure>
+<p>The second <code>review</code>, on the updated working tree, closed the task:</p>
+<figure class="code-figure code-plain">
+  <figcaption><span>Text</span><span>Fixed-width text</span></figcaption>
+  <pre><code class="language-text">VERDICT: APPROVE
+FINDINGS:
+1. minor | location: none | No remaining issues; all original rules and added transliteration cases are covered. | Evidence satisfied: `npm test` passes all 6 tests.</code></pre>
+</figure>
+<p><code>status</code> showed T1 <code>approved</code> with 1 cycle out of 3; <code>close --topic slugify</code> wrote the Outcome and removed the controller worktree. The same run, inverted (Pi coordinating, Claude controlling, Codex executing), approved a second task in one cycle; a third run with the session agent as executor and Pi as controller needed one <code>REVISE</code> on whitespace handling before its <code>APPROVE</code>.</p>
+<h2 id="sources">Sources <a class="heading-anchor" href="#sources" aria-label="Copy link to Sources">#</a></h2>
+<div class="table-wrap"><table><thead><tr><th>Source</th><th>Use</th></tr></thead><tbody><tr><td data-label="Source"><code>skills/tandem.md</code></td><td data-label="Use">Skill card: when to use, roles, modes, key rules, human-coordinated variant, memory impact.</td></tr><tr><td data-label="Source"><code>prompts/38-tandem.md</code></td><td data-label="Use">Canonical procedure: preconditions, setup, procedure per task, exit codes, escalation, resuming, closure.</td></tr><tr><td data-label="Source"><code>templates/TANDEM_BRIEF_TEMPLATE.md</code></td><td data-label="Use">Shape of <code>BRIEF.md</code>: fields, roles, rules, tasks, outcome.</td></tr><tr><td data-label="Source"><code>scripts/tandem.mjs</code></td><td data-label="Use">The command line, the exit codes, the worktree synchronisation and workspace guard.</td></tr><tr><td data-label="Source"><code>scripts/lib/tandem-contract.mjs</code></td><td data-label="Use">The review and response contracts and their parsers.</td></tr><tr><td data-label="Source"><code>scripts/lib/tandem-backends.mjs</code></td><td data-label="Use">How each backend creates and resumes its session.</td></tr><tr><td data-label="Source"><code>scripts/lib/tandem-state.mjs</code></td><td data-label="Use">Layout of the collaboration folder and its Git ignore rules.</td></tr></tbody></table></div>
+<h2 id="related-links">Related Links <a class="heading-anchor" href="#related-links" aria-label="Copy link to Related Links">#</a></h2>
+<ul><li><a href="skills-and-prompts.html">skills-and-prompts</a></li><li><a href="experiments-and-extension.html">experiments-and-extension</a></li><li><a href="loop-goal-workflow-tutorial.html">loop-goal-workflow-tutorial</a></li></ul>
+        <nav class="page-pager" aria-label="Previous and next pages">
+    <a class="pager-prev" href="agent-graph-patterns.html" title="Agent Graph Patterns"><span>Previous</span>Agent Graph Patterns</a>
+    <span></span>
+  </nav>
+      </article>
+    </main>
+
+    <aside class="outline" aria-label="Page outline">
+      <p class="outline-title">On This Page</p>
+      <nav><a class="level-2" href="#summary">Summary</a>
+<a class="level-2" href="#current-state">Current State</a>
+<details class="outline-section" open>
+    <summary><a class="level-2" href="#details">Details</a></summary>
+    <div class="outline-children">
+      <a class="level-3" href="#three-roles-three-symmetric-backends">Three roles, three symmetric backends</a>
+<a class="level-3" href="#persistent-sessions-keep-the-context">Persistent sessions keep the context</a>
+<a class="level-3" href="#the-controller-s-own-worktree">The controller's own worktree</a>
+<a class="level-3" href="#the-cycle-per-task">The cycle per task</a>
+<a class="level-3" href="#the-two-contracts">The two contracts</a>
+<a class="level-3" href="#exit-codes">Exit codes</a>
+<a class="level-3" href="#human-coordinated-variant">Human-coordinated variant</a>
+<a class="level-3" href="#how-a-review-is-read">How a review is read</a>
+<a class="level-3" href="#a-complete-example">A complete example</a>
+    </div>
+  </details>
+<a class="level-2" href="#sources">Sources</a>
+<a class="level-2" href="#related-links">Related Links</a></nav>
+    </aside>
+  </div>
+
+  <script src="search-index.js"></script>
+  <script src="reader.js"></script>
+  
+</body>
+</html>

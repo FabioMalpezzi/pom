@@ -2,6 +2,12 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## 0.7.1 - 2026-09-02
+
+### Added
+
+- **Tandem documented end to end**: `wiki/tandem-collaboration.md` (roles, persistent sessions, controller worktree and guard, cycle and cap, contracts, exit codes, memory, human-coordinated variant, how a review is read, and the real `slugify` run of 2026-09-02 quoted from its turn files), a dedicated section in both HTML guides, a "Two-Agent Collaboration (tandem)" section in the README, the `pom:tandem` paragraph in `docs/installation.md`, the `pom:help` entry rewritten with every flag and the four exit codes, a `tandem` key route in the installed section and the router prompt, and the glossary entries aligned with 0.7.0.
+
 ## 0.7.0 - 2026-09-02
 
 ### Fixed

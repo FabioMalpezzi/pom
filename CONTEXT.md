@@ -90,11 +90,11 @@ The `## Criteria` section of an experiment's `EXPERIMENT.md`, accepted and commi
 _Avoid_: criteria file, hypothesis list, success metrics
 
 **Coordinator**:
-The agent role that runs a cycle on the user's behalf without judging it or producing its deliverable. In a loop/goal experiment it conducts the criteria dialogue, freezes the contract, runs the rounds, and is the only addressee of the evaluator's non-retroactive advice. In a **Tandem** it writes the brief with the user, carries the difference between **Executor** and **Controller**, reads the script's exit codes, and escalates; it writes no project files and holds no role in the tandem it coordinates.
+The agent role that runs a cycle on the user's behalf without judging it or producing its deliverable. In a loop/goal experiment it conducts the criteria dialogue, freezes the contract, runs the rounds, and is the only addressee of the evaluator's non-retroactive advice. In a **Tandem** it writes the brief with the user, carries the difference between **Executor** and **Controller**, relays every verdict and every answer verbatim in its chat, reads the script's exit codes, records user decisions in the ledger with `note`, and escalates; it writes no project files and holds no role in the tandem it coordinates. It may be the user coordinating from the chat, with the session agent in one role.
 _Avoid_: evaluator, controller, orchestrator, experiment owner, decision maker
 
 **Tandem**:
-A multi-turn collaboration between two coding agents, an **Executor** and a **Controller**, run by a **Coordinator** through `scripts/tandem.mjs` on one dedicated branch: a flat task list, a per-task cycle cap, a fixed review contract (`VERDICT`, numbered `FINDINGS`, `FIXED`/`DISPUTED` answers), and escalation to the user when the cap is reached without agreement. Its memory is `BRIEF.md`, `LEDGER.md`, and `turns/`.
+A multi-turn collaboration between two coding agents, an **Executor** and a **Controller**, run by a **Coordinator** through `scripts/tandem.mjs` on one dedicated branch: a flat task list, a per-task cycle cap, a fixed review contract (`VERDICT`, numbered `FINDINGS`, `FIXED`/`DISPUTED` answers), a controller isolated in its own Git worktree with the executor workspace guarded by the script, and escalation to the user when the cap is reached without agreement. Its memory is `BRIEF.md`, `LEDGER.md`, and `turns/` under `collaboration/<slug>/`, plus the persistent sessions of the backends.
 _Avoid_: pair programming, multi-agent runtime, review loop, swarm
 
 **Executor**:

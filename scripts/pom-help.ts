@@ -107,11 +107,12 @@ function printHelp(): void {
   console.log("    npm run pom:help [-- --lang en|it]");
   console.log("");
   console.log("13. Run a tandem: a controller agent reviews what an executor agent builds (pi, codex, claude; persistent sessions)");
-  console.log("    npm run pom:tandem -- init --topic <slug> --controller <backend>[:<model>] --executor <backend>[:<model>] [--cap 4] [--phase-budget N] [--setup \"npm ci\"] [--track-turns]");
-  console.log("    npm run pom:tandem -- task add --topic <slug> --id T1 --title \"...\" [--done \"...\"]   |   status --topic <slug>   |   note --topic <slug> --message \"...\"");
-  console.log("    npm run pom:tandem -- send|review|respond --topic <slug> --task T1 ...   |   session reset --role controller|executor   |   close [--keep-worktrees]   |   init --reopen");
-  console.log("    The controller works in its own Git worktree under collaboration/<slug>/ and never edits the executor workspace (exit 4 if it does).");
-  console.log("    Exit codes: 2 reply without VERDICT, 3 cap or phase budget reached. Guide: pom/skills/tandem.md.");
+  console.log("    npm run pom:tandem -- init --topic <slug> --controller <backend>[:<model>] --executor <backend>[:<model>] [--cap 4] [--phase-budget N] [--setup \"npm ci\"] [--track-turns] [--controller-worktree <path>] [--guard-ignore <glob>]...");
+  console.log("    npm run pom:tandem -- task add --topic <slug> --id T1 --title \"...\" [--phase <label>] [--done \"...\"]   |   status --topic <slug>   |   note --topic <slug> [--task T1] --message \"...\"");
+  console.log("    npm run pom:tandem -- send --topic <slug> --role executor --task T1 --message \"...\"   |   review --topic <slug> --task T1 --deliverable <path or ref>   |   respond --topic <slug> --task T1");
+  console.log("    npm run pom:tandem -- session reset --topic <slug> --role controller|executor   |   close --topic <slug> [--keep-worktrees]   |   init --reopen --topic <slug>");
+  console.log("    The controller works in its own Git worktree (default collaboration/<slug>/.controller-worktree/) and never edits the executor workspace; --setup runs there once, --guard-ignore keeps self-changing files out of the guard.");
+  console.log("    Exit codes: 0 ok, 1 usage/backend error or lost session (then session reset), 2 non-conforming reply, 3 cap or phase budget reached, 4 controller modified the executor workspace. Guide: pom/skills/tandem.md.");
   console.log("");
   console.log("Source-only commands (POM repository itself, not installed in target projects):");
   console.log("");
@@ -140,6 +141,7 @@ function printHelp(): void {
   console.log("  - Use `pom/skills/release.md` to close a numbered version with changelog, version references, and tag.");
   console.log("  - Use `pom/skills/method.md` to extend, improve, or prune POM itself.");
   console.log("  - Use `pom/skills/finish-branch.md` to close branch, PR, merge, keep, discard, or cleanup decisions.");
+  console.log("  - Use `pom/skills/tandem.md` to have two coding agents build and review multi-turn work as executor and controller.");
   console.log("");
 
   const skillsPath = pathExists("pom/skills/README.md") ? "pom/skills/README.md" : "skills/README.md";
@@ -232,11 +234,12 @@ function printHelpIt(): void {
   console.log("    npm run pom:help [-- --lang en|it]");
   console.log("");
   console.log("13. Avviare un tandem: un agente controllore rivede ciò che un agente esecutore costruisce (pi, codex, claude; sessioni persistenti)");
-  console.log("    npm run pom:tandem -- init --topic <slug> --controller <backend>[:<modello>] --executor <backend>[:<modello>] [--cap 4] [--phase-budget N] [--setup \"npm ci\"] [--track-turns]");
-  console.log("    npm run pom:tandem -- task add --topic <slug> --id T1 --title \"...\" [--done \"...\"]   |   status --topic <slug>   |   note --topic <slug> --message \"...\"");
-  console.log("    npm run pom:tandem -- send|review|respond --topic <slug> --task T1 ...   |   session reset --role controller|executor   |   close [--keep-worktrees]   |   init --reopen");
-  console.log("    Il controllore lavora in un proprio worktree Git sotto collaboration/<slug>/ e non modifica mai l'area di lavoro dell'esecutore (uscita 4 se lo fa).");
-  console.log("    Codici di uscita: 2 risposta senza VERDICT, 3 tetto o bilancio di fase raggiunto. Guida: pom/skills/tandem.md.");
+  console.log("    npm run pom:tandem -- init --topic <slug> --controller <backend>[:<modello>] --executor <backend>[:<modello>] [--cap 4] [--phase-budget N] [--setup \"npm ci\"] [--track-turns] [--controller-worktree <percorso>] [--guard-ignore <glob>]...");
+  console.log("    npm run pom:tandem -- task add --topic <slug> --id T1 --title \"...\" [--phase <etichetta>] [--done \"...\"]   |   status --topic <slug>   |   note --topic <slug> [--task T1] --message \"...\"");
+  console.log("    npm run pom:tandem -- send --topic <slug> --role executor --task T1 --message \"...\"   |   review --topic <slug> --task T1 --deliverable <percorso o ref>   |   respond --topic <slug> --task T1");
+  console.log("    npm run pom:tandem -- session reset --topic <slug> --role controller|executor   |   close --topic <slug> [--keep-worktrees]   |   init --reopen --topic <slug>");
+  console.log("    Il controllore lavora in un proprio worktree Git (default collaboration/<slug>/.controller-worktree/) e non modifica mai l'area di lavoro dell'esecutore; --setup vi esegue un comando una volta, --guard-ignore esclude dalla guardia i file che cambiano da soli.");
+  console.log("    Codici di uscita: 0 ok, 1 errore d'uso o del backend oppure sessione persa (poi session reset), 2 risposta fuori contratto, 3 tetto o bilancio di fase raggiunto, 4 il controllore ha modificato l'area dell'esecutore. Guida: pom/skills/tandem.md.");
   console.log("");
   console.log("Comandi solo nel repo POM sorgente (non installati nei progetti target):");
   console.log("");
@@ -262,6 +265,7 @@ function printHelpIt(): void {
   console.log("  - Usa `pom/skills/release.md` per chiudere una versione numerata con changelog, riferimenti di versione e tag.");
   console.log("  - Usa `pom/skills/method.md` per estendere, migliorare o snellire POM stesso.");
   console.log("  - Usa `pom/skills/finish-branch.md` per chiudere decisioni di branch, PR, merge, keep, discard o cleanup.");
+  console.log("  - Usa `pom/skills/tandem.md` per far costruire e rivedere un lavoro di più turni a due agenti di coding, esecutore e controllore.");
   console.log("");
 
   const skillsPath = pathExists("pom/skills/README.md") ? "pom/skills/README.md" : "skills/README.md";

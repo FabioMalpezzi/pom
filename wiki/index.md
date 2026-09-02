@@ -2,7 +2,7 @@
 
 > Persistent Wiki for the POM source repository.
 > Primary source: current POM repository files.
-> Last updated: 2026-09-02 (POM v0.7.0)
+> Last updated: 2026-09-02 (POM v0.7.1)
 
 ## Summary
 
@@ -36,6 +36,7 @@ The reader-oriented guides under `docs/` remain introductory public guides. They
 | Governance | Templates, lint, artifact policy, completion verification, and document discipline | [[templates-and-governance]] |
 | Evolution | Experiments, extension, pruning, reader capabilities, and current specs | [[experiments-and-extension]], [[reader-capabilities]], [[current-specs]] |
 | Workflow patterns | Human guides for choosing and reading reusable workflow pattern examples | [[loop-goal-workflow-tutorial]], [[loop-goal-scope-examples]], [[agent-graph-patterns]] |
+| Agent collaboration | Two coding agents building and reviewing multi-turn work as controller and executor, with a fixed review contract | [[tandem-collaboration]] |
 
 ## Sources And Legend
 

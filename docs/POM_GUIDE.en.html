@@ -69,6 +69,7 @@
         <a href="#overlay">Overlay</a>
         <a href="#adoption">Adoption</a>
         <a href="#skills">Skills</a>
+        <a href="#tandem">Tandem</a>
         <a href="#workflows">Workflows</a>
         <a href="#recommendations">Recommendations</a>
       </nav>
@@ -479,6 +480,48 @@
           <tr><td data-label="Need">Model, audit, test, or conclude an agent-shaped loop/goal workflow</td><td data-label="Skill"><code>loop-goal</code></td></tr>
         </tbody>
       </table>
+    </section>
+
+    <section id="tandem">
+      <h2>Tandem: two agents, one reviewer</h2>
+      <p>A reviewer that did not write the code sees the failures the author could not see. The <code>tandem</code> skill applies that idea to work that spans several turns: one coding agent implements, a second one reviews, and a third carries the difference between them through <code>npm run pom:tandem</code>. Claude Code, Pi, and Codex are interchangeable in every seat; whichever runs the skill coordinates, and the other two take the roles. Each role keeps a persistent session in its backend, so the coordinator sends only the delta of each turn and never replays history. A different LLM for the reviewer is preferred, not required: the script records <code>model_diversity</code> in the brief.</p>
+      <div class="grid">
+        <div class="item">
+          <span class="tag teal">Executor</span>
+          <h3>The only writer</h3>
+          <p>Writes project files in one workspace on the collaboration branch and answers every finding with <code>FIXED</code> or <code>DISPUTED</code> plus evidence.</p>
+        </div>
+        <div class="item">
+          <span class="tag">Controller</span>
+          <h3>Reviews in its own worktree</h3>
+          <p>Receives the deliverable in a Git worktree synchronised by the script, runs tests and builds there, returns a verdict with findings, and never touches the executor's files: the worktree is reset after every review and the script exits <code>4</code> if the executor workspace changed.</p>
+        </div>
+        <div class="item">
+          <span class="tag gold">Coordinator</span>
+          <h3>Carries the difference</h3>
+          <p>Writes the brief with the user, runs the commands, reads the exit codes, and escalates. Writes no project files and takes no role. It can also be the user, coordinating from the chat with the session's agent in one seat.</p>
+        </div>
+      </div>
+
+      <h3>The cycle per task</h3>
+      <div class="command-list">
+        <code>npm run pom:tandem -- init --topic &lt;slug&gt; --controller pi --executor claude --cap 4 [--setup "npm ci"]</code>
+        <code>npm run pom:tandem -- task add --topic &lt;slug&gt; --id T1 --title "&lt;title&gt;" --done "&lt;criteria&gt;"</code>
+        <code>npm run pom:tandem -- send --topic &lt;slug&gt; --role executor --task T1 --message "&lt;assignment&gt;"</code>
+        <code>npm run pom:tandem -- review --topic &lt;slug&gt; --task T1 --deliverable &lt;path-or-ref&gt;</code>
+        <code>npm run pom:tandem -- respond --topic &lt;slug&gt; --task T1</code>
+      </div>
+      <p>After a <code>REVISE</code>, <code>respond</code> hands the findings to the executor and <code>review</code> runs again, until <code>APPROVE</code> or the cycle cap (default 4 per task). When the cap is reached the task is escalated to the user with both positions; the cap is not raised. <code>status</code> shows the task table, <code>note</code> records a user decision in the ledger, <code>session reset</code> recovers a lost backend session, and <code>close</code> writes the outcome into <code>collaboration/&lt;slug&gt;/BRIEF.md</code>.</p>
+
+      <h3>Two fixed contracts</h3>
+      <div class="command-list">
+        <code>VERDICT: APPROVE|REVISE</code>
+        <code>FINDINGS:</code>
+        <code>1. blocking|minor | &lt;location&gt; | &lt;what is wrong&gt; | &lt;evidence that would satisfy you&gt;</code>
+      </div>
+      <p>The verdict is the first non-empty line of the controller's reply. The executor answers every finding on its own line, <code>F&lt;n&gt;: FIXED &lt;what changed and its evidence&gt;</code> or <code>F&lt;n&gt;: DISPUTED &lt;evidence&gt;</code>. A reply outside the contract, an empty reply, or a blocking finding disputed without evidence exits <code>2</code> and leaves the task as it was; the cap or a phase budget exits <code>3</code>; a controller that modified the executor workspace exits <code>4</code>.</p>
+
+      <p class="callout">The review is read in the coordinator's chat. The script prints each reply between delimiters, and the coordinator quotes every verdict with its findings, and every executor answer, verbatim before acting on them. A review nobody can read is a review nobody can check. The full texts stay under <code>collaboration/&lt;slug&gt;/turns/</code>, one line per turn goes into <code>LEDGER.md</code>. Skill card: <code>skills/tandem.md</code>; procedure: <code>prompts/38-tandem.md</code>; reading guide: <code>wiki/tandem-collaboration.md</code>.</p>
     </section>
 
     <section id="workflows">

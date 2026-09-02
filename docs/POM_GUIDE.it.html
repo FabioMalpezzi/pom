@@ -69,6 +69,7 @@
         <a href="#overlay">Overlay</a>
         <a href="#adoption">Adozione</a>
         <a href="#skills">Skill</a>
+        <a href="#tandem">Tandem</a>
         <a href="#workflows">Workflow</a>
         <a href="#recommendations">Raccomandazioni</a>
       </nav>
@@ -479,6 +480,48 @@
           <tr><td data-label="Esigenza">Modellare, auditare, testare o concludere un workflow loop/goal agent-shaped</td><td data-label="Skill"><code>loop-goal</code></td></tr>
         </tbody>
       </table>
+    </section>
+
+    <section id="tandem">
+      <h2>Tandem: due agenti, un revisore</h2>
+      <p>Un revisore che non ha scritto il codice vede gli errori che l'autore non poteva vedere. La skill <code>tandem</code> applica questa idea a un lavoro che dura più turni: un agente di coding implementa, un secondo rivede, e un terzo porta la differenza tra i due attraverso <code>npm run pom:tandem</code>. Claude Code, Pi e Codex sono intercambiabili in ogni posto: chi esegue la skill coordina, gli altri due prendono i ruoli. Ogni ruolo mantiene una sessione persistente nel proprio backend, così il coordinatore invia solo la differenza di ogni turno e non ripete mai la storia. Un LLM diverso per il revisore è preferito, non obbligatorio: lo script registra <code>model_diversity</code> nel brief.</p>
+      <div class="grid">
+        <div class="item">
+          <span class="tag teal">Esecutore</span>
+          <h3>L'unico che scrive</h3>
+          <p>Scrive i file di progetto in un solo spazio di lavoro sul branch della collaborazione e risponde a ogni rilievo con <code>FIXED</code> o <code>DISPUTED</code> più l'evidenza.</p>
+        </div>
+        <div class="item">
+          <span class="tag">Controllore</span>
+          <h3>Rivede nel proprio worktree</h3>
+          <p>Riceve il risultato in un worktree Git sincronizzato dallo script, vi esegue test e build, restituisce un verdetto con i rilievi e non tocca mai i file dell'esecutore: il worktree viene ripristinato dopo ogni revisione e lo script esce con codice <code>4</code> se lo spazio di lavoro dell'esecutore è cambiato.</p>
+        </div>
+        <div class="item">
+          <span class="tag gold">Coordinatore</span>
+          <h3>Porta la differenza</h3>
+          <p>Scrive il brief con l'utente, lancia i comandi, legge i codici di uscita e fa escalation. Non scrive file di progetto e non prende alcun ruolo. Può essere anche l'utente, che coordina dalla chat con l'agente della sessione in uno dei due posti.</p>
+        </div>
+      </div>
+
+      <h3>Il ciclo per task</h3>
+      <div class="command-list">
+        <code>npm run pom:tandem -- init --topic &lt;slug&gt; --controller pi --executor claude --cap 4 [--setup "npm ci"]</code>
+        <code>npm run pom:tandem -- task add --topic &lt;slug&gt; --id T1 --title "&lt;titolo&gt;" --done "&lt;criteri&gt;"</code>
+        <code>npm run pom:tandem -- send --topic &lt;slug&gt; --role executor --task T1 --message "&lt;assegnazione&gt;"</code>
+        <code>npm run pom:tandem -- review --topic &lt;slug&gt; --task T1 --deliverable &lt;percorso-o-ref&gt;</code>
+        <code>npm run pom:tandem -- respond --topic &lt;slug&gt; --task T1</code>
+      </div>
+      <p>Dopo un <code>REVISE</code>, <code>respond</code> consegna i rilievi all'esecutore e <code>review</code> viene ripetuto, fino ad <code>APPROVE</code> o al tetto di cicli (4 per task di default). Quando il tetto è raggiunto il task viene portato all'utente con entrambe le posizioni; il tetto non si alza. <code>status</code> mostra la tabella dei task, <code>note</code> registra una decisione dell'utente nel registro, <code>session reset</code> recupera una sessione persa del backend e <code>close</code> scrive l'esito in <code>collaboration/&lt;slug&gt;/BRIEF.md</code>.</p>
+
+      <h3>Due contratti fissi</h3>
+      <div class="command-list">
+        <code>VERDICT: APPROVE|REVISE</code>
+        <code>FINDINGS:</code>
+        <code>1. blocking|minor | &lt;posizione&gt; | &lt;cosa non va&gt; | &lt;evidenza che ti soddisferebbe&gt;</code>
+      </div>
+      <p>Il verdetto è la prima riga non vuota della risposta del controllore. L'esecutore risponde a ogni rilievo su una riga propria, <code>F&lt;n&gt;: FIXED &lt;cosa è cambiato e l'evidenza&gt;</code> oppure <code>F&lt;n&gt;: DISPUTED &lt;evidenza&gt;</code>. Una risposta fuori contratto, una risposta vuota o un rilievo bloccante contestato senza evidenza esce con codice <code>2</code> e lascia il task com'era; il tetto o il bilancio di fase escono con <code>3</code>; un controllore che ha modificato lo spazio dell'esecutore esce con <code>4</code>.</p>
+
+      <p class="callout">La revisione si legge nella chat del coordinatore. Lo script stampa ogni risposta tra due delimitatori e il coordinatore riporta parola per parola ogni verdetto con i suoi rilievi, e ogni risposta dell'esecutore, prima di agire. Una revisione che nessuno può leggere è una revisione che nessuno può controllare. I testi completi restano sotto <code>collaboration/&lt;slug&gt;/turns/</code>, una riga per turno va in <code>LEDGER.md</code>. Scheda della skill: <code>skills/tandem.md</code>; procedura: <code>prompts/38-tandem.md</code>; guida di lettura: <code>wiki/tandem-collaboration.md</code>.</p>
     </section>
 
     <section id="workflows">

@@ -138,9 +138,11 @@ Complete skill catalog:
 
 ### `tandem`
 
-- **Illustration**: coordinates two coding agents on multi-turn work: an executor that writes, a controller that reviews with a fixed `VERDICT`/`FINDINGS` contract, and a coordinator (the agent running the skill) that carries only the difference between them through `scripts/tandem.mjs`; three modes, `setup`, `run`, `close`.
-- **Real use cases**: implement a feature with Claude and have Codex review each task; run Pi as coordinator between a Claude executor and a Codex controller; resume a collaboration from `BRIEF.md`, `LEDGER.md`, and `turns/` after a session is lost.
-- **Why it exists / importance**: a reviewer that did not write the code sees what the author cannot, and a different LLM sees more than a second session of the same one; the script keeps the controller in its own worktree (it may run tests there, never touch the executor workspace), caps cycles per task, and turns a stuck task into an escalation instead of a fourth rewrite.
+- **Illustration**: coordinates two coding agents on multi-turn work: an executor that writes, a controller that reviews with a fixed `VERDICT`/`FINDINGS` contract, and a coordinator (the agent running the skill) that carries only the difference between them through `scripts/tandem.mjs`; three modes, `setup`, `run`, `close`. Claude Code, Pi, and Codex are interchangeable in every seat, and the user can coordinate from the chat with the session agent in one role.
+- **Commands**: `setup` is `init --topic <slug> --controller <backend>[:<model>] --executor <backend>[:<model>] [--cap 4] [--phase-budget N] [--track-turns] [--controller-worktree <path>] [--setup "<command>"] [--guard-ignore <glob>]...` followed by `task add ... [--phase <label>] [--done "<criteria>"]`; `run` is `send`, `review`, `respond`, `status`, `note --topic <slug> [--task <id>] --message "<text>"` for user decisions, and `session reset --topic <slug> --role controller|executor` after a lost session; `close --topic <slug> [--keep-worktrees]` writes the Outcome, and `init --reopen --topic <slug>` reopens a closed tandem with a fresh controller worktree.
+- **Exit codes**: `0` ok; `1` usage or backend error, timeout, lost session; `2` non-conforming reply (state unchanged); `3` cycle cap or phase budget reached (escalate, do not raise the cap); `4` the controller modified the executor workspace (stop and report the listed paths).
+- **Real use cases**: implement a feature with Claude and have Pi review each task; run Codex as coordinator between a Claude executor and a Pi controller; resume a collaboration from `BRIEF.md`, `LEDGER.md`, and `turns/` after a session is lost.
+- **Why it exists / importance**: a reviewer that did not write the code sees what the author cannot, and a different LLM sees more than a second session of the same one; the script keeps the controller in its own worktree (it may run tests there, never touch the executor workspace), caps cycles per task, and turns a stuck task into an escalation instead of a fourth rewrite. The user reads every verdict and every executor answer in the coordinator's chat, not in the script output. Reading guide: [[tandem-collaboration]].
 
 ### `status`
 
@@ -227,7 +229,7 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 | `prompts/12-extend-pom.md` | Controlled POM extension procedure. |
 | `skills/release.md`, `prompts/36-release.md` | Version closure procedure. |
 | `skills/migrate.md`, `prompts/37-migrate-structure.md` | Structure migration procedure for adopted projects. |
-| `skills/tandem.md`, `prompts/38-tandem.md` | Controller/executor tandem between two coding agents, coordinated by a third through `scripts/tandem.mjs`. |
+| `skills/tandem.md`, `prompts/38-tandem.md` | Controller/executor tandem between two coding agents, coordinated by a third through `scripts/tandem.mjs`; reading guide in [[tandem-collaboration]]. |
 | `skills/reader-notes.md` | Skill card for processing human Project Reader notes. |
 | `prompts/26-process-reader-notes.md` | Canonical procedure for claiming, evaluating, applying, recording, and verifying Project Reader notes. |
 | `skills/challenge.md` | Skill card for adversarial thesis/antithesis review. |
@@ -267,3 +269,4 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 - [[experiments-and-extension]]
 - [[templates-and-governance]]
 - [[loop-goal-workflow-tutorial]]
+- [[tandem-collaboration]]
