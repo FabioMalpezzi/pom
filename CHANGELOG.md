@@ -2,6 +2,29 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## 0.7.0 - 2026-09-02
+
+### Fixed
+
+- **A quoted verdict could approve a task** (`scripts/lib/tandem-contract.mjs`): the verdict parser took the first `VERDICT:` anywhere in the reply, so a controller writing "VERDICT: APPROVE would need a test" before its real `VERDICT: REVISE` was read as an approval. The verdict is now the first non-empty line only (case-insensitive, Markdown emphasis tolerated), and a reply carrying two different verdicts exits 2.
+- **Lost Claude sessions were unrecoverable** (`scripts/tandem.mjs`): the session was marked started only after a successful call, so an interrupted first call left a session id that Claude then refused as "already in use" or "no conversation found", with no way out. The state is saved before the call; a lost session exits 1 with the instruction to run `session reset` and re-send the assignment; no automatic retry, because a retry into a fresh session silently loses the assignment.
+- **`init --dir .` overwrote the project `.gitignore`**: `--dir` now rejects the project root and paths outside it, and merges only the missing lines into an existing `.gitignore`, warning when that file is tracked.
+- **The executor-workspace guard could be bypassed** (`scripts/lib/tandem-git.mjs`): it ignored Git-ignored files, skipped the comparison when the backend failed, and let two tandems in one repository disturb each other. The fingerprint now covers ignored files by size and date (tracked and untracked files by content), the comparison always runs, exit 4 lists the differing paths, and every `collaboration/` folder is excluded. `--guard-ignore <glob>` (repeatable; `*.log` and `*.pid` under ignored folders by default) keeps files that change on their own, such as a dev server log, out of the guard.
+- **Controller edits vanished without trace**: whatever the controller changed in its worktree is saved as `turns/NNN-controller-<task>.left.patch`, new files included, and noted in the ledger before the reset.
+- **State transitions**: commands on a closed tandem are refused (`init --reopen` reopens one), `close` is idempotent, `respond` no longer downgrades an approved task, `review` on an escalated task stays refused; `state.json` is written atomically and a corrupt one gets a clear message.
+- **Session bookkeeping**: a Codex reply without a thread id and a missing Pi session file are reported on stderr and in the ledger instead of silently starting new conversations.
+- **Phase budget is per phase label**, as the prompt promised; `status` shows the remaining budget per phase.
+- **Contract parsing**: `respond` without any `F<n>:` line exits 2; numbered or emphasised `F<n>` lines are recognised; a blocking finding disputed without at least twelve letters or digits of evidence exits 2; empty replies exit 2; timeouts and a non-numeric `POM_TANDEM_TIMEOUT_MS` fail with clear messages.
+
+### Added
+
+- **`task add --done "<criteria>"`**: the definition of done travels with the task and is sent to the controller in every review.
+- **`note --topic <slug> [--task <id>] --message "<text>"`**: records a user decision or an escalation outcome in the ledger without calling any backend.
+- **`session reset --role controller|executor`** and **`init --reopen`**.
+- **`init --setup "<command>"`**: prepares the controller worktree (for example `npm ci`) at creation and on reopen; the reset between reviews keeps ignored files, so installed dependencies survive.
+- **Human-coordinated variant** in `skills/tandem.md`: the user coordinates from the chat, the session's agent takes one role, and the response to findings travels in the next review's deliverable and in the ledger through `note`.
+- Adversarial review and re-verification with a hostile fake backend: 125 new assertions in `tests/tandem/integration/test-tandem-robustness.mjs`.
+
 ## 0.6.1 - 2026-09-02
 
 ### Changed

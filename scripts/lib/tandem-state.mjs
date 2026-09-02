@@ -9,7 +9,7 @@
 //   .controller-worktree/ Git worktree of the controller (ignored by Git)
 //   .sessions/            pi session storage (ignored by Git)
 
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 export const TASK_STATUSES = ["pending", "in_progress", "approved", "stalled", "escalated"];
@@ -19,8 +19,23 @@ export const SESSIONS_DIRNAME = ".sessions";
 /** Files the collaboration folder keeps out of Git: the nested worktree and the session store. */
 // Default: full responses under turns/ are raw evidence and stay out of Git;
 // BRIEF.md and LEDGER.md are the tracked record. `init --track-turns` keeps turns/ versioned.
-export const COLLABORATION_GITIGNORE = `${CONTROLLER_WORKTREE_DIRNAME}/\n${SESSIONS_DIRNAME}/\nturns/\n`;
-export const COLLABORATION_GITIGNORE_TRACKED_TURNS = `${CONTROLLER_WORKTREE_DIRNAME}/\n${SESSIONS_DIRNAME}/\n`;
+export const COLLABORATION_GITIGNORE_LINES = [`${CONTROLLER_WORKTREE_DIRNAME}/`, `${SESSIONS_DIRNAME}/`, "turns/"];
+export const COLLABORATION_GITIGNORE_TRACKED_TURNS_LINES = [`${CONTROLLER_WORKTREE_DIRNAME}/`, `${SESSIONS_DIRNAME}/`];
+
+/**
+ * Writes the collaboration `.gitignore`, or adds only the missing lines when
+ * the folder already has one (a hand-edited ignore file is never overwritten).
+ * @returns {string[]} the lines that were added
+ */
+export function ensureGitignoreLines(path, lines) {
+  const existing = existsSync(path) ? readFileSync(path, "utf8") : "";
+  const present = new Set(existing.split(/\r?\n/).map((line) => line.trim()));
+  const missing = lines.filter((line) => !present.has(line));
+  if (missing.length === 0 && existing !== "") return [];
+  const separator = existing === "" || existing.endsWith("\n") ? "" : "\n";
+  writeFileSync(path, `${existing}${separator}${missing.map((line) => `${line}\n`).join("")}`);
+  return missing;
+}
 
 export function timestamp(date = new Date()) {
   return date.toISOString().slice(0, 16);
@@ -33,12 +48,46 @@ export function statePath(dir) {
 export function loadState(dir) {
   const path = statePath(dir);
   if (!existsSync(path)) throw new Error(`No tandem state at ${path}. Run \`init\` first (or pass --dir).`);
-  return JSON.parse(readFileSync(path, "utf8"));
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    throw new Error(`state.json is not valid JSON: ${path}; restore it from Git or re-run init --reopen after fixing it`);
+  }
 }
 
+/** Atomic: the JSON goes to a temporary file first, then `rename` replaces state.json in one step. */
 export function saveState(dir, state) {
   state.updated = new Date().toISOString();
-  writeFileSync(statePath(dir), `${JSON.stringify(state, null, 2)}\n`);
+  const path = statePath(dir);
+  const temporary = `${path}.${process.pid}.tmp`;
+  writeFileSync(temporary, `${JSON.stringify(state, null, 2)}\n`);
+  renameSync(temporary, path);
+}
+
+/** The key of a task in the per-phase budget map: its phase label, or `-` when it has none. */
+export function phaseKey(task) {
+  return task.phase || "-";
+}
+
+/**
+ * Units of the phase budget still available to a phase. Every phase starts
+ * with the full budget the first time one of its tasks consumes a unit.
+ * @returns {number | null} null when the tandem has no phase budget
+ */
+export function phaseBudgetRemaining(state, task) {
+  if (state.phaseBudget === null) return null;
+  const remaining = state.phaseBudgetRemaining && typeof state.phaseBudgetRemaining === "object" ? state.phaseBudgetRemaining : {};
+  const value = remaining[phaseKey(task)];
+  return Number.isInteger(value) ? value : state.phaseBudget;
+}
+
+/** One `<phase>: <remaining> of <budget>` fragment per phase present in the tasks, `-` for tasks without a phase. */
+export function phaseBudgetSummary(state) {
+  if (state.phaseBudget === null) return "none";
+  const phases = [...new Set(state.tasks.map(phaseKey))];
+  if (phases.length === 0) return `${state.phaseBudget} per phase`;
+  const parts = phases.map((phase) => `${phase}: ${phaseBudgetRemaining(state, { phase: phase === "-" ? null : phase })} remaining of ${state.phaseBudget}`);
+  return `${state.phaseBudget} per phase (${parts.join(", ")})`;
 }
 
 export function findTask(state, id) {
@@ -106,12 +155,18 @@ function escapeCell(value) {
   return String(value).replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
 }
 
-/** Markdown table of the tasks, shared by BRIEF.md and `status`. */
+/**
+ * Markdown table of the tasks, shared by BRIEF.md and `status`, followed by
+ * the definition of done of every task that has one (`task add --done`).
+ */
 export function tasksTable(state) {
   const header = ["| Id | Title | Phase | Status | Cycles |", "|---|---|---|---|---|"];
   if (state.tasks.length === 0) return [...header, "| - | (no task yet) | - | - | - |"].join("\n");
   const rows = state.tasks.map((task) => `| ${task.id} | ${escapeCell(task.title)} | ${task.phase || "-"} | ${task.status} | ${task.cycles}/${state.cap} |`);
-  return [...header, ...rows].join("\n");
+  const done = state.tasks.filter((task) => task.done).map((task) => `- ${task.id}: ${escapeCell(task.done)}`);
+  const lines = [...header, ...rows];
+  if (done.length) lines.push("", "Definition of done:", "", ...done);
+  return lines.join("\n");
 }
 
 /**
@@ -140,6 +195,9 @@ export function renderBrief(template, state) {
     "<executor backend>": role("executor").backend,
     "<executor model>": role("executor").model || "(backend default)",
     "<controller worktree>": state.controllerWorktree,
+    "<folder>": state.dir,
+    "<setup>": state.setup ? `\`${state.setup}\` (run in the controller worktree at init and at reopen)` : "none",
+    "<guard ignore>": `\`*.log\`, \`*.pid\` under ignored folders${(state.guardIgnore || []).length ? `; plus ${state.guardIgnore.map((glob) => `\`${glob}\``).join(", ")}` : ""}`,
     "<cap>": String(state.cap),
     "<phase budget>": state.phaseBudget === null ? "none" : String(state.phaseBudget),
     "<model diversity>": state.modelDiversity,

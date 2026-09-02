@@ -26,10 +26,10 @@ A reviewer that did not write the code sees the failures the author could not se
 ## Setup
 
 1. **Initialize.**
-   `npm run pom:tandem -- init --topic <slug> --controller <backend>[:<model>] --executor <backend>[:<model>] [--cap 4] [--phase-budget N]`
-   `<backend>` is one of `claude`, `pi`, `codex`. The command creates the collaboration folder with `BRIEF.md`, `LEDGER.md`, and `turns/`, and prints where it lives.
+   `npm run pom:tandem -- init --topic <slug> --controller <backend>[:<model>] --executor <backend>[:<model>] [--cap 4] [--phase-budget N] [--setup "<command>"]`
+   `<backend>` is one of `claude`, `pi`, `codex`. The command creates the collaboration folder with `BRIEF.md`, `LEDGER.md`, and `turns/`, and prints where it lives. `--setup` runs once in the controller worktree (and again at `init --reopen`): dependencies and builds it needs to run tests; ignored files such as `node_modules` survive every reset. `--controller-worktree <path>` moves the worktree outside the project root; a path inside the root but outside the tandem folder is refused. `--guard-ignore <glob>` (repeatable) keeps paths that change on their own (a server log, a cache) out of the executor-workspace guard, for ignored and untracked paths only (tracked files stay guarded whatever the glob); `*.log` and `*.pid` under ignored folders are always skipped, and ignored files are compared by size and modification time, not content.
 2. **Write the brief with the user.** Fill `BRIEF.md` (shape: `templates/TANDEM_BRIEF_TEMPLATE.md`): objective, definition of done per task, constraints the controller must enforce, what counts as evidence. The brief is the controller's yardstick; a vague brief produces vague findings.
-3. **Add the tasks.** One `task add --topic <slug> --id <id> --title <title> [--phase <label>]` per task, in execution order. Tasks are a flat list; a phase label only groups them for reporting and for the optional phase budget.
+3. **Add the tasks.** One `task add --topic <slug> --id <id> --title <title> [--phase <label>] [--done "<criteria>"]` per task, in execution order. `--done` is the task's definition of done: it appears in the brief and is sent with every review together with the title. Tasks are a flat list; a phase label groups them for reporting and gives each phase its own budget (tasks without a phase share the `-` entry).
 4. **Confirm.** `status --topic <slug>` shows roles, models, `model_diversity`, cap, budget, and the task list. Read it back to the user and get the go.
 
 ## Procedure per task
@@ -40,11 +40,11 @@ A reviewer that did not write the code sees the failures the author could not se
    ```text
    VERDICT: APPROVE|REVISE
    FINDINGS:
-   F1 [blocking|minor] <location> - <defect> - expected evidence: <what would show it is fixed>
-   F2 ...
+   1. blocking|minor | <location> | <what is wrong> | <evidence that would satisfy you>
+   2. ...
    ```
-   The script records the verdict in `LEDGER.md` and the full text under `turns/`.
-4. **Respond.** On `REVISE`, `respond --topic <slug> --task <id> --findings <path>` sends the findings to the executor. The executor answers every finding in the response contract: `F<n>: FIXED <what changed and its evidence>` or `F<n>: DISPUTED <evidence>`. A blocking finding disputed without evidence does not close the cycle; the script treats it as open.
+   The verdict must be the first non-empty line (Markdown emphasis is tolerated); a verdict after a preamble, or two different verdicts, is non-conforming. The script records the verdict in `LEDGER.md` and the full text under `turns/`. Whatever the controller changed in its own worktree is saved as `turns/NNN-controller-<task>.left.patch`, noted in the ledger, and discarded.
+4. **Respond.** On `REVISE`, `respond --topic <slug> --task <id> [--findings <path>]` sends the findings to the executor (the last review's findings by default). The executor answers every finding in the response contract: `F<N>: FIXED <what changed and its evidence>` or `F<N>: DISPUTED <evidence>`, N being the finding number. A reply without any `F<N>:` line, or a blocking finding disputed without evidence, is non-conforming: exit `2`, the task stays as it was, and you ask again. `respond` on an approved task is refused; run `review` again only if the deliverable changed.
 5. **Review again.** Repeat steps 3 and 4 until `APPROVE` or the cycle cap. Each `review`/`respond` pair is one cycle; `status` shows the count.
 6. **Move on.** Only after `APPROVE`. Record in `LEDGER.md` (the script does it) and start the next task from step 1.
 
@@ -53,17 +53,18 @@ A reviewer that did not write the code sees the failures the author could not se
 | Code | Meaning | What you do |
 |---|---|---|
 | `0` | Turn accepted and recorded. | Continue. |
-| `2` | Response does not follow the contract: no `VERDICT:` line from the controller, or no `F<n>: FIXED|DISPUTED` lines from the executor. Resend the contract once; if it happens again, escalate. |
-| `3` | Cycle cap for the task, or phase budget, reached without `APPROVE`. | Stop the task. Escalate with both positions. Do not raise the cap. |
-| `4` | The executor workspace changed while the controller was reviewing. | Stop the tandem. Report which files differ; the user decides whether to reset the executor workspace or to discard the review. |
+| `1` | Usage error, backend error, timeout (`POM_TANDEM_TIMEOUT_MS`), or a lost Claude session (`claude session lost`). | Read the message; for a lost session follow Resuming below. |
+| `2` | Response does not follow the contract: no valid `VERDICT:` first line or two verdicts from the controller, an empty reply, no `F<N>: FIXED|DISPUTED` lines from the executor, or a blocking finding disputed without evidence. The task state does not change (the calls counter still advances). | Resend the contract once; if it happens again, escalate. |
+| `3` | Cycle cap for the task, or the budget of its phase, reached without `APPROVE`. | Stop the task. Escalate with both positions. Do not raise the cap. |
+| `4` | The executor workspace changed while the controller was reviewing (ignored files included). The message and the ledger list the changed paths. | Stop the tandem. Report the paths; the user decides whether to reset the executor workspace or to discard the review. |
 
 ## Escalation
 
-An escalation is a message to the user with: task id, cycles used, the last verdict, the findings still open with the executor's last answer to each, and your recommendation (accept as is, one more cycle with a narrowed brief, split the task, or drop it). Wait for the user. Their decision goes into `LEDGER.md` through the next `send` or `close`, not into the code.
+An escalation is a message to the user with: task id, cycles used, the last verdict, the findings still open with the executor's last answer to each, and your recommendation (accept as is, one more cycle with a narrowed brief, split the task, or drop it). Wait for the user. Their decision goes into `LEDGER.md` with `note --topic <slug> --task <id> --message "<decision>"`, not into the code.
 
 ## Resuming
 
-If a backend session is lost, do not replay the conversation. Read `BRIEF.md`, the last entries of `LEDGER.md`, and the last two files in `turns/`; then `send` the current task's assignment again with a one-line note that the session restarted. The persistent sessions of the backends and these files are the whole memory of the tandem.
+If a backend session is lost, do not replay the conversation. The script never replaces a session on its own: when Claude answers "already in use" or "No conversation found" it exits `1` with `claude session lost`, records the event in the ledger, and leaves the message unsent, because resending it to a fresh session would silently drop the context the role had. Then: read `BRIEF.md`, the last entries of `LEDGER.md`, and the last two files in `turns/`; run `session reset --topic <slug> --role <role>`; `send` the current task's assignment again, this time with the brief context the role needs (goal, definition of done, constraints, what was already approved or disputed) and a one-line note that the session restarted. The same applies when the script warns that codex returned no thread id or that the pi session file is missing. The persistent sessions of the backends and these files are the whole memory of the tandem. A closed tandem accepts only `status`; `init --reopen --topic <slug>` reopens it with a fresh controller worktree.
 
 ## Closure
 
@@ -94,7 +95,7 @@ If only two backends are installed, the coordinator still does not take a role: 
 ## Anti-patterns
 
 - The coordinator fixing the code itself "to save a cycle": the fix is unreviewed and the tandem has silently lost its executor.
-- The controller producing the deliverable or editing the executor workspace; the script exits `4` for the second, the first shows up as a controller turn with a patch instead of a verdict.
+- The controller producing the deliverable or editing the executor workspace; the script exits `4` for the second, and for the first it saves what the controller changed in its own worktree as `turns/NNN-controller-<task>.left.patch`, notes "controller left changes in its worktree (discarded)" in the ledger, and discards it at the reset.
 - Pasting the whole history into every turn: the sessions already hold it, and the brief plus `turns/` is the restart point.
 - Raising the cap while a task is stuck: the cap exists to force the escalation, not to postpone it.
 - Accepting a `DISPUTED` blocking finding on the executor's word: without evidence the cycle stays open.
