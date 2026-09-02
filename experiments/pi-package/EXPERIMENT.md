@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-07-13 |
 | Type | API library / spike |
-| Status | under evaluation |
+| Status | consolidated |
 | Branch / Path | `exp/pom-skill-evolution` / `experiments/pi-package/` |
 | Isolation | branch + generated staging package |
 | Owner | POM maintainer |

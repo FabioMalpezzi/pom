@@ -12,6 +12,7 @@ description: Use when running temporary exploratory work that must stay isolated
 - Risky or exploratory one-shot work with temporary notes, including LLM model trials, libraries, APIs, quick benchmarks, or focused refactors.
 - External repository evaluation.
 - Market research or project analysis that is not mature yet.
+- Isolation and consolidation of a loop/goal experiment: `skills/loop-goal.md` owns its criteria contract, audit, scenarios, and independent conclusion; this skill owns where the experiment lives and how it is promoted.
 
 ## Canonical Prompt
 
@@ -29,6 +30,8 @@ description: Use when running temporary exploratory work that must stay isolated
 - Do not contaminate stable codebase or documentation.
 - Do not import heavy artifacts without approval.
 - Consolidate only after evaluation, preferably by selective cherry-pick, clean reimplementation, or moving specific approved artifacts.
+- `EXPERIMENT.md` (`templates/EXPERIMENT_TEMPLATE.md`) is the one experiment contract: every experiment declares a budget and a stop rule; loop/goal experiments must also accept its `## Criteria` section before evidence exists.
+- The promotion decision is exactly one of `adopt`, `refine`, or `reject`, taken by the user with an owner and a date; for loop/goal experiments it follows, but is not, the technical verdict `confirmed | refuted | inconclusive`.
 
 ## Git Isolation
 
@@ -48,7 +51,7 @@ Read `pom.config.json` before proposing consolidation into analysis, wiki, docs,
 
 ## Output
 
-- experiment result;
-- discard or consolidation decision;
+- experiment result and stop reason;
+- promotion decision (`adopt`, `refine`, or `reject`) with owner and date;
 - optional synthesis in `analysis/`;
 - optional wiki/spec/ADR/task-plan update.

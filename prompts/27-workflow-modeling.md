@@ -7,7 +7,7 @@ I want to model, validate, visualize, derive scenarios for, or guide the impleme
 
 Before doing anything:
 1. read `pom.config.json` and confirm that the workflows section is enabled (`workflows.enabled: true`). If missing or false, stop and route to `skills/config.md`.
-2. if the request is part of a loop/goal experiment, also confirm `workflows.loopGoal.enabled: true`, read `skills/loop-goal.md`, and locate its accepted `criteria.md`. In `design` mode, stop if the criteria are missing, still draft, or not explicitly accepted; loop/goal modeling starts only after the criteria contract is frozen.
+2. if the request is part of a loop/goal experiment, also confirm `workflows.loopGoal.enabled: true`, read `skills/loop-goal.md`, and locate its accepted criteria contract: the `## Criteria` section of the experiment's `EXPERIMENT.md`, or the accepted `criteria.md` copy at `workflows.loopGoal.criteriaPath` when configured. In `design` mode, stop if the criteria are missing, still draft, or not explicitly accepted; loop/goal modeling starts only after the criteria contract is frozen.
 3. if the request involves Dynamic Workflow fields (`fan_out_launch`, `await`, `join`, `react`, handle lifecycle, cancellation, detachment, suspend/resume propagation, or compensation), also confirm `workflows.dynamic.enabled: true`. If missing or false, stop and route to `skills/config.md` instead of modeling those fields.
 4. read this prompt and `skills/workflow.md`.
 5. identify the requested mode: design | validate | diagram | scenarios | implement.

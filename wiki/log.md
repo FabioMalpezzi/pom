@@ -213,3 +213,9 @@ Sources used: `wiki/loop-goal-workflow-tutorial.md`, `skills/loop-goal.md`, and 
 Updated the loop/goal tutorial to distinguish POM Source fallback paths from Target Project paths configured through `workflows.loopGoal.dialogPath`.
 
 Sources used: `prompts/28-loop-goal-define-criteria.md`, `skills/loop-goal.md`, `templates/POM_CONFIG_TEMPLATE.json`, and `wiki/loop-goal-workflow-tutorial.md`.
+
+## [2026-09-02] update | one experiment contract and four loop-goal modes
+
+Aligned the loop/goal tutorial with the unified experiment contract: the `## Criteria` section of `EXPERIMENT.md` is the contract, budget is written in experiment units and kept apart from `loop_guard`/`timeout`, signals use threshold/target/expected trend, exits are `reached`/`stalled`/`exhausted`/`falsified`, and the operating sequence uses the four `loop-goal` modes plus `workflow design`/`workflow implement`. The tutorial now cites the criteria and evaluation examples under `templates/examples/workflow/loop-goal/`.
+
+Sources used: `templates/EXPERIMENT_TEMPLATE.md`, `skills/loop-goal.md`, `prompts/28-loop-goal-define-criteria.md`, `prompts/31-loop-goal-conclude.md`, and `templates/examples/workflow/loop-goal/README.md`.
