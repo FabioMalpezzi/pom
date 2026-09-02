@@ -3,9 +3,22 @@
 | Field | Value |
 |---|---|
 | Date | 2026-05-16 |
-| Status | Draft |
+| Status | Deferred |
 | Area | governance / wiki |
 | Summary | Define POM overlay mode for repositories the operator does not own, where POM governs local understanding instead of upstream project governance |
+
+## Implementation Status
+
+The explicit-ownership part of this spec is implemented; the local-only `.pom/` layout is deferred.
+
+| Requirement | State | Evidence |
+|---|---|---|
+| R1, R8, R9 — explicit, non-inferred ownership with an agent-friendly parameter | Implemented | `scripts/lib/install-model.ts` defines the ownership modes `owned`, `team`, `external_overlay`, `unknown` and the `overlay` preset; `scripts/install-pom.ts` accepts `--ownership external_overlay` and `--preset overlay`, and writes `ownership.mode` to `pom.config.json`. |
+| R2 — no POM conventions imposed on upstream `docs/`, `tests/`, analysis | Implemented in lint | `scripts/lib/lint-context.ts` disables docs, tests, and analysis governance when `ownership.mode` is `external_overlay`; task-plan governance stays on only when `adoption.tasks` is `structured`. |
+| R3, R7 — local overlay wiki with the recommended understanding pages | Not implemented | No overlay page set or generator exists; the wiki skill applies unchanged. |
+| R4, R5, R6 — local-only artifacts, preserved upstream agent files, clean upstream PR | Documented only | The Git posture and contribution steps below are the documented practice; no `.pom/` layout, no `.git/info/exclude` automation. |
+
+Reactivation criterion: a second external-repository trial, or an adopter request, that needs the `.pom/` local-only layout or the overlay page set. Until then the documented posture plus the ownership parameter is the supported shape.
 
 ## Purpose
 
@@ -165,21 +178,21 @@ Before contributing upstream:
 
 ## Linked Tasks
 
-- `TASK-0000` not created yet.
+- none; the remaining work is deferred (see Implementation Status).
 
 ## Completion Verification
 
-This spec is not complete. It documents the mode before implementation.
+This spec is not complete; it is deferred with the ownership parameter and lint posture implemented and the local-only layout open.
 
 ### Step 0 — Goal-backward check (always first)
 
 - [ ] What must be TRUE for overlay mode to be complete?
-  - POM has an explicit command or workflow for local-only overlay setup.
-  - POM has an explicit ownership field or parameter, rather than silent ownership inference.
-  - Overlay artifacts can be kept out of upstream commits by default.
-  - The wiki can be created under a local overlay root.
-  - Lint does not impose project-governance conventions on upstream docs/tests.
-  - README, guides, skills, and prompts describe when to use overlay mode.
+  - [ ] POM has an explicit command or workflow for local-only overlay setup.
+  - [x] POM has an explicit ownership field or parameter, rather than silent ownership inference (`scripts/lib/install-model.ts`, `scripts/install-pom.ts`).
+  - [ ] Overlay artifacts can be kept out of upstream commits by default.
+  - [ ] The wiki can be created under a local overlay root.
+  - [x] Lint does not impose project-governance conventions on upstream docs/tests (`scripts/lib/lint-context.ts`).
+  - [ ] README, guides, skills, and prompts describe when to use overlay mode.
 - [ ] Verify each truth against actual artifacts.
 
 ### If this spec has code implementation

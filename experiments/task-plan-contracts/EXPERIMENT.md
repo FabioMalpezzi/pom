@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-07-13 |
 | Type | LLM model / research |
-| Status | under evaluation |
+| Status | closed — candidate rejected, current Task Plan format stands |
 | Branch / Path | `exp/pom-skill-evolution` / `experiments/task-plan-contracts/` |
 | Isolation | branch + experiment-only prompt/template variants |
 | Owner | POM maintainer |

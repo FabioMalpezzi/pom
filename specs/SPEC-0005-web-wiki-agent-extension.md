@@ -3,9 +3,15 @@
 | Field | Value |
 |---|---|
 | Date | 2026-05-19 |
-| Status | Draft |
+| Status | Deferred |
 | Area | wiki / AI / integrations |
 | Summary | Define the first POM web wiki agent-extension capability: a navigable memory UI that works with an active coding agent session to produce reviewed proposals for wiki, specs, ADRs, task plans, and project documents |
+
+## Deferral
+
+This spec is deferred by `ADR-0005`. The lightweight Project Reader with file-based annotations (`scripts/project-reader/`) took the place of the persistent-session extension this spec describes: a coding agent claims annotation files from the repository inside its ordinary session, and no session adapter, streaming channel, or agent panel exists in POM Source. The event/proposal contract validated by `TASK-0003` is preserved as experiment evidence and reused by the annotation format.
+
+Reactivation requires a new decision record that names a concrete target project need, an agent that exposes a compatible persistent-session interface, and the privacy and write-approval rules for LLM-driven proposals. Until then, the requirements and design below are a boundary for future work, not a commitment.
 
 ## Purpose
 
@@ -31,7 +37,7 @@ The first implementation should therefore separate:
 - the UI surface: reader, annotations, proposal review, document creation flow;
 - the agent adapter: Codex first, other coding agents later only after compatibility testing.
 
-`ADR-0001` decides that the primary user workflow must use a persistent connection to an active AI coding agent session. Codex is the first implementation target, not a permanent constraint. File/event artifacts remain useful for audit, fallback, fixtures, and tests; they are not the daily interaction path.
+`ADR-0001` decided that the primary user workflow must use a persistent connection to an active AI coding agent session, with Codex as the first implementation target. `ADR-0005` superseded it: the file-based Project Reader is the reading and annotation surface, and file/event artifacts are the handoff path to the agent, not only audit and test support.
 
 This spec does not promote the preparatory experiment to authoritative wiki knowledge. It uses that experiment as input for defining a draft capability.
 
@@ -148,7 +154,7 @@ The minimum useful UI is not a landing page. It is a work surface with:
 | Area | Impact |
 |---|---|
 | Wiki | Defines a future web wiki extension beyond static reader output |
-| Decisions | `ADR-0001` chooses a persistent AI coding agent session as the primary path, with Codex as the first implementation target |
+| Decisions | `ADR-0001` chose a persistent AI coding agent session as the primary path; `ADR-0005` superseded it with the file-based Project Reader and deferred this spec |
 | Docs | Reader-facing docs may need updates if the capability is promoted beyond experiment |
 | Mockups | Future UI mockups are likely needed before implementation |
 | Code | Future code may touch wiki reader tooling, a web server, agent adapter code, and tests |
@@ -159,7 +165,7 @@ The minimum useful UI is not a landing page. It is a work surface with:
 
 ## Completion Verification
 
-This spec is not complete. It defines the first capability boundary before implementation.
+This spec is not complete and is deferred. It defines the first capability boundary; none of the truths below is verified because the implementation was not pursued (see `ADR-0005`).
 
 ### Step 0 — Goal-backward check (always first)
 
@@ -194,7 +200,8 @@ Exception reason: _none_
 - Source: `CONTEXT.md` for Operating Memory, Memory Element, Source Authority, Artifact Policy, and Open Discussion terms.
 - Source: `templates/OPEN_DISCUSSION_TEMPLATE.md`.
 - Source: `templates/EXPERIMENT_TEMPLATE.md`.
-- ADR: `decisions/ADR-0001-persistent-coding-agent-session-for-web-wiki.md`.
+- ADR: `decisions/ADR-0001-persistent-coding-agent-session-for-web-wiki.md` (superseded).
+- ADR: `decisions/ADR-0005-file-based-project-reader-replaces-persistent-agent-session.md` (defers this spec).
 
 ## Evolution Rule
 

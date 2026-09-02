@@ -2,6 +2,18 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-09-02] update | POM 0.4.0: installation guides, specs status, reading path
+
+`docs/installation.md` and `docs/project-reader.md` are now the installation and reader authority; `wiki/adoption-and-installation.md` points at them and its agent install prompt names the guide instead of the README. `wiki/current-specs.md` records SPEC-0004, SPEC-0005, and SPEC-0008 as Deferred and ADR-0001 as superseded by ADR-0005 (file-based Project Reader instead of a persistent agent session). The routing table lives only in `skills/README.md`; `prompts/32-using-pom.md` keeps the key routes.
+
+Sources used: `docs/installation.md`, `docs/project-reader.md`, `decisions/ADR-0005-file-based-project-reader-replaces-persistent-agent-session.md`, `specs/`, `skills/README.md`, `CHANGELOG.md`.
+
+## [2026-09-02] update | self-improvement loop promoted, method skill modes
+
+Rewrote the extension paragraph and the self-improvement loop paragraph of `wiki/experiments-and-extension.md`: the `extend` skill is now the `extend` mode of `skills/method.md` alongside `improve` and `prune`, and the loop is no longer "under evaluation" — it is the `improve` mode with `prompts/25-self-improvement-loop.md` as canonical prompt, and `experiments/self-improvement-loop/` is closed. The candidate-outcome table and the open question on the loop were answered accordingly. The same audit superseded ADR-0001 with ADR-0005 (file-based Project Reader instead of a persistent agent session) and deferred SPEC-0004, SPEC-0005, and SPEC-0008; `wiki/current-specs.md` still has to reflect those statuses.
+
+Sources used: `skills/method.md`, `prompts/25-self-improvement-loop.md`, `experiments/self-improvement-loop/EXPERIMENT.md`, `decisions/ADR-0005-file-based-project-reader-replaces-persistent-agent-session.md`, `CHANGELOG.md`.
+
 ## [2026-09-02] update | POM 0.3.1
 
 Bumped the index to POM v0.3.1: bootstrap clones `main` explicitly, the Project Reader collapsed navigation is a compact top bar below 760 px, and TASK-0001 is Complete. Details in `CHANGELOG.md`.

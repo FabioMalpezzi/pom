@@ -14,8 +14,11 @@ import {
   readStringArray,
 } from "./shared.mjs";
 
+const DEFAULT_WIKI_ROOT = "wiki";
+
+// The wiki entry is built by wikiDocSource(): its root follows wiki.root in
+// pom.config.json, so it is not part of this fixed list.
 const BASE_DOC_SOURCES = [
-  { root: "wiki", kind: "wiki", exts: [".md"], skipDirs: ["_site"], skipFiles: ["log.md"] },
   { root: "specs", kind: "spec", exts: [".md"] },
   { root: "decisions", kind: "decision", exts: [".md"] },
   { root: "tasks", kind: "task_plan", exts: [".md"] },
@@ -38,7 +41,8 @@ const BASE_DOC_SOURCES = [
 
 export function createPomSourceContext(root) {
   const pomConfig = loadPomConfig(root);
-  const docSources = buildDocSources(pomConfig);
+  const wikiRoot = configuredWikiRoot(pomConfig);
+  const docSources = buildDocSources(pomConfig, wikiRoot);
   return {
     profile: "pom",
     mode: pomConfig ? "pom.config.json" : "built-in",
@@ -46,6 +50,7 @@ export function createPomSourceContext(root) {
     configFound: Boolean(pomConfig),
     configuredCount: docSources.filter((source) => source.fromConfig).length,
     docSources,
+    wikiRoot,
     config: pomConfig,
     ignoreGlobs: [
       ...generatedIgnoreGlobs(pomConfig),
@@ -95,8 +100,18 @@ export function skippedDocumentGlobs(docSources) {
   return [...new Set(globs)];
 }
 
-function buildDocSources(config) {
-  const sources = [...BASE_DOC_SOURCES];
+// wiki.root in pom.config.json; the same key the doc-governance lint reads.
+export function configuredWikiRoot(config) {
+  if (!config) return DEFAULT_WIKI_ROOT;
+  return normalizeConfigPath(readString(config, "wiki.root"), "pom.config.json") || DEFAULT_WIKI_ROOT;
+}
+
+function wikiDocSource(wikiRoot) {
+  return { root: wikiRoot, kind: "wiki", exts: [".md"], skipDirs: ["_site"], skipFiles: ["log.md"] };
+}
+
+function buildDocSources(config, wikiRoot) {
+  const sources = [wikiDocSource(wikiRoot), ...BASE_DOC_SOURCES];
   if (config) sources.push(...configuredDocSources(config));
   return dedupeDocSources(sources);
 }

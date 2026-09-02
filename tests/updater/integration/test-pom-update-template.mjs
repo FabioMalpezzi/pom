@@ -6,35 +6,19 @@
 // a missing pom/. The vendored-copy update path (network clone) is out of
 // scope here.
 
-import { execFileSync, spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
+
+import { createHarness, git, makeSandbox, removeSandbox, runNode } from "../../lib/harness.mjs";
 
 const POM_ROOT = process.cwd();
 const TEMPLATE = join(POM_ROOT, "templates", "POM_UPDATE_TEMPLATE.mjs");
 const EXCLUDED_TOP_LEVEL = new Set(["node_modules", ".git", "experiments"]);
-const GIT_IDENTITY = ["-c", "user.name=POM Test", "-c", "user.email=pom-test@example.invalid", "-c", "commit.gpgsign=false"];
 
-let passed = 0;
-let failed = 0;
-
-function assert(name, condition, detail) {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name} - ${detail}`);
-    failed++;
-  }
-}
-
-function git(dir, args) {
-  return execFileSync("git", [...GIT_IDENTITY, ...args], { cwd: dir, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-}
+const { assert, section, banner, summary } = createHarness({ name: "POM Update Template Tests" });
 
 function createTarget({ withPom = true } = {}) {
-  const dir = mkdtempSync(join(tmpdir(), "pom-update-template-test-"));
+  const { dir } = makeSandbox("pom-update-template-test-");
   git(dir, ["init", "-q"]);
   writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "target", private: true, type: "module", scripts: { "pom:update": "node pom-update.mjs" } }, null, 2));
   cpSync(TEMPLATE, join(dir, "pom-update.mjs"));
@@ -59,20 +43,17 @@ function makePomGitManaged(dir) {
 }
 
 function runUpdate(dir, args, env = {}) {
-  return spawnSync(process.execPath, ["pom-update.mjs", ...args], {
+  return runNode(["pom-update.mjs", ...args], {
     cwd: dir,
-    encoding: "utf8",
     timeout: 60000,
-    env: { ...process.env, POM_LANG: "", LC_ALL: "", LC_MESSAGES: "", LANG: "", ...env },
+    env: { POM_LANG: "", LC_ALL: "", LC_MESSAGES: "", LANG: "", ...env },
   });
 }
 
-function cleanup(dir) {
-  rmSync(dir, { recursive: true, force: true });
-}
+const cleanup = removeSandbox;
 
 function scenarioModeChangeArgs() {
-  console.log("\nScenario 1: mode-change arguments stop the update and point to pom:init");
+  section("Scenario 1: mode-change arguments stop the update and point to pom:init");
   const dir = createTarget();
   try {
     assert("the copied pom/ excludes node_modules, .git and experiments", ["node_modules", ".git", "experiments"].every((name) => !existsSync(join(dir, "pom", name))), "excluded entry was copied");
@@ -113,7 +94,7 @@ function scenarioModeChangeArgs() {
 }
 
 function scenarioDirtyGitPom() {
-  console.log("\nScenario 2: Git-managed pom/ with local changes stops and suggests the sync skill");
+  section("Scenario 2: Git-managed pom/ with local changes stops and suggests the sync skill");
   const dir = createTarget();
   try {
     makePomGitManaged(dir);
@@ -138,7 +119,7 @@ function scenarioDirtyGitPom() {
 }
 
 function scenarioMissingPom() {
-  console.log("\nScenario 3: missing pom/ stops with a clear message");
+  section("Scenario 3: missing pom/ stops with a clear message");
   const dir = createTarget({ withPom: false });
   try {
     const result = runUpdate(dir, []);
@@ -152,12 +133,10 @@ function scenarioMissingPom() {
   }
 }
 
-console.log("POM Update Template Tests");
-console.log("=========================");
+banner();
 
 scenarioModeChangeArgs();
 scenarioDirtyGitPom();
 scenarioMissingPom();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

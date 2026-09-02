@@ -351,7 +351,8 @@ function renderDocumentNav() {
 
 async function loadInitialDocument() {
   const requestedPath = initialDocumentPath();
-  for (const path of [requestedPath, "wiki/index.md", "__project_index__.md"].filter(Boolean)) {
+  const wikiIndexPath = state.status?.wikiIndexPath || "wiki/index.md";
+  for (const path of [requestedPath, wikiIndexPath, "__project_index__.md"].filter(Boolean)) {
     try {
       await loadDocument(path, { syncUrl: path === requestedPath });
       return;

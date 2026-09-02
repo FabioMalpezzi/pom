@@ -12,6 +12,19 @@
 | Driver | technical constraint |
 | Scope | architecture / workflow modeling |
 
+## Context
+
+The `experiments/dynamic-workflows/` experiment tested whether SPEC-0006
+could model Dynamic Workflows: orchestrators that launch many concurrent
+tasks, wait for fan-in, and resume based on completion, timeout, or
+control signals.
+
+The original hypothesis was refuted in a precise way. Current SPEC-0006
+cannot represent real parallelism inside the FSM, and that is deliberate:
+asynchronous composition is rejected by the existing workflow pillars.
+The experiment then found a lower-cost alternative: keep the FSM
+deterministic and delegate concurrency to a target-owned data plane.
+
 ## Decision
 
 Adopt the Dynamic Workflow contract as a **workflow-domain control-plane
@@ -51,19 +64,6 @@ POM Source includes two complete reference executors for the contract,
 one in TypeScript and one in Python, under
 `experiments/dynamic-workflows/runtime/`. They are executable examples and
 test evidence for adopters, not a canonical runtime owned by POM.
-
-## Context
-
-The `experiments/dynamic-workflows/` experiment tested whether SPEC-0006
-could model Dynamic Workflows: orchestrators that launch many concurrent
-tasks, wait for fan-in, and resume based on completion, timeout, or
-control signals.
-
-The original hypothesis was refuted in a precise way. Current SPEC-0006
-cannot represent real parallelism inside the FSM, and that is deliberate:
-asynchronous composition is rejected by the existing workflow pillars.
-The experiment then found a lower-cost alternative: keep the FSM
-deterministic and delegate concurrency to a target-owned data plane.
 
 ## Rationale
 
@@ -137,7 +137,7 @@ compensation boundaries that target executors need.
 | Antithesis | Confutation |
 |---|---|
 | POM should add native parallel states directly. | That would reverse the accepted no-native-async-inside-the-FSM pillar and force POM to define runtime scheduling, which SPEC-0006 explicitly excludes. |
-| POM should ignore Dynamic Workflows entirely. | The experiment produced a small additive contract with runnable evidence; ignoring it would lose useful operating memory for a known target need. |
+| The existing SPEC-0006 schema already expresses a Dynamic Workflow control plane, so no new fields are needed: fan-out is a counted `invoke` loop and fan-in is a context counter. | The experiment tested exactly this and refuted it (`experiments/dynamic-workflows/EXPERIMENT.md`, rounds 1 and 2): the counted invoke loop (`workflows-candidate/04b-fanout-counted.yaml`) expresses N dynamic tasks but runs them sequentially, `04-fanout` with `--n 100` launches one real task, and E036 forbids `mode: parallel` inside the FSM (`broken-fixtures/state-invoke-parallel-E036.yaml`). What the schema could not express was not the fan-out function but the concurrency; only a non-blocking `fan_out_launch` plus a blocking `await` with a handle lets the FSM stay deterministic while N tasks run elsewhere. |
 
 ### Exception
 

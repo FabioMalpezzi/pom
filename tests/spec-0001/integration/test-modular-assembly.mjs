@@ -25,27 +25,25 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { tmpdir } from "node:os";
+
+import { createHarness, makeSandbox, removeSandbox } from "../../lib/harness.mjs";
 
 const POM_ROOT = process.cwd();
 const START_MARKER = "<!-- POM:START -->";
 const END_MARKER = "<!-- POM:END -->";
 
-let passed = 0;
-let failed = 0;
+const { assert, section, banner, summary } = createHarness({ name: "SPEC-0001 Completion Verification Tests" });
 
 function createTempProject() {
-  const dir = mkdtempSync(join(tmpdir(), "pom-test-"));
+  const { dir } = makeSandbox("pom-test-");
   // Symlink pom/ into the temp project
   execFileSync("ln", ["-s", POM_ROOT, join(dir, "pom")]);
   return dir;
 }
 
-function cleanup(dir) {
-  rmSync(dir, { recursive: true, force: true });
-}
+const cleanup = removeSandbox;
 
 function runInstaller(projectDir, profile, extraArgs = []) {
   execFileSync(
@@ -78,18 +76,8 @@ function countLines(text) {
   return text.split("\n").length;
 }
 
-function assert(name, condition, detail) {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name} — ${detail}`);
-    failed++;
-  }
-}
-
 function scenario1() {
-  console.log("\nScenario 1: minimal profile → global core + skill router only, ≤140 lines");
+  section("Scenario 1: minimal profile → global core + skill router only, ≤140 lines");
   const dir = createTempProject();
   try {
     runInstaller(dir, "minimal");
@@ -123,7 +111,7 @@ function scenario1() {
 }
 
 function scenario2() {
-  console.log("\nScenario 2: full profile → active workflow modules, ≤260 lines");
+  section("Scenario 2: full profile → active workflow modules, ≤260 lines");
   const dir = createTempProject();
   try {
     runInstaller(dir, "full");
@@ -142,7 +130,7 @@ function scenario2() {
 }
 
 function scenario3() {
-  console.log("\nScenario 3: refresh follows current config, then full → minimal shrinks");
+  section("Scenario 3: refresh follows current config, then full → minimal shrinks");
   const dir = createTempProject();
   try {
     // Install with full
@@ -188,8 +176,8 @@ function scenario3() {
 }
 
 function scenario4() {
-  console.log("\nScenario 4: pom:update stops on local pom/ changes");
-  const dir = mkdtempSync(join(tmpdir(), "pom-update-test-"));
+  section("Scenario 4: pom:update stops on local pom/ changes");
+  const dir = makeSandbox("pom-update-test-").dir;
   try {
     mkdirSync(join(dir, "pom"));
     execFileSync("git", ["init"], { cwd: join(dir, "pom"), stdio: "pipe" });
@@ -215,8 +203,8 @@ function scenario4() {
 }
 
 function scenario5() {
-  console.log("\nScenario 5: pom:update supports clean vendored pom/ with unrelated parent changes");
-  const dir = mkdtempSync(join(tmpdir(), "pom-update-vendored-test-"));
+  section("Scenario 5: pom:update supports clean vendored pom/ with unrelated parent changes");
+  const dir = makeSandbox("pom-update-vendored-test-").dir;
   try {
     mkdirSync(join(dir, "pom"));
     writeFileSync(join(dir, "pom", "README.md"), "old vendored POM\n");
@@ -258,7 +246,7 @@ function scenario5() {
 }
 
 function scenario6() {
-  console.log("\nScenario 6: docs lint skips specialized governance roots under docs/");
+  section("Scenario 6: docs lint skips specialized governance roots under docs/");
   const dir = createTempProject();
   try {
     mkdirSync(join(dir, "docs", "adr"), { recursive: true });
@@ -303,7 +291,7 @@ function scenario6() {
 }
 
 function scenario7() {
-  console.log("\nScenario 7: external overlay ownership applies conservative adoption defaults");
+  section("Scenario 7: external overlay ownership applies conservative adoption defaults");
   const dir = createTempProject();
   try {
     runInstallerArgs(dir, ["--preset", "overlay"]);
@@ -321,7 +309,7 @@ function scenario7() {
 }
 
 function scenario8() {
-  console.log("\nScenario 8: external overlay lint does not govern host project structure");
+  section("Scenario 8: external overlay lint does not govern host project structure");
   const dir = createTempProject();
   try {
     runInstaller(dir, "adopt", ["--ownership", "external_overlay"]);
@@ -359,8 +347,8 @@ function scenario8() {
 }
 
 function scenario9() {
-  console.log("\nScenario 9: pom:update rejects adoption mode changes");
-  const dir = mkdtempSync(join(tmpdir(), "pom-update-mode-test-"));
+  section("Scenario 9: pom:update rejects adoption mode changes");
+  const dir = makeSandbox("pom-update-mode-test-").dir;
   try {
     writeFileSync(join(dir, "pom-update.mjs"), readFileSync(join(POM_ROOT, "templates", "POM_UPDATE_TEMPLATE.mjs"), "utf8"));
 
@@ -388,8 +376,8 @@ function scenario9() {
 }
 
 function scenario10() {
-  console.log("\nScenario 10: bootstrap without preset does not install implicitly");
-  const dir = mkdtempSync(join(tmpdir(), "pom-bootstrap-guide-test-"));
+  section("Scenario 10: bootstrap without preset does not install implicitly");
+  const dir = makeSandbox("pom-bootstrap-guide-test-").dir;
   try {
     let result;
     try {
@@ -415,7 +403,7 @@ function scenario10() {
 }
 
 function scenario11() {
-  console.log("\nScenario 11: non-interactive init without preset does not install implicitly");
+  section("Scenario 11: non-interactive init without preset does not install implicitly");
   const dir = createTempProject();
   try {
     let result;
@@ -443,7 +431,7 @@ function scenario11() {
 }
 
 function scenario12() {
-  console.log("\nScenario 12: installer leaves POM source untouched when pom/ is a symlink");
+  section("Scenario 12: installer leaves POM source untouched when pom/ is a symlink");
   // When pom/ in the target project is a symbolic link to the POM source
   // repository (typical of integration tests, and of developer setups where a
   // local POM clone is linked into a target), the installer must not run git
@@ -498,7 +486,7 @@ function scenario12() {
 }
 
 function scenario13() {
-  console.log("\nScenario 13: pom-update leaves POM source untouched when pom/ is a symlink");
+  section("Scenario 13: pom-update leaves POM source untouched when pom/ is a symlink");
   // Symmetric to scenario 12 but for pom-update.mjs: when pom/ in a target
   // is a symlink to the POM source repo, running pom-update must not run
   // git checkout/pull or rm+copy on it, otherwise it would mutate the linked
@@ -559,8 +547,8 @@ function scenario13() {
 }
 
 function scenario14() {
-  console.log("\nScenario 14: bootstrap stops when run from the POM Source root");
-  const parent = mkdtempSync(join(tmpdir(), "pom-bootstrap-source-root-test-"));
+  section("Scenario 14: bootstrap stops when run from the POM Source root");
+  const parent = makeSandbox("pom-bootstrap-source-root-test-").dir;
   const sourceDir = join(parent, "pom");
   try {
     mkdirSync(join(sourceDir, "templates"), { recursive: true });
@@ -599,7 +587,7 @@ function scenario14() {
 }
 
 function scenario15() {
-  console.log("\nScenario 15: installer initializes Git and installs the hook in a new target root");
+  section("Scenario 15: installer initializes Git and installs the hook in a new target root");
   const dir = createTempProject();
   try {
     const stdout = execFileSync(
@@ -620,8 +608,8 @@ function scenario15() {
 }
 
 function scenario16() {
-  console.log("\nScenario 16: installer does not create nested Git or parent hook from a subdirectory target");
-  const parent = mkdtempSync(join(tmpdir(), "pom-nested-git-test-"));
+  section("Scenario 16: installer does not create nested Git or parent hook from a subdirectory target");
+  const parent = makeSandbox("pom-nested-git-test-").dir;
   const appDir = join(parent, "app");
   try {
     execFileSync("git", ["init"], { cwd: parent, stdio: "pipe" });
@@ -644,7 +632,7 @@ function scenario16() {
 }
 
 function scenario17() {
-  console.log("\nScenario 17: installer respects configured ADR root instead of forcing decisions/");
+  section("Scenario 17: installer respects configured ADR root instead of forcing decisions/");
   const dir = createTempProject();
   try {
     writeFileSync(
@@ -683,7 +671,7 @@ function scenario17() {
 }
 
 function scenario18() {
-  console.log("\nScenario 18: refresh fails before writing agent files when pom.config.json is invalid");
+  section("Scenario 18: refresh fails before writing agent files when pom.config.json is invalid");
   const dir = createTempProject();
   try {
     writeFileSync(join(dir, "pom.config.json"), "{ invalid json\n");
@@ -710,7 +698,7 @@ function scenario18() {
 }
 
 function scenario19() {
-  console.log("\nScenario 19: refresh expands partial full adoption config from full defaults");
+  section("Scenario 19: refresh expands partial full adoption config from full defaults");
   const dir = createTempProject();
   try {
     writeFileSync(
@@ -730,8 +718,7 @@ function scenario19() {
   }
 }
 
-console.log("SPEC-0001 Completion Verification Tests");
-console.log("========================================");
+banner();
 
 // Scenarios 12 and 13 must run first: they assert that neither the installer
 // nor pom-update mutates the POM source repo when pom/ is a symlink. Scenarios
@@ -757,8 +744,4 @@ scenario9();
 scenario10();
 scenario11();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-
-if (failed > 0) {
-  process.exit(1);
-}
+summary();

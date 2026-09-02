@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-07-13 |
 | Type | benchmark / LLM model / research |
-| Status | under evaluation |
+| Status | consolidated — compact always-loaded section promoted on both install paths |
 | Branch / Path | `exp/pom-skill-evolution` / `experiments/using-pom-bootstrap-diet/` |
 | Isolation | branch + experiment-only bootstrap variants |
 | Owner | POM maintainer |
@@ -170,9 +170,14 @@ Promotion requires a frozen baseline, five repetitions per critical scenario, 10
 
 ## Outcome
 
-Decision (2026-07-15): PARTIAL promotion. The compact router was promoted to the manual-install fallback template `templates/AGENTS_POM_SECTION_TEMPLATE.md` only (1241 -> 709 words; measured bootstrap input-token cost 3454 -> 2042, -40.9%). Behavioral evidence: 5-repetition comparison showed no safety breach and no false completion claim under the compact section; the user explicitly accepted the marginal, non-safety routing-discipline slip (compact critical 0.956 vs 1.0 baseline; two 1/5 ordering/prompt-read variances). Two structural assertions that encoded the old routing-table-in-section design were updated to assert the compact design (routing via the `README` catalog + preserved disabled-module guard), consistent with SPEC-0001's objective; `npm run pom:test` (893 passed) and `npm run pom:lint` pass.
+Decision: PROMOTED on both install paths, in two steps recorded in the Evidence section.
 
-Explicitly NOT promoted / discarded from this round: the compaction was tested on the monolithic fallback, but the DEFAULT installed path is the modular assembly (`templates/agents/00-core.md` + `60-skills.md`), which was neither compacted nor behaviorally tested here. The proven concept transfers, but applying and re-confirming it on the modular default is deferred future work, not claimed as done. No default-path token reduction is claimed.
+- Manual-install fallback (`templates/AGENTS_POM_SECTION_TEMPLATE.md`): 1241 -> 709 words; measured bootstrap input-token cost 3454 -> 2042 (-40.9%). The five-repetition comparison showed no safety breach and no false completion claim; the user explicitly accepted the marginal, non-safety routing-discipline slip (compact critical 0.956 vs 1.0 baseline; two 1/5 ordering/prompt-read variances).
+- Default modular assembly (`templates/agents/00-core.md` + `60-skills.md`): the aggressive candidate that dropped the routing table entirely saved 42.4% but broke `clarify` routing (`ambiguous-memory-request-it` 1/5 vs 5/5) and was rejected; the middle-ground candidate with a minimal key-routes cue saved 34.0% (3964 -> 2616 input tokens) at exact critical parity with the baseline (0.978 = 0.978, `evidence/modular-gate-v2`) and was promoted.
+
+Structural assertions in `tests/skill-bootstrap/` and `test-modular-assembly` that encoded the old routing-table-in-section design were updated to assert the compact design (routing via the `README` catalog, `Key routes` cue, preserved disabled-module guard), consistent with SPEC-0001's objective; `npm run pom:test` and `npm run pom:lint` pass.
+
+Preserved as evidence rather than promoted: the proof that the full routing table is partly load-bearing (dropping it wholesale degrades the less obvious routes), and the token/behavior figures per run. Minor evaluator follow-up: broaden the Fix-E deferred-record detection (accept a `tasks/deferred/` path or a bold "**Status:** Deferred" marker).
 
 Promotion path:
 
@@ -190,7 +195,8 @@ Promotion path:
 
 ## Follow-up
 
-- [ ] Wait for the P1 behavioral baseline.
-- [ ] Build the static loading-path inventory.
-- [ ] Author two experiment-only candidates.
-- [ ] Run comparative behavior and usage measurements.
+- [x] Wait for the P1 behavioral baseline (frozen at critical 0.978 in `experiments/pom-skill-behavior-evals/`).
+- [x] Build the static loading-path inventory.
+- [x] Author experiment-only candidates (compact router; aggressive modular; modular with key-routes cue).
+- [x] Run comparative behavior and usage measurements (`evidence/comparison`, `evidence/gate-5rep`, `evidence/modular-gate`, `evidence/modular-gate-v2`).
+- [ ] Broaden the Fix-E deferred-record detection in the evaluator (optional).

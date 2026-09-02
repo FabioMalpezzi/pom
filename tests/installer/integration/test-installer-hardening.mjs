@@ -1,29 +1,18 @@
 #!/usr/bin/env node
-// Regression tests for installer and updater hardening:
+// Regression tests for installer, bootstrap, and updater hardening:
 //   1. pom:init rerun with the same mode leaves pom.config.json untouched;
 //   2. the pre-commit hook restages tracked artifacts that pom:lint regenerated;
 //   3. pom-update.mjs refuses to replace a vendored pom/ that Git ignores;
 //   4. the installer accepts --no-pull on refresh.
 
-import { execFileSync, spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { cpSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
+import { GIT_IDENTITY, createHarness, git, makeSandbox, removeSandbox, runCommand, runNode } from "../../lib/harness.mjs";
 
 const POM_ROOT = process.cwd();
 const INSTALLER = ["--experimental-strip-types", "pom/scripts/install-pom.ts"];
-let passed = 0;
-let failed = 0;
-
-function assert(name, condition, detail = "") {
-  if (condition) {
-    passed += 1;
-    console.log(`  ✓ ${name}`);
-  } else {
-    failed += 1;
-    console.log(`  ✗ ${name}${detail ? `\n    ${String(detail).trim().split("\n").join("\n    ")}` : ""}`);
-  }
-}
+const { assert, section, summary } = createHarness();
 
 function copyPomSource(target) {
   cpSync(POM_ROOT, join(target, "pom"), {
@@ -37,21 +26,15 @@ function copyPomSource(target) {
   });
 }
 
-function git(dir, args) {
-  return execFileSync("git", ["-c", "user.name=POM Test", "-c", "user.email=pom@example.test", ...args], {
-    cwd: dir,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-}
-
+// Every installer/updater/bootstrap run speaks English so the assertions can
+// match the messages regardless of the developer locale.
 function node(dir, args) {
-  const result = spawnSync(process.execPath, args, { cwd: dir, encoding: "utf8", env: { ...process.env, POM_LANG: "en" } });
-  return { status: result.status ?? 1, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
+  const result = runNode(args, { cwd: dir, env: { POM_LANG: "en" } });
+  return { status: result.status ?? 1, stdout: result.stdout, stderr: result.stderr };
 }
 
 function makeTarget(prefix) {
-  const dir = mkdtempSync(join(tmpdir(), prefix));
+  const { dir } = makeSandbox(prefix);
   git(dir, ["init", "-q"]);
   writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "target", version: "0.0.1", private: true }, null, 2) + "\n");
   writeFileSync(join(dir, "README.md"), "# target\n");
@@ -60,7 +43,7 @@ function makeTarget(prefix) {
 }
 
 function scenarioConfigRerun() {
-  console.log("\nScenario 1: rerunning pom:init with the same preset does not rewrite pom.config.json");
+  section("Scenario 1: rerunning pom:init with the same preset does not rewrite pom.config.json");
   const dir = makeTarget("pom-hardening-config-");
   try {
     const first = node(dir, [...INSTALLER, "--preset", "owned"]);
@@ -79,18 +62,18 @@ function scenarioConfigRerun() {
     const changed = node(dir, [...INSTALLER, "--preset", "team"]);
     assert("changing the preset still rewrites the config", changed.status === 0 && changed.stdout.includes("Updated pom.config.json"), changed.stdout);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
 function scenarioHookRestagesRegeneratedIndex() {
-  console.log("\nScenario 2: the pre-commit hook restages the ADR index that pom:lint regenerates");
+  section("Scenario 2: the pre-commit hook restages the ADR index that pom:lint regenerates");
   const dir = makeTarget("pom-hardening-hook-");
   try {
     const install = node(dir, [...INSTALLER, "--profile", "decisions", "--ownership", "owned"]);
     assert("install with decisions profile succeeds", install.status === 0, install.stderr);
     const hook = readFileSync(join(dir, ".git", "hooks", "pre-commit"), "utf8");
-    assert("hook contains the restage block", hook.includes("git add --update --") && hook.includes("'decisions/DECISIONS_INDEX.md'"), hook);
+    assert("hook contains the restage block", hook.includes("git add --all --") && hook.includes("'decisions/DECISIONS_INDEX.md'"), hook);
     assert("hook lists the wiki reader output as generated", hook.includes("'wiki/_site'"), hook);
 
     const firstLint = node(dir, ["--experimental-strip-types", "pom/scripts/lint-doc-governance.ts"]);
@@ -114,10 +97,7 @@ function scenarioHookRestagesRegeneratedIndex() {
     git(dir, ["add", "decisions/ADR-0001-keep-the-test-fixture-small.md"]);
 
     // Git forwards hook output to stderr, so capture both streams.
-    const commit = spawnSync("git", ["-c", "user.name=POM Test", "-c", "user.email=pom@example.test", "commit", "-m", "add ADR-0001"], {
-      cwd: dir,
-      encoding: "utf8",
-    });
+    const commit = runCommand("git", [...GIT_IDENTITY, "commit", "-m", "add ADR-0001"], { cwd: dir });
     const commitStatus = commit.status ?? 1;
     const commitOutput = `${commit.stdout ?? ""}${commit.stderr ?? ""}`;
     assert("commit with the hook succeeds", commitStatus === 0, commitOutput);
@@ -128,13 +108,13 @@ function scenarioHookRestagesRegeneratedIndex() {
     const committedIndex = git(dir, ["show", "HEAD:decisions/DECISIONS_INDEX.md"]);
     assert("committed index lists the new ADR", committedIndex.includes("ADR-0001"), committedIndex);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
 function scenarioUpdaterRefusesIgnoredVendoredPom() {
-  console.log("\nScenario 3: pom-update.mjs refuses to replace a vendored pom/ that Git ignores");
-  const dir = mkdtempSync(join(tmpdir(), "pom-hardening-ignored-"));
+  section("Scenario 3: pom-update.mjs refuses to replace a vendored pom/ that Git ignores");
+  const dir = makeSandbox("pom-hardening-ignored-").dir;
   try {
     git(dir, ["init", "-q"]);
     mkdirSync(join(dir, "pom"));
@@ -149,12 +129,12 @@ function scenarioUpdaterRefusesIgnoredVendoredPom() {
     assert("updater explains that an ignored pom/ cannot be verified", result.stderr.includes("ignored by Git"), result.stderr);
     assert("local edit in pom/ survives", readFileSync(join(dir, "pom", "README.md"), "utf8").includes("local edit"));
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
 function scenarioNoPullFlag() {
-  console.log("\nScenario 4: refresh accepts --no-pull");
+  section("Scenario 4: refresh accepts --no-pull");
   const dir = makeTarget("pom-hardening-nopull-");
   try {
     const install = node(dir, [...INSTALLER, "--preset", "minimal"]);
@@ -165,7 +145,125 @@ function scenarioNoPullFlag() {
     const updater = readFileSync(join(dir, "pom-update.mjs"), "utf8");
     assert("installed updater passes --no-pull to the refresh", updater.includes('"--no-pull"'), "flag missing in pom-update.mjs");
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
+  }
+}
+
+function scenarioBootstrapUnreachableSource() {
+  section("Scenario 5: bootstrap fails cleanly when the POM source cannot be reached");
+  const dir = makeSandbox("pom-hardening-bootstrap-").dir;
+  try {
+    git(dir, ["init", "-q"]);
+    writeFileSync(join(dir, "package.json"), '{"name":"target","version":"0.0.1","private":true}\n');
+    const result = node(dir, [join(POM_ROOT, "bootstrap-pom.mjs"), "--preset", "minimal", "--repo", join(dir, "does-not-exist.git")]);
+    assert("bootstrap exits 1", result.status === 1, `status ${result.status}`);
+    assert("bootstrap names the unreachable source", result.stderr.includes("Cannot reach the POM source repository"), result.stderr);
+    assert("bootstrap prints no stack trace", !/\n\s+at /.test(result.stderr), result.stderr);
+    assert("nothing was cloned", !existsSync(join(dir, "pom")));
+  } finally {
+    removeSandbox(dir);
+  }
+}
+
+function scenarioBootstrapRerunOnVendoredCopy() {
+  section("Scenario 6: bootstrap rerun on a vendored pom/ leaves the target repository alone");
+  const dir = makeTarget("pom-hardening-vendored-rerun-");
+  try {
+    git(dir, ["add", "-A"]);
+    git(dir, ["commit", "-q", "-m", "baseline with vendored pom"]);
+    git(dir, ["checkout", "-q", "-b", "feature"]);
+    writeFileSync(join(dir, "feature.txt"), "work in progress\n");
+    const result = node(dir, [join(POM_ROOT, "bootstrap-pom.mjs"), "--preset", "minimal"]);
+    assert("bootstrap succeeds on a vendored copy", result.status === 0, result.stderr);
+    assert("bootstrap reports the vendored copy", result.stdout.includes("vendored copy without Git metadata"), result.stdout);
+    assert("target branch is unchanged", git(dir, ["branch", "--show-current"]).trim() === "feature", git(dir, ["branch", "--show-current"]));
+    assert("uncommitted work is untouched", existsSync(join(dir, "feature.txt")));
+  } finally {
+    removeSandbox(dir);
+  }
+}
+
+function scenarioHuskyHooksPath() {
+  section("Scenario 7: with husky's core.hooksPath the POM block goes to .husky/pre-commit");
+  const dir = makeTarget("pom-hardening-husky-");
+  try {
+    mkdirSync(join(dir, ".husky", "_"), { recursive: true });
+    writeFileSync(join(dir, ".husky", "_", "pre-commit"), "#!/usr/bin/env sh\n. \"$(dirname \"$0\")/h\"\n");
+    git(dir, ["config", "core.hooksPath", ".husky/_"]);
+    const install = node(dir, [...INSTALLER, "--preset", "minimal"]);
+    assert("install succeeds with husky", install.status === 0, install.stderr);
+    assert("installer reports the husky detection", install.stdout.includes("Detected husky"), install.stdout);
+    const userHook = join(dir, ".husky", "pre-commit");
+    assert("POM block lands in .husky/pre-commit", existsSync(userHook) && readFileSync(userHook, "utf8").includes("# POM:START pre-commit"), "user hook missing");
+    assert("husky shim is left untouched", !readFileSync(join(dir, ".husky", "_", "pre-commit"), "utf8").includes("POM:START"));
+  } finally {
+    removeSandbox(dir);
+  }
+}
+
+function scenarioConfiguredWikiRoot() {
+  section("Scenario 8: profile files honor wiki.root and handoff paths from an existing config");
+  const dir = makeTarget("pom-hardening-wikiroot-");
+  try {
+    const template = JSON.parse(readFileSync(join(POM_ROOT, "templates", "POM_CONFIG_TEMPLATE.json"), "utf8"));
+    template.wiki.root = "doc/wiki";
+    template.handoff = { ...(template.handoff ?? {}), projectStatePath: "STATE.md", currentPlanPath: "PLAN.md" };
+    writeFileSync(join(dir, "pom.config.json"), JSON.stringify(template, null, 2) + "\n");
+    const install = node(dir, [...INSTALLER, "--profile", "full", "--ownership", "owned"]);
+    assert("install with full profile succeeds", install.status === 0, install.stderr);
+    assert("wiki index is created under wiki.root", existsSync(join(dir, "doc", "wiki", "index.md")), "doc/wiki/index.md missing");
+    assert("no default wiki/ folder is created", !existsSync(join(dir, "wiki")));
+    assert("wiki.html shortcut points at the configured reader", readFileSync(join(dir, "wiki.html"), "utf8").includes("doc/wiki/_site/"));
+    assert("project state uses handoff.projectStatePath", existsSync(join(dir, "STATE.md")) && !existsSync(join(dir, "PROJECT_STATE.md")));
+    assert("current plan uses handoff.currentPlanPath", existsSync(join(dir, "PLAN.md")) && !existsSync(join(dir, "CURRENT_PLAN.md")));
+    const hook = readFileSync(join(dir, ".git", "hooks", "pre-commit"), "utf8");
+    assert("hook watches the configured wiki root", hook.includes("'doc/wiki'"), hook);
+  } finally {
+    removeSandbox(dir);
+  }
+}
+
+function scenarioHookStagesNewGeneratedFiles() {
+  section("Scenario 9: the hook stages new files under a tracked generated path and reports untracked ones");
+  const dir = makeTarget("pom-hardening-hook-new-");
+  try {
+    const install = node(dir, [...INSTALLER, "--profile", "wiki", "--ownership", "owned"]);
+    assert("install with wiki profile succeeds", install.status === 0, install.stderr);
+    // Lint regenerates the reader when Git reports changed wiki Markdown; stage the new files first.
+    git(dir, ["add", "-A"]);
+    const lint = node(dir, ["--experimental-strip-types", "pom/scripts/lint-doc-governance.ts"]);
+    assert("first lint renders wiki/_site", lint.status === 0 && existsSync(join(dir, "wiki", "_site", "index.html")), lint.stdout + lint.stderr);
+    git(dir, ["add", "-A"]);
+    git(dir, ["commit", "-q", "-m", "adopt pom with wiki"]);
+
+    writeFileSync(join(dir, "wiki", "alpha.md"), "# Alpha\n\n## Summary\n\nAlpha is a new page created to exercise the reader regeneration path during a commit. It has enough text to satisfy the minimum page length that the wiki lint enforces on every page.\n");
+    const log = readFileSync(join(dir, "wiki", "log.md"), "utf8");
+    writeFileSync(join(dir, "wiki", "log.md"), `${log}\n## [2026-09-02] add | alpha page\n\nAdded alpha.\n`);
+    const index = readFileSync(join(dir, "wiki", "index.md"), "utf8");
+    writeFileSync(join(dir, "wiki", "index.md"), `${index}\n- [Alpha](./alpha.md)\n`);
+    git(dir, ["add", "wiki/alpha.md", "wiki/log.md", "wiki/index.md"]);
+    const commit = runCommand("git", [...GIT_IDENTITY, "commit", "-m", "add alpha"], { cwd: dir });
+    const output = `${commit.stdout ?? ""}${commit.stderr ?? ""}`;
+    assert("commit with a new wiki page succeeds", commit.status === 0, output);
+    assert("new reader page is part of the commit", git(dir, ["show", "--name-only", "--format=", "HEAD"]).includes("wiki/_site/alpha.html"), output);
+    assert("working tree is clean after the commit", git(dir, ["status", "--porcelain"]).trim() === "", git(dir, ["status", "--porcelain"]));
+  } finally {
+    removeSandbox(dir);
+  }
+
+  const dir2 = makeTarget("pom-hardening-hook-untracked-");
+  try {
+    const install = node(dir2, [...INSTALLER, "--profile", "decisions", "--ownership", "owned"]);
+    assert("install with decisions profile succeeds", install.status === 0, install.stderr);
+    git(dir2, ["add", "README.md", "package.json", "AGENTS.md", "pom.config.json", "pom-update.mjs", "pom"]);
+    const commit = runCommand("git", [...GIT_IDENTITY, "commit", "-m", "adopt without the index"], { cwd: dir2 });
+    const output = `${commit.stdout ?? ""}${commit.stderr ?? ""}`;
+    assert("commit succeeds while the index is untracked", commit.status === 0, output);
+    assert("hook reports the untracked generated index", output.includes("does not track yet") && output.includes("decisions/DECISIONS_INDEX.md"), output);
+    const committed = git(dir2, ["show", "--name-only", "--format=", "HEAD"]).split("\n");
+    assert("untracked index was not added to the commit", !committed.includes("decisions/DECISIONS_INDEX.md"), committed.join("\n"));
+  } finally {
+    removeSandbox(dir2);
   }
 }
 
@@ -173,6 +271,10 @@ scenarioConfigRerun();
 scenarioHookRestagesRegeneratedIndex();
 scenarioUpdaterRefusesIgnoredVendoredPom();
 scenarioNoPullFlag();
+scenarioBootstrapUnreachableSource();
+scenarioBootstrapRerunOnVendoredCopy();
+scenarioHuskyHooksPath();
+scenarioConfiguredWikiRoot();
+scenarioHookStagesNewGeneratedFiles();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-process.exit(failed === 0 ? 0 : 1);
+summary();

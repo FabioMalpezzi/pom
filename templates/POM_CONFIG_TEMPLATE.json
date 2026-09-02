@@ -1,5 +1,5 @@
 {
-  "pomVersion": "0.3.1",
+  "pomVersion": "0.4.0",
   "installation": {
     "pomRoot": "pom",
     "note": "Template paths assume POM is installed in the target project as pom/. Adapt paths if using a different installation layout."
@@ -106,6 +106,7 @@
     "namespaceConvention": "Keep existing framework/service-local tests where the project expects them. Use analysis/workstream namespaces for new cross-system tests, E2E tests, fixtures, and evidence tied to task plans.",
     "recommendedLayout": ["e2e", "integration", "fixtures", "evidence"],
     "crossSystemDir": "cross-system",
+    "supportDir": "lib",
     "preferExistingStructure": true,
     "requireApprovalBeforeMigratingExistingTests": true,
     "severity": "warning"

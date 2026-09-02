@@ -5,8 +5,8 @@ How to **adopt** POM workflow in a project that decides to use it, and how to **
 This guide is for the team that owns the target project. It complements:
 
 - `WORKFLOW_IMPLEMENTATION_GUIDE.md` — how to translate one YAML into target-language code (Patterns A/B/C, language profiles, suspend/restore).
-- `prompts/workflow.md` — how the agent operates in `design | validate | diagram | scenarios | implement` modes.
-- `SPEC-DRAFT-workflow-modeling.md` — the contract: schema, validation rules, four invariants.
+- `skills/workflow.md` and its canonical prompt `prompts/27-workflow-modeling.md` — how the agent operates in `design | validate | diagram | scenarios | implement` modes.
+- `specs/SPEC-0006-workflow-modeling.md` — the contract: schema, validation rules, four invariants.
 
 ## When to adopt
 

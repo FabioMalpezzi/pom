@@ -10,7 +10,7 @@ Roadmap
         -> Step     (closes with atomic verification: unit test, lint, check)
 ```
 
-Verification happens at every level, not only at the bottom. Place E2E and user-flow tests at Task or Workstream level, not at Step level.
+Verification happens at every level, not only at the bottom. Place E2E and user-flow tests at Task or Workstream level, not at Step level. Small projects use the short form `Task -> Step`; use `Roadmap` only for multi-phase direction or coordination across several streams.
 
 Every spec or decision that generates work must produce verifiable tasks. For significant steps, run the shortest relevant checkpoint before dependent work continues.
 

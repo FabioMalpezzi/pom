@@ -1,36 +1,24 @@
 #!/usr/bin/env node
 
-import { spawnSync } from "node:child_process";
+import { createHarness, runNode } from "../../lib/harness.mjs";
 
-let passed = 0;
-let failed = 0;
+const FIXTURES = "tests/workflow-validator/fixtures";
+const CANDIDATES = "tests/dynamic-workflows/fixtures/workflows-candidate";
 
-function assert(name, condition, detail = "") {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name}${detail ? ` - ${detail}` : ""}`);
-    failed++;
-  }
-}
+const { assert, section, banner, summary } = createHarness({ name: "Workflow Dynamic Handle Tests" });
 
 function runLint(path) {
-  return spawnSync(process.execPath, ["scripts/lint-workflows.mjs", path], {
-    cwd: process.cwd(),
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  return runNode(["scripts/lint-workflows.mjs", path]);
 }
 
 function scenarioDynamicHandleLifecycle() {
-  console.log("\nScenario 1: Dynamic Workflow handles have explicit lifecycle");
+  section("Scenario 1: Dynamic Workflow handles have explicit lifecycle");
 
-  const valid = runLint("experiments/dynamic-workflows/workflows-candidate/14-handle-lifecycle.yaml");
+  const valid = runLint(`${CANDIDATES}/14-handle-lifecycle.yaml`);
   assert("selective await plus explicit detach passes", valid.status === 0, valid.stdout + valid.stderr);
   assert("valid handle lifecycle has no warnings", valid.stdout.includes("| Warnings | 0 |"), valid.stdout);
 
-  const cancelValid = runLint("experiments/dynamic-workflows/workflows-candidate/15-handle-cancel-lifecycle.yaml");
+  const cancelValid = runLint(`${CANDIDATES}/15-handle-cancel-lifecycle.yaml`);
   assert("explicit cancel handle lifecycle passes", cancelValid.status === 0, cancelValid.stdout + cancelValid.stderr);
   assert("cancel handle lifecycle has no warnings", cancelValid.stdout.includes("| Warnings | 0 |"), cancelValid.stdout);
 
@@ -44,12 +32,12 @@ function scenarioDynamicHandleLifecycle() {
   ]);
 
   for (const [fixture, code] of expected) {
-    const result = runLint(`experiments/dynamic-workflows/broken-fixtures/${fixture}`);
+    const result = runLint(`${FIXTURES}/${fixture}`);
     assert(`${fixture} fails`, result.status === 1, result.stdout + result.stderr);
     assert(`${fixture} reports ${code}`, result.stdout.includes(`**${code}**`), result.stdout);
   }
 
-  const terminalActive = runLint("experiments/dynamic-workflows/broken-fixtures/handle.broken-E089-terminal-active.yaml");
+  const terminalActive = runLint(`${FIXTURES}/handle.broken-E089-terminal-active.yaml`);
   assert(
     "terminal active handle report names launch origin",
     terminalActive.stdout.includes("launched_at=batch_b@states[1].fan_out_launch"),
@@ -66,7 +54,7 @@ function scenarioDynamicHandleLifecycle() {
     terminalActive.stdout,
   );
 
-  const stateParallel = runLint("experiments/dynamic-workflows/broken-fixtures/state-invoke-parallel-E036.yaml");
+  const stateParallel = runLint(`${FIXTURES}/state-invoke-parallel-E036.yaml`);
   assert(
     "state parallel invoke report avoids stale XState guidance",
     !stateParallel.stdout.includes("Pattern C") && !stateParallel.stdout.includes("XState"),
@@ -80,9 +68,9 @@ function scenarioDynamicHandleLifecycle() {
 }
 
 function scenarioDiagnosticClarity() {
-  console.log("\nScenario 2: Workflow lint diagnostics are actionable");
+  section("Scenario 2: Workflow lint diagnostics are actionable");
 
-  const missing = runLint("experiments/dynamic-workflows/broken-fixtures/does-not-exist.yaml");
+  const missing = runLint(`${FIXTURES}/does-not-exist.yaml`);
   assert("missing file fails", missing.status === 1, missing.stdout + missing.stderr);
   assert(
     "missing file report distinguishes readability and YAML shape",
@@ -101,11 +89,9 @@ function scenarioDiagnosticClarity() {
   );
 }
 
-console.log("Workflow Dynamic Handle Tests");
-console.log("=============================");
+banner();
 
 scenarioDynamicHandleLifecycle();
 scenarioDiagnosticClarity();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

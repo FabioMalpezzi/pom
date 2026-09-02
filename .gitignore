@@ -1,20 +1,27 @@
+# System and editor files
 .DS_Store
+
+# Local runtime state
 .pom-reader/
 .playwright-cli/
-experiments/wiki-agent-orchestration/evidence/agent-drafts/
-experiments/wiki-agent-orchestration/evidence/agent-turns/
-experiments/wiki-agent-orchestration/evidence/annotations/
-experiments/wiki-agent-orchestration/evidence/ui-events/
-# Behavioral eval raw dumps: keep run-level report.json, drop per-scenario transcripts/events
-experiments/pom-skill-behavior-evals/evidence/*/*/
-experiments/using-pom-bootstrap-diet/evidence/*/*/
 node_modules/
 
 # Secrets
 .env
 .env.local
 .env.*.local
-experiments/task-plan-contracts/evidence/*/*/
-experiments/pi-package/staging/
+
 # Local Claude Code permission settings are per machine, not project memory
 .claude/settings.local.json
+
+# Experiment evidence: only the run-level summaries an experiment cites are tracked
+# (see the Evidence convention in templates/EXPERIMENT_TEMPLATE.md).
+experiments/wiki-agent-orchestration/evidence/agent-drafts/
+experiments/wiki-agent-orchestration/evidence/agent-turns/
+experiments/wiki-agent-orchestration/evidence/annotations/
+experiments/wiki-agent-orchestration/evidence/ui-events/
+experiments/pom-skill-behavior-evals/evidence/*/*/
+experiments/using-pom-bootstrap-diet/evidence/*/*/
+experiments/task-plan-contracts/evidence/*/*/
+experiments/pi-package/staging/
+experiments/fan-in-accounting/evidence-raw/

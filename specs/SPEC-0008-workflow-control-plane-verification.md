@@ -3,9 +3,17 @@
 | Field | Value |
 |---|---|
 | Date | 2026-06-01 |
-| Status | Draft |
+| Status | Deferred |
 | Area | method / workflow modeling |
 | Summary | Strengthen POM workflow validation with stricter static checks and a finite control-plane model checker, without claiming target runtime or business-domain correctness. |
+
+## Deferral
+
+Nothing in this spec is implemented: the rule codes, the graph module, the model checker, and the `--formal` flag below are a candidate design, and the file paths it names do not exist in POM Source. `ADR-0004` accepted the Dynamic Workflow contract with partial validator coverage (handle lifecycle E080–E089) and left stricter automation to grow "as target projects need" it; the fan-in accounting experiment (`experiments/fan-in-accounting/EXPERIMENT.md`) later showed that structural validity alone does not prove semantic provenance and explicitly deferred schema, validator, and this spec.
+
+Note that the E090 and E091 codes proposed below were meanwhile assigned to the guard `evidence` block (`scripts/lib/workflow-lint-core.mjs`); a reactivated implementation must renumber the `await` rules.
+
+Reactivation criterion: a target project that models Dynamic Workflows and needs a malformed `join`/`k`/`on_timeout` or a reachable dead end caught statically, or a concrete counterexample that the current validator lets through. Level 1 (static checks) can then be implemented alone; Level 2 (model checking) stays opt-in behind a flag until calibrated.
 
 ## Purpose
 
@@ -225,7 +233,7 @@ When relevant, the report must include active handles and launch origin.
 
 ## Completion Verification
 
-This spec cannot move beyond Draft until implementation has executable
+This spec cannot move beyond Deferred until implementation has executable
 evidence.
 
 ### Step 0 - Goal-Backward Check

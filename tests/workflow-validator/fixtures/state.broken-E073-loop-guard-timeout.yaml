@@ -1,0 +1,21 @@
+# Expected: E073 because loop_guard and timeout cannot be declared on the same state.
+workflow: loop_guard_and_timeout_same_state
+version: 1
+initial_state: planning
+states:
+  - name: planning
+    is_final: false
+    loop_guard:
+      max_visits: 3
+      on_exhaustion: failed
+    timeout:
+      duration: 10min
+      on_timeout: failed
+  - name: failed
+    is_final: true
+events:
+  - name: retry
+transitions:
+  - from: planning
+    to: planning
+    event: retry

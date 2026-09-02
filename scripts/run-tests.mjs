@@ -6,7 +6,9 @@
  * Discovers integration test files under tests/<area>/integration/*.mjs,
  * runs them one by one, and aggregates pass/fail counts from their final
  * "Results: X passed, Y failed" line. Exits non-zero when any file exits
- * non-zero or reports failed assertions.
+ * non-zero, reports failed assertions, or finishes without printing a
+ * "Results:" line at all (a file that crashes early, or forgets the
+ * summary, must never count as a silent 0/0 pass).
  *
  * Zero dependencies: uses only Node standard library, consistent with the
  * rest of POM.
@@ -84,21 +86,31 @@ let totalPassed = 0;
 let totalFailed = 0;
 let anyExitFailure = false;
 
+const unparsed = [];
+
 for (const r of results) {
   totalPassed += r.passed;
   totalFailed += r.failed;
   if (r.status !== 0) anyExitFailure = true;
+  if (!r.parsed) unparsed.push(r.file);
 }
 
 console.log("------------------------------------------------------------");
 console.log("POM tests summary:");
 for (const r of results) {
-  const label = r.status === 0 ? "OK  " : "FAIL";
+  const label = r.status === 0 && r.parsed ? "OK  " : "FAIL";
   const counts = r.parsed ? `${r.passed} passed, ${r.failed} failed` : "no Results line parsed";
   console.log(`  [${label}] ${r.file}  (${counts}, ${r.elapsedSec}s)`);
 }
 console.log(`Aggregate: ${totalPassed} passed, ${totalFailed} failed across ${results.length} file(s)`);
 
-if (anyExitFailure || totalFailed > 0) {
+if (unparsed.length > 0) {
+  console.error("");
+  console.error(`POM tests: ${unparsed.length} file(s) finished without a "Results: X passed, Y failed" line:`);
+  for (const file of unparsed) console.error(`  - ${file}`);
+  console.error("A test file must end with that line (see tests/lib/harness.mjs summary()); a missing line is treated as a failure, not as 0/0.");
+}
+
+if (anyExitFailure || totalFailed > 0 || unparsed.length > 0) {
   process.exit(1);
 }

@@ -1,0 +1,16 @@
+# Expected: E072 because timeout.on_timeout must reference a declared state.
+workflow: timeout_bad_target
+version: 1
+initial_state: waiting
+states:
+  - name: waiting
+    is_final: false
+    timeout:
+      duration: 15min
+      on_timeout: missing_state
+events:
+  - name: timeout
+transitions:
+  - from: waiting
+    to: waiting
+    event: timeout

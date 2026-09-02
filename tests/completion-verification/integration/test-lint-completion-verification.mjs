@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 
-import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
+import { createHarness, git, makeSandbox, removeSandbox, runNode } from "../../lib/harness.mjs";
 
 const POM_ROOT = process.cwd();
 
-let passed = 0;
-let failed = 0;
+const { assert, section, banner, summary } = createHarness({ name: "Completion Verification Lint Tests" });
 
 function createTempProject() {
-  const dir = mkdtempSync(join(tmpdir(), "pom-completion-test-"));
+  const { dir } = makeSandbox("pom-completion-test-");
   execFileSync("ln", ["-s", POM_ROOT, join(dir, "pom")]);
-  execFileSync("git", ["init"], { cwd: dir, stdio: "ignore" });
+  git(dir, ["init", "-q"]);
   writeFileSync(join(dir, "package.json"), JSON.stringify({ type: "module" }, null, 2) + "\n");
   writeFileSync(
     join(dir, "pom.config.json"),
@@ -61,15 +61,10 @@ function createTempProject() {
   return dir;
 }
 
-function cleanup(dir) {
-  rmSync(dir, { recursive: true, force: true });
-}
+const cleanup = removeSandbox;
 
 function runLint(projectDir) {
-  return spawnSync("node", ["--experimental-strip-types", "pom/scripts/lint-doc-governance.ts"], {
-    cwd: projectDir,
-    encoding: "utf8",
-  });
+  return runNode(["--experimental-strip-types", "pom/scripts/lint-doc-governance.ts"], { cwd: projectDir });
 }
 
 function writeAdr(projectDir, filename, body) {
@@ -80,18 +75,8 @@ function writeFile(projectDir, filename, body) {
   writeFileSync(join(projectDir, filename), body.trimStart());
 }
 
-function assert(name, condition, detail) {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name} - ${detail}`);
-    failed++;
-  }
-}
-
 function scenarioMissingVerificationWarns() {
-  console.log("\nScenario 1: accepted ADR without completion verification warns");
+  section("Scenario 1: accepted ADR without completion verification warns");
   const dir = createTempProject();
 
   try {
@@ -121,7 +106,7 @@ function scenarioMissingVerificationWarns() {
 }
 
 function scenarioValidVerificationDoesNotWarn() {
-  console.log("\nScenario 2: accepted ADR with thesis and antithesis is accepted");
+  section("Scenario 2: accepted ADR with thesis and antithesis is accepted");
   const dir = createTempProject();
 
   try {
@@ -171,7 +156,7 @@ Exception reason: _none_
 }
 
 function scenarioExceptionReasonWarns() {
-  console.log("\nScenario 3: accepted ADR with exception reason warns");
+  section("Scenario 3: accepted ADR with exception reason warns");
   const dir = createTempProject();
 
   try {
@@ -205,7 +190,7 @@ Exception reason: external evidence is not available in this repository.
 }
 
 function scenarioMetadataIgnoresLaterTables() {
-  console.log("\nScenario 4: ADR metadata ignores later content tables");
+  section("Scenario 4: ADR metadata ignores later content tables");
   const dir = createTempProject();
 
   try {
@@ -245,8 +230,8 @@ function scenarioMetadataIgnoresLaterTables() {
 }
 
 function scenarioLocalizedTemplatesAndIndexesWork() {
-  console.log("\nScenario 5: localized templates and configured indexes work");
-  const dir = mkdtempSync(join(tmpdir(), "pom-localized-test-"));
+  section("Scenario 5: localized templates and configured indexes work");
+  const { dir } = makeSandbox("pom-localized-test-");
 
   try {
     execFileSync("ln", ["-s", POM_ROOT, join(dir, "pom")]);
@@ -491,7 +476,7 @@ Documento di prova.
 }
 
 function scenarioReaderNotesWarnAndSuggestSkill() {
-  console.log("\nScenario 6: open Project Reader notes warn and suggest the reader-notes skill");
+  section("Scenario 6: open Project Reader notes warn and suggest the reader-notes skill");
   const dir = createTempProject();
 
   try {
@@ -525,7 +510,7 @@ function scenarioReaderNotesWarnAndSuggestSkill() {
 }
 
 function scenarioNoneReasonWithTrailingNoteDoesNotWarn() {
-  console.log("\nScenario 7: '_none_' with trailing punctuation or note is not an exception");
+  section("Scenario 7: '_none_' with trailing punctuation or note is not an exception");
   const dir = createTempProject();
 
   try {
@@ -570,8 +555,7 @@ Exception reason: _none_. Direction is Accepted; implementation details are foll
   }
 }
 
-console.log("Completion Verification Lint Tests");
-console.log("==================================");
+banner();
 
 scenarioMissingVerificationWarns();
 scenarioValidVerificationDoesNotWarn();
@@ -581,11 +565,7 @@ scenarioLocalizedTemplatesAndIndexesWork();
 scenarioReaderNotesWarnAndSuggestSkill();
 scenarioNoneReasonWithTrailingNoteDoesNotWarn();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-
-if (failed > 0) {
-  process.exit(1);
-}
+summary();
 
 if (!existsSync(join(POM_ROOT, "scripts", "lint-doc-governance.ts"))) {
   process.exit(1);

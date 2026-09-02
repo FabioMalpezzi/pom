@@ -1,0 +1,74 @@
+workflow: dyn_fanin
+version: 1
+description: |
+  Struttura 3 di 4: il fan-in finale. Nel Dynamic Workflow gli N fixer
+  convergono su un aggregatore che "returns when done".
+
+  Design pattern trovato: il join si esprime con un CONTATORE nel context
+  e una self-transition guardata. `collecting` raccoglie un risultato alla
+  volta (self-transition su task_returned, guard more_pending) e, quando li
+  ha raccolti tutti (guard all_returned), passa a all_collected. È il
+  pattern "counted join": N vive nel context come parametro, non come
+  numero di stati. Esprimibile SENZA primitive nuove.
+
+  Classificazione attesa: adapted (join via context counter al posto di un
+  join nativo; il numero di rami non è strutturale ma un dato di context).
+  Il fan-in di N dinamico è quindi RIDUCIBILE con un design pattern — a
+  differenza del fan-out (Struttura 4). Nota: questo cattura la
+  convergenza/conteggio, non la concorrenza dei rami (semantica runtime,
+  fuori scope).
+
+initial_state: collecting
+
+states:
+  - name: collecting
+    description: |
+      Raccoglie i risultati dei task uno alla volta. Resta qui finché
+      mancano risultati (guard more_pending), esce quando li ha tutti
+      (guard all_returned). Il conteggio vive nel context.
+    is_final: false
+  - name: all_collected
+    description: Tutti gli N risultati raccolti; l'aggregatore può chiudere.
+    is_final: true
+
+events:
+  - name: task_returned
+    description: Un task (uno degli N) ha restituito il suo risultato.
+
+guards:
+  - name: more_pending
+    description: received < expected — mancano ancora risultati da raccogliere.
+  - name: all_returned
+    description: received == expected — tutti gli N risultati sono arrivati.
+
+transitions:
+  - from: collecting
+    to: collecting
+    event: task_returned
+    guard: more_pending
+  - from: collecting
+    to: all_collected
+    event: task_returned
+    guard: all_returned
+
+context_schema:
+  input:
+    - name: expected
+      type: number
+  output_by_terminal:
+    all_collected:
+      - name: received
+        type: number
+
+invariants:
+  - description: |
+      all_collected è raggiunto solo quando received == expected. Il join è
+      contato nel context, non strutturale: N rami entranti collassano in
+      una self-transition ripetuta N volte.
+
+metadata:
+  experiment: dynamic-workflows
+  structure: 3-fanin
+  iteration: 1
+  expected_fit: adapted
+  design_pattern: "counted join (context counter + guarded self-transition)"

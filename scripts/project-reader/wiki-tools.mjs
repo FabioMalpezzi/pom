@@ -4,33 +4,17 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { basename, isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { hasArg, positionalArgs, readRawArg } from "../lib/cli-args.mjs";
+import { createSourceContext } from "./adapters/index.mjs";
+import { createProjectReaderCore } from "./core.mjs";
 
 export let ROOT = resolve(process.cwd());
 export let ANNOTATIONS_ROOT = annotationsRootFor(ROOT);
 
-const SEARCH_ROOTS = [
-  "README.md",
-  "CONTEXT.md",
-  "WIKI_METHOD.md",
-  "wiki",
-  "specs",
-  "decisions",
-  "tasks",
-  "skills",
-  "prompts",
-  "templates",
-  "scripts",
-  "tests",
-  "experiments/wiki-agent-orchestration",
-];
-
-const RG_GLOBS = [
-  "!.git/**",
-  "!node_modules/**",
-  "!wiki/_site/**",
-  "!experiments/wiki-agent-orchestration/evidence/**",
-  "!scripts/project-reader/public/*.map",
-];
+// Search and path guards are delegated to the Project Reader core, so the CLI
+// and the server look at the same roots (profile/adapter) with the same rules.
+let profile = "auto";
+let reader = null;
 
 const STATUSES = new Set(["new", "triaged", "in_progress", "resolved", "parked", "discarded"]);
 
@@ -39,7 +23,20 @@ export function setProjectRoot(path) {
   if (!existsSync(root) || !statSync(root).isDirectory()) throw new Error(`Project root not found: ${root}`);
   ROOT = root;
   ANNOTATIONS_ROOT = annotationsRootFor(ROOT);
+  reader = null;
   return ROOT;
+}
+
+export function setProjectProfile(value) {
+  profile = String(value || "auto");
+  reader = null;
+  return profile;
+}
+
+// Lets the server share its reader instead of building a second one.
+export function setProjectReader(instance) {
+  reader = instance;
+  return reader;
 }
 
 export function setAnnotationsRoot(path) {
@@ -47,88 +44,15 @@ export function setAnnotationsRoot(path) {
   return ANNOTATIONS_ROOT;
 }
 
-export function searchProject({ query, regex = false, maxResults = 50, roots: inputRoots, ignoreGlobs = [] } = {}) {
-  const pattern = String(query || "").trim();
-  if (!pattern) throw new Error("Search query is required");
-  const hasCustomRoots = Array.isArray(inputRoots);
-  const searchRoots = normalizeSearchRoots(inputRoots);
-  const roots = (hasCustomRoots ? searchRoots : SEARCH_ROOTS).filter((path) => existsSync(join(ROOT, path)));
-  if (!roots.length) return emptySearchResult(pattern, regex, maxResults);
-  const args = [
-    "--json",
-    "--line-number",
-    "--column",
-    "--color",
-    "never",
-    "--max-count",
-    "20",
-    "--max-filesize",
-    "1M",
-  ];
-  if (!regex) args.push("--fixed-strings");
-  for (const glob of RG_GLOBS) args.push("--glob", glob);
-  for (const glob of normalizedIgnoreGlobs(ignoreGlobs)) args.push("--glob", glob);
-  args.push("--", pattern, ...roots);
-
-  const result = spawnSync("rg", args, {
-    cwd: ROOT,
-    encoding: "utf8",
-    timeout: 5000,
-    maxBuffer: 2_000_000,
-  });
-
-  if (result.error) throw new Error(`rg failed: ${result.error.message}`);
-  if (result.status > 1) throw new Error((result.stderr || "rg search failed").trim());
-
-  const matches = [];
-  for (const line of result.stdout.split(/\r?\n/)) {
-    if (!line.trim()) continue;
-    const event = JSON.parse(line);
-    if (event.type !== "match") continue;
-    const data = event.data;
-    matches.push({
-      path: normalize(data.path.text),
-      line: data.line_number,
-      column: firstColumn(data),
-      text: data.lines.text.trimEnd(),
-    });
-    if (matches.length >= maxResults) break;
+function projectReader() {
+  if (!reader) {
+    reader = createProjectReaderCore({ root: ROOT, sourceContext: createSourceContext({ root: ROOT, profile }) });
   }
-
-  return {
-    query: pattern,
-    regex: Boolean(regex),
-    generatedAt: new Date().toISOString(),
-    maxResults,
-    resultCount: matches.length,
-    truncated: matches.length >= maxResults,
-    results: matches,
-  };
+  return reader;
 }
 
-function emptySearchResult(pattern, regex, maxResults) {
-  return {
-    query: pattern,
-    regex: Boolean(regex),
-    generatedAt: new Date().toISOString(),
-    maxResults,
-    resultCount: 0,
-    truncated: false,
-    results: [],
-  };
-}
-
-function normalizeSearchRoots(inputRoots) {
-  if (!Array.isArray(inputRoots)) return [];
-  return [...new Set(inputRoots.map((path) => requireRepoPath(path, { mustExist: false })))];
-}
-
-function normalizedIgnoreGlobs(inputGlobs) {
-  if (!Array.isArray(inputGlobs)) return [];
-  return [...new Set(inputGlobs
-    .filter((glob) => typeof glob === "string")
-    .map((glob) => glob.trim())
-    .filter((glob) => glob.startsWith("!") && !glob.includes("\0")))];
+export function searchProject({ query, regex = false, maxResults = 50, kind = "all" } = {}) {
+  return projectReader().search({ query, regex, maxResults, kind });
 }
 
 export function gitHistory({ path, maxResults = 30 } = {}) {
@@ -267,22 +191,8 @@ function normalizeAnnotationRecord(record) {
   };
 }
 
-function firstColumn(data) {
-  const submatch = data.submatches?.[0];
-  return Number.isInteger(submatch?.start) ? submatch.start + 1 : data.column || 1;
-}
-
-function requireRepoPath(input, { mustExist = true } = {}) {
-  if (!input) throw new Error("Path is required");
-  const normalized = normalize(String(input));
-  if (isAbsolute(normalized)) throw new Error("Absolute paths are not allowed");
-  const absolute = resolve(ROOT, normalized);
-  const relativePath = relative(ROOT, absolute);
-  if (relativePath.startsWith("..") || isAbsolute(relativePath)) throw new Error("Path outside repository");
-  if (relativePath === ".git" || relativePath.startsWith(".git/")) throw new Error("Git internals are not valid targets");
-  if (relativePath === "node_modules" || relativePath.startsWith("node_modules/")) throw new Error("node_modules is not a valid target");
-  if (mustExist && (!existsSync(absolute) || !statSync(absolute).isFile())) throw new Error(`Target file not found: ${relativePath}`);
-  return relativePath;
+function requireRepoPath(input, options) {
+  return projectReader().requireRepoPath(input, options);
 }
 
 function normalizeStatus(status) {
@@ -339,23 +249,16 @@ function safeId(value) {
   return String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "item";
 }
 
+const VALUE_OPTIONS = ["root", "dir", "annotations-dir", "profile", "kind", "path", "note", "text", "line-start", "line-end", "by", "status"];
+const BOOLEAN_OPTIONS = ["json", "regex"];
+
 function parseArgs(args) {
-  const parsed = { _: [] };
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index];
-    if (!arg.startsWith("--")) {
-      parsed._.push(arg);
-      continue;
-    }
-    const key = arg.slice(2);
-    const next = args[index + 1];
-    if (!next || next.startsWith("--")) {
-      parsed[key] = true;
-    } else {
-      parsed[key] = next;
-      index += 1;
-    }
+  const parsed = { _: positionalArgs(args, VALUE_OPTIONS) };
+  for (const name of VALUE_OPTIONS) {
+    const value = readRawArg(name, args);
+    if (value !== undefined) parsed[name] = value;
   }
+  for (const name of BOOLEAN_OPTIONS) parsed[name] = hasArg(name, args);
   return parsed;
 }
 
@@ -383,8 +286,9 @@ function usage() {
   Run from the project root, or pass --root <project-root>.
   If POM is installed under pom/, prefix the script path with pom/.
   Annotation files default to .pom-reader/annotations under the project root.
+  Search uses the Project Reader roots for the project (--profile auto|pom|generic).
 
-  node scripts/project-reader/wiki-tools.mjs search <query> [--regex] [--json] [--root <project-root>]
+  node scripts/project-reader/wiki-tools.mjs search <query> [--regex] [--kind <kind>] [--json] [--root <project-root>] [--profile <profile>]
   node scripts/project-reader/wiki-tools.mjs history --path <repo-path> [--json] [--root <project-root>]
   node scripts/project-reader/wiki-tools.mjs annotate --path <repo-path> --note <text> [--text <selected>] [--line-start <n>] [--line-end <n>] [--root <project-root>] [--annotations-dir <dir>]
   node scripts/project-reader/wiki-tools.mjs list [--status <status>] [--json] [--root <project-root>] [--annotations-dir <dir>]
@@ -405,9 +309,10 @@ async function main() {
     return;
   }
   if (args.root || args.dir) setProjectRoot(args.root || args.dir);
+  if (args.profile) setProjectProfile(args.profile);
   if (args["annotations-dir"]) setAnnotationsRoot(args["annotations-dir"]);
   if (command === "search") {
-    print(searchProject({ query: args._.join(" "), regex: Boolean(args.regex) }), asJson);
+    print(searchProject({ query: args._.join(" "), regex: Boolean(args.regex), kind: args.kind || "all" }), asJson);
     return;
   }
   if (command === "history") {

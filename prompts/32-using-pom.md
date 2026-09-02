@@ -1,6 +1,6 @@
 # Prompt - Using POM
 
-Use this prompt as the bootstrap/router for POM-aware work. Its job is to make the coding agent load the right POM skill before acting and to respect the target project's adoption profile. For harness setup or tool mapping details, use `prompts/references/agent-harnesses.md`.
+Use this prompt as the bootstrap/router for POM-aware work. Its job is to make the coding agent load the right POM skill before acting and to respect the target project's adoption profile. The complete routing table is the `skills/README.md` catalog; harness setup, the session-start contract, and tool mapping live in `prompts/references/agent-harnesses.md`.
 
 ```text
 I am using POM - Project Operating Memory.
@@ -14,10 +14,10 @@ Before any POM action:
 1. locate POM:
    - if `pom/skills/using-pom.md` exists, this is an installed target project;
    - if `skills/using-pom.md` exists and this is the POM Source repository, use source-relative paths;
-   - if neither exists, do not invent a POM workflow; use the installation guidance in the POM README.
-2. read `pom.config.json` when present. If missing, state that project-specific adoption/profile checks are not configured.
-3. read `pom/skills/README.md` or `skills/README.md` as the skill index.
-4. route by intent, then read the selected skill card and its linked prompt before acting.
+   - if neither exists, do not invent a POM workflow; use the POM README Quickstart or `docs/installation.md` in the POM Source.
+2. read `pom.config.json` when present; the adoption guard it drives is stated once in the installed POM section. If the file is missing, state that project-specific adoption/profile checks are not configured.
+3. read `pom/skills/README.md` or `skills/README.md` as the skill catalog: its `Use` column is the routing signal.
+4. route by intent from the key routes below or from the catalog, then read the selected skill card and its linked prompt before acting.
 5. treat YAML frontmatter descriptions as triggers only. Do not follow a description as if it were the procedure.
 6. respect disabled adoption modules:
    - if wiki is disabled, do not create `wiki/` or wiki pages unless the user explicitly enables it;
@@ -32,55 +32,25 @@ Before any POM action:
    - use `root-cause` for Target Project bugs, test failures, build failures, performance problems, or unexpected behavior before proposing fixes;
    - do not promote files from `experiments/`, `/tmp`, or an `exp/<topic>` branch into stable source until the experiment has been evaluated and promotion is approved.
 
-Session-start contract:
-- if the harness has native skill, plugin, or hook support, load `using-pom` at session start;
-- if the harness only has project instructions, those instructions must require reading `pom/skills/using-pom.md` before the first POM-related action;
-- for a new harness integration, keep a clean-session transcript showing that a natural POM request loads `using-pom`, routes to the selected skill, and does not edit files first;
-- read `prompts/references/agent-harnesses.md` when installing, testing, or debugging Codex, Claude Code, Gemini CLI, Cursor, OpenCode, GitHub Copilot, or another harness integration.
+Session-start contract: defined once in `prompts/references/agent-harnesses.md` (integration contract, harness instruction files, tool mapping, smoke prompts). Read it when installing, testing, or debugging Codex, Claude Code, Gemini CLI, Cursor, OpenCode, GitHub Copilot, or another harness integration.
 
-Routing signals:
+Key routes (the same table as the installed POM section; everything else routes from the catalog):
 
-| User intent | Skill |
+| Situation | Skill |
 |---|---|
-| "What POM skill should I use?" / "Quale skill POM serve?" | answer from `skills/README.md` (this skill routes; no separate skill) |
-| ambiguous POM request or artifact | `clarify` |
-| new or empty project setup | `seed` |
-| existing project adoption without moving structure | `adopt` |
-| resume after pause / restart context / current state changed | `pulse` |
-| end-of-session handoff | `handoff` |
-| wiki build/query/maintenance/health | `wiki` |
-| spec, ADR, or analysis must become verifiable work | `plan` |
-| completed phase/task/workstream must be verified | `check` |
-| significant POM action needs read-only governance audit | `validate` |
-| Target Project bug, test failure, build failure, performance problem, or unexpected behavior | `root-cause` |
-| design, audit, reshape, or verify an MCP server interface | `mcp-interface` |
-| important work should be preserved without implementation | `defer` |
-| temporary experiment or isolated exploration | `spike` |
-| installed POM refresh or source/target alignment | `sync` |
-| Git branch/worktree choice for risky exploratory work | `spike` |
-| completed branch, PR, merge, keep, discard, or cleanup decision | `finish-branch` |
-| close a numbered version: changelog, version references, tag | `release` |
-| move adopted project folders toward canonical roots | `migrate` |
-| governance, lint, decision-record, or agent-rule setup beyond the installer | `config` |
-| dirty `pom/`, submodule update, vendored POM copy, or source-to-target POM propagation | `sync` |
-| POM method change (extend, improve, or prune) | `method`, starting in `prune` mode if the change may add method weight |
-| divergence between source and memory | `reconcile` |
-| document type or status is unclear | `status` |
-| domain state-machine workflow | `workflow` |
-| agent-shaped loop/goal workflow or experiment | `loop-goal` |
-
-Harness tool mapping summary:
-
-| Skill wording | Codex | Claude Code | Gemini CLI | Cursor | OpenCode | GitHub Copilot |
-|---|---|---|---|---|---|---|
-| read file | native file read | Read | `read_file` | native file read | native file read | view/read equivalent |
-| edit file | `apply_patch` or native edit | Edit | `replace` | native edit | native edit | edit equivalent |
-| run shell command | native shell tool | Bash | `run_shell_command` | native shell | native shell | shell equivalent |
-| update task list | `update_plan` | TodoWrite | `write_todos` | native todo/tooling | native todo/tooling | todo/plan equivalent |
-| invoke/load skill | native skill loading or read skill file | Skill tool | `activate_skill` | plugin skill loading or rule file | native skill tool when available | skill tool when available |
-| dispatch subagent | multi-agent tools if enabled; otherwise fresh context/read-back | Task | `@generalist` or named agent | available agent/subagent feature | available agent feature | task/agent equivalent when available |
-
-Behavioral smoke prompts for future harness evals live in `tests/skill-bootstrap/fixtures/routing-smoke.json` in the POM Source repository. They include English and Italian prompts for `adopt`, `wiki`, `pulse`, `validate`, `plan`, `spike`, `sync`, `finish-branch`, `root-cause`, `mcp-interface`, and disabled-module negative cases.
+| Ambiguous POM request or unclear artifact/status | `clarify` |
+| Existing project adoption; new or empty project | `adopt`; `seed` |
+| Target Project bug, test/build failure, or unexpected behavior | `root-cause` |
+| Design, audit, reshape, or verify an MCP server interface | `mcp-interface` |
+| Park or postpone work without implementing | `defer` |
+| Spec, ADR, or analysis must become verifiable work | `plan` |
+| Verify a completed phase, task, spec, or ADR | `check` |
+| Read-only governance audit after a significant POM action | `validate` |
+| Wiki build, query, or maintenance | `wiki` |
+| Restart, handoff, or current-state memory | `pulse` or `handoff` |
+| Temporary experiment or risky Git worktree/branch | `spike` |
+| Installed POM refresh, dirty `pom/`, or source/target alignment | `sync` |
+| Finish branch, PR, merge, keep, discard, or cleanup | `finish-branch` |
 
 Output:
 - state the selected POM skill and why;

@@ -1,28 +1,15 @@
 #!/usr/bin/env node
 
-import { spawnSync } from "node:child_process";
+import { createHarness, runNode } from "../../lib/harness.mjs";
 
-let passed = 0;
-let failed = 0;
+const { assert, section, banner, summary } = createHarness({ name: "Workflow Verification Evidence and Runtime Loop Tests" });
 
 const FIXTURES = "tests/workflow-validator/fixtures";
-
-function assert(name, condition, detail = "") {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name}${detail ? ` - ${detail}` : ""}`);
-    failed++;
-  }
-}
+// Relative to FIXTURES: the dynamic workflow candidates live in another area.
+const CANDIDATES = "../../dynamic-workflows/fixtures/workflows-candidate";
 
 function runLint(file) {
-  return spawnSync(process.execPath, ["scripts/lint-workflows.mjs", `${FIXTURES}/${file}`], {
-    cwd: process.cwd(),
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  return runNode(["scripts/lint-workflows.mjs", `${FIXTURES}/${file}`]);
 }
 
 function assertClean(label, file) {
@@ -46,7 +33,7 @@ function assertFails(file, code) {
 }
 
 function scenarioVerificationEvidence() {
-  console.log("\nScenario 1: a guard declares where its pass/fail decision comes from");
+  section("Scenario 1: a guard declares where its pass/fail decision comes from");
 
   assertClean("model judgement on an independent context", "evidence-independent.yaml");
   assertWarns("model judgement without declared independence", "evidence-self-review-W005.yaml", ["W005"]);
@@ -70,7 +57,7 @@ function scenarioVerificationEvidence() {
 }
 
 function scenarioFanInVerification() {
-  console.log("\nScenario 2: a fan-in guard without evidence is visible");
+  section("Scenario 2: a fan-in guard without evidence is visible");
 
   assertWarns("fan-in guard with no evidence block", "fanin-no-evidence-W006.yaml", ["W006"]);
   assertClean("fan-in guard with a deterministic source", "fanin-with-evidence.yaml");
@@ -84,7 +71,7 @@ function scenarioFanInVerification() {
 }
 
 function scenarioRuntimeLoop() {
-  console.log("\nScenario 3: a declared runtime loop is a complete contract");
+  section("Scenario 3: a declared runtime loop is a complete contract");
 
   assertClean("complete runtime loop", "runtime-loop-complete.yaml");
   assertWarns(
@@ -114,7 +101,7 @@ function scenarioRuntimeLoop() {
 }
 
 function scenarioShippedExamples() {
-  console.log("\nScenario 5: the shipped agent-graph examples stay clean");
+  section("Scenario 5: the shipped agent-graph examples stay clean");
 
   for (const example of ["security-sweep.yaml", "file-audit.yaml", "nightly-test-repair.yaml"]) {
     const result = runLint(`../../../templates/examples/workflow/agent-graph/${example}`);
@@ -134,7 +121,7 @@ function scenarioShippedExamples() {
 }
 
 function scenarioCanonicalTemplates() {
-  console.log("\nScenario 6: the canonical templates pass their own validator");
+  section("Scenario 6: the canonical templates pass their own validator");
 
   // POM tells target projects that the model is the source of authority and
   // that the validator is the judge. A canonical template failing that
@@ -168,9 +155,9 @@ function scenarioCanonicalTemplates() {
 }
 
 function scenarioBackwardCompatibility() {
-  console.log("\nScenario 4: models that declare neither block are unaffected");
+  section("Scenario 4: models that declare neither block are unaffected");
 
-  const noEvidenceNoLoop = runLint("../../../experiments/dynamic-workflows/workflows-candidate/14-handle-lifecycle.yaml");
+  const noEvidenceNoLoop = runLint(`${CANDIDATES}/14-handle-lifecycle.yaml`);
   assert(
     "an existing dynamic workflow with no evidence and no runtime_loop still passes clean",
     noEvidenceNoLoop.status === 0 && noEvidenceNoLoop.stdout.includes("| Warnings | 0 |"),
@@ -178,8 +165,7 @@ function scenarioBackwardCompatibility() {
   );
 }
 
-console.log("Workflow Verification Evidence and Runtime Loop Tests");
-console.log("====================================================");
+banner();
 
 scenarioVerificationEvidence();
 scenarioFanInVerification();
@@ -188,5 +174,4 @@ scenarioShippedExamples();
 scenarioCanonicalTemplates();
 scenarioBackwardCompatibility();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

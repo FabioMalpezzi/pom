@@ -6,7 +6,7 @@ This README is POM's canonical entry point and operating overview. Detailed proc
 
 POM is designed to be reused on new or existing projects. It does not impose a single application structure and does not assume that every project has mockups, source code, tests, or official docs. For existing projects, POM should first map the current structure in `pom.config.json`; migration to canonical folders is a later explicit decision, not a prerequisite.
 
-Version: `0.3.1`
+Version: `0.4.0`
 
 Release notes: see `CHANGELOG.md`.
 
@@ -30,9 +30,42 @@ For a reader-friendly explanation of POM's purpose, tools, adoption levels, skil
 - [Guida POM in italiano](docs/POM_GUIDE.it.html)
 - [POM Wiki Reader](wiki.html)
 
+Official documents for installation and for the local repository browser:
+
+- [Installation Guide](docs/installation.md): Pi package, bootstrap, presets, updates, overlay mode, manual and non-npm installs, project structure after install, pre-commit hook.
+- [POM Project Reader](docs/project-reader.md): the local repository browser, its profiles, search, annotations, and cmux integration.
+
 These guides are explanatory or generated reader views, not normative replacements. Operational rules remain in `README.md`, `AGENTS.MD`, `prompts/`, `skills/`, `templates/`, `scripts/`, and the source Markdown under `wiki/`.
 
 ## Quickstart
+
+### Install
+
+Requirements: Node.js >= 22.6 and Git. From the target project root:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
+node bootstrap-pom.mjs --preset owned
+```
+
+Do not clone the POM Source into a project root; the bootstrap keeps the method under `pom/` and project-owned files at the root. Choose the preset from your relationship to the repository:
+
+| Preset | Use when | Meaning |
+|---|---|---|
+| `owned` | The project is yours | POM may become project governance when useful. |
+| `team` | The project is shared with a team | POM must preserve shared conventions unless explicitly changed. |
+| `overlay` | The repository belongs to an external upstream | POM is local understanding memory only. |
+| `minimal` | You want only the smallest local setup | POM starts with minimal memory and no ownership assumption. |
+
+Everything else about installing (Pi package, pinned installs, updates with `pom:update`, overlay mode, manual and non-npm installs, the pre-commit hook) is in the [Installation Guide](docs/installation.md). When asking an AI agent to install POM, say `POM - Project Operating Memory from FabioMalpezzi/pom` so it does not confuse POM with Maven `pom.xml` or Page Object Model. Suggested AI-agent prompt:
+
+```text
+Install POM - Project Operating Memory from https://github.com/FabioMalpezzi/pom in this target project. Treat that repository's docs/installation.md as the installation authority for this turn. Fetch or read that guide first, then follow it. Do not use Maven, Page Object Model, or a remembered POM workflow. Do not clone the repository into the project root; use the bootstrap from the target project root. If I have not stated a preset, ask me to choose one of owned, team, overlay, or minimal.
+```
+
+If you already know the preset, include it in the prompt, for example: `Use preset owned.`
+
+### Choose A Workflow
 
 Use the smallest workflow that matches your situation:
 
@@ -46,8 +79,7 @@ Use the smallest workflow that matches your situation:
 | Resume after a pause | `skills/pulse.md` |
 | Ask or maintain the wiki | `skills/wiki.md` |
 | Render the wiki reader | `npm run pom:wiki:render` |
-| Browse the project locally | `npm run pom:reader -- --port 4173` |
-| Browse, search, and annotate the project locally | POM Project Reader server |
+| Browse, search, and annotate the project locally | `npm run pom:reader -- --port 4173` ([POM Project Reader](docs/project-reader.md)) |
 | Change POM itself (extend, improve, prune) | `skills/method.md` |
 | Close a numbered version | `skills/release.md` |
 | Move adopted folders toward canonical roots | `skills/migrate.md` |
@@ -114,440 +146,7 @@ See `examples/agent-conversations.md` for more detailed interaction examples.
 
 ## POM Project Reader
 
-The POM Project Reader is a supported local web server for browsing a repository without turning generated HTML into a new source of authority. By default, it uses the current working directory as the project root and port `4173`; pass `--root` or `--dir` and `--port` when you want to choose them explicitly.
-
-Project-wide content search requires `rg` from ripgrep. Annotation files default to `.pom-reader/annotations/` under the project root; pass `--annotations-dir` to use a different working directory for annotation handoff files.
-
-From this POM Source repository:
-
-```bash
-npm run pom:reader -- --port 4173
-```
-
-From a target project where POM is installed under `pom/`:
-
-```bash
-npm run pom:reader -- --port 4173
-```
-
-Explicit form:
-
-```bash
-node pom/scripts/project-reader/server.mjs --port 4173 --root . --annotations-dir .pom-reader/annotations
-```
-
-Standalone CLI form:
-
-```bash
-project-reader --root . --port 4173
-project-reader open wiki/overview.md --port 4173
-project-reader search "Operating Memory" --root .
-```
-
-Then open:
-
-```text
-http://127.0.0.1:4173
-```
-
-If a coding-agent sandbox reports `EPERM` or `EACCES` while binding `127.0.0.1`, the local environment blocked the server start. Approve the local-server startup request or run the command in a normal terminal; once the URL responds, no POM update or project repair is implied by that first failure.
-
-The reader starts from `wiki/index.md` when the project has a wiki. If the project has no wiki index, it shows a generated `POM Project Reader` entry page and still exposes project documentation and source files through an explicit allowlist.
-
-The reader is split into a reusable core and profiles. In `auto` mode it first honors `.project-reader.json`, then uses the POM profile when `pom.config.json` or the POM Source structure is present, otherwise falls back to common roots such as `README.md`, `docs/`, `src/`, and `tests/`. The POM profile classifies `documentation.officialRoot` and `documentation.existingRoots` as project documents, `decisions.root` as decisions, `taskPlans.root` as task plans, `analysis.root` as analysis, `source.roots` as source, and `tests.root` as tests. It also respects generated-output exclusions from `artifactPolicy.generated` in navigation and search. If a config exists but is invalid JSON, the server fails loudly instead of guessing. The UI shows which profile and config mode are active.
-
-It can show and search:
-
-- wiki pages, README, context, docs, specs, decisions, task plans, prompts, skills, templates, examples, selected experiment files, scripts, tests, `bootstrap-pom.mjs`, and `package.json`;
-- thematic navigation and project-tree navigation;
-- direct file opening with URLs such as `http://127.0.0.1:4173/?path=wiki/overview.md`;
-- command palette for direct path open, file lookup, and content search;
-- collapsible or pinned navigation and annotation side panels;
-- project-wide `rg` search with optional regex mode;
-- search inside the open file, with optional regex mode;
-- a responsive document surface that keeps prose readable while giving code blocks and tables more room on large screens;
-- Markdown tables, fixed-width text blocks, syntax-highlighted code, source line numbers where they are useful, and English/Italian interface labels.
-- local safety guards: rendering rejects files above 1 MB and binary-looking files, while project search skips files above 1 MB.
-
-For large repositories, the project tree uses a lazy API: expanding `src/server` reads `/api/tree?path=src/server` instead of building one global tree first. The thematic list loads progressively and renders through a virtualized window instead of one DOM button per file. The reader can open the wiki or a direct `?path=` URL immediately, and project search remains available during loading.
-
-cmux can drive the reader by opening the direct URL in a browser surface:
-
-```bash
-project-reader open wiki/overview.md --port 4173 --cmux
-cmux browser open "http://127.0.0.1:4173/?path=wiki/overview.md"
-```
-
-For a single Markdown file outside the Project Reader UI, cmux also provides:
-
-```bash
-cmux markdown open wiki/overview.md
-```
-
-Annotations are file-based. The UI saves JSON work files under the configured annotation directory. Treat this as runtime evidence and keep it out of commits unless the project intentionally wants to archive an annotation. If you choose a custom annotation directory, add it to the target project's ignore rules.
-
-The annotation panel has "New note", "In progress", and "Processed" tabs. It can send selected document text into a note, show the JSON work file on demand, and reopen the target document when an annotation is selected. Browser-based source editing is not part of the current workflow.
-
-`pom:lint` warns when the default `.pom-reader/annotations/` directory contains working annotations. The warning routes agents to `skills/reader-notes.md`; lint does not process the notes itself.
-
-The server binds to `127.0.0.1` and sends restrictive browser security headers. It is still a local repository browser; do not expose it on a shared network without a separate threat model.
-
-A coding agent can read the next open annotation from the same project root:
-
-```bash
-node scripts/project-reader/wiki-tools.mjs claim-next --by codex
-```
-
-When the server uses a custom annotation directory, pass the same directory to the CLI:
-
-```bash
-node scripts/project-reader/wiki-tools.mjs claim-next --by codex --annotations-dir .pom-reader/annotations
-```
-
-When the CLI is being used from an installed `pom/` folder, prefix the script path with `pom/`. The UI does not talk directly to an AI agent; the annotation file is the handoff artifact, and durable document changes still need a separate reviewed edit.
-
-## Installation
-
-**Requirements:** Node.js ≥22.6 (for TypeScript script execution via `--experimental-strip-types`). Git required.
-
-### Use with the Pi coding agent (skill package)
-
-POM is a Pi package: it registers its skills so a Pi session can load `using-pom` and route POM work without any extension or active adapter.
-
-```bash
-# Try it for one run (no install):
-pi -e git:github.com/FabioMalpezzi/pom
-
-# Or install it (writes Pi settings, not your project):
-pi install git:github.com/FabioMalpezzi/pom      # add -l for project-local settings
-pi install /absolute/path/to/pom                 # from a local clone
-
-pi list                                          # show registered packages and skills
-pi remove git:github.com/FabioMalpezzi/pom       # remove from settings
-```
-
-Once loaded, a natural POM request (for example "adopt POM in this repo" or "defer this work") makes the agent read `skills/using-pom.md`, consult the `skills/README.md` catalog, and follow the selected skill's linked prompt. This is skill-only: it does not run code, call a model, or write to your project; in a repository without POM it stays inert, and it reloads `using-pom` after compaction.
-
-**The Pi package does not replace installing POM in a project.** They are complementary: the Pi package gives the *agent* the POM method (skills) in every Pi session, while the project install below gives the *project* its Operating Memory — `pom.config.json`, the always-loaded POM section in `AGENTS.md` (harness-agnostic, shared with teammates), and the memory folders. Skills read `pom.config.json` to respect disabled modules, so a project you actually govern with POM still needs the bootstrap below.
-
-### First install (recommended)
-
-Download and run the bootstrap script from the target project root:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
-node bootstrap-pom.mjs --preset owned
-```
-
-Do not install POM by running `git clone https://github.com/FabioMalpezzi/pom.git .` in a project root. This repository is the POM Source. The bootstrap is the supported install path because it keeps the reusable method under `pom/` and leaves project-owned files at the target project root.
-
-If your goal is to improve POM itself, clone this repository as its own working repository and do not run the bootstrap. Use the source repository commands such as `npm run pom:lint`, `npm run pom:test`, `npm run pom:wiki:render`, `npm run pom:skills:sync` (regenerates the README skill table from `skills/README.md`), and `npm run pom:experiments:clean` (reports Git-ignored experiment evidence and removes it only with `--delete`).
-
-When asking an AI agent to install this method, say `POM - Project Operating Memory from FabioMalpezzi/pom` and ask it to run the bootstrap from the target project root. That wording distinguishes POM from Maven `pom.xml`, Page Object Model, and other common meanings.
-
-Suggested AI-agent prompt:
-
-```text
-Install POM - Project Operating Memory from https://github.com/FabioMalpezzi/pom in this target project. Treat that repository's README as the installation authority for this turn. Fetch or read the README first, then follow its Installation section. Do not use Maven, Page Object Model, or a remembered POM workflow. Do not clone the repository into the project root; use the bootstrap from the target project root. If I have not stated a preset, ask me to choose one of owned, team, overlay, or minimal.
-```
-
-If you already know the preset, include it in the prompt, for example: `Use preset owned.`
-
-Do not pipe a remote bootstrap script directly into `node`. Download it first, then inspect it or verify it before running.
-
-For environments that require a pinned and checked install, prefer a tag or commit URL and verify the bootstrap checksum before execution:
-
-```bash
-POM_REF=main
-curl -fsSL "https://raw.githubusercontent.com/FabioMalpezzi/pom/${POM_REF}/bootstrap-pom.mjs" -o bootstrap-pom.mjs
-curl -fsSL "https://raw.githubusercontent.com/FabioMalpezzi/pom/${POM_REF}/checksums/bootstrap-pom.mjs.sha256" -o bootstrap-pom.mjs.sha256
-shasum -a 256 -c bootstrap-pom.mjs.sha256
-node bootstrap-pom.mjs --preset owned
-```
-
-Use `main` only when you intentionally want the current development line. For repeatable adoption, set `POM_REF` to a release tag or immutable commit and use the checksum published with that same ref.
-
-Choose the preset that matches your relationship to the repository:
-
-| Preset | Use when | Meaning |
-|---|---|---|
-| `owned` | The project is yours | POM may become project governance when useful. |
-| `team` | The project is shared with a team | POM must preserve shared conventions unless explicitly changed. |
-| `overlay` | The repository belongs to an external upstream | POM is local understanding memory only. |
-| `minimal` | You want only the smallest local setup | POM starts with minimal memory and no ownership assumption. |
-
-Running `bootstrap-pom.mjs` without a preset prints this guide and exits. POM does not guess ownership during first install.
-
-Use `--lang it|en` only when you want to force the language of CLI guidance.
-
-After bootstrap has installed `pom/`, for agent-driven setup on a new project, ask:
-
-```text
-Read pom/skills/seed.md and set up POM for this project.
-```
-
-After bootstrap has installed `pom/`, for agent-driven adoption in an existing repository, ask:
-
-```text
-Read pom/skills/adopt.md and adopt POM without changing the existing structure.
-```
-
-For a cloned repository you do not own, prefer overlay mode:
-
-```bash
-node bootstrap-pom.mjs --preset overlay
-```
-
-Then ask the agent to read the overlay rules before adding project memory:
-
-```text
-Read pom/specs/SPEC-0004-external-project-overlay.md and use POM as a local understanding overlay, not as project governance.
-```
-
-In overlay mode, POM governs the operator's understanding of the project. It must not impose POM conventions on upstream `docs/`, `tests/`, ADRs, source layout, release process, or pull-request contents.
-
-The bootstrap script:
-
-- clones POM into `pom/` (or pulls if it already exists);
-- runs the installer using the selected preset;
-- initializes Git in the target project root when the target is not already inside a Git worktree;
-- lets advanced users choose an adoption profile directly (minimal, wiki, decisions, full, adopt, refresh, custom);
-- updates the POM section in every existing supported agent instruction file, or creates `AGENTS.md` if none exists;
-- creates `package.json` scripts, `pom-update.mjs`, `pom.config.json`, and governance folders based on the chosen profile.
-- installs or updates the Git pre-commit hook with POM checks when the target project root is the Git worktree root.
-
-You can also pass a profile directly for advanced use:
-
-```bash
-node bootstrap-pom.mjs --profile full
-```
-
-For existing repositories, the presets are the normal path:
-
-```bash
-node bootstrap-pom.mjs --preset owned
-node bootstrap-pom.mjs --preset team
-node bootstrap-pom.mjs --preset overlay
-```
-
-You can still pass ownership explicitly when the agent or user already knows the relationship:
-
-```bash
-node bootstrap-pom.mjs --profile adopt --ownership owned
-node bootstrap-pom.mjs --profile adopt --ownership team
-node bootstrap-pom.mjs --profile adopt --ownership external_overlay
-```
-
-The same option is available after POM is installed:
-
-```bash
-npm run pom:init -- --preset overlay
-```
-
-### Updating POM in an existing project
-
-For normal manual updates from a project that already has POM installed:
-
-```bash
-npm run pom:update
-git diff
-```
-
-`pom:update` updates `pom/`, refreshes the POM section in every existing supported agent instruction file, updates package scripts and the pre-commit hook, then runs `pom:lint` when available. It supports both Git-managed POM installs and clean vendored `pom/` copies. It does not change `pom.config.json`, project documents, wiki, decisions, or project-owned templates outside `pom/`.
-
-`pom:update` also does not change adoption mode. If called with `--preset`, `--profile`, or `--ownership`, it stops and tells you to use `pom:init` instead. Changing mode is a governance decision, not a framework update.
-
-If `pom/` has local changes, `pom:update` stops and suggests `pom/skills/sync.md` instead of overwriting them. For vendored copies, unrelated parent-project changes outside `pom/` do not block the update. A vendored `pom/` that Git ignores is refused as well, because an ignored folder always looks clean and local edits could not be detected before it is replaced: track `pom/` or update it by hand.
-
-For agent-driven updates, use the sync skill:
-
-```text
-Read pom/skills/sync.md and refresh this project's POM installation.
-```
-
-If the project does not have `pom:update` yet, install the current updater once:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/FabioMalpezzi/pom/main/bootstrap-pom.mjs -o bootstrap-pom.mjs
-node bootstrap-pom.mjs --profile refresh
-```
-
-If POM is already installed, `pom/` is clean, and `package.json` has the scripts, you can also refresh only generated sections with:
-
-```bash
-npm run pom:init -- --profile refresh
-```
-
-That command is an advanced convenience path. It does not replace `pom:update` when POM itself may need to be pulled first.
-
-After installation, show the command guide with:
-
-```bash
-npm run pom:help
-```
-
-Prints the command reference and skill index. Always exits immediately — no interactive input required.
-
-Supported instruction targets are deliberately conservative:
-
-- existing root files: `AGENTS.md`, `AGENTS.MD`, `agents.md`, `CLAUDE.md`, `GEMINI.md`, `CONVENTIONS.md`, `.cursorrules`, `.clinerules`, `.windsurfrules`;
-- existing nested files: `.github/copilot-instructions.md`, `.junie/guidelines.md`, `.junie/instructions.md`, `.junie/AGENTS.md`;
-- existing rule folders, where POM creates or updates a dedicated file: `.claude/rules/pom.md`, `.github/instructions/pom.instructions.md`, `.cursor/rules/pom.mdc`, `.windsurf/rules/pom.md`, `.kiro/steering/pom.md`, `.continue/rules/pom.md`, `.roo/rules/pom.md`, `.clinerules/pom.md`.
-
-POM does not create tool-specific folders just because the tool exists. It only writes into a tool-specific folder when that folder is already part of the project.
-
-For Claude Code, `.claude/agents/pom-post-action-validator.md` is optional. The installer creates or updates it only when `.claude/` already exists. If `.claude/` is missing, the installer prints the exact `mkdir -p .claude` and `npm run pom:init ...` commands to enable the helper with the same install mode.
-
-For OpenAI Codex, `AGENTS.md` is the project instruction target. The equivalent post-action audit is the generic `pom/skills/validate.md` skill and its canonical prompt `pom/prompts/18-post-action-validator.md`; no Claude-specific wrapper is required.
-
-POM includes a bootstrap/router skill at `pom/skills/using-pom.md`. Harnesses with native skill or hook support should load it at session start when possible. Instruction-file-only integrations should read it before the first POM-related action, especially after compaction, handoff, or when choosing between POM skills. See `pom/prompts/references/agent-harnesses.md` for instruction targets, tool mapping, and session-start smoke prompts. The harness table is a mapping and test protocol, not a live support claim; mark a harness as verified only after a clean-session transcript proves the route.
-
-### External project overlay
-
-Use overlay mode when the repository is cloned from an upstream you do not own and POM is needed to understand, audit, or prepare a limited contribution.
-
-Overlay mode is different from adoption:
-
-| Mode | What POM governs |
-|---|---|
-| Adoption | the project's operating method |
-| Overlay | the operator's local understanding of someone else's project |
-
-Overlay mode should keep upstream structures authoritative:
-
-- upstream `docs/` remain upstream documentation, not POM-governed docs;
-- upstream `tests/` remain upstream test layout, not POM-governed test structure;
-- upstream agent instruction files should be preserved unless local agent guidance is intentionally added;
-- local wiki pages are working notes for understanding architecture, entrypoints, modules, tests, conventions, risks, and open questions;
-- before opening a PR, POM overlay artifacts must stay out of the contribution unless the upstream project explicitly wants them.
-
-Recommended Git posture:
-
-- keep the overlay in its own branch or, better, in a separate Git worktree;
-- do actual upstream contribution work on a separate feature branch;
-- do not merge the overlay branch into the contribution branch;
-- transfer only selected non-POM changes with a patch, file checkout, or `git cherry-pick -n` of commits that contain no POM artifacts.
-
-See `specs/SPEC-0004-external-project-overlay.md` for the documented mode and future implementation requirements.
-
-If you customized or translated templates, keep them outside `pom/` before refreshing, for example:
-
-```text
-project-templates/
-  ADR_TEMPLATE.md
-  WIKI_PAGE_TEMPLATE.md
-  PROJECT_STATE_TEMPLATE.md
-```
-
-Then point `pom.config.json` to those project-owned templates:
-
-```json
-"templates": {
-  "adr": "project-templates/ADR_TEMPLATE.md",
-  "wikiPage": "project-templates/WIKI_PAGE_TEMPLATE.md",
-  "projectState": "project-templates/PROJECT_STATE_TEMPLATE.md"
-}
-```
-
-Template paths in `pom.config.json` are relative to the target project root, where `pom.config.json`, agent instruction files, `package.json`, and `pom/` live. For example, `project-templates/ADR_TEMPLATE.md` means `<project-root>/project-templates/ADR_TEMPLATE.md`, not `<project-root>/pom/project-templates/ADR_TEMPLATE.md`.
-
-Do not customize files directly under `pom/`: updates may overwrite them or create Git conflicts.
-
-The bootstrap itself requires only Node ≥20. The installer it launches requires Node ≥22.6.
-
-### Manual install
-
-**Important:** POM must live in a subfolder (typically `pom/`), not at the project root. Cloning POM directly into the root would overwrite the project's `README.md`, `AGENTS.MD`, and `package.json`, and break all internal path references.
-
-```bash
-# Option A: Git submodule (stays updatable)
-git submodule add https://github.com/FabioMalpezzi/pom.git pom
-
-# Option B: Simple copy
-cp -r /path/to/pom ./pom
-```
-
-Then run the installer:
-
-```bash
-node --experimental-strip-types pom/scripts/install-pom.ts
-```
-
-### Project structure after installation
-
-In the common Git-managed install, `pom/` is a full checkout of the POM Source and may contain its own `.git`, `README.md`, `AGENTS.MD`, `bootstrap-pom.mjs`, and `package.json`. That is expected. The wrong layout is POM Source files directly at the target project root.
-
-On a new project, the root may initially contain only `pom/`, agent instructions, `package.json`, `pom-update.mjs`, and `pom.config.json`. That is a valid day-zero state: create `PROJECT_STATE.md`, `CURRENT_PLAN.md`, `tasks/`, `analysis/`, `docs/`, `wiki/`, or the configured decisions root only when the selected adoption profile enables them or current work needs them.
-
-If a new project has no application infrastructure yet, POM must not infer the stack, source layout, package manager, deployment model, database, authentication system, test framework, or hosting strategy on its own. Treat infrastructure as a project decision: ask the user how they want it realized, or create an approved Open Discussion or analysis note for the alternatives, before scaffolding code or committing to a technical structure.
-
-```text
-my-project/
-  pom/                  <- POM method (this repository)
-    .git/               <- present in Git-managed installs
-    prompts/
-    skills/
-    templates/
-    scripts/
-  AGENTS.md             <- project agent instructions, when used (references pom/)
-  CLAUDE.md             <- also updated when already present
-  pom.config.json       <- project-specific config
-  wiki.html             <- shortcut to the generated wiki reader, if wiki profile enabled
-  wiki/                 <- if wiki profile enabled
-  decisions/            <- default decisions root, if decisions profile enabled
-  ...
-```
-
-### Non-npm projects
-
-If the project does not use npm, copy the POM section manually into every agent instruction file used by the project:
-
-| Agent | Instructions file | What to do |
-|---|---|---|
-| OpenAI Codex | `AGENTS.md` | Copy `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` into `AGENTS.md` |
-| Claude Code | `CLAUDE.md` | Copy `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` into `CLAUDE.md` |
-| Gemini | `GEMINI.md` | Copy `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` into `GEMINI.md` |
-| GitHub Copilot | `.github/copilot-instructions.md` or `.github/instructions/pom.instructions.md` | Copy the template content into the project instructions |
-| Cursor | `.cursor/rules/pom.mdc` or `.cursorrules` | Copy the template content into a project rule |
-| Windsurf | `.windsurf/rules/pom.md`, `.windsurfrules`, or `AGENTS.md` | Copy the template content into a project rule |
-| Kiro | `.kiro/steering/pom.md` | Copy the template content as a steering file |
-| Junie | `.junie/AGENTS.md` or `.junie/guidelines.md` | Copy the template content into the project guidelines |
-| Cline / Roo / Continue | tool-specific rules file or folder | Copy the template content into a POM-specific rule file |
-| Other agents | Agent-specific config | Adapt the template to the agent's instructions format |
-
-### Start working
-
-Use the skill that matches your situation (see Quickstart table above). The agent will read the skill card, then the linked prompt, then the relevant templates.
-
-If the correct skill is not obvious, start with `pom/skills/using-pom.md`. It routes the request, checks adoption constraints in `pom.config.json`, maps common tool names across Codex, Claude Code, Gemini, Cursor, OpenCode, and GitHub Copilot, and prevents disabled modules from being created by accident. For integration details, read `pom/prompts/references/agent-harnesses.md`.
-
-### Pre-commit hook
-
-`pom:init` initializes Git in the target project root when the target is not already inside a Git worktree. When the target project root is the Git worktree root, it installs a managed POM block in the resolved Git `pre-commit` hook path.
-
-If the target project is a subdirectory inside a larger Git worktree, `pom:init` does not create a nested repository and does not install a hook automatically. Install POM from the Git root, or adapt the hook manually so it runs the target project's `npm run pom:lint` from the correct directory.
-
-The hook is agent-neutral. It works for Claude Code, Codex, and any other workflow because it only runs local project commands.
-
-The hook:
-
-- runs `npm run pom:lint`;
-- blocks the commit if lint fails;
-- restages tracked files that lint regenerated (folder indexes, the ADR index, `wiki/_site/`), so the commit carries the regenerated output; untracked or ignored files are never added;
-- if `PROJECT_STATE.md` exists and governed project-memory files are staged, prints a non-blocking reminder to update it when the restart context changed.
-
-The hook does not synthesize or rewrite `PROJECT_STATE.md`: that remains the agent's responsibility, because it requires project understanding. Claude Code can use the optional `pom-post-action-validator` agent when installed; Codex can use `pom/skills/validate.md` for the same read-only audit.
-
-Update `PROJECT_STATE.md` when the project restart context changes:
-
-- substantial ADR change;
-- substantial spec change;
-- roadmap, priority, dependency, or current-plan change;
-- important task/phase closed;
-- new relevant risk, blocker, or open decision;
-- explicit end-of-session or end-of-day handoff request.
-
-Do not update it for typo fixes, regenerated indexes, small link fixes, or changes that do not affect how the next session should restart.
+The POM Project Reader is a supported local web server for browsing a repository without turning generated HTML into a new source of authority. Start it with `npm run pom:reader -- --port 4173` and open `http://127.0.0.1:4173`. Profiles, search, annotations, the cmux integration, and the agent-side `claim-next` handoff are documented in [docs/project-reader.md](docs/project-reader.md).
 
 ## Origin And Attribution
 
@@ -577,36 +176,11 @@ When applying POM to a project, the agent must use the project/user language for
 
 If the project already has a dominant documentation language, follow it. If the user asks for a different language, follow the user. If sources are multilingual, preserve source titles and quoted terms, but write synthesis in the project/user language.
 
-## Installation Model
-
-This repository has its own `AGENTS.MD`. That file governs work on the POM repository itself. Do not copy it verbatim into target projects.
-
-For a target project, use `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` as the source for the project's agent instructions. The installer updates every existing supported agent instruction target so different coding agents see the same POM rules. If none exists, it creates `AGENTS.md`.
-
-Supported installation styles:
-
-- copy POM into the target project as a `pom/` folder;
-- add POM as a Git submodule or subtree under `pom/`;
-- keep POM as an external reference and copy only the needed templates/prompts.
-
-`pom/templates/POM_CONFIG_TEMPLATE.json` assumes the common installation style where POM lives in the target project as `pom/`, so template paths point to `pom/templates/...`. If you install POM somewhere else, adapt those paths in the target project's `pom.config.json`.
-
 ## Principle
 
-POM does not use one universal source of truth. It uses source authority by domain:
+POM does not use one universal source of truth. It uses source authority by domain: code and tests for current behavior, the wiki for current knowledge, the configured decisions root for rationale, `analysis/` for supporting analysis, Open Discussion for what is still desiderata or unresolved, `mockups/` for the intended experience, `docs/` for shareable documentation, and `PROJECT_STATE.md` or the current plan for the restart point. When sources diverge, the divergence must be made visible, analyzed, and resolved with a decision when needed.
 
-| Question | Authoritative Source |
-|---|---|
-| What does the system currently do? | code and tests, when present |
-| What do we currently know about the project? | wiki Markdown under `wiki/`, when enabled |
-| Why did we decide this? | configured decisions root (`decisions.root`, default `decisions/`) |
-| What analysis supports or challenges a choice? | `analysis/` |
-| What is still desiderata, hypotheses, or unresolved discussion? | Open Discussion or `analysis/`, not implementation authority |
-| What does the intended experience show? | `mockups/`, when present |
-| What can be shared as official documentation? | `docs/`, when present |
-| Where do I restart after a pause? | `PROJECT_STATE.md` or current plan |
-
-When sources diverge, the divergence must not be hidden. It must be made visible, analyzed, and resolved with a decision when needed.
+The normative text is the Source Authority block of the installed POM section (`templates/agents/00-core.md`), which every target project loads at session start.
 
 ## Artifact Policy
 
@@ -756,59 +330,16 @@ Rules:
 - use ADRs only for decisions that change direction or constrain the project;
 - add lint, mockups, docs, tests, or an extended roadmap when the project grows.
 
-## Work Planning Hierarchy
+## Planning, Verification, And Conventions
 
-The hierarchy is logical, not physical. It organizes work, not folders. Verification happens at every level, not only at the bottom.
+These rules are normative in the installed POM section and the skills, not here:
 
-For small projects, use the short form:
+- **Work planning hierarchy** (`Roadmap -> Phase -> Workstream -> Task -> Step`, verification at every level, short form `Task -> Step` for small projects): `templates/agents/30-planning.md`; task creation in `prompts/05-create-task-plan-from-spec.md`.
+- **Completion verification gate** (goal-backward check first; two positive and one misuse scenario for code; thesis and confuted antithesis for non-code; `validate` for significant closures; separate agent or fresh context when available; "Complete with exceptions" only with a documented reason): invariant in `templates/agents/30-planning.md`, full procedure in `skills/check.md` and `prompts/06-review-task-phase.md`.
+- **Test convention** (`tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}` and `tests/cross-system/`, sharing the namespace of `analysis/` and `tasks/`): `templates/agents/30-planning.md`; portable defaults for analysis and task paths in `skills/README.md`.
+- **Docs and source conventions** (`docs/` and `src/` are proposals; existing roots such as `doc/`, `apps/`, `packages/`, `services/`, `frontend/`, or `backend/` are mapped in `pom.config.json` before any migration): `templates/agents/80-docs-source.md` and `prompts/08-create-pom-config.md`.
 
-```text
-Task       (closes with integration tests / single-feature E2E)
-  -> Step  (closes with atomic verification: unit test, lint, check)
-```
-
-For larger or multi-stream projects, use the full hierarchy:
-
-```text
-Roadmap
-  -> Phase          (closes with acceptance review)
-    -> Workstream   (closes with cross-functional E2E / user-flow tests)
-      -> Task       (closes with integration tests / single-feature E2E)
-        -> Step     (closes with atomic verification: unit test, lint, check)
-```
-
-Place E2E and user-flow tests at Task or Workstream level, not at Step level. Step-level verification covers atomic checks only.
-
-Use `Roadmap` only when the project needs multi-phase direction or coordination across multiple streams. Do not force all levels into small work items.
-
-## Completion Verification Rules
-
-A spec, task, or ADR cannot be marked Complete/Accepted without passing the completion verification gate. This gate is **mandatory and automatic**: the agent executes it when marking work as Complete, without asking.
-
-**Verification procedure:**
-
-1. **Goal-backward check (first):** verify the declared goal is actually achieved — "what must be TRUE for this goal to be met?" — before checking tests or theses. If the goal is not met, the work cannot be Complete regardless of checkbox status.
-2. **Technical work (with code):** at least 2 positive scenario tests based on real user use cases + at least 1 error/misuse scenario test. Tests must run and pass.
-3. **Non-technical work (without code):** at least 1 thesis proving validity based on use cases + at least 1 antithesis (incorrect/improper usage) confuted. Cannot close if an antithesis is not confuted.
-4. **Governance check:** for significant or memory-changing closures, run `pom/skills/validate.md` to verify PROJECT_STATE, wiki, task status, decisions, and orphan artifacts.
-
-**Who verifies:** when the environment supports it (sub-agents, hooks), verification should be performed by a separate agent or fresh context. When not available, the working agent re-reads files from disk instead of relying on session memory.
-
-**Exception:** if verification is not possible, document the reason and close as "Complete with exceptions" (lint warning, not error).
-
-See `prompts/05-create-task-plan-from-spec.md` for task creation rules and `prompts/06-review-task-phase.md` for review rules.
-
-## Test Convention
-
-POM proposes matching namespaces for analysis, task plans, and verification evidence. For new synthesis, prefer `analysis/<analysis-or-workstream>/<analysis>.md`; for task plans, prefer `tasks/<analysis-or-workstream>/P<priority-or-phase>/<task>.md`; for cross-system verification, prefer `tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}` and `tests/cross-system/`. When tests or evidence validate a specific analysis/workstream, reuse the same namespace, for example `analysis/governance-core/...`, `tasks/governance-core/P0/...`, and `tests/governance-core/...`. Existing project conventions must not be moved automatically; if the agent finds an existing structure, it must ask before changing anything.
-
-Lint reads the `tests` section of `pom.config.json`. See `prompts/05-create-task-plan-from-spec.md` and `prompts/06-review-task-phase.md` for test planning and verification rules.
-
-## Docs And Source Conventions
-
-POM proposes `docs/` for official documentation and `src/` as the minimal source root, but existing projects should keep their real structure unless the user approves a change. Do not move documents or source files without approval.
-
-Lint reads the `documentation` and `source` sections of `pom.config.json`. Existing roots such as `doc/`, `apps/`, `packages/`, `services/`, `frontend/`, or `backend/` should be mapped there before any migration is proposed. See `prompts/08-create-pom-config.md` for configuration details.
+Lint reads the `tests`, `documentation`, and `source` sections of `pom.config.json`. Existing project conventions are never moved automatically; the agent asks before changing an existing structure.
 
 ## POM Folders
 
@@ -834,7 +365,7 @@ Generated from `skills/README.md` by `npm run pom:skills:sync`. Edit the catalog
 | `clarify` | clarify ambiguous work before creating memory or changing method | `prompts/20-clarify-pom-work.md` |
 | `seed` | start POM on a new project | `prompts/01-bootstrap-new-project.md` |
 | `adopt` | adopt POM in an existing project | `prompts/02-adopt-existing-project.md` |
-| `pulse` | create or update `PROJECT_STATE.md` | `prompts/03-create-project-state.md` |
+| `pulse` | create or update `PROJECT_STATE.md`; resume after a pause, a restart-context change, or a changed current state | `prompts/03-create-project-state.md` |
 | `plan` | turn specs/ADRs into verifiable tasks | `prompts/05-create-task-plan-from-spec.md` |
 | `check` | verify that completed work is really done: goal achieved, tests, lint, consistency, risks | `prompts/06-review-task-phase.md` |
 | `handoff` | close a session by updating memory and status | `prompts/07-update-project-after-work.md` |
@@ -844,13 +375,13 @@ Generated from `skills/README.md` by `npm run pom:skills:sync`. Edit the catalog
 | `mcp-interface` | design, audit, reshape, or verify MCP interfaces for agent ergonomics | `prompts/35-mcp-interface.md` |
 | `zero-tech-debt` | reshape a scoped change around the intended product and architecture end state | `prompts/23-zero-tech-debt.md` |
 | `challenge` | run adversarial thesis/antithesis review before accepting or completing non-code work | `prompts/24-challenge-antithesis.md` |
-| `config` | create or update `pom.config.json`; set or revise governance, lint, decision records, mock manifests, and agent rules | `prompts/08-create-pom-config.md`, `prompts/04-create-doc-governance.md` |
-| `spike` | manage temporary experiments and consolidation | `prompts/09-run-temporary-experiment.md` |
+| `config` | create or update `pom.config.json`; set or revise governance, lint, decision records, mock manifests, and agent rules beyond the installer | `prompts/08-create-pom-config.md`, `prompts/04-create-doc-governance.md` |
+| `spike` | manage temporary experiments and consolidation, including the Git branch/worktree choice for risky or exploratory work | `prompts/09-run-temporary-experiment.md` |
 | `wiki` | build, query, check, or maintain the wiki | `prompts/10-build-wiki.md`, `prompts/11-review-stale-wiki.md`, `prompts/13-query-wiki.md`, `prompts/14-lint-wiki.md` |
-| `method` | change POM itself in `extend`, `improve`, or `prune` mode | `prompts/12-extend-pom.md`, `prompts/25-self-improvement-loop.md`, `prompts/21-prune-pom-method.md` |
+| `method` | change POM itself in `extend`, `improve`, or `prune` mode; start in `prune` when the change may add method weight | `prompts/12-extend-pom.md`, `prompts/25-self-improvement-loop.md`, `prompts/21-prune-pom-method.md` |
 | `status` | classify document type and choose the least misleading status | `prompts/15-classify-document-status.md` |
 | `defer` | park important work without implementing it | `prompts/16-defer-work.md` |
-| `sync` | refresh an existing POM installation or align source POM changes with a target project's `pom/` | `prompts/17-sync-pom-framework.md` |
+| `sync` | refresh an existing POM installation or align source POM changes with a target project's `pom/`; also for a dirty `pom/`, a submodule update, or a vendored copy | `prompts/17-sync-pom-framework.md` |
 | `finish-branch` | finish branch, PR, merge, keep, discard, or cleanup decisions | `prompts/33-finish-branch.md` |
 | `release` | close a numbered version: changelog, version references, checksums, tag, memory updates | `prompts/36-release.md` |
 | `migrate` | move an adopted project's folders toward canonical roots with approval and lint before and after | `prompts/37-migrate-structure.md` |

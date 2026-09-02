@@ -1,49 +1,33 @@
 #!/usr/bin/env node
 
-import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
+import { createHarness, makeSandbox, removeSandbox, runCommand } from "../../lib/harness.mjs";
 
 const POM_ROOT = process.cwd();
 const RENDER_TIMEOUT_MS = 60000;
 
-let passed = 0;
-let failed = 0;
+const { assert, section, banner, summary } = createHarness({ name: "Wiki Reader Orphan Table Row Tests" });
 
 function createTempProject() {
-  const dir = mkdtempSync(join(tmpdir(), "pom-wiki-orphan-table-test-"));
+  const { dir } = makeSandbox("pom-wiki-orphan-table-test-");
   execFileSync("ln", ["-s", POM_ROOT, join(dir, "pom")]);
   mkdirSync(join(dir, "wiki"), { recursive: true });
   return dir;
 }
 
-function cleanup(dir) {
-  rmSync(dir, { recursive: true, force: true });
-}
-
-function assert(name, condition, detail) {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name} - ${detail}`);
-    failed++;
-  }
-}
+const cleanup = removeSandbox;
 
 // A regression here means the renderer loops forever, so the timeout is part of
 // the assertion, not just a safeguard.
 function renderWiki(projectDir) {
-  return spawnSync("node", ["pom/scripts/render-wiki.mjs"], {
-    cwd: projectDir,
-    encoding: "utf8",
-    timeout: RENDER_TIMEOUT_MS,
-  });
+  return runCommand("node", ["pom/scripts/render-wiki.mjs"], { cwd: projectDir, timeout: RENDER_TIMEOUT_MS });
 }
 
 function scenarioOrphanTableRow() {
-  console.log("\nScenario 1: a table row separated from its table does not hang the renderer");
+  section("Scenario 1: a table row separated from its table does not hang the renderer");
   const dir = createTempProject();
 
   try {
@@ -92,7 +76,7 @@ Text after the orphan row.
 }
 
 function scenarioTableAfterParagraph() {
-  console.log("\nScenario 2: a table directly after a paragraph line is still a table");
+  section("Scenario 2: a table directly after a paragraph line is still a table");
   const dir = createTempProject();
 
   try {
@@ -121,11 +105,9 @@ Intro line with no blank line below
   }
 }
 
-console.log("Wiki Reader Orphan Table Row Tests");
-console.log("==================================");
+banner();
 
 scenarioOrphanTableRow();
 scenarioTableAfterParagraph();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

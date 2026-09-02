@@ -3,22 +3,13 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { createHarness } from "../../lib/harness.mjs";
+
 const ROOT = process.cwd();
-let passed = 0;
-let failed = 0;
+const { assert, section, summary } = createHarness();
 
 function read(path) {
   return readFileSync(join(ROOT, path), "utf8");
-}
-
-function assert(name, condition, detail = "") {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name}${detail ? ` — ${detail}` : ""}`);
-    failed++;
-  }
 }
 
 function parseFrontmatter(path) {
@@ -41,7 +32,7 @@ function skillFiles() {
 }
 
 function testBootstrapArtifacts() {
-  console.log("\nScenario 1: using-pom bootstrap artifacts are registered");
+  section("Scenario 1: using-pom bootstrap artifacts are registered");
 
   assert("skills/using-pom.md exists", existsSync(join(ROOT, "skills/using-pom.md")));
   assert("prompts/32-using-pom.md exists", existsSync(join(ROOT, "prompts/32-using-pom.md")));
@@ -89,7 +80,7 @@ function testBootstrapArtifacts() {
 }
 
 function testBootstrapPromptCoverage() {
-  console.log("\nScenario 2: using-pom prompt covers routing, harnesses, and disabled modules");
+  section("Scenario 2: using-pom prompt covers routing, harnesses, and disabled modules");
 
   const prompt = read("prompts/32-using-pom.md");
   for (const skill of ["adopt", "wiki", "pulse", "validate", "plan", "spike", "sync", "finish-branch", "root-cause"]) {
@@ -117,7 +108,7 @@ function testBootstrapPromptCoverage() {
 }
 
 function testFinishBranchCoverage() {
-  console.log("\nScenario 3: finish-branch and spike cover Git isolation and cleanup safety");
+  section("Scenario 3: finish-branch and spike cover Git isolation and cleanup safety");
 
   const finishPrompt = read("prompts/33-finish-branch.md");
   const spikeSkill = read("skills/spike.md");
@@ -148,7 +139,7 @@ function testFinishBranchCoverage() {
 }
 
 function testRootCauseCoverage() {
-  console.log("\nScenario 4: root-cause covers evidence-first debugging");
+  section("Scenario 4: root-cause covers evidence-first debugging");
 
   const rootCauseSkill = read("skills/root-cause.md");
   const rootCausePrompt = read("prompts/34-root-cause-debugging.md");
@@ -181,7 +172,7 @@ function testRootCauseCoverage() {
 }
 
 function testSkillDescriptions() {
-  console.log("\nScenario 5: skill frontmatter descriptions stay discovery-oriented");
+  section("Scenario 5: skill frontmatter descriptions stay discovery-oriented");
 
   for (const file of skillFiles()) {
     const frontmatter = parseFrontmatter(file);
@@ -199,7 +190,7 @@ function testSkillDescriptions() {
 }
 
 function testBilingualRoutingEvalFixtures() {
-  console.log("\nScenario 6: routing eval fixtures cover English and Italian prompts");
+  section("Scenario 6: routing eval fixtures cover English and Italian prompts");
 
   const fixtures = JSON.parse(read("tests/skill-bootstrap/fixtures/routing-smoke.json"));
   const skillNames = new Set(
@@ -245,5 +236,4 @@ testRootCauseCoverage();
 testSkillDescriptions();
 testBilingualRoutingEvalFixtures();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

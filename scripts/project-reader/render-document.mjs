@@ -1,9 +1,20 @@
+// Markdown and source rendering for the Project Reader panel.
+//
+// This renderer is deliberately separate from scripts/lib/wiki-reader-markdown.mjs,
+// which produces the static wiki site: the two target different DOM contracts
+// (line-numbered code rows and data-doc-path links here; heading anchors,
+// figure captions and .html links there). Only the text helpers that are
+// identical in both are shared, imported from the wiki module.
+
 import { basename, dirname, extname, join, normalize } from "node:path";
+import { escapeHtml, shorten, stripMarkdown } from "../lib/wiki-reader-markdown.mjs";
+
+const DEFAULT_WIKI_ROOT = "wiki";
 
 export function extractTitle(content, path) {
   if (extname(path) !== ".md") return basename(path);
   const match = content.match(/^#\s+(.+)$/m);
-  return match ? stripInline(match[1]) : basename(path);
+  return match ? stripMarkdown(match[1]) : basename(path);
 }
 
 export function extractSummary(content) {
@@ -11,27 +22,16 @@ export function extractSummary(content) {
   const summary = content.match(/## Summary\s+([\s\S]*?)(?=\n## |\n# |\n?$)/);
   const source = summary ? summary[1] : content.replace(/^---[\s\S]*?---\s*/, "");
   const paragraph = source.split(/\n\s*\n/).find((block) => block.trim() && !block.trim().startsWith("#"));
-  return shorten(stripInline(paragraph || "Document"), 160);
+  return shorten(stripMarkdown(paragraph || "Document"), 160);
 }
 
-export function renderDocument(content, path) {
+// `options.wikiRoot` is the repository path that `[[wikilinks]]` resolve to
+// (wiki.root in pom.config.json, "wiki" by default).
+export function renderDocument(content, path, options = {}) {
   const ext = extname(path);
-  if (ext === ".md") return renderMarkdown(content, path);
+  if (ext === ".md") return renderMarkdown(content, path, options);
   if (ext === ".json") return renderJson(content);
   return renderCode(content, ext.slice(1) || "text");
-}
-
-function stripInline(value) {
-  return String(value)
-    .replace(/\[\[([^\]|]+)\|?([^\]]*)\]\]/g, (_, page, label) => label || page)
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
-    .replace(/[`*_>#|-]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function shorten(value, max) {
-  return value.length <= max ? value : `${value.slice(0, max - 3).replace(/\s+\S*$/, "")}...`;
 }
 
 function renderJson(content) {
@@ -174,10 +174,11 @@ function restoreTokens(text, store) {
   return text.replace(/@@POMTOK(\d+)@@/g, (_, index) => store[Number(index)]);
 }
 
-function renderMarkdown(markdown, currentPath) {
+function renderMarkdown(markdown, currentPath, options = {}) {
   const body = markdown.replace(/^---\n[\s\S]*?\n---\s*/, "");
   const lines = body.split(/\r?\n/);
   const out = [];
+  const link = { currentPath, wikiRoot: normalize(String(options.wikiRoot || DEFAULT_WIKI_ROOT)).replace(/\/+$/, "") };
   let paragraph = [];
   let list = null;
   let inCode = false;
@@ -186,12 +187,12 @@ function renderMarkdown(markdown, currentPath) {
 
   const flushParagraph = () => {
     if (!paragraph.length) return;
-    out.push(`<p>${inlineMarkdown(paragraph.join(" "), currentPath)}</p>`);
+    out.push(`<p>${inlineMarkdown(paragraph.join(" "), link)}</p>`);
     paragraph = [];
   };
   const flushList = () => {
     if (!list) return;
-    out.push(`<${list.type}>${list.items.map((item) => `<li>${inlineMarkdown(item, currentPath)}</li>`).join("")}</${list.type}>`);
+    out.push(`<${list.type}>${list.items.map((item) => `<li>${inlineMarkdown(item, link)}</li>`).join("")}</${list.type}>`);
     list = null;
   };
 
@@ -230,7 +231,7 @@ function renderMarkdown(markdown, currentPath) {
         index += 1;
       }
       index -= 1;
-      out.push(renderTable(tableLines, currentPath));
+      out.push(renderTable(tableLines, link));
       continue;
     }
     const heading = line.match(/^(#{1,4})\s+(.+)$/);
@@ -238,7 +239,7 @@ function renderMarkdown(markdown, currentPath) {
       flushParagraph();
       flushList();
       const level = heading[1].length;
-      out.push(`<h${level}>${inlineMarkdown(heading[2], currentPath)}</h${level}>`);
+      out.push(`<h${level}>${inlineMarkdown(heading[2], link)}</h${level}>`);
       continue;
     }
     const bullet = line.match(/^\s*[-*]\s+(.+)$/);
@@ -282,7 +283,7 @@ function splitTableRow(line) {
   return value.split("|").map((cell) => cell.trim());
 }
 
-function renderTable(tableLines, currentPath) {
+function renderTable(tableLines, link) {
   const header = splitTableRow(tableLines[0]);
   const aligns = splitTableRow(tableLines[1]).map((cell) => {
     if (cell.startsWith(":") && cell.endsWith(":")) return "center";
@@ -292,28 +293,28 @@ function renderTable(tableLines, currentPath) {
   const body = tableLines.slice(2).map(splitTableRow);
   const head = header.map((cell, index) => {
     const align = aligns[index] || "left";
-    return `<th class="align-${align}">${inlineMarkdown(cell, currentPath)}</th>`;
+    return `<th class="align-${align}">${inlineMarkdown(cell, link)}</th>`;
   }).join("");
   const rows = body.map((row) => {
     const cells = header.map((_, index) => {
       const align = aligns[index] || "left";
-      return `<td class="align-${align}">${inlineMarkdown(row[index] || "", currentPath)}</td>`;
+      return `<td class="align-${align}">${inlineMarkdown(row[index] || "", link)}</td>`;
     }).join("");
     return `<tr>${cells}</tr>`;
   }).join("");
   return `<div class="table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
-function inlineMarkdown(value, currentPath) {
+function inlineMarkdown(value, link) {
   return escapeHtml(value)
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|([^\]]+))?\]\]/g, (_, page, label) => {
-      const target = `wiki/${page.replace(/\.md$/, "")}.md`;
+      const target = `${link.wikiRoot}/${page.replace(/\.md$/, "")}.md`;
       return `<a href="#" data-doc-path="${escapeHtml(target)}">${escapeHtml(label || page)}</a>`;
     })
     .replace(/\[([^\]]+)\]\(([^)]+\.md)(?:#[^)]+)?\)/g, (_, label, target) => {
-      const resolved = resolveLinkTarget(currentPath, target);
+      const resolved = resolveLinkTarget(link.currentPath, target);
       return `<a href="#" data-doc-path="${escapeHtml(resolved)}">${escapeHtml(label)}</a>`;
     });
 }
@@ -321,14 +322,6 @@ function inlineMarkdown(value, currentPath) {
 function resolveLinkTarget(currentPath, target) {
   if (target.startsWith("/")) return target.slice(1);
   return normalize(join(dirname(currentPath), target));
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 function escapeCodeText(value) {

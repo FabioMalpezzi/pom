@@ -1,0 +1,17 @@
+# Expected: E061 because loop_guard declares no max_visits or max_duration.
+workflow: loop_guard_empty
+version: 1
+initial_state: planning
+states:
+  - name: planning
+    is_final: false
+    loop_guard:
+      on_exhaustion: failed
+  - name: failed
+    is_final: true
+events:
+  - name: retry
+transitions:
+  - from: planning
+    to: planning
+    event: retry

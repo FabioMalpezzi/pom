@@ -14,30 +14,16 @@
 // (runtime-loop-unreachable-stop-W001.yaml) exercised by
 // test-verification-and-runtime-loop.mjs.
 
-import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 
-let passed = 0;
-let failed = 0;
+import { createHarness, runNode } from "../../lib/harness.mjs";
+
+const { assert, section, summary } = createHarness();
 
 const FIXTURES = "tests/workflow-validator/fixtures";
 
-function assert(name, condition, detail = "") {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name}${detail ? ` - ${detail}` : ""}`);
-    failed++;
-  }
-}
-
 function runLint(file) {
-  return spawnSync(process.execPath, ["scripts/lint-workflows.mjs", `${FIXTURES}/${file}`], {
-    cwd: process.cwd(),
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  return runNode(["scripts/lint-workflows.mjs", `${FIXTURES}/${file}`]);
 }
 
 function assertClean(label, file) {
@@ -104,7 +90,7 @@ const WARN = new Map([
 ]);
 
 function scenarioBaseModels() {
-  console.log("\nScenario 1: the base models the broken fixtures derive from are clean");
+  section("Scenario 1: the base models the broken fixtures derive from are clean");
 
   assertClean("core.valid-minimal.yaml", "core.valid-minimal.yaml");
   assertClean("core.valid-invoke.yaml", "core.valid-invoke.yaml");
@@ -113,7 +99,7 @@ function scenarioBaseModels() {
 }
 
 function scenarioBrokenFixtures() {
-  console.log("\nScenario 2: every base error rule has a fixture that trips it");
+  section("Scenario 2: every base error rule has a fixture that trips it");
 
   for (const [fixture, code] of BROKEN) {
     assertFails(fixture, code);
@@ -121,7 +107,7 @@ function scenarioBrokenFixtures() {
 }
 
 function scenarioWarningFixtures() {
-  console.log("\nScenario 3: every base warning rule has a fixture that trips it without failing");
+  section("Scenario 3: every base warning rule has a fixture that trips it without failing");
 
   for (const [fixture, code] of WARN) {
     assertWarns(fixture, code);
@@ -129,7 +115,7 @@ function scenarioWarningFixtures() {
 }
 
 function scenarioRuleCoverage() {
-  console.log("\nScenario 4: the fixture set and the rule set stay in step");
+  section("Scenario 4: the fixture set and the rule set stay in step");
 
   const expectedErrorCodes = [
     ...Array.from({ length: 18 }, (_, i) => `E${String(i).padStart(3, "0")}`),
@@ -162,5 +148,4 @@ scenarioBrokenFixtures();
 scenarioWarningFixtures();
 scenarioRuleCoverage();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

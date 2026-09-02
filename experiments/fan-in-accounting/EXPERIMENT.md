@@ -117,7 +117,9 @@ The prose diagnosis led to a separate experiment-local structured contract under
 
 Calibration found and corrected two specification defects before the frozen run: mandatory Dynamic Workflow scenarios were initially hidden only in fixture expectations, and ordinary workflows were incorrectly required to list Dynamic Workflow runtime responsibilities. Later adversarial review added structured identity eligibility, reduction-source lineage, placeholder rejection, and ordinary-boundary checks. Each change received a new runner revision; earlier evidence remains frozen.
 
-Frozen revision 0.5 — `evidence-structured/2026-07-23T16-45-38-289Z-structured-v0.5-5x/`:
+Evidence layout for the structured runs: each `evidence-structured/<run>/` folder keeps `report.md` and, for the five-repetition runs, `report.summary.json` (run metadata, environment, aggregate summary, and per-outcome status, validation errors, and final validated artifact, without the raw model responses) plus `independent-review.md` where one was written. The full `report.json` files of the five-repetition runs, which exceed the 1 MB tracked-evidence limit, live under `evidence-raw/<run>/` and are local, Git-ignored raw evidence per the convention in `templates/EXPERIMENT_TEMPLATE.md`. The one-repetition runs keep their `report.json` in place because they are under the limit.
+
+Frozen revision 0.5 — `evidence-structured/2026-07-23T16-45-38-289Z-structured-v0.5-5x/` (`report.summary.json`, `report.md`, `independent-review.md`):
 
 - 80/80 first calls completed, with no dropped repairs;
 - `gpt-5.4-mini`: 34/40 first-pass valid (85%); 40/40 after one repair;
