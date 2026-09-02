@@ -36,7 +36,7 @@ A reviewer that did not write the code sees the failures the author could not se
 
 1. **Assign.** `send --topic <slug> --role executor --task <id> --message "<assignment>"` (or `--message-file <path>` for longer text). The assignment carries the task's definition of done and constraints from the brief, the files or areas involved, and nothing from earlier tasks unless this task depends on it. The executor's session already holds its own history; do not repeat it.
 2. **Collect the deliverable.** The executor reports what it changed and how it verified it. The deliverable is a commit on the collaboration branch or the executor's working-tree patch; name it by path or ref.
-3. **Review.** `review --topic <slug> --task <id> --deliverable <path-or-ref>`. The script synchronizes the controller worktree with the deliverable and sends the task's definition of done plus the deliverable, never the whole history. The controller answers in the review contract:
+3. **Review.** `review --topic <slug> --task <id> --deliverable <path-or-ref>`. When the command returns, quote the controller's reply verbatim in the chat, verdict and findings, before deciding anything: the user reads the review through the coordinator, not through the script output. Do the same with the executor's `F<n>` replies after `respond`. The script synchronizes the controller worktree with the deliverable and sends the task's definition of done plus the deliverable, never the whole history. The controller answers in the review contract:
    ```text
    VERDICT: APPROVE|REVISE
    FINDINGS:

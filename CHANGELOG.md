@@ -2,6 +2,12 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## 0.6.1 - 2026-09-02
+
+### Changed
+
+- **Reviews are read through the coordinator** (`skills/tandem.md`, `prompts/38-tandem.md`, `scripts/tandem.mjs`): the user sees what the coordinating agent writes, not the script output, so the skill now requires the coordinator to quote every controller verdict with its findings and every executor response verbatim in its chat before acting on them. `send`, `review`, and `respond` print each reply between `=== <role> reply | task <id> | <turn file> ===` and `=== end ... ===` delimiters to make the relay easy. Verified in a third live trial with Claude as executor and Pi as controller (one blocking finding on whitespace handling, fixed, then approved).
+
 ## 0.6.0 - 2026-09-02
 
 ### Added

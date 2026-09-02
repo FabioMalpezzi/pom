@@ -77,6 +77,17 @@ function ensureTurnsPolicy(dir, state) {
   }
 }
 
+/**
+ * Prints a role reply between clear delimiters so the coordinator can relay
+ * it verbatim in its chat: the user reads reviews through the coordinator,
+ * not through this output.
+ */
+function printReply(roleName, taskId, outcome) {
+  console.log(`=== ${roleName} reply | task ${taskId} | ${outcome.turnPath} ===`);
+  console.log(outcome.reply);
+  console.log(`=== end of ${roleName} reply ===`);
+}
+
 class TandemError extends Error {
   constructor(message, code) {
     super(message);
@@ -331,7 +342,7 @@ function cmdSend(argv) {
     : callRole(state, dir, roleName, task.id, message);
   appendLedger(dir, { role: roleName, taskId: task.id, cycle: task.cycles, event: "send", turnPath: outcome.turnPath });
   saveState(dir, state);
-  console.log(outcome.reply);
+  printReply(roleName, task.id, outcome);
 }
 
 function cmdReview(argv) {
@@ -351,7 +362,7 @@ function cmdReview(argv) {
     { Kind: "review", ...syncMetadata(sync) },
   ));
   const verdict = parseVerdict(outcome.reply);
-  console.log(outcome.reply);
+  printReply("controller", task.id, outcome);
 
   if (verdict === null) {
     appendLedger(dir, { role: "controller", taskId: task.id, cycle: task.cycles, event: "indeterminate (no VERDICT line)", turnPath: outcome.turnPath });
@@ -406,7 +417,7 @@ function cmdRespond(argv) {
   if (task.status !== "escalated" && task.status !== "stalled") task.status = "in_progress";
   appendLedger(dir, { role: "executor", taskId: task.id, cycle: task.cycles, event: `respond (${summary})`, turnPath: outcome.turnPath });
   saveState(dir, state);
-  console.log(outcome.reply);
+  printReply("executor", task.id, outcome);
 }
 
 function verdictLabel(task) {

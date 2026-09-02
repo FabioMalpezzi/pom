@@ -2,6 +2,12 @@
 
 This log records root wiki changes for the POM source repository. It keeps update history out of the topic pages while preserving the reason for meaningful wiki changes.
 
+## [2026-09-02] update | POM 0.6.1
+
+Bumped the index to POM v0.6.1: the tandem coordinator relays every controller verdict and executor response verbatim in its chat, and the script prints replies between delimiters. Details in `CHANGELOG.md`.
+
+Sources used: `CHANGELOG.md`, `skills/tandem.md`, `prompts/38-tandem.md`.
+
 ## [2026-09-02] add | tandem skill for two-agent controller/executor work
 
 Added the `tandem` skill (`skills/tandem.md`, `prompts/38-tandem.md`) to the skill map: a coordinator agent carries assignments, deliverables, and findings between an executor that writes and a controller that reviews in its own worktree, with a fixed verdict contract, a per-task cycle cap, and escalation to the user. Catalogued in `skills/README.md`, `prompts/README.md`, the README, and both HTML guides; `CONTEXT.md` gained Tandem, Controller, and Executor and generalized Coordinator.
