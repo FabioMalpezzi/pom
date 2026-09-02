@@ -2,6 +2,13 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## 0.6.0 - 2026-09-02
+
+### Added
+
+- **`tandem` skill** (`skills/tandem.md`, `prompts/38-tandem.md`, `templates/TANDEM_BRIEF_TEMPLATE.md`, `scripts/tandem.mjs`, `npm run pom:tandem`, installed in target projects): two coding agents collaborate on a multi-turn job, one as controller and one as executor, coordinated by whoever runs the skill. Claude Code, Pi, and Codex are interchangeable backends: each keeps its own persistent non-interactive session (`claude -p --session-id/--resume`, `pi -p --session-id`, `codex exec ... resume <thread>`), so the coordinator sends only the delta of each turn and never replays history. The controller may run tests, builds, and scripts but never modifies the executor workspace: it works in a dedicated Git worktree synchronised to the reviewed commit or patch and reset after every review, and the script fails with exit code 4 when the executor workspace changed during a review. Tasks are a flat list with an optional phase label; the review cap is per task (default 4) and an optional phase budget acts as a stop rule; reaching the cap escalates to the user with both positions instead of moving on. Review and response follow fixed contracts (`VERDICT: APPROVE|REVISE` with numbered findings; `F<n>: FIXED|DISPUTED`). Different models for the two roles are recommended, recorded as `model_diversity`, not required. `BRIEF.md` and `LEDGER.md` are the tracked record; `turns/` (full responses), the controller worktree, and session files are ignored by Git by default, with `init --track-turns` to version the turns on purpose. 118 assertions with a fake backend; Claude roles run with shell, read, and edit tools pre-allowed, because print mode denies any tool that is not allowed up front (the first inverted trial showed the Claude controller unable to run the tests); live trial in a scratch project with Claude coordinating, Pi controlling, and Codex executing (one REVISE with a real transliteration finding, then APPROVE), and the inverted trial coordinated by Pi.
+- **Glossary entries** (`CONTEXT.md`): Tandem, Controller, Executor; Coordinator now covers loop/goal and tandem.
+
 ## 0.5.0 - 2026-09-02
 
 ### Added

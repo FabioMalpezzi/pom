@@ -136,6 +136,12 @@ Complete skill catalog:
 - **Real use cases**: unify `doc/` and `docs/`; move ADRs scattered across folders into the configured decisions root; relocate a wiki nested under a documentation root.
 - **Why it exists / importance**: adoption maps existing structure and never moves it; migration is the later explicit decision the README promises, and without a procedure it happened ad hoc or not at all.
 
+### `tandem`
+
+- **Illustration**: coordinates two coding agents on multi-turn work: an executor that writes, a controller that reviews with a fixed `VERDICT`/`FINDINGS` contract, and a coordinator (the agent running the skill) that carries only the difference between them through `scripts/tandem.mjs`; three modes, `setup`, `run`, `close`.
+- **Real use cases**: implement a feature with Claude and have Codex review each task; run Pi as coordinator between a Claude executor and a Codex controller; resume a collaboration from `BRIEF.md`, `LEDGER.md`, and `turns/` after a session is lost.
+- **Why it exists / importance**: a reviewer that did not write the code sees what the author cannot, and a different LLM sees more than a second session of the same one; the script keeps the controller in its own worktree (it may run tests there, never touch the executor workspace), caps cycles per task, and turns a stuck task into an escalation instead of a fourth rewrite.
+
 ### `status`
 
 - **Illustration**: classifies document type and chooses the least misleading status.
@@ -203,7 +209,7 @@ Three optional blocks describe an agent-shaped graph rather than a purely domain
 - **Real use cases**: define measurable criteria for an agent loop; audit controller fit; derive terminal-coverage scenarios; conclude whether an experiment actually met its objective; adapt the optional TypeScript or Python runtime seam templates in the target project if the loop needs execution, persistence, timer, retry, tool, or side-effect ports.
 - **Why it exists / importance**: handles agentic feedback loops that are too specific for the generic `workflow` skill and need criteria, falsification, and independent evaluation.
 
-The prompt set covers session bootstrap, adoption, state, governance, planning, review, handoff, Project Reader note processing, config, experiments, wiki operations, extension, self-improvement, classification, deferral, sync, branch delivery, validation, reconciliation, clarification, pruning, POM diagnosis, Target Project root-cause debugging, MCP interface ergonomics, workflow modeling, loop/goal workflow work, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.
+The prompt set covers session bootstrap, adoption, state, governance, planning, review, handoff, Project Reader note processing, config, experiments, wiki operations, extension, self-improvement, classification, deferral, sync, branch delivery, validation, reconciliation, clarification, pruning, POM diagnosis, Target Project root-cause debugging, MCP interface ergonomics, workflow modeling, loop/goal workflow work, two-agent tandem collaboration, and adversarial challenge. Together they make POM less dependent on an agent remembering the right procedure for each task.
 
 The installed agent section now keeps the minimal profile to global posture plus a skill router. Profile modules add active workflow entry points, while detailed procedures stay in skills and prompts.
 
@@ -221,6 +227,7 @@ Reader generation is currently a script command, not a separate skill. Use `npm 
 | `prompts/12-extend-pom.md` | Controlled POM extension procedure. |
 | `skills/release.md`, `prompts/36-release.md` | Version closure procedure. |
 | `skills/migrate.md`, `prompts/37-migrate-structure.md` | Structure migration procedure for adopted projects. |
+| `skills/tandem.md`, `prompts/38-tandem.md` | Controller/executor tandem between two coding agents, coordinated by a third through `scripts/tandem.mjs`. |
 | `skills/reader-notes.md` | Skill card for processing human Project Reader notes. |
 | `prompts/26-process-reader-notes.md` | Canonical procedure for claiming, evaluating, applying, recording, and verifying Project Reader notes. |
 | `skills/challenge.md` | Skill card for adversarial thesis/antithesis review. |

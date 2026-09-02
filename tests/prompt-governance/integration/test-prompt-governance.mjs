@@ -54,7 +54,7 @@ const skillFiles = readdirSync(join(ROOT, "skills")).filter((entry) => entry.end
 const rawSkillLinks = skillFiles.flatMap((file) => promptLinks(read(`skills/${file}`)));
 const skillLinks = new Set(rawSkillLinks.map((file) => basename(file)));
 
-assert("there are exactly 37 canonical numbered prompts", canonical.length === 37, `${canonical.length} found`);
+assert("there are exactly 38 canonical numbered prompts", canonical.length === 38, `${canonical.length} found`);
 assert("every canonical prompt is catalogued", canonical.every((file) => promptCatalog.has(file)));
 assert("the prompt catalog has no stale numbered entries", [...promptCatalog].every((file) => canonical.includes(file)));
 assert("every canonical prompt is linked by a skill", canonical.every((file) => skillLinks.has(file)));

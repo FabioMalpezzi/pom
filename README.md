@@ -6,7 +6,7 @@ This README is POM's canonical entry point and operating overview. Detailed proc
 
 POM is designed to be reused on new or existing projects. It does not impose a single application structure and does not assume that every project has mockups, source code, tests, or official docs. For existing projects, POM should first map the current structure in `pom.config.json`; migration to canonical folders is a later explicit decision, not a prerequisite.
 
-Version: `0.5.0`
+Version: `0.6.0`
 
 Release notes: see `CHANGELOG.md`.
 
@@ -83,6 +83,7 @@ Use the smallest workflow that matches your situation:
 | Change POM itself (extend, improve, prune) | `skills/method.md` |
 | Close a numbered version | `skills/release.md` |
 | Move adopted folders toward canonical roots | `skills/migrate.md` |
+| Have two coding agents build and review multi-turn work as controller and executor | `skills/tandem.md` |
 | Diagnose a POM problem | `skills/diagnose.md` |
 | Debug a Target Project problem | `skills/root-cause.md` |
 | Rework a patch around the intended final shape | `skills/zero-tech-debt.md` |
@@ -385,6 +386,7 @@ Generated from `skills/README.md` by `npm run pom:skills:sync`. Edit the catalog
 | `finish-branch` | finish branch, PR, merge, keep, discard, or cleanup decisions | `prompts/33-finish-branch.md` |
 | `release` | close a numbered version: changelog, version references, checksums, tag, memory updates | `prompts/36-release.md` |
 | `migrate` | move an adopted project's folders toward canonical roots with approval and lint before and after | `prompts/37-migrate-structure.md` |
+| `tandem` | coordinate two coding agents on multi-turn work as controller and executor (`setup`, `run`, `close`), with a fixed verdict contract, a per-task cycle cap, and escalation to the user | `prompts/38-tandem.md` |
 | `reconcile` | classify and resolve a divergence between a source and project memory | `prompts/19-reconcile-memory.md` |
 | `validate` | audit governed memory read-only after significant actions: project state, wiki, task status, decisions, orphans | `prompts/18-post-action-validator.md` |
 | `workflow` | design, validate, diagram, scenarios, and implement domain workflows declared as YAML state models | `prompts/27-workflow-modeling.md` |

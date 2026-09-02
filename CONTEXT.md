@@ -90,8 +90,20 @@ The `## Criteria` section of an experiment's `EXPERIMENT.md`, accepted and commi
 _Avoid_: criteria file, hypothesis list, success metrics
 
 **Coordinator**:
-The agent role that owns a loop/goal experiment cycle: it conducts the criteria dialogue with the user, freezes the contract, runs the rounds, and is the only addressee of the evaluator's non-retroactive advice.
-_Avoid_: evaluator, orchestrator, experiment owner, decision maker
+The agent role that runs a cycle on the user's behalf without judging it or producing its deliverable. In a loop/goal experiment it conducts the criteria dialogue, freezes the contract, runs the rounds, and is the only addressee of the evaluator's non-retroactive advice. In a **Tandem** it writes the brief with the user, carries the difference between **Executor** and **Controller**, reads the script's exit codes, and escalates; it writes no project files and holds no role in the tandem it coordinates.
+_Avoid_: evaluator, controller, orchestrator, experiment owner, decision maker
+
+**Tandem**:
+A multi-turn collaboration between two coding agents, an **Executor** and a **Controller**, run by a **Coordinator** through `scripts/tandem.mjs` on one dedicated branch: a flat task list, a per-task cycle cap, a fixed review contract (`VERDICT`, numbered `FINDINGS`, `FIXED`/`DISPUTED` answers), and escalation to the user when the cap is reached without agreement. Its memory is `BRIEF.md`, `LEDGER.md`, and `turns/`.
+_Avoid_: pair programming, multi-agent runtime, review loop, swarm
+
+**Executor**:
+The tandem role that produces the deliverable: the only agent that writes project files, in one workspace on the collaboration branch, and answers every finding with `FIXED` or `DISPUTED` plus evidence.
+_Avoid_: worker, implementer agent, coder, primary agent
+
+**Controller**:
+The tandem role that reviews each deliverable against the brief and returns a verdict with findings. It works in its own Git worktree, synchronized by the script with the deliverable under review, where it may run tests, builds, and scripts; it never produces the deliverable and never modifies the executor's workspace, which the script verifies after every review. Preferably a different LLM from the executor; separate sessions of the same model are the minimum separation.
+_Avoid_: reviewer, evaluator, judge, read-only agent, the loop/goal "agent-shaped controller"
 
 **Technical Verdict**:
 The evaluator's judgement of a frozen contract against the evidence: `confirmed`, `refuted`, or `inconclusive`.
@@ -114,6 +126,7 @@ _Avoid_: verdict, consolidation, merge decision
 - **Artifact Policy** decides whether an artifact may be edited directly, needs approval, must be regenerated, or should stay historical.
 - **POM Source** supplies reusable rules, while each **Target Project** owns its memory products.
 - The **Coordinator** freezes an **Experiment Criteria Contract**; an independent evaluator returns a **Technical Verdict** on it; the user takes the **Promotion Decision**.
+- In a **Tandem** the **Coordinator** carries assignments, deliverables, and findings between the **Executor**, who alone writes, and the **Controller**, who alone judges; when a tandem is an experiment its closure feeds the **Technical Verdict** and the **Promotion Decision**.
 
 ## Example Dialogue
 
@@ -130,4 +143,5 @@ _Avoid_: verdict, consolidation, merge decision
 - "task" can mean any work item; resolved: use **Task Plan** when referring to POM-governed work and "issue" only for external issue trackers.
 - "project memory" was used broadly; resolved: use **Operating Memory** for the restart-critical context and **Memory Element** for durable artifacts that carry it.
 - "loop" names five different things in loop/goal work; resolved: **runtime loop** for the controller's own cycle, **experiment round** and **experiment iteration** for the experiment cycle and its comparable measurements, **`loop_guard`** for the per-state visit bound, **Iteration Record** for the target-owned record of one runtime iteration, and **method improvement round** for the evaluator's advice feeding a next round (see `skills/loop-goal.md`).
+- "controller" names both the agent-shaped system a loop/goal experiment models and the reviewing role of a tandem; resolved: **Controller** (capitalized) is the tandem role, "agent-shaped controller" or "runtime loop" is the loop/goal subject; in loop/goal work the independent judge is the "evaluator", never the Controller.
 - "outcome" of an experiment mixed judgement and action; resolved: **Technical Verdict** (`confirmed`, `refuted`, `inconclusive`) for what the evidence supports and **Promotion Decision** (`adopt`, `refine`, `reject`) for what the project does.
