@@ -2,6 +2,22 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## Unreleased
+
+### Added
+
+- **Synthesis pages declare their sources and are flagged when those move** (`scripts/lib/lint-wiki-freshness.ts`): a wiki page may carry `derivedFrom` (paths it summarizes) and `verified` (YYYY-MM-DD) in its frontmatter; `pom:lint` reports `wiki-stale-synthesis` for every declared path that changed, in a later commit or in the working tree, after that date (or after the page's last commit when `verified` is absent), plus `wiki-derived-source-missing` and `wiki-verified-format` for malformed declarations. The ADR index the lint itself writes never counts as a change. Pages without `derivedFrom` are not checked. Motivated by a target project whose `wiki/overview.md` passed every structural check while stating "no code written yet" 505 commits and nine ADRs later.
+- **Generated blocks in wiki pages** (`scripts/lib/wiki-generated-blocks.ts`): between `<!-- pom:generated decisions -->` and `<!-- /pom:generated -->` the lint writes the table of every ADR in the decisions root (status, date, summary, relative link); `state` quotes one section of `PROJECT_STATE.md` with its last change date (options `source="..."`, `section="### Current State"`); `pages` lists the other wiki pages with their titles. Text outside the markers is never touched; malformed markers are reported as `wiki-generated-block-unknown` / `wiki-generated-block-unclosed` and left alone. The installer's overview placeholder now declares its sources and uses these blocks for the parts the chosen profile creates.
+- `tests/doc-governance/integration/test-lint-wiki-freshness.mjs` covers both features end to end, including the reader.
+- **ADR-0006** records the decision, its context (the target project whose overview drifted), the rejected alternatives, and the follow-ups. Both HTML guides gain a "synthesis" section.
+
+### Changed
+
+- **Pre-commit hook restages refreshed wiki pages** (`scripts/lib/install-hook.ts`): a tracked wiki page that was clean before the lint and changed by it carries only generated content, so the hook adds it to the commit and says so; a page with unstaged edits before the lint is left to the author. `pom:update` installs the new block.
+- The wiki reader skips single-line HTML comments (block markers among them) instead of rendering them as paragraph text, and drops them from the search index. Block markers quoted in inline code or fenced blocks are documentation, not blocks.
+- `wiki-multiple-h1` no longer counts `# comment` lines inside YAML frontmatter as titles.
+- `skills/wiki.md`, the `10-wiki.md` agent section, the stale-review and lint prompts, the wiki page template, `pom:help`, and the README describe the two mechanisms and the rule that goes with them: never bump `verified` without re-reading.
+
 ## 0.7.2 - 2026-09-02
 
 ### Fixed

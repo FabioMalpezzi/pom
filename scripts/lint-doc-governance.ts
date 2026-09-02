@@ -21,8 +21,14 @@ import {
   checkWikiIndexCoverage,
   renderWikiReaderIfNeeded,
 } from "./lib/lint-wiki.ts";
+import { checkWikiFreshness } from "./lib/lint-wiki-freshness.ts";
+import { refreshWikiGeneratedBlocks } from "./lib/wiki-generated-blocks.ts";
 
 const context = createLintContext(process.cwd());
+
+// Generated blocks are rewritten before the wiki checks so that links and
+// sections they produce are validated like hand-written content.
+refreshWikiGeneratedBlocks(context);
 
 checkRootMarkdown(context);
 checkAnalysisLayout(context);
@@ -36,6 +42,7 @@ checkMockReconciliation(context);
 checkReaderNotes(context);
 checkWikiDocuments(context);
 checkWikiIndexCoverage(context);
+checkWikiFreshness(context);
 checkTestsLayout(context);
 checkProjectStateShape(context);
 checkGitWorkflow(context);

@@ -246,6 +246,11 @@ function scenarioHookStagesNewGeneratedFiles() {
     const output = `${commit.stdout ?? ""}${commit.stderr ?? ""}`;
     assert("commit with a new wiki page succeeds", commit.status === 0, output);
     assert("new reader page is part of the commit", git(dir, ["show", "--name-only", "--format=", "HEAD"]).includes("wiki/_site/alpha.html"), output);
+    // The placeholder overview carries a generated `pages` block: the new page
+    // changes it, and the hook restages the page because it was clean before.
+    assert("hook reports the overview whose generated block it restaged", output.includes("restaged wiki pages whose generated blocks") && output.includes("wiki/overview.md"), output);
+    assert("overview with the refreshed pages block is part of the commit", git(dir, ["show", "--name-only", "--format=", "HEAD"]).includes("wiki/overview.md"), output);
+    assert("committed overview lists the new page in its generated block", git(dir, ["show", "HEAD:wiki/overview.md"]).includes("- [[alpha]]: Alpha"), git(dir, ["show", "HEAD:wiki/overview.md"]));
     assert("working tree is clean after the commit", git(dir, ["status", "--porcelain"]).trim() === "", git(dir, ["status", "--porcelain"]));
   } finally {
     removeSandbox(dir);

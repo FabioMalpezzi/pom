@@ -64,6 +64,7 @@
         <a href="#tools">Tools</a>
         <a href="#reader">Reader</a>
         <a href="#workflow">Practice</a>
+        <a href="#synthesis">Synthesis</a>
         <a href="#pi-package">Pi</a>
         <a href="#install">Install</a>
         <a href="#overlay">Overlay</a>
@@ -289,6 +290,35 @@
           <p>POM checks that the result is reliable. For code this usually means tests. For documents it means checking the sources, looking for contradictions, and challenging the conclusion before treating it as settled.</p>
         </div>
       </div>
+    </section>
+
+    <section id="synthesis">
+      <h2>Keeping synthesis pages honest</h2>
+      <p>Some memory keeps itself current: the wiki log, the decision records, and the project state all receive an entry as a side effect of doing the work. A page that <em>summarizes</em> them, such as the project overview, has no task that owns it. It passes every structural check while quietly describing a project that no longer exists. POM makes that gap visible and removes the parts that never needed a hand.</p>
+      <div class="grid">
+        <div class="item">
+          <span class="tag teal">Declare</span>
+          <h3>Say what the page derives from</h3>
+          <p>A synthesis page lists in its frontmatter the paths it summarizes and the date it was last re-read.</p>
+          <div class="command-list">
+            <code>derivedFrom:</code>
+            <code>&nbsp;&nbsp;- decisions/</code>
+            <code>&nbsp;&nbsp;- PROJECT_STATE.md</code>
+            <code>verified: 2026-09-02</code>
+          </div>
+        </div>
+        <div class="item">
+          <span class="tag gold">Detect</span>
+          <h3>The lint reports what moved</h3>
+          <p><code>npm run pom:lint</code> compares every declared path with that date and reports <code>wiki-stale-synthesis</code> for each source that changed later, in a commit or in the working tree. It is a candidate, not a verdict: re-read the source, fix the prose where it no longer holds, then set <code>verified</code> to today. Never move the date without re-reading.</p>
+        </div>
+        <div class="item">
+          <span class="tag">Generate</span>
+          <h3>Do not hand-write what has a source</h3>
+          <p>Between <code>&lt;!-- pom:generated decisions --&gt;</code> and <code>&lt;!-- /pom:generated --&gt;</code> the lint writes the table of every decision record; <code>state</code> quotes a section of the project state with its last change date; <code>pages</code> lists the other wiki pages. Text outside the markers is never touched, and the reader hides the markers.</p>
+        </div>
+      </div>
+      <p class="callout">Both mechanisms are opt-in per page and only produce warnings. A page that never declares anything behaves exactly as before. The rule and its origin are recorded in <code>decisions/ADR-0006</code>.</p>
     </section>
 
     <section id="pi-package">

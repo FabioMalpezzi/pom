@@ -135,3 +135,107 @@ export function relativeFromIndex(indexPath: string, file: string): string {
   }
   return link;
 }
+
+export type Frontmatter = {
+  /** Scalar values as written; list values as arrays of their items. */
+  fields: Map<string, string | string[]>;
+  /** Whether the file starts with a `---` block at all. */
+  present: boolean;
+};
+
+/**
+ * Parse the optional YAML-like frontmatter block at the top of a Markdown file.
+ * Supports `key: value` scalars, `key: a, b` inline lists (only for keys read
+ * as lists by the caller), and block lists written as `key:` followed by `- item`
+ * lines. Comments (`# ...`) and unknown shapes are ignored. Values are returned
+ * verbatim, without quotes.
+ */
+export function parseFrontmatter(text: string): Frontmatter {
+  const fields = new Map<string, string | string[]>();
+  const normalized = text.replace(/\r\n/g, "\n");
+  const match = normalized.match(/^---\n([\s\S]*?)\n---[ \t]*(?:\n|$)/);
+  if (!match) return { fields, present: false };
+
+  let currentList: string[] | undefined;
+  for (const rawLine of match[1].split("\n")) {
+    const line = rawLine.replace(/\s+#.*$/, "");
+    if (!line.trim() || line.trim().startsWith("#")) continue;
+
+    const item = line.match(/^\s+-\s+(.*)$/);
+    if (item && currentList) {
+      currentList.push(unquote(item[1]));
+      continue;
+    }
+
+    const scalar = line.match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/);
+    if (!scalar) continue;
+    const key = scalar[1];
+    const value = unquote(scalar[2]);
+    if (value) {
+      fields.set(key, value);
+      currentList = undefined;
+    } else {
+      currentList = [];
+      fields.set(key, currentList);
+    }
+  }
+
+  return { fields, present: true };
+}
+
+/** Read a frontmatter field as a list, accepting block lists and comma-separated scalars. */
+export function frontmatterList(frontmatter: Frontmatter, key: string): string[] {
+  const value = frontmatter.fields.get(key);
+  if (Array.isArray(value)) return value.map((item) => item.trim()).filter(Boolean);
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+export function frontmatterScalar(frontmatter: Frontmatter, key: string): string | undefined {
+  const value = frontmatter.fields.get(key);
+  return typeof value === "string" ? value : undefined;
+}
+
+function unquote(value: string): string {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
+/**
+ * Committer time (epoch milliseconds) of the last commit touching `path`,
+ * which may be a file or a directory. Undefined when the path has no commits
+ * or Git is unavailable.
+ */
+export function gitLastCommitTime(root: string, path: string): number | undefined {
+  try {
+    const output = execFileSync("git", ["log", "-1", "--format=%ct", "--", path], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (!output) return undefined;
+    const seconds = Number(output);
+    return Number.isFinite(seconds) ? seconds * 1000 : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Normalize a repository-relative path written by hand: no `./`, no trailing slash, forward slashes. */
+export function cleanRelativePath(path: string): string {
+  return normalize(path.trim())
+    .replace(/\\/g, "/")
+    .replace(/^\.\//, "")
+    .replace(/\/+$/, "");
+}

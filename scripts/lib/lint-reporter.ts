@@ -29,6 +29,12 @@ function printSuggestedWorkflows(findings: Finding[]): void {
   for (const finding of findings) {
     if (finding.rule.startsWith("config-")) {
       suggestions.add("Config findings: read pom/skills/config.md and update pom.config.json.");
+    } else if (finding.rule === "wiki-stale-synthesis" || finding.rule === "wiki-derived-source-missing") {
+      suggestions.add(
+        "Stale synthesis findings: re-read the changed sources named in the finding, update the page where the prose no longer holds, then set its 'verified' frontmatter date to today. Never bump the date without re-reading.",
+      );
+    } else if (finding.rule.startsWith("wiki-generated-block")) {
+      suggestions.add("Generated block findings: fix the block markers in the wiki page; pom:lint fills the content between them.");
     } else if (finding.rule.startsWith("wiki-")) {
       suggestions.add("Wiki findings: read pom/skills/wiki.md in lint or stale mode before changing wiki pages.");
     } else if (finding.rule.startsWith("adr-") || finding.rule === "docs-without-adr") {

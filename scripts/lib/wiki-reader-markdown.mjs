@@ -46,6 +46,13 @@ export function renderMarkdown(markdown, config, context = {}) {
       continue;
     }
 
+    // Single-line HTML comments (POM generated-block markers among them) are
+    // authoring metadata: they must not surface as paragraph text.
+    if (/^\s*<!--.*-->\s*$/.test(line)) {
+      i += 1;
+      continue;
+    }
+
     const fence = line.match(/^```([^\s`]*)?.*$/);
     if (fence) {
       const code = [];
@@ -136,7 +143,8 @@ function isParagraphLine(lines, index) {
     !isTableStart(lines, index) &&
     !/^\s*-\s+/.test(line) &&
     !/^\s*\d+\.\s+/.test(line) &&
-    !/^>\s?/.test(line)
+    !/^>\s?/.test(line) &&
+    !/^\s*<!--.*-->\s*$/.test(line)
   );
 }
 
@@ -390,6 +398,7 @@ function uniqueId(base, usedIds) {
 export function stripMarkdown(value) {
   return value
     .replace(/```[\s\S]*?```/g, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
     .replace(/\[\[([^\]|]+)\|?([^\]]*)\]\]/g, (_, page, label) => label || page)
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/[`*_>#|-]/g, "")

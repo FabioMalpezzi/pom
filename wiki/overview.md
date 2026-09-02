@@ -1,3 +1,12 @@
+---
+derivedFrom:
+  - README.md
+  - CONTEXT.md
+  - specs/SPEC-0000-pom-founding-spec.md
+  - WIKI_METHOD.md
+verified: 2026-09-02
+---
+
 # POM Overview
 
 ## Summary
@@ -49,6 +58,21 @@ The current repository already contains reader-oriented guides under `docs/`, bu
 
 ## Related Links
 
-- [[operating-memory]]
-- [[wiki-method]]
-- [[adoption-and-installation]]
+Start from [[operating-memory]], [[wiki-method]], and [[adoption-and-installation]]. Every page of this wiki:
+
+<!-- pom:generated pages -->
+
+- [[adoption-and-installation]]: Adoption And Installation
+- [[agent-graph-patterns]]: Agent Graph Patterns
+- [[current-specs]]: Current POM Specs
+- [[experiments-and-extension]]: Experiments And Extension
+- [[loop-goal-scope-examples]]: Loop/Goal Scope Examples
+- [[loop-goal-workflow-tutorial]]: Loop/Goal Workflow Tutorial
+- [[operating-memory]]: Operating Memory
+- [[reader-capabilities]]: Reader Capabilities
+- [[skills-and-prompts]]: Skills And Prompts
+- [[tandem-collaboration]]: Tandem Collaboration
+- [[templates-and-governance]]: Templates And Governance
+- [[wiki-method]]: Persistent Wiki Method
+
+<!-- /pom:generated -->

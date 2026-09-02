@@ -64,6 +64,7 @@
         <a href="#tools">Strumenti</a>
         <a href="#reader">Reader</a>
         <a href="#workflow">Pratica</a>
+        <a href="#synthesis">Sintesi</a>
         <a href="#pi-package">Pi</a>
         <a href="#install">Installa</a>
         <a href="#overlay">Overlay</a>
@@ -289,6 +290,35 @@
           <p>POM controlla che il risultato sia affidabile. Per il codice di solito significa test. Per i documenti significa controllare le fonti, cercare contraddizioni e sfidare la conclusione prima di considerarla chiusa.</p>
         </div>
       </div>
+    </section>
+
+    <section id="synthesis">
+      <h2>Tenere oneste le pagine di sintesi</h2>
+      <p>Una parte della memoria si mantiene aggiornata da sola: il registro della wiki, le decisioni e lo stato di progetto ricevono una voce come effetto collaterale del lavoro. Una pagina che li <em>riassume</em>, come la panoramica del progetto, non ha nessuna attività che la possieda. Supera ogni controllo strutturale mentre descrive in silenzio un progetto che non esiste più. POM rende visibile quel divario e toglie dalla prosa le parti che non avevano bisogno di una mano.</p>
+      <div class="grid">
+        <div class="item">
+          <span class="tag teal">Dichiara</span>
+          <h3>Dire da cosa deriva la pagina</h3>
+          <p>Una pagina di sintesi elenca nell'intestazione i percorsi che riassume e la data in cui sono stati riletti l'ultima volta.</p>
+          <div class="command-list">
+            <code>derivedFrom:</code>
+            <code>&nbsp;&nbsp;- decisions/</code>
+            <code>&nbsp;&nbsp;- PROJECT_STATE.md</code>
+            <code>verified: 2026-09-02</code>
+          </div>
+        </div>
+        <div class="item">
+          <span class="tag gold">Rileva</span>
+          <h3>Il lint segnala cosa si è mosso</h3>
+          <p><code>npm run pom:lint</code> confronta ogni percorso dichiarato con quella data e segnala <code>wiki-stale-synthesis</code> per ogni fonte cambiata dopo, in un commit o nel working tree. È un candidato, non un verdetto: rileggi la fonte, correggi la prosa dove non regge più, poi porta <code>verified</code> a oggi. Mai spostare la data senza rileggere.</p>
+        </div>
+        <div class="item">
+          <span class="tag">Genera</span>
+          <h3>Non scrivere a mano ciò che ha una fonte</h3>
+          <p>Tra <code>&lt;!-- pom:generated decisions --&gt;</code> e <code>&lt;!-- /pom:generated --&gt;</code> il lint scrive la tabella di tutte le decisioni; <code>state</code> cita una sezione dello stato di progetto con la data dell'ultima modifica; <code>pages</code> elenca le altre pagine della wiki. Il testo fuori dai marcatori non viene mai toccato e il reader nasconde i marcatori.</p>
+        </div>
+      </div>
+      <p class="callout">Entrambi i meccanismi sono facoltativi pagina per pagina e producono solo avvisi. Una pagina che non dichiara nulla si comporta esattamente come prima. La regola e la sua origine sono registrate in <code>decisions/ADR-0006</code>.</p>
     </section>
 
     <section id="pi-package">

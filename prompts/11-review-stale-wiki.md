@@ -6,10 +6,10 @@ Use this prompt to identify potentially stale wiki pages after changes to source
 I want to check whether the wiki became stale after recent changes.
 
 Before modifying files:
-1. read `git status`;
-2. identify modified, added, removed, or renamed files;
+1. run `npm run pom:lint`, if available, and collect every `wiki-stale-synthesis` finding: each names a page, the declared source that changed, and when;
+2. read `git status` and identify modified, added, removed, or renamed files;
 3. for each changed file, search references in `wiki/` using text search;
-4. produce a stale-candidates list:
+4. produce a stale-candidates list (lint findings first, then text-search candidates):
    - changed file;
    - wiki pages that cite it;
    - reason for possible impact;
@@ -25,7 +25,7 @@ Rules:
 - do not automatically update non-candidate pages.
 
 After approval:
-1. update only impacted wiki pages;
+1. update only impacted wiki pages; on a page with a `verified` frontmatter date, set it to today only after re-reading every source the finding named, whether or not the text changed;
 2. update `wiki/index.md` if pages or descriptions change;
 3. update `wiki/log.md`;
 4. create an ADR or reconciliation only if a structural decision or contradiction emerges;

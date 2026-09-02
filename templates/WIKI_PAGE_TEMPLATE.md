@@ -1,5 +1,11 @@
 ---
 navTitle: Page Title
+# Synthesis pages only: declare what this page summarizes and when you last
+# re-read it. pom:lint reports wiki-stale-synthesis when a source changes later.
+# derivedFrom:
+#   - decisions/
+#   - PROJECT_STATE.md
+# verified: YYYY-MM-DD
 ---
 
 # Page Title

@@ -10,6 +10,10 @@ import {
   walkFiles,
 } from "./lint-helpers.ts";
 
+function stripFrontmatter(text: string): string {
+  return text.replace(/^---\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/, "");
+}
+
 function stripWikiRoot(path: string, wikiRoot: string): string {
   const prefix = `${wikiRoot}/`;
   return path.startsWith(prefix) ? path.slice(prefix.length) : path;
@@ -57,9 +61,10 @@ export function checkWikiDocuments(context: LintContext): void {
       continue;
     }
 
-    // Count headings outside fenced code, so a `# comment` line in a shell
-    // example is not reported as a second title.
-    const h1Matches = stripMarkdownCode(text).match(/^# .+/gm) ?? [];
+    // Count headings outside fenced code and outside the frontmatter, so a
+    // `# comment` line in a shell example or a YAML comment is not reported
+    // as a second title.
+    const h1Matches = stripMarkdownCode(stripFrontmatter(text)).match(/^# .+/gm) ?? [];
     if (h1Matches.length === 0) {
       context.add("error", "wiki-missing-h1", "Each wiki page must have one H1 title.", page);
     } else if (h1Matches.length > 1) {

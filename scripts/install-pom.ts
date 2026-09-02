@@ -489,7 +489,7 @@ function createProfileFiles(adoption: AdoptionConfig, config: ProjectConfig): vo
     copyTemplateIfMissing(resolveTemplate("WIKI_READER_SHORTCUT.html"), "wiki.html", (text) =>
       text.replaceAll("wiki/_site/", `${wikiRoot}/_site/`),
     );
-    createWikiOverviewIfMissing(wikiRoot);
+    createWikiOverviewIfMissing(wikiRoot, adoption, config);
   }
   if (adoption.decisions === "enabled") {
     const decisionsRoot = configuredPath(config, "decisions.root", "decisions");
@@ -509,19 +509,49 @@ function createProfileFiles(adoption: AdoptionConfig, config: ProjectConfig): vo
   }
 }
 
-function createWikiOverviewIfMissing(wikiRoot: string): void {
+/**
+ * The overview is a synthesis page: it summarizes decisions and state that live
+ * elsewhere. The placeholder therefore declares those sources in `derivedFrom`
+ * (so `pom:lint` can flag it when they move) and reserves generated blocks for
+ * what should never be restated by hand. Only sources the chosen profile
+ * actually creates are declared, so a fresh install lints clean.
+ */
+function createWikiOverviewIfMissing(wikiRoot: string, adoption: AdoptionConfig, config: ProjectConfig): void {
   const overviewPath = `${wikiRoot}/overview.md`;
   if (pathExists(overviewPath)) return;
 
-  const content = `# Overview
+  const hasDecisions = adoption.decisions === "enabled";
+  const hasProjectState =
+    adoption.profile === "full" || (adoption.profile === "custom" && adoption.planning === "structured");
+  const decisionsRoot = configuredPath(config, "decisions.root", "decisions");
+  const projectStatePath = configuredPath(config, "handoff.projectStatePath", "PROJECT_STATE.md");
+
+  const derivedFrom = [
+    ...(hasDecisions ? [`${decisionsRoot}/`] : []),
+    ...(hasProjectState ? [projectStatePath] : []),
+  ];
+  const frontmatter =
+    derivedFrom.length > 0
+      ? `---\n# Sources this page summarizes. pom:lint reports wiki-stale-synthesis when one\n# changes after 'verified'; re-read it, update the page, then set verified to today.\nderivedFrom:\n${derivedFrom.map((path) => `  - ${path}`).join("\n")}\n---\n\n`
+      : "";
+
+  const currentState = hasProjectState
+    ? `<!-- pom:generated state -->\n<!-- /pom:generated -->`
+    : `The project wiki has been initialized, but the project overview still needs to be compiled from actual sources, code, decisions, mockups, analysis, or user input.`;
+
+  const linkedDecisions = hasDecisions
+    ? `<!-- pom:generated decisions -->\n<!-- /pom:generated -->`
+    : `| Decision | Impact |\n|---|---|\n|  |  |`;
+
+  const content = `${frontmatter}# Overview
 
 ## Summary
 
-Initial project overview page created by POM. Replace this placeholder with the current consolidated project knowledge when the wiki is first built.
+Initial project overview page created by POM. Replace this placeholder with the current consolidated project knowledge when the wiki is first built. Keep hand-written text outside the generated blocks: \`pom:lint\` fills them.
 
 ## Current State
 
-The project wiki has been initialized, but the project overview still needs to be compiled from actual sources, code, decisions, mockups, analysis, or user input.
+${currentState}
 
 ## Details
 
@@ -538,9 +568,7 @@ The project wiki has been initialized, but the project overview still needs to b
 
 ## Linked Decisions
 
-| Decision | Impact |
-|---|---|
-|  |  |
+${linkedDecisions}
 
 ## Open Questions
 
@@ -550,7 +578,8 @@ The project wiki has been initialized, but the project overview still needs to b
 
 ## Related Links
 
-- [[index]]
+<!-- pom:generated pages -->
+<!-- /pom:generated -->
 `;
 
   writeText(overviewPath, content);

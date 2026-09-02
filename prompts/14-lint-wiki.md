@@ -15,12 +15,14 @@ Before modifying files:
    - very short pages or pages without sources/references;
    - recurring open questions;
    - stale candidates from references to modified files, if `git status` shows changes;
-4. produce a health report.
+   - synthesis pages that list decisions, state, or pages by hand instead of using a generated block, and synthesis pages without `derivedFrom`;
+4. run `npm run pom:lint`, if available, and add its `wiki-*` findings (`wiki-stale-synthesis` above all) to the report;
+5. produce a health report.
 
 Rules:
 - do not perform full semantic analysis unless requested;
 - report issues as candidates, not certain errors, when the check is heuristic;
-- do not add mandatory frontmatter;
+- do not add mandatory frontmatter; `derivedFrom` and `verified` are optional and belong on synthesis pages only;
 - do not modify the wiki without approval;
 - keep the report concise and actionable.
 

@@ -273,6 +273,32 @@ The generated reader is derived output. It is useful for browsing and search, bu
 
 Wiki pages may define optional YAML frontmatter with `navTitle` when the H1 is too long for reader navigation. The reader uses `navTitle` in side navigation, breadcrumbs, and previous/next links, while keeping the full H1 as the page title and search text. Omit `navTitle` when the H1 is already short enough.
 
+### Synthesis Pages Stay Honest
+
+Appended memory (the wiki log, ADRs, `PROJECT_STATE.md`) tends to stay current because every task writes its own entry. Derived memory, such as the project overview that summarizes decisions and state, has no task that owns it and silently falls behind. POM makes the gap visible and removes the parts that need not be written by hand:
+
+- **Declared sources and verification date.** A synthesis page may declare in its frontmatter what it derives from and when it was last re-read:
+
+  ```yaml
+  ---
+  derivedFrom:
+    - decisions/
+    - PROJECT_STATE.md
+  verified: 2026-09-02
+  ---
+  ```
+
+  `pom:lint` compares every declared path with that date (or with the page's last commit when `verified` is absent) and reports `wiki-stale-synthesis` for each source that changed later, in a commit or in the working tree. The finding is a candidate, not a verdict: re-read the source, update the page where the prose no longer holds, then set `verified` to today. Never bump the date without re-reading. Pages without `derivedFrom` are not checked.
+
+- **Generated blocks.** What already has an authoritative source is filled in by `pom:lint` between markers, the way the ADR index is regenerated:
+
+  ```markdown
+  <!-- pom:generated decisions -->
+  <!-- /pom:generated -->
+  ```
+
+  `decisions` lists every ADR in the configured decisions root with status, date, and summary; `state` quotes one section of `PROJECT_STATE.md` (options: `source="..."`, `section="### Current State"`) with its last change date; `pages` lists the other wiki pages. Text outside the markers is never touched, and the regenerated block is committed with the page. The reader hides the markers.
+
 Mermaid rendering is opt-in. By default, the generated reader does not load Mermaid or any external CDN; it shows Mermaid blocks as readable source. If a project passes `--mermaid-runtime` with a remote URL, the generated reader will fetch that module in the browser. Offline or sensitive environments should use no runtime or a local vendored runtime. POM does not add Subresource Integrity for remote Mermaid modules.
 
 ### Wiki Reader Lifecycle

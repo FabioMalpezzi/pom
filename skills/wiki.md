@@ -36,6 +36,8 @@ Use `stale` when files changed and you want to find which wiki pages cite them. 
 - In `lint` mode, treat heuristic results as candidates, not certain errors.
 - Propose changes before applying them when impact is ambiguous.
 - Run lint after wiki updates.
+- A synthesis page declares its sources in frontmatter (`derivedFrom`) and the date they were last re-read (`verified`). A `wiki-stale-synthesis` finding means a declared source moved after that date: re-read it, update the page where needed, then set `verified` to today. Never bump the date without re-reading.
+- Do not hand-write what has an authoritative source: the list of decisions, the current state, the map of pages go in generated blocks (`<!-- pom:generated decisions -->` ... `<!-- /pom:generated -->`) that `pom:lint` fills. Never edit between the markers.
 - If a stale candidate involves a contradiction between two authoritative sources, use `skills/reconcile.md` instead of updating the wiki directly.
 
 ## Output

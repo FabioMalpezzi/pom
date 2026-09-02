@@ -67,6 +67,7 @@ function printHelp(): void {
   console.log("4. Lint POM governance");
   console.log("   npm run pom:lint");
   console.log("   Check document governance, configured roots, statuses, indexes, and handoff reminders.");
+  console.log("   Fills the generated blocks of wiki pages (decisions, state, pages) and reports wiki-stale-synthesis when a page's declared sources (derivedFrom) changed after its verified date.");
   console.log("   If wiki Markdown changed, regenerate the static wiki reader at the end.");
   console.log("");
   console.log("5. Render the wiki reader");
@@ -196,6 +197,7 @@ function printHelpIt(): void {
   console.log("4. Lint della governance POM");
   console.log("   npm run pom:lint");
   console.log("   Controlla governance documentale, root configurate, status, indici e promemoria di handoff.");
+  console.log("   Riempie i blocchi generati delle pagine wiki (decisions, state, pages) e segnala wiki-stale-synthesis quando le fonti dichiarate di una pagina (derivedFrom) sono cambiate dopo la sua data verified.");
   console.log("   Se cambia Markdown sotto wiki/, rigenera il reader statico alla fine.");
   console.log("");
   console.log("5. Generare il reader della wiki");

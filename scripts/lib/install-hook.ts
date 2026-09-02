@@ -37,7 +37,10 @@ export function installPreCommitHook({ root, config, gitContext, runGit }: HookI
   const governedPathArgs = governedMemoryPaths(config).map(shellQuote).join(" ");
   const generatedPathArgs = generatedArtifactPaths(config).map(shellQuote).join(" ");
   const projectStatePath = shellQuote(configuredPath(config, "handoff.projectStatePath", "PROJECT_STATE.md"));
+  const wikiRootArg = shellQuote(configuredPath(config, "wiki.root", "wiki"));
   const hookBlock = `${HOOK_START_MARKER}
+# Wiki pages with unstaged edits before the lint runs: those stay yours.
+pom_wiki_dirty_before="$(git diff --name-only -- ${wikiRootArg} 2>/dev/null)"
 echo "POM pre-commit: running npm run pom:lint"
 npm run pom:lint
 pom_lint_status=$?
@@ -74,6 +77,19 @@ if [ -n "$pom_untracked_generated" ]; then
   echo "POM pre-commit notice: pom:lint created generated files that this project does not track yet."
   echo "Add them to the commit or ignore them explicitly; they were left unstaged:"
   printf '%s' "$pom_untracked_generated" | sed '/^$/d; s/^/  /'
+fi
+
+# pom:lint also refreshes generated blocks inside wiki pages. A tracked page
+# that was clean before the lint and changed by it carries only generated
+# content, so it is restaged; a page you were already editing is left to you.
+pom_wiki_refreshed="$(git diff --name-only -- ${wikiRootArg} 2>/dev/null | while IFS= read -r pom_wiki_page; do
+  case "$pom_wiki_page" in (*.md) ;; (*) continue ;; esac
+  printf '%s\\n' "$pom_wiki_dirty_before" | grep -qxF -- "$pom_wiki_page" && continue
+  git add -- "$pom_wiki_page" 2>/dev/null && printf '%s\\n' "$pom_wiki_page"
+done)"
+if [ -n "$pom_wiki_refreshed" ]; then
+  echo "POM pre-commit: restaged wiki pages whose generated blocks pom:lint refreshed:"
+  printf '%s\\n' "$pom_wiki_refreshed" | sed '/^$/d; s/^/  /'
 fi
 
 if [ -f ${projectStatePath} ]; then

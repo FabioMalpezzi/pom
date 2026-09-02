@@ -344,6 +344,7 @@ The hook:
 - runs `npm run pom:lint`;
 - blocks the commit if lint fails;
 - restages the generated artifacts that lint touched (folder indexes, the ADR index, `wiki/_site/`): for an artifact the project already tracks, modifications, deletions, and new files under it are staged so the commit carries the regenerated output; a generated file the project does not track yet is left unstaged and listed in a notice, so the choice to track or ignore it stays explicit;
+- restages wiki pages whose generated blocks (`<!-- pom:generated ... -->`) lint refreshed, but only pages that were clean before the lint ran: such a page changed by generated content alone. A page you were already editing is left unstaged, so your own half-done work is never committed by the hook;
 - with `core.hooksPath` pointing at husky's shim directory (`.husky/_`), the block goes into the user hook `.husky/pre-commit`; any other custom hooks directory is respected as configured;
 - if `PROJECT_STATE.md` exists and governed project-memory files are staged, prints a non-blocking reminder to update it when the restart context changed.
 
