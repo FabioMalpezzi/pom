@@ -1,0 +1,24 @@
+# E004: states is empty.
+workflow: core_minimal
+version: 1
+description: |
+  A single piece of work is open and then closed.
+initial_state: open
+
+states: []
+
+events:
+  - name: finish
+    description: |
+      The work is finished.
+
+guards:
+  - name: is_ready
+    description: |
+      The work is ready to be closed.
+
+transitions:
+  - from: open
+    to: closed
+    event: finish
+    guard: is_ready

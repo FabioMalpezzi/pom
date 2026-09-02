@@ -5,8 +5,8 @@
 //
 // Usage: node scripts/to-mermaid.mjs <yaml> [--out <file.mmd>]
 
-import { readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import yaml from './require-yaml.mjs';
 
 import { renderModelMermaid } from './mermaid.mjs';
@@ -32,7 +32,7 @@ function main() {
   const model = yaml.load(raw);
   if (!model || typeof model !== 'object') { console.error('YAML root is not a mapping.'); process.exit(1); }
   const text = renderModelMermaid(model);
-  if (out) { writeFileSync(resolve(out), text, 'utf8'); console.log(`Wrote: ${out}`); }
+  if (out) { mkdirSync(dirname(resolve(out)), { recursive: true }); writeFileSync(resolve(out), text, 'utf8'); console.log(`Wrote: ${out}`); }
   else process.stdout.write(text);
 }
 
