@@ -149,7 +149,7 @@ The bootstrap script:
 - initializes Git in the target project root when the target is not already inside a Git worktree;
 - lets advanced users choose an adoption profile directly (minimal, wiki, decisions, full, adopt, refresh, custom);
 - updates the POM section in every existing supported agent instruction file, or creates `AGENTS.md` if none exists;
-- creates `package.json` scripts, `pom-update.mjs`, `pom.config.json`, and governance folders based on the chosen profile;
+- creates `package.json` scripts (`pom:init`, `pom:update`, `pom:help`, `pom:lint`, `pom:reader`, `pom:wiki:render`, `pom:workflow:lint`, `pom:workflow:mermaid`, `pom:workflow:xstate`, `pom:tandem`), `pom-update.mjs`, `pom.config.json`, and governance folders based on the chosen profile;
 - installs or updates the Git pre-commit hook with POM checks when the target project root is the Git worktree root.
 
 Rerunning the bootstrap when `pom/` already exists updates a Git-managed checkout (checkout `main`, fast-forward pull, submodule fallback) and leaves a vendored copy without `.git` untouched, pointing at `npm run pom:update` instead: running Git inside a vendored copy would act on the project repository. When the source cannot be reached, the bootstrap stops with the Git error and no clone; when the source has no `main` branch, it clones the default branch and says so.

@@ -106,6 +106,13 @@ function printHelp(): void {
   console.log("12. Show this command guide");
   console.log("    npm run pom:help [-- --lang en|it]");
   console.log("");
+  console.log("13. Run a tandem: a controller agent reviews what an executor agent builds (pi, codex, claude; persistent sessions)");
+  console.log("    npm run pom:tandem -- init --topic <slug> --controller <backend>[:<model>] --executor <backend>[:<model>] [--cap 4] [--phase-budget N]");
+  console.log("    npm run pom:tandem -- task add --topic <slug> --id T1 --title \"...\"   |   status --topic <slug>");
+  console.log("    npm run pom:tandem -- send|review|respond --topic <slug> --task T1 ...   |   close --topic <slug> [--keep-worktrees]");
+  console.log("    The controller works in its own Git worktree under collaboration/<slug>/ and never edits the executor workspace (exit 4 if it does).");
+  console.log("    Exit codes: 2 reply without VERDICT, 3 cap or phase budget reached. Guide: pom/skills/tandem.md.");
+  console.log("");
   console.log("Source-only commands (POM repository itself, not installed in target projects):");
   console.log("");
   console.log("- npm run pom:test");
@@ -223,6 +230,13 @@ function printHelpIt(): void {
   console.log("");
   console.log("12. Mostrare questa guida ai comandi");
   console.log("    npm run pom:help [-- --lang en|it]");
+  console.log("");
+  console.log("13. Avviare un tandem: un agente controllore rivede ciò che un agente esecutore costruisce (pi, codex, claude; sessioni persistenti)");
+  console.log("    npm run pom:tandem -- init --topic <slug> --controller <backend>[:<modello>] --executor <backend>[:<modello>] [--cap 4] [--phase-budget N]");
+  console.log("    npm run pom:tandem -- task add --topic <slug> --id T1 --title \"...\"   |   status --topic <slug>");
+  console.log("    npm run pom:tandem -- send|review|respond --topic <slug> --task T1 ...   |   close --topic <slug> [--keep-worktrees]");
+  console.log("    Il controllore lavora in un proprio worktree Git sotto collaboration/<slug>/ e non modifica mai l'area di lavoro dell'esecutore (uscita 4 se lo fa).");
+  console.log("    Codici di uscita: 2 risposta senza VERDICT, 3 tetto o bilancio di fase raggiunto. Guida: pom/skills/tandem.md.");
   console.log("");
   console.log("Comandi solo nel repo POM sorgente (non installati nei progetti target):");
   console.log("");

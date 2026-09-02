@@ -45,6 +45,7 @@ These prompts are intentionally generic: they can be copied into other repositor
 | `35-mcp-interface.md` | design, audit, reshape, or verify MCP tools, resources, prompts, schemas, responses, and errors |
 | `36-release.md` | close a numbered version: reconcile changelog with history, align version references, checksums, tag, record in memory |
 | `37-migrate-structure.md` | move an adopted project's folders toward canonical roots with approval, dependents checklist, and lint before and after |
+| `38-tandem.md` | coordinate a controller/executor tandem between two coding agents: brief, review cycles with a fixed verdict contract, exit codes, escalation, closure |
 
 ## References
 
@@ -57,7 +58,7 @@ These prompts are intentionally generic: they can be copied into other repositor
 Two styles are admitted. Pick one per prompt and do not mix them in the same file:
 
 - **Pasteable prompt** (`32` to `35`): a short framing paragraph, then one ```text block written in the first person that a user can paste into any harness as-is. Numbered steps, routing cues, and the expected output live inside the block.
-- **Procedure with headings** (`36` and `37`): a prose procedure the agent reads rather than pastes, organized as `## Goal`, `## Preconditions`, numbered steps, and verification. Use it when the workflow needs branches, tables, or checks that do not fit one pasteable block.
+- **Procedure with headings** (`36` to `38`): a prose procedure the agent reads rather than pastes, organized as `## Goal`, `## Preconditions`, numbered steps, and verification. Use it when the workflow needs branches, tables, or checks that do not fit one pasteable block.
 
 Both styles start with an English `# Prompt` title, are owned by one skill card, and carry no session history or version notes.
 

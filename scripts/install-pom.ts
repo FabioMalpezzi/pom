@@ -149,6 +149,7 @@ function expectedPomScripts(): Record<string, string> {
     "pom:workflow:lint": jsScript("scripts/lint-workflows.mjs"),
     "pom:workflow:mermaid": jsScript("scripts/to-mermaid.mjs"),
     "pom:workflow:xstate": jsScript("scripts/to-xstate.mjs"),
+    "pom:tandem": jsScript("scripts/tandem.mjs"),
   };
 }
 
