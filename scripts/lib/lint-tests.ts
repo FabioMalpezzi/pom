@@ -29,6 +29,8 @@ export function checkTestsLayout(context: LintContext): void {
 
     if (!stat.isDirectory()) continue;
     if (entry === context.config.tests.crossSystemDir) continue;
+    // Shared test support code (harness, helpers) is not a test area.
+    if (entry === context.config.tests.supportDir) continue;
 
     if (allowedAreas.size > 0 && !allowedAreas.has(entry)) {
       context.add(

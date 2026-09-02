@@ -3,22 +3,13 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
 
+import { createHarness } from "../../lib/harness.mjs";
+
 const ROOT = process.cwd();
-let passed = 0;
-let failed = 0;
+const { assert, section, banner, summary } = createHarness({ name: "Prompt Governance Tests" });
 
 function read(path) {
   return readFileSync(join(ROOT, path), "utf8");
-}
-
-function assert(name, condition, detail = "") {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name}${detail ? ` — ${detail}` : ""}`);
-    failed++;
-  }
 }
 
 function promptLinks(text) {
@@ -50,10 +41,9 @@ function assertContract(name, path, contract) {
   }
 }
 
-console.log("Prompt Governance Tests");
-console.log("=======================");
+banner();
 
-console.log("\nScenario 1: prompt catalogs and skill links are complete in both directions");
+section("Scenario 1: prompt catalogs and skill links are complete in both directions");
 const canonical = readdirSync(join(ROOT, "prompts"))
   .filter((entry) => /^\d{2}-.*\.md$/.test(entry))
   .sort();
@@ -70,7 +60,7 @@ assert("the prompt catalog has no stale numbered entries", [...promptCatalog].ev
 assert("every canonical prompt is linked by a skill", canonical.every((file) => skillLinks.has(file)));
 assert("every skill prompt link resolves", rawSkillLinks.every((file) => existsSync(join(ROOT, file))));
 
-console.log("\nScenario 2: loop/goal prompts and skill are portable current procedures");
+section("Scenario 2: loop/goal prompts and skill are portable current procedures");
 for (const number of [28, 29, 30, 31]) {
   const file = canonical.find((entry) => entry.startsWith(`${number}-`));
   const text = read(`prompts/${file}`);
@@ -83,7 +73,7 @@ assert(
   !/promoted from|session 2026-|Status.*canonical/i.test(read("skills/loop-goal.md")),
 );
 
-console.log("\nScenario 3: copied canonical prompts retain their own config guards");
+section("Scenario 3: copied canonical prompts retain their own config guards");
 for (const file of [
   "07-update-project-after-work.md",
   "09-run-temporary-experiment.md",
@@ -95,14 +85,14 @@ for (const file of [
 assert("status classification respects disabled modules", read("prompts/15-classify-document-status.md").includes("disabled adoption module"));
 assert("validator marks disabled modules N/A", read("prompts/18-post-action-validator.md").includes("Mark a governed module N/A when it is disabled"));
 
-console.log("\nScenario 4: reconciliation respects disabled decision governance");
+section("Scenario 4: reconciliation respects disabled decision governance");
 for (const file of ["prompts/19-reconcile-memory.md", "skills/reconcile.md", "templates/RECONCILIATION_TEMPLATE.md"]) {
   const text = read(file);
   assert(`${file} gates ADR creation on adoption.decisions`, text.includes("adoption.decisions") && text.includes("disabled"));
 }
 assert("reconciliation does not impose ADRs unconditionally", !read("prompts/19-reconcile-memory.md").includes("contradictions require an ADR"));
 
-console.log("\nScenario 5: static contract guards reject omissions and explicit contradictions");
+section("Scenario 5: static contract guards reject omissions and explicit contradictions");
 assertContract("loop/goal model gate", "prompts/27-workflow-modeling.md", {
   required: ["workflows.enabled: true", "workflows.loopGoal.enabled: true", "accepted `criteria.md`", "criteria contract is frozen"],
   forbidden: ["Continue when workflows.enabled is false.", "Continue when workflows.loopGoal.enabled is false.", "Model the loop/goal workflow before criteria are accepted.", "Draft criteria are sufficient for loop/goal modeling."],
@@ -160,5 +150,4 @@ assertContract("MCP interface ergonomics", "prompts/35-mcp-interface.md", {
   forbidden: ["Use one generic inventory for tools, resources, and prompts.", "Never mirror structured content in TextContent.", "Output-schema conformance is optional.", "Return every failure as a JSON-RPC protocol error.", "Return every failure with isError true.", "Trust tool annotations as enforcement controls.", "Compatible public-contract changes need no approval.", "Skip the Goal-Backward Check.", "One positive representative agent intent is sufficient.", "Treat every authorization failure as a tool execution error.", "Serialized byte count proves token efficiency.", "Missing evidence counts as verified."],
 });
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exitCode = 1;
+summary();

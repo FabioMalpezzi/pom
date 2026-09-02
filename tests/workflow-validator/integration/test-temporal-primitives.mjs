@@ -1,36 +1,23 @@
 #!/usr/bin/env node
 
-import { spawnSync } from "node:child_process";
+import { createHarness, runNode } from "../../lib/harness.mjs";
 
-let passed = 0;
-let failed = 0;
+const FIXTURES = "tests/workflow-validator/fixtures";
 
-function assert(name, condition, detail = "") {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name}${detail ? ` - ${detail}` : ""}`);
-    failed++;
-  }
-}
+const { assert, section, banner, summary } = createHarness({ name: "Workflow Temporal Primitive Tests" });
 
 function runLint(path) {
-  return spawnSync(process.execPath, ["scripts/lint-workflows.mjs", path], {
-    cwd: process.cwd(),
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  return runNode(["scripts/lint-workflows.mjs", path]);
 }
 
 function scenarioTemporalPrimitives() {
-  console.log("\nScenario 1: loop_guard and timeout validate statically");
+  section("Scenario 1: loop_guard and timeout validate statically");
 
-  const valid = runLint("experiments/schema-loop-guard-timeout/examples/loop-guard-timeout.yaml");
+  const valid = runLint(`${FIXTURES}/loop-guard-timeout.yaml`);
   assert("combined H6/H7 example passes", valid.status === 0, valid.stdout + valid.stderr);
   assert("combined H6/H7 example has no warnings", valid.stdout.includes("| Warnings | 0 |"), valid.stdout);
 
-  const warning = runLint("experiments/schema-loop-guard-timeout/examples/loop-guard-unused-override-warning.yaml");
+  const warning = runLint(`${FIXTURES}/loop-guard-unused-override-warning.yaml`);
   assert("unused cause-specific override example passes", warning.status === 0, warning.stdout + warning.stderr);
   assert("unused cause-specific override reports W060", warning.stdout.includes("**W060**"), warning.stdout);
 
@@ -46,16 +33,14 @@ function scenarioTemporalPrimitives() {
   ]);
 
   for (const [fixture, code] of expected) {
-    const result = runLint(`experiments/schema-loop-guard-timeout/broken-fixtures/${fixture}`);
+    const result = runLint(`${FIXTURES}/${fixture}`);
     assert(`${fixture} fails`, result.status === 1, result.stdout + result.stderr);
     assert(`${fixture} reports ${code}`, result.stdout.includes(`**${code}**`), result.stdout);
   }
 }
 
-console.log("Workflow Temporal Primitive Tests");
-console.log("=================================");
+banner();
 
 scenarioTemporalPrimitives();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

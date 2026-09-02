@@ -1,0 +1,40 @@
+workflow: dynamic_handle_terminal_active
+version: 1
+initial_state: launch_a
+
+states:
+  - name: launch_a
+    is_final: false
+    fan_out_launch:
+      workflow: 01-task-pipeline.yaml
+      over: items_a
+      handle: batch_a
+  - name: launch_b
+    is_final: false
+    fan_out_launch:
+      workflow: 01-task-pipeline.yaml
+      over: items_b
+      handle: batch_b
+  - name: wait_a
+    is_final: false
+    await:
+      handles: [batch_a]
+      join: all
+  - name: done
+    is_final: true
+
+events:
+  - name: launched_a
+  - name: launched_b
+  - name: batch_a_ready
+
+transitions:
+  - from: launch_a
+    to: launch_b
+    event: launched_a
+  - from: launch_b
+    to: wait_a
+    event: launched_b
+  - from: wait_a
+    to: done
+    event: batch_a_ready

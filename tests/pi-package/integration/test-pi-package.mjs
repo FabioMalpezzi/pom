@@ -11,20 +11,11 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as yaml from "js-yaml";
 
+import { createHarness } from "../../lib/harness.mjs";
+
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 
-let passed = 0;
-let failed = 0;
-function assert(name, ok, detail) {
-  if (ok) {
-    passed += 1;
-    console.log(`  ✓ ${name}`);
-  } else {
-    failed += 1;
-    console.log(`  ✗ ${name}${detail ? ` — ${detail}` : ""}`);
-  }
-}
-
+const { assert, summary } = createHarness();
 const manifest = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
 
 assert("keywords includes pi-package", Array.isArray(manifest.keywords) && manifest.keywords.includes("pi-package"));
@@ -66,5 +57,4 @@ assert(
   !manifest.dependencies || !Object.keys(manifest.dependencies).some((d) => /@anthropic-ai|^openai$|@google\/generative-ai/.test(d)),
 );
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exitCode = 1;
+summary();

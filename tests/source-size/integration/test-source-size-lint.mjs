@@ -1,30 +1,16 @@
 #!/usr/bin/env node
 
-import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const POM_ROOT = process.cwd();
-let passed = 0;
-let failed = 0;
+import { createHarness, makeSandbox, removeSandbox, runNode } from "../../lib/harness.mjs";
 
-function assert(name, condition, detail = "") {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name}${detail ? ` - ${detail}` : ""}`);
-    failed++;
-  }
-}
+const POM_ROOT = process.cwd();
+const { assert, section, banner, summary } = createHarness({ name: "Source Size Lint Tests" });
 
 function runLint(projectDir, scriptPath) {
-  return spawnSync(process.execPath, ["--experimental-strip-types", scriptPath], {
-    cwd: projectDir,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  return runNode(["--experimental-strip-types", scriptPath], { cwd: projectDir });
 }
 
 function writeHugeSource(path, lineCount) {
@@ -32,8 +18,8 @@ function writeHugeSource(path, lineCount) {
 }
 
 function scenarioPomSourceEnforcesHardCap() {
-  console.log("\nScenario 1: POM Source enforces source file hard cap");
-  const dir = mkdtempSync(join(tmpdir(), "pom-source-size-"));
+  section("Scenario 1: POM Source enforces source file hard cap");
+  const { dir } = makeSandbox("pom-source-size-");
 
   try {
     mkdirSync(join(dir, "scripts"), { recursive: true });
@@ -48,13 +34,13 @@ function scenarioPomSourceEnforcesHardCap() {
     assert("lint fails on POM Source hard cap", result.status === 1, result.stdout + result.stderr);
     assert("hard cap finding is emitted", result.stdout.includes("source-size-hard-cap"), result.stdout);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
 function scenarioTargetProjectIsNotChecked() {
-  console.log("\nScenario 2: Target Project source files are not checked by POM Source limits");
-  const dir = mkdtempSync(join(tmpdir(), "pom-target-size-"));
+  section("Scenario 2: Target Project source files are not checked by POM Source limits");
+  const { dir } = makeSandbox("pom-target-size-");
 
   try {
     execFileSync("ln", ["-s", POM_ROOT, join(dir, "pom")]);
@@ -65,15 +51,13 @@ function scenarioTargetProjectIsNotChecked() {
     assert("target lint exits without source-size failure", result.status === 0, result.stdout + result.stderr);
     assert("target lint does not emit source-size finding", !result.stdout.includes("source-size-"), result.stdout);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
-console.log("Source Size Lint Tests");
-console.log("======================");
+banner();
 
 scenarioPomSourceEnforcesHardCap();
 scenarioTargetProjectIsNotChecked();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

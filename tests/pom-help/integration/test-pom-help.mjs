@@ -4,9 +4,10 @@
 // Runs the script from the POM source root, so the skills index is read from
 // skills/README.md (in a target project it would be pom/skills/README.md).
 
-import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+
+import { createHarness, runNode } from "../../lib/harness.mjs";
 
 const POM_ROOT = process.cwd();
 const SCRIPT = join("scripts", "pom-help.ts");
@@ -14,24 +15,12 @@ const SCRIPT = join("scripts", "pom-help.ts");
 // pom:help is the command under test; the help does not advertise itself.
 const SELF_SCRIPT = "pom:help";
 
-let passed = 0;
-let failed = 0;
-
-function assert(name, condition, detail) {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name} - ${detail}`);
-    failed++;
-  }
-}
+const { assert, section, banner, summary } = createHarness({ name: "POM Help Tests" });
 
 function runHelp(args, env = {}) {
-  return spawnSync(process.execPath, ["--experimental-strip-types", SCRIPT, ...args], {
+  return runNode(["--experimental-strip-types", SCRIPT, ...args], {
     cwd: POM_ROOT,
-    encoding: "utf8",
-    env: { ...process.env, POM_LANG: "", LC_ALL: "", LC_MESSAGES: "", LANG: "", ...env },
+    env: { POM_LANG: "", LC_ALL: "", LC_MESSAGES: "", LANG: "", ...env },
   });
 }
 
@@ -47,7 +36,7 @@ function skillsFromReadme() {
 }
 
 function scenarioLanguage(lang, heading) {
-  console.log(`\nScenario: --lang ${lang}`);
+  section(`Scenario: --lang ${lang}`);
   const result = runHelp(["--lang", lang]);
   assert("exit code is 0", result.status === 0, `status=${result.status} stderr=${result.stderr}`);
   assert("stdout is not empty", result.stdout.trim().length > 0, "empty stdout");
@@ -72,7 +61,7 @@ function scenarioLanguage(lang, heading) {
 }
 
 function scenarioLanguageSelection(enOutput, itOutput) {
-  console.log("\nScenario: language selection");
+  section("Scenario: language selection");
   assert("English and Italian outputs differ", enOutput !== itOutput, "identical outputs");
 
   const inline = runHelp(["--lang=it"]);
@@ -95,12 +84,10 @@ function scenarioLanguageSelection(enOutput, itOutput) {
   assert("--lang without a value exits with 1", missingValue.status === 1, `status=${missingValue.status}`);
 }
 
-console.log("POM Help Tests");
-console.log("==============");
+banner();
 
 const en = scenarioLanguage("en", "POM Help");
 const it = scenarioLanguage("it", "Aiuto POM");
 scenarioLanguageSelection(en, it);
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

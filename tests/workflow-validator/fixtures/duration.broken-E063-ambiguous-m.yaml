@@ -1,0 +1,18 @@
+# Expected: E063 because bare "m" is ambiguous and minutes must be "min".
+workflow: loop_guard_ambiguous_duration
+version: 1
+initial_state: planning
+states:
+  - name: planning
+    is_final: false
+    loop_guard:
+      max_duration: 5m
+      on_exhaustion: failed
+  - name: failed
+    is_final: true
+events:
+  - name: retry
+transitions:
+  - from: planning
+    to: planning
+    event: retry

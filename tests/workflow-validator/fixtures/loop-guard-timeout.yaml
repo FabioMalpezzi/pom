@@ -1,0 +1,76 @@
+workflow: loop_guard_timeout_example
+version: 1
+description: |
+  Minimal workflow exercising the H6 loop_guard primitive and the H7
+  timeout primitive in the same model without making POM responsible for
+  runtime scheduling.
+
+initial_state: planning
+
+states:
+  - name: planning
+    description: The target code is retrying a bounded planning loop.
+    is_final: false
+    loop_guard:
+      max_visits: 3
+      max_duration: 10min
+      on_exhaustion: planning_failed
+      on_visits_exhausted: too_many_attempts
+      on_duration_exhausted: planning_timed_out
+  - name: waiting_human_review
+    description: The workflow is waiting for a human decision.
+    is_final: false
+    timeout:
+      duration: 24h
+      on_timeout: review_timed_out
+  - name: approved
+    description: The human approved the plan.
+    is_final: true
+  - name: planning_failed
+    description: The planning loop exhausted its common fallback.
+    is_final: true
+  - name: too_many_attempts
+    description: The planning loop exhausted its visit budget.
+    is_final: true
+  - name: planning_timed_out
+    description: The planning loop exhausted its duration budget.
+    is_final: true
+  - name: review_timed_out
+    description: The human review state timed out.
+    is_final: true
+
+events:
+  - name: retry_needed
+    description: Target code decided the loop should retry.
+  - name: plan_ready
+    description: Target code produced a plan ready for human review.
+  - name: review_approved
+    description: The human approved the plan.
+  - name: review_timeout
+    description: Target code emitted the timeout event for human review.
+
+guards:
+  - name: within_loop_budget
+    description: Target code enforces loop_guard counters and duration.
+
+transitions:
+  - from: planning
+    to: planning
+    event: retry_needed
+    guard: within_loop_budget
+    description: Retry inside the bounded planning loop.
+  - from: planning
+    to: waiting_human_review
+    event: plan_ready
+    description: Leave the loop after producing a plan.
+  - from: waiting_human_review
+    to: approved
+    event: review_approved
+    description: Human approval arrives before the timeout.
+  - from: waiting_human_review
+    to: review_timed_out
+    event: review_timeout
+    description: Target code emits this event when timeout.duration elapses.
+
+invariants:
+  - description: POM validates the static contract; target code owns counters, timers, and event emission.

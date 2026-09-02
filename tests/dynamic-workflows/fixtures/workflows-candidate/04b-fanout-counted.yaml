@@ -1,0 +1,87 @@
+workflow: dyn_fanout_counted
+version: 1
+description: |
+  Struttura 4, iterazione 2 — tentativo avversariale di REFUTARE
+  l'irriducibilità del fan-out trovata all'iterazione 1.
+
+  Idea: se la concorrenza è fuori scope (semantica runtime), allora il
+  fan-out "lancia N task" si può esprimere come un LOOP DI INVOKE CONTATI,
+  lo stesso pattern del fan-in (Struttura 3). Lo stato `dispatching` invoca
+  il task-pipeline, e sul ritorno o ri-lancia (self, guard more_pending) o
+  passa ad aggregating (guard all_dispatched). N vive nel context.
+
+  Esito: N task DINAMICI sono esprimibili, ma SEQUENZIALI. Si recupera la
+  funzione (lanciare e raccogliere N task con N dinamico) ma si perde la
+  STRUTTURA che rende "dynamic" il workflow: il parallelismo a N. Quindi
+  l'irriducibilità non è della funzione fan-out, è del PARALLELISMO.
+
+  Classificazione: adapted con perdita esplicita (serializzazione del
+  parallelismo). Confronto col verdetto avversariale in design/evaluation.
+
+initial_state: dispatching
+
+states:
+  - name: dispatching
+    description: |
+      Invoca un task-pipeline alla volta. Sul ritorno ri-lancia finché
+      mancano task (more_pending) o chiude (all_dispatched). Counted
+      invoke loop: N task sequenziali, N dal context.
+    is_final: false
+    invoke:
+      workflow: 01-task-pipeline.yaml
+      on_completion:
+        - terminal_state: task_done
+          next_event: task_returned
+  - name: aggregating
+    description: Tutti gli N task lanciati e raccolti (sequenzialmente).
+    is_final: false
+  - name: all_done
+    description: Fan-out/fan-in completati in forma serializzata.
+    is_final: true
+
+events:
+  - name: task_returned
+    description: Un task è terminato; decide se ri-lanciare o chiudere.
+  - name: done_all
+    description: Aggregazione finale completata.
+
+guards:
+  - name: more_pending
+    description: dispatched < expected — restano task da lanciare.
+  - name: all_dispatched
+    description: dispatched == expected — tutti gli N task lanciati e raccolti.
+
+transitions:
+  - from: dispatching
+    to: dispatching
+    event: task_returned
+    guard: more_pending
+  - from: dispatching
+    to: aggregating
+    event: task_returned
+    guard: all_dispatched
+  - from: aggregating
+    to: all_done
+    event: done_all
+
+context_schema:
+  input:
+    - name: expected
+      type: number
+  output_by_terminal:
+    all_done:
+      - name: dispatched
+        type: number
+
+invariants:
+  - description: |
+      I task sono lanciati e raccolti UNO ALLA VOLTA. La concorrenza a N
+      (l'essenza del Dynamic Workflow) non è rappresentata: è serializzata.
+
+metadata:
+  experiment: dynamic-workflows
+  structure: 4-fanout
+  iteration: 2
+  design_pattern: "counted invoke loop (sequential N)"
+  expected_fit: adapted-with-loss
+  residual_forced: "parallelism (concurrent N) — forbidden by E036, no pattern recovers it"

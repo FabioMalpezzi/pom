@@ -10,26 +10,16 @@
 // pom/templates/ADR_TEMPLATE.md resolve exactly as in a real installation.
 // Index regeneration and wiki rendering are deliberately not asserted here.
 
-import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+
+import { createHarness, git, makeSandbox, removeSandbox, runNode } from "../../lib/harness.mjs";
 
 const POM_ROOT = process.cwd();
 const LINT_SCRIPT = join("pom", "scripts", "lint-doc-governance.ts");
 
-let passed = 0;
-let failed = 0;
-
-function assert(name, condition, detail) {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name} - ${detail}`);
-    failed++;
-  }
-}
+const { assert, section, banner, summary } = createHarness({ name: "Doc Governance Lint Rules Tests" });
 
 function baseConfig(overrides = {}) {
   const config = JSON.parse(readFileSync(join(POM_ROOT, "templates", "POM_CONFIG_TEMPLATE.json"), "utf8"));
@@ -48,10 +38,10 @@ function deepMerge(target, source) {
   return target;
 }
 
-function createProject(config, { git = true } = {}) {
-  const dir = mkdtempSync(join(tmpdir(), "pom-lint-rules-test-"));
+function createProject(config, { git: withGit = true } = {}) {
+  const { dir } = makeSandbox("pom-lint-rules-test-");
   execFileSync("ln", ["-s", POM_ROOT, join(dir, "pom")]);
-  if (git) execFileSync("git", ["init", "-q"], { cwd: dir });
+  if (withGit) git(dir, ["init", "-q"]);
   if (config !== undefined) {
     writeFileSync(join(dir, "pom.config.json"), typeof config === "string" ? config : JSON.stringify(config, null, 2));
   }
@@ -65,21 +55,15 @@ function writeProjectFile(dir, relativePath, content) {
 }
 
 function gitCommitAll(dir, message) {
-  const identity = ["-c", "user.name=POM Test", "-c", "user.email=pom-test@example.invalid", "-c", "commit.gpgsign=false"];
-  execFileSync("git", [...identity, "add", "-A"], { cwd: dir });
-  execFileSync("git", [...identity, "commit", "-q", "-m", message], { cwd: dir });
+  git(dir, ["add", "-A"]);
+  git(dir, ["commit", "-q", "-m", message]);
 }
 
 function runLint(dir) {
-  return spawnSync(process.execPath, ["--experimental-strip-types", LINT_SCRIPT], {
-    cwd: dir,
-    encoding: "utf8",
-  });
+  return runNode(["--experimental-strip-types", LINT_SCRIPT], { cwd: dir });
 }
 
-function cleanup(dir) {
-  rmSync(dir, { recursive: true, force: true });
-}
+const cleanup = removeSandbox;
 
 function rulesIn(stdout) {
   return new Set([...stdout.matchAll(/^\[(?:ERROR|WARN)\] (\S+)/gm)].map((m) => m[1]));
@@ -146,7 +130,7 @@ function taskDocument({ status, sections = TASK_SECTIONS }) {
 // ─── Scenarios ────────────────────────────────────────────────────────
 
 function scenarioConfigInvalid() {
-  console.log("\nScenario: config-invalid (lint-config.ts)");
+  section("Scenario: config-invalid (lint-config.ts)");
 
   const cases = [
     { name: "pom.config.json that is not JSON", config: "{ not json", fragment: "is not valid JSON" },
@@ -183,7 +167,7 @@ function scenarioConfigInvalid() {
 }
 
 function scenarioDecisions() {
-  console.log("\nScenario: decision records (lint-decisions.ts)");
+  section("Scenario: decision records (lint-decisions.ts)");
   const decisionsEnabled = { adoption: { decisions: "enabled" } };
   const noSections = { decisions: { requireTemplateSections: false } };
 
@@ -309,7 +293,7 @@ function scenarioDecisions() {
 }
 
 function scenarioTaskPlans() {
-  console.log("\nScenario: task plans (lint-tasks.ts)");
+  section("Scenario: task plans (lint-tasks.ts)");
   const light = { adoption: { tasks: "structured" }, taskPlans: { requireTemplateSections: false } };
 
   let dir = createProject(baseConfig(light));
@@ -395,7 +379,7 @@ function scenarioTaskPlans() {
 }
 
 function scenarioHandoff() {
-  console.log("\nScenario: handoff and Git workflow (lint-handoff.ts)");
+  section("Scenario: handoff and Git workflow (lint-handoff.ts)");
   const handoffConfig = { handoff: { triggerPaths: ["src/"], maxLines: 5 } };
 
   // src/ is tracked from the baseline so `git status --porcelain` lists the
@@ -506,13 +490,11 @@ function scenarioHandoff() {
   }
 }
 
-console.log("Doc Governance Lint Rules Tests");
-console.log("===============================");
+banner();
 
 scenarioConfigInvalid();
 scenarioDecisions();
 scenarioTaskPlans();
 scenarioHandoff();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

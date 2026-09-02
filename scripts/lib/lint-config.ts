@@ -95,6 +95,7 @@ export type LintConfig = {
     areas: string[];
     recommendedLayout: string[];
     crossSystemDir: string;
+    supportDir: string;
     preferExistingStructure: boolean;
     requireApprovalBeforeMigratingExistingTests: boolean;
     severity: Severity;
@@ -218,6 +219,7 @@ const defaultConfig: LintConfig = {
     areas: [],
     recommendedLayout: ["e2e", "integration", "fixtures", "evidence"],
     crossSystemDir: "cross-system",
+    supportDir: "lib",
     preferExistingStructure: true,
     requireApprovalBeforeMigratingExistingTests: true,
     severity: "warning",
@@ -386,6 +388,7 @@ function mergeConfig(base: LintConfig, raw: Record<string, unknown>, readers: Co
       areas: readStringArray(raw, "tests.areas", base.tests.areas),
       recommendedLayout: readStringArray(raw, "tests.recommendedLayout", base.tests.recommendedLayout),
       crossSystemDir: readString(raw, "tests.crossSystemDir", base.tests.crossSystemDir),
+      supportDir: readString(raw, "tests.supportDir", base.tests.supportDir),
       preferExistingStructure: readBoolean(raw, "tests.preferExistingStructure", base.tests.preferExistingStructure),
       requireApprovalBeforeMigratingExistingTests: readBoolean(
         raw,

@@ -1,0 +1,30 @@
+workflow: dynamic_handle_empty_await
+version: 1
+initial_state: launch
+
+states:
+  - name: launch
+    is_final: false
+    fan_out_launch:
+      workflow: 01-task-pipeline.yaml
+      over: items
+      handle: batch
+  - name: wait
+    is_final: false
+    await:
+      handles: []
+      join: all
+  - name: done
+    is_final: true
+
+events:
+  - name: launched
+  - name: ready
+
+transitions:
+  - from: launch
+    to: wait
+    event: launched
+  - from: wait
+    to: done
+    event: ready

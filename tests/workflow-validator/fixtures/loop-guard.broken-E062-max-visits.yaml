@@ -1,0 +1,18 @@
+# Expected: E062 because max_visits must be an integer >= 1.
+workflow: loop_guard_bad_max_visits
+version: 1
+initial_state: planning
+states:
+  - name: planning
+    is_final: false
+    loop_guard:
+      max_visits: 0
+      on_exhaustion: failed
+  - name: failed
+    is_final: true
+events:
+  - name: retry
+transitions:
+  - from: planning
+    to: planning
+    event: retry
