@@ -3,12 +3,12 @@
 // Integration test for scripts/to-mermaid.mjs (CLI) and scripts/mermaid.mjs
 // (shared renderer): POM workflow / pipeline YAML -> Mermaid stateDiagram-v2.
 
-import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import yaml from "../../../scripts/require-yaml.mjs";
 import { renderModelMermaid, renderPipelineMermaid, renderWorkflowMermaid } from "../../../scripts/mermaid.mjs";
+
+import { createHarness, makeSandbox, removeSandbox, runNode } from "../../lib/harness.mjs";
 
 const POM_ROOT = process.cwd();
 const SCRIPT = join("scripts", "to-mermaid.mjs");
@@ -21,21 +21,10 @@ const WORKFLOW_INPUTS = [
 ];
 const PIPELINE_INPUT = join("templates", "PIPELINE_TEMPLATE.yaml");
 
-let passed = 0;
-let failed = 0;
-
-function assert(name, condition, detail) {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name} - ${detail}`);
-    failed++;
-  }
-}
+const { assert, section, banner, summary } = createHarness({ name: "Workflow Transformers: to-mermaid Tests" });
 
 function runToMermaid(args) {
-  return spawnSync(process.execPath, [SCRIPT, ...args], { cwd: POM_ROOT, encoding: "utf8" });
+  return runNode([SCRIPT, ...args], { cwd: POM_ROOT });
 }
 
 function loadYaml(relativePath) {
@@ -47,7 +36,7 @@ function memberKey(workflowPath) {
 }
 
 function scenarioWorkflow(relativePath) {
-  console.log(`\nScenario: workflow ${relativePath}`);
+  section(`Scenario: workflow ${relativePath}`);
   const model = loadYaml(relativePath);
   const result = runToMermaid([relativePath]);
 
@@ -113,7 +102,7 @@ function scenarioWorkflow(relativePath) {
 }
 
 function scenarioPipeline() {
-  console.log(`\nScenario: pipeline ${PIPELINE_INPUT}`);
+  section(`Scenario: pipeline ${PIPELINE_INPUT}`);
   const model = loadYaml(PIPELINE_INPUT);
   const result = runToMermaid([PIPELINE_INPUT]);
 
@@ -168,8 +157,8 @@ transitions:
 `;
 
 function scenarioSyntheticInvokes() {
-  console.log("\nScenario: synthetic fixture with event-invoke and re-entry terminal");
-  const dir = mkdtempSync(join(tmpdir(), "pom-to-mermaid-synthetic-"));
+  section("Scenario: synthetic fixture with event-invoke and re-entry terminal");
+  const dir = makeSandbox("pom-to-mermaid-synthetic-").dir;
   try {
     const file = join(dir, "synthetic-invokes.yaml");
     writeFileSync(file, SYNTHETIC_WORKFLOW);
@@ -182,13 +171,13 @@ function scenarioSyntheticInvokes() {
     assert("re-entry terminal gets the documented re-entry note", text.includes("note right of failed") && text.includes("terminal with documented re-entry"), text);
     assert("pure terminal is not declared", !text.includes(" as done\n"), text);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
 function scenarioOutFlag() {
-  console.log("\nScenario: --out writes the .mmd file");
-  const dir = mkdtempSync(join(tmpdir(), "pom-to-mermaid-test-"));
+  section("Scenario: --out writes the .mmd file");
+  const dir = makeSandbox("pom-to-mermaid-test-").dir;
   try {
     const out = join(dir, "spec-evolution.mmd");
     const result = runToMermaid([WORKFLOW_INPUTS[2], "--out", out]);
@@ -201,13 +190,13 @@ function scenarioOutFlag() {
       assert("file content equals the stdout rendering", written === direct && written.startsWith("stateDiagram-v2"), written.slice(0, 80));
     }
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
 function scenarioInvalidInputs() {
-  console.log("\nScenario: invalid inputs exit non-zero");
-  const dir = mkdtempSync(join(tmpdir(), "pom-to-mermaid-invalid-"));
+  section("Scenario: invalid inputs exit non-zero");
+  const dir = makeSandbox("pom-to-mermaid-invalid-").dir;
   try {
     const noArgs = runToMermaid([]);
     assert("no arguments exits non-zero", noArgs.status !== 0, `status=${noArgs.status}`);
@@ -231,12 +220,11 @@ function scenarioInvalidInputs() {
     assert("unknown option exits non-zero", unknownOption.status !== 0, `status=${unknownOption.status}`);
     assert("unknown option is reported", unknownOption.stderr.includes("Unknown option: --bogus"), unknownOption.stderr);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
-console.log("Workflow Transformers: to-mermaid Tests");
-console.log("=======================================");
+banner();
 
 for (const input of WORKFLOW_INPUTS) scenarioWorkflow(input);
 scenarioPipeline();
@@ -244,5 +232,4 @@ scenarioSyntheticInvokes();
 scenarioOutFlag();
 scenarioInvalidInputs();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

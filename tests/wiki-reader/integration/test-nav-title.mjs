@@ -1,42 +1,30 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
+import { createHarness, makeSandbox, removeSandbox } from "../../lib/harness.mjs";
 
 const POM_ROOT = process.cwd();
 
-let passed = 0;
-let failed = 0;
+const { assert, section, banner, summary } = createHarness({ name: "Wiki Reader Nav Title Tests" });
 
 function createTempProject() {
-  const dir = mkdtempSync(join(tmpdir(), "pom-wiki-reader-test-"));
+  const { dir } = makeSandbox("pom-wiki-reader-test-");
   execFileSync("ln", ["-s", POM_ROOT, join(dir, "pom")]);
   mkdirSync(join(dir, "wiki"), { recursive: true });
   return dir;
 }
 
-function cleanup(dir) {
-  rmSync(dir, { recursive: true, force: true });
-}
-
-function assert(name, condition, detail) {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name} - ${detail}`);
-    failed++;
-  }
-}
+const cleanup = removeSandbox;
 
 function renderWiki(projectDir) {
   execFileSync("node", ["pom/scripts/render-wiki.mjs"], { cwd: projectDir, stdio: "pipe" });
 }
 
 function scenarioNavTitleFrontmatter() {
-  console.log("\nScenario 1: wiki reader uses navTitle for navigation only");
+  section("Scenario 1: wiki reader uses navTitle for navigation only");
   const dir = createTempProject();
 
   try {
@@ -105,10 +93,8 @@ Long page title, short navigation title.
   }
 }
 
-console.log("Wiki Reader Nav Title Tests");
-console.log("===========================");
+banner();
 
 scenarioNavTitleFrontmatter();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

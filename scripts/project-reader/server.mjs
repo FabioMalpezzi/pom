@@ -2,11 +2,12 @@
 
 import { createServer } from "node:http";
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { dirname, extname, isAbsolute, join, relative, resolve } from "node:path";
+import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readRawArg } from "../lib/cli-args.mjs";
 import { createSourceContext } from "./adapters/index.mjs";
-import { createProjectReaderCore, httpError } from "./core.mjs";
-import { ANNOTATIONS_ROOT, createAnnotation, deleteAnnotation, listAnnotations, readAnnotation, setAnnotationsRoot, setProjectRoot, takeAnnotation } from "./wiki-tools.mjs";
+import { createProjectReaderCore, httpError, pathInside } from "./core.mjs";
+import { ANNOTATIONS_ROOT, createAnnotation, deleteAnnotation, listAnnotations, readAnnotation, setAnnotationsRoot, setProjectReader, setProjectRoot, takeAnnotation } from "./wiki-tools.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, "public");
@@ -24,6 +25,7 @@ export function startProjectReaderServer(inputOptions = {}) {
   if (options.annotationsDir) setAnnotationsRoot(options.annotationsDir);
   const sourceContext = createSourceContext({ root: projectRoot, profile: options.profile });
   const reader = createProjectReaderCore({ root: projectRoot, sourceContext });
+  setProjectReader(reader);
 
   const server = createServer(async (req, res) => {
     try {
@@ -112,34 +114,28 @@ function normalizeOptions(input) {
 }
 
 function parsePort(args) {
-  const index = args.indexOf("--port");
-  const value = Number(index === -1 ? process.env.PORT || 4173 : args[index + 1]);
+  const value = Number(readRawArg("port", args) ?? process.env.PORT ?? 4173);
   if (!Number.isInteger(value) || value < 1 || value > 65535) throw new Error("Invalid --port value");
   return value;
 }
 
 function parseRoot(args) {
-  const rootIndex = args.indexOf("--root");
-  const dirIndex = args.indexOf("--dir");
-  const index = rootIndex === -1 ? dirIndex : rootIndex;
-  if (index === -1) return ".";
-  const value = args[index + 1];
-  if (!value || value.startsWith("--")) throw new Error("Missing project root value");
+  const value = readRawArg("root", args) ?? readRawArg("dir", args);
+  if (value === undefined) return ".";
+  if (!value) throw new Error("Missing project root value");
   return value;
 }
 
 function parseAnnotationsDir(args) {
-  const index = args.indexOf("--annotations-dir");
-  if (index === -1) return "";
-  const value = args[index + 1];
-  if (!value || value.startsWith("--")) throw new Error("Missing annotation directory value");
+  const value = readRawArg("annotations-dir", args);
+  if (value === undefined) return "";
+  if (!value) throw new Error("Missing annotation directory value");
   return value;
 }
 
 function parseProfile(args) {
-  const index = args.indexOf("--profile");
-  if (index === -1) return "auto";
-  const value = args[index + 1];
+  const value = readRawArg("profile", args);
+  if (value === undefined) return "auto";
   if (!["auto", "pom", "generic"].includes(value)) throw new Error("Invalid --profile value");
   return value;
 }
@@ -273,11 +269,6 @@ function securityHeaders() {
     "x-content-type-options": "nosniff",
     "x-frame-options": "DENY",
   };
-}
-
-function pathInside(parent, child) {
-  const relativePath = relative(parent, child);
-  return !relativePath || (!relativePath.startsWith("..") && !isAbsolute(relativePath));
 }
 
 if (isDirectRun()) {

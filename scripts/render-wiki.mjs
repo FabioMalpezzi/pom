@@ -3,6 +3,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { positionalArgs, readRawArg, unknownOptions } from "./lib/cli-args.mjs";
 import {
   escapeAttr,
   escapeHtml,
@@ -61,32 +62,34 @@ function main() {
   console.log(`Open ${pathToFileURL(join(config.out, "index.html")).href}`);
 }
 
+// Option name -> config key. Path options are resolved against the current directory.
+const OPTIONS = {
+  source: "source",
+  out: "out",
+  theme: "theme",
+  title: "title",
+  label: "label",
+  lang: "lang",
+  "generated-date": "generatedDate",
+  "mermaid-runtime": "mermaidRuntime",
+};
+const PATH_OPTIONS = new Set(["source", "out", "theme"]);
+
 function parseArgs(args) {
-  const config = { ...DEFAULT_CONFIG };
-
-  for (let i = 0; i < args.length; i += 1) {
-    const arg = args[i];
-    if (arg === "--help" || arg === "-h") {
-      printHelp();
-      process.exit(0);
-    }
-
-    const [name, inlineValue] = arg.split("=", 2);
-    const value = inlineValue ?? args[i + 1];
-
-    if (name === "--source") config.source = resolvePath(value);
-    else if (name === "--out") config.out = resolvePath(value);
-    else if (name === "--theme") config.theme = resolvePath(value);
-    else if (name === "--title") config.title = requireValue(value, name);
-    else if (name === "--label") config.label = requireValue(value, name);
-    else if (name === "--lang") config.lang = requireValue(value, name);
-    else if (name === "--generated-date") config.generatedDate = requireValue(value, name);
-    else if (name === "--mermaid-runtime") config.mermaidRuntime = requireValue(value, name);
-    else throw new Error(`Unknown option: ${arg}`);
-
-    if (inlineValue === undefined) i += 1;
+  if (args.includes("--help") || args.includes("-h")) {
+    printHelp();
+    process.exit(0);
   }
+  const known = Object.keys(OPTIONS);
+  const stray = [...unknownOptions(args, known), ...positionalArgs(args, known)];
+  if (stray.length > 0) throw new Error(`Unknown option: ${stray[0]}`);
 
+  const config = { ...DEFAULT_CONFIG };
+  for (const [name, key] of Object.entries(OPTIONS)) {
+    const value = readRawArg(name, args);
+    if (value === undefined) continue;
+    config[key] = PATH_OPTIONS.has(name) ? resolvePath(value) : requireValue(value, `--${name}`);
+  }
   return config;
 }
 

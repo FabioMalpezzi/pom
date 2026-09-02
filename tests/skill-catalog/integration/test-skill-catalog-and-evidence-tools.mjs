@@ -4,33 +4,23 @@
 //     and every skill card is listed in the catalog, the README, the wiki
 //     skill map, and both HTML guides;
 //   - clean-experiment-evidence.mjs reports Git-ignored evidence without
-//     deleting anything unless --delete is passed.
+//     deleting anything unless --delete is passed, and keeps --root inside
+//     experiments/ unless --allow-any-root is passed.
 
-import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const ROOT = process.cwd();
-let passed = 0;
-let failed = 0;
+import { createHarness, git, makeSandbox, removeSandbox, runNode } from "../../lib/harness.mjs";
 
-function assert(name, condition, detail = "") {
-  if (condition) {
-    passed += 1;
-    console.log(`  ✓ ${name}`);
-  } else {
-    failed += 1;
-    console.log(`  ✗ ${name}${detail ? `\n    ${String(detail).trim().split("\n").join("\n    ")}` : ""}`);
-  }
-}
+const ROOT = process.cwd();
+const { assert, section, summary } = createHarness();
 
 function run(args, cwd = ROOT) {
-  const result = spawnSync(process.execPath, args, { cwd, encoding: "utf8" });
-  return { status: result.status ?? 1, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
+  const result = runNode(args, { cwd });
+  return { status: result.status ?? 1, stdout: result.stdout, stderr: result.stderr };
 }
 
-console.log("\nSkill catalog");
+section("Skill catalog");
 const skills = readdirSync(join(ROOT, "skills"))
   .filter((entry) => entry.endsWith(".md") && entry !== "README.md")
   .map((entry) => entry.replace(/\.md$/, ""));
@@ -51,9 +41,9 @@ for (const [surface, text] of Object.entries(surfaces)) {
   assert(`${surface} lists every skill card`, missing.length === 0, `missing: ${missing.join(", ")}`);
 }
 
-console.log("\nSkill catalog drift detection");
+section("Skill catalog drift detection");
 {
-  const dir = mkdtempSync(join(tmpdir(), "pom-skill-catalog-"));
+  const dir = makeSandbox("pom-skill-catalog-").dir;
   try {
     mkdirSync(join(dir, "skills"));
     writeFileSync(join(dir, "skills", "alpha.md"), "---\nname: alpha\n---\n# alpha\n");
@@ -73,38 +63,66 @@ console.log("\nSkill catalog drift detection");
     const uncatalogued = run([join(ROOT, "scripts", "sync-skill-catalog.mjs")], dir);
     assert("a skill card missing from the catalog is a hard error", uncatalogued.status === 1 && uncatalogued.stderr.includes("skills/beta.md is not listed"), uncatalogued.stderr);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
-console.log("\nExperiment evidence cleanup");
+section("Experiment evidence cleanup");
 {
-  const dir = mkdtempSync(join(tmpdir(), "pom-evidence-clean-"));
+  const dir = makeSandbox("pom-evidence-clean-").dir;
   try {
-    execFileSync("git", ["init", "-q"], { cwd: dir });
+    git(dir, ["init", "-q"]);
     mkdirSync(join(dir, "experiments", "topic", "evidence", "run-1"), { recursive: true });
     writeFileSync(join(dir, "experiments", "topic", "EXPERIMENT.md"), "# Experiment\n");
     writeFileSync(join(dir, "experiments", "topic", "evidence", "run-1", "dump.json"), "x".repeat(2048));
     writeFileSync(join(dir, "experiments", "topic", "big-report.json"), "y".repeat(1024 * 1024 + 1));
-    writeFileSync(join(dir, ".gitignore"), "experiments/topic/evidence/\n");
-    execFileSync("git", ["add", "-A"], { cwd: dir });
-    execFileSync("git", ["-c", "user.name=POM Test", "-c", "user.email=pom@example.test", "commit", "-q", "-m", "baseline"], { cwd: dir });
+    // Ignored files outside experiments/ that a careless --root must never reach.
+    mkdirSync(join(dir, "node_modules", "pkg"), { recursive: true });
+    writeFileSync(join(dir, "node_modules", "pkg", "index.js"), "module.exports = 1;\n");
+    writeFileSync(join(dir, ".env"), "SECRET=1\n");
+    writeFileSync(join(dir, ".gitignore"), "experiments/topic/evidence/\nnode_modules/\n.env\n");
+    git(dir, ["add", "-A"]);
+    git(dir, ["commit", "-q", "-m", "baseline"]);
+    const script = join(ROOT, "scripts", "clean-experiment-evidence.mjs");
+    const noStackTrace = (result) => !/\n\s+at /.test(result.stderr);
 
-    const report = run([join(ROOT, "scripts", "clean-experiment-evidence.mjs")], dir);
+    const report = run([script], dir);
     assert("report lists the ignored evidence directory", report.status === 0 && report.stdout.includes("experiments/topic/evidence"), report.stdout + report.stderr);
     assert("report flags the tracked file above 1 MB", report.stdout.includes("big-report.json"), report.stdout);
     assert("report mode deletes nothing", existsSync(join(dir, "experiments", "topic", "evidence", "run-1", "dump.json")));
+    assert("default report stays inside experiments/", !report.stdout.includes(".env") && !report.stdout.includes("node_modules"), report.stdout);
 
-    const remove = run([join(ROOT, "scripts", "clean-experiment-evidence.mjs"), "--delete"], dir);
+    const topic = run([script, "--root", "experiments/topic"], dir);
+    assert("--root accepts a topic inside experiments/", topic.status === 0 && topic.stdout.includes("experiments/topic/evidence"), topic.stdout + topic.stderr);
+
+    const repoRoot = run([script, "--root", "."], dir);
+    assert("--root . is rejected without --allow-any-root", repoRoot.status === 1 && repoRoot.stderr.includes("experiments/") && repoRoot.stderr.includes("--allow-any-root"), repoRoot.stdout + repoRoot.stderr);
+    assert("the rejection is a message, not a stack trace", noStackTrace(repoRoot), repoRoot.stderr);
+    assert("--root . deletes nothing", existsSync(join(dir, ".env")) && existsSync(join(dir, "node_modules", "pkg", "index.js")));
+
+    const climbing = run([script, "--root", "experiments/../", "--delete"], dir);
+    assert("--root that climbs out of experiments/ is rejected even with --delete", climbing.status === 1 && existsSync(join(dir, ".env")), climbing.stdout + climbing.stderr);
+
+    const sibling = run([script, "--root", "../repo-sibling"], dir);
+    assert("a sibling directory is rejected as outside the repository", sibling.status === 1 && sibling.stderr.includes("outside the repository") && noStackTrace(sibling), sibling.stdout + sibling.stderr);
+
+    const missingValue = run([script, "--root"], dir);
+    assert("--root without a value is rejected with usage", missingValue.status === 1 && missingValue.stderr.includes("Usage:") && noStackTrace(missingValue), missingValue.stdout + missingValue.stderr);
+
+    const anyRoot = run([script, "--root", ".", "--allow-any-root"], dir);
+    assert("--allow-any-root reports ignored paths across the repository", anyRoot.status === 0 && anyRoot.stdout.includes(".env") && anyRoot.stdout.includes("node_modules"), anyRoot.stdout + anyRoot.stderr);
+    assert("--allow-any-root without --delete still deletes nothing", existsSync(join(dir, ".env")) && existsSync(join(dir, "node_modules", "pkg", "index.js")));
+
+    const remove = run([script, "--delete"], dir);
     assert("--delete removes the ignored evidence", remove.status === 0 && !existsSync(join(dir, "experiments", "topic", "evidence")), remove.stdout + remove.stderr);
     assert("--delete keeps tracked files", existsSync(join(dir, "experiments", "topic", "big-report.json")));
+    assert("--delete leaves ignored files outside experiments/ alone", existsSync(join(dir, ".env")) && existsSync(join(dir, "node_modules", "pkg", "index.js")));
 
-    const outside = run([join(ROOT, "scripts", "clean-experiment-evidence.mjs"), "--root", "../"], dir);
-    assert("a root outside the repository is rejected", outside.status === 1, outside.stdout + outside.stderr);
+    const outside = run([script, "--root", "../"], dir);
+    assert("a root outside the repository is rejected", outside.status === 1 && noStackTrace(outside), outside.stdout + outside.stderr);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-process.exit(failed === 0 ? 0 : 1);
+summary();

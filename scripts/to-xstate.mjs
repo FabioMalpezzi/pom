@@ -37,23 +37,17 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
 import yaml from './require-yaml.mjs';
+import { positionalArgs, readRawArg, unknownOptions } from './lib/cli-args.mjs';
 
 const USAGE = 'Usage: node scripts/to-xstate.mjs <workflow-or-pipeline.yaml> [--out <output.json>]';
+const OPTIONS = ['out'];
 
 function parseArgs(argv) {
-  const args = { file: null, out: null };
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === '--out') {
-      args.out = argv[++i];
-      if (!isNonEmptyString(args.out)) fail('Option --out requires a file path.', 2);
-    } else if (a.startsWith('--')) {
-      fail(`Unknown option: ${a}\n${USAGE}`, 2);
-    } else {
-      args.file = a;
-    }
-  }
-  return args;
+  const unknown = unknownOptions(argv, OPTIONS);
+  if (unknown.length > 0) fail(`Unknown option: ${unknown[0]}\n${USAGE}`, 2);
+  const out = readRawArg('out', argv);
+  if (out !== undefined && !isNonEmptyString(out)) fail('Option --out requires a file path.', 2);
+  return { file: positionalArgs(argv, OPTIONS)[0] ?? null, out: out ?? null };
 }
 
 function fail(message, code = 1) {

@@ -8,18 +8,16 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import yaml from './require-yaml.mjs';
+import { positionalArgs, readRawArg, unknownOptions } from './lib/cli-args.mjs';
 
 import { renderModelMermaid } from './mermaid.mjs';
 
+const OPTIONS = ['out'];
+
 function parseArgs(argv) {
-  const args = { file: null, out: null };
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === '--out') args.out = argv[++i];
-    else if (a.startsWith('--')) { console.error(`Unknown option: ${a}`); process.exit(2); }
-    else args.file = a;
-  }
-  return args;
+  const unknown = unknownOptions(argv, OPTIONS);
+  if (unknown.length > 0) { console.error(`Unknown option: ${unknown[0]}`); process.exit(2); }
+  return { file: positionalArgs(argv, OPTIONS)[0] ?? null, out: readRawArg('out', argv) || null };
 }
 
 function main() {

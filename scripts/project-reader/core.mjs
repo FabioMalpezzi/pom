@@ -1,8 +1,9 @@
 import { spawnSync } from "node:child_process";
-import { closeSync, existsSync, openSync, readFileSync, readSync, statSync } from "node:fs";
+import { closeSync, existsSync, openSync, readFileSync, readSync, realpathSync, statSync } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { basename, dirname, extname, isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { setImmediate as yieldImmediate } from "node:timers/promises";
+import { normalizeRepoPath } from "./adapters/shared.mjs";
 import { extractSummary, extractTitle, renderDocument } from "./render-document.mjs";
 
 export const PROJECT_INDEX_PATH = "__project_index__.md";
@@ -19,12 +20,19 @@ const RG_GLOBS = [
 
 export function createProjectReaderCore({ root, sourceContext }) {
   const projectRoot = resolve(String(root || "."));
+  // Symlinks are compared through real paths: the project root itself may be a
+  // symlink (macOS /tmp -> /private/tmp), so both sides are resolved.
+  const realRoot = realPathOrSelf(projectRoot);
   const scan = createDocumentScan();
   const readerTitle = sourceContext.readerTitle || "Project Reader";
+  const wikiRoot = resolveWikiRoot(sourceContext);
+  const wikiIndexPath = `${wikiRoot}/index.md`;
 
   function status() {
     return {
       projectRoot,
+      wikiRoot,
+      wikiIndexPath,
       documentSources: {
         mode: sourceContext.mode,
         profile: sourceContext.profile,
@@ -43,7 +51,7 @@ export function createProjectReaderCore({ root, sourceContext }) {
   function listDocuments() {
     startDocumentScan();
     const docs = scannedDocuments();
-    if (!hasWikiIndex(docs)) docs.push(projectIndexSummary(docs));
+    if (!hasWikiIndex(docs, wikiIndexPath)) docs.push(projectIndexSummary(docs));
     return {
       documents: docs.sort(compareDocuments),
       scan: documentScanStatus(),
@@ -62,7 +70,7 @@ export function createProjectReaderCore({ root, sourceContext }) {
       kind: kindForPath(safePath),
       title: extractTitle(content, safePath),
       markdown: content,
-      html: renderDocument(content, safePath),
+      html: renderDocument(content, safePath, { wikiRoot }),
     };
   }
 
@@ -70,7 +78,6 @@ export function createProjectReaderCore({ root, sourceContext }) {
     const safePath = normalizeTreePath(path);
     if (!safePath) return rootTree();
     const absolute = resolve(projectRoot, safePath);
-    assertInsideProject(absolute);
     if (!directoryMayContainAllowedPath(safePath)) throw httpError(403, "Path is not part of the Project Reader tree.");
     const directoryStat = await stat(absolute);
     if (!directoryStat.isDirectory()) throw httpError(400, "Tree path must be a directory.");
@@ -88,7 +95,9 @@ export function createProjectReaderCore({ root, sourceContext }) {
   function search({ query, regex = false, maxResults = 50, kind = "all" } = {}) {
     const pattern = String(query || "").trim();
     if (!pattern) throw new Error("Search query is required");
-    const roots = searchRootsForKind(kind).filter((path) => existsSync(join(projectRoot, path)));
+    // rg follows symlinks given as explicit roots even without --follow, so a
+    // root that resolves outside the project is dropped here.
+    const roots = searchRootsForKind(kind).filter((path) => realPathInside(join(projectRoot, path)));
     if (!roots.length) return emptySearchResult(pattern, regex, maxResults);
     const args = ["--json", "--line-number", "--column", "--color", "never", "--max-count", "20", "--max-filesize", "1M"];
     if (!regex) args.push("--fixed-strings");
@@ -104,7 +113,7 @@ export function createProjectReaderCore({ root, sourceContext }) {
     });
     if (result.error) throw new Error(`rg failed: ${result.error.message}`);
     if (result.status > 1) throw new Error((result.stderr || "rg search failed").trim());
-    return parseRgResult(result.stdout, pattern, regex, maxResults);
+    return parseRgResult(result.stdout, pattern, regex, maxResults, (path) => realPathInside(join(projectRoot, path)));
   }
 
   function startDocumentScan() {
@@ -126,7 +135,7 @@ export function createProjectReaderCore({ root, sourceContext }) {
 
   async function scanSource(source) {
     const absolute = join(projectRoot, source.root);
-    if (!existsSync(absolute)) return;
+    if (!realPathInside(absolute)) return;
     const rootStat = await stat(absolute);
     if (rootStat.isFile()) {
       if (!pathIsSkipped(source.root, source)) addScannedDocument(source.root, source.kind);
@@ -142,13 +151,29 @@ export function createProjectReaderCore({ root, sourceContext }) {
     for (const entry of entries) {
       if (shouldSkipEntry(entry.name) || source.skipFiles?.includes(entry.name)) continue;
       const child = join(rootPath, entry.name);
-      if (entry.isDirectory()) {
+      // A nested root (wiki.root under the docs root) scans its own subtree.
+      if (owningSource(child) !== source) continue;
+      const type = entryType(child, entry);
+      if (type === "directory" && !entry.isSymbolicLink()) {
         if (!source.skipDirs?.includes(entry.name)) await scanDirectory(child, source);
-      } else if (!pathIsSkipped(child, source) && source.exts.includes(extname(child))) {
+      } else if (type === "file" && !pathIsSkipped(child, source) && source.exts.includes(extname(child))) {
         addScannedDocument(child, source.kind);
       }
       await yieldDocumentScan();
     }
+  }
+
+  // Directory entries as the reader sees them: a symlink counts as its target
+  // only when that target stays inside the real project root.
+  function entryType(path, entry) {
+    if (entry.isSymbolicLink()) {
+      const absolute = join(projectRoot, path);
+      if (!realPathInside(absolute)) return null;
+      const target = statSync(absolute);
+      return target.isDirectory() ? "directory" : target.isFile() ? "file" : null;
+    }
+    if (entry.isDirectory()) return "directory";
+    return entry.isFile() ? "file" : null;
   }
 
   function addScannedDocument(path, kind) {
@@ -195,11 +220,21 @@ export function createProjectReaderCore({ root, sourceContext }) {
     if (!input) throw new Error("Missing path");
     const relativePath = requireProjectPath(input);
     const absolute = resolve(projectRoot, relativePath);
-    const allowed = sourceContext.docSources.some((source) => (
-      pathBelongsToSource(absolute, source) && !pathIsSkipped(relativePath, source) && pathExtAllowed(relativePath, source)
-    )) || (sourceContext.extraAllowedPrefixes || []).some((prefix) => relativePath.startsWith(prefix));
+    const allowed = fileAllowed(relativePath)
+      || (sourceContext.extraAllowedPrefixes || []).some((prefix) => relativePath.startsWith(prefix));
     if (!allowed) throw new Error("Path is not part of the Project Reader document set");
     if (!existsSync(absolute) || !statSync(absolute).isFile()) throw new Error("Document not found");
+    return relativePath;
+  }
+
+  // Repository-level guard shared with the annotation tools: the path must be
+  // relative, stay inside the real project root, and avoid Git internals and
+  // node_modules. It does not require membership in the document set.
+  function requireRepoPath(input, { mustExist = true } = {}) {
+    if (!input) throw new Error("Path is required");
+    const relativePath = requireProjectPath(input);
+    const absolute = resolve(projectRoot, relativePath);
+    if (mustExist && (!existsSync(absolute) || !statSync(absolute).isFile())) throw new Error(`Target file not found: ${relativePath}`);
     return relativePath;
   }
 
@@ -209,7 +244,7 @@ export function createProjectReaderCore({ root, sourceContext }) {
       const rootPart = source.root.split("/")[0];
       const rootPath = rootPart || source.root;
       const absolute = join(projectRoot, rootPath);
-      if (!rootPath || !existsSync(absolute) || shouldSkipEntry(rootPath)) continue;
+      if (!rootPath || shouldSkipEntry(rootPath) || !realPathInside(absolute)) continue;
       const entryStat = statSync(absolute);
       if (entryStat.isDirectory()) entries.set(rootPath, { name: rootPath, path: rootPath, type: "directory" });
       if (entryStat.isFile() && pathExtAllowed(rootPath, source)) entries.set(rootPath, treeFileEntry(rootPath));
@@ -218,11 +253,12 @@ export function createProjectReaderCore({ root, sourceContext }) {
   }
 
   function treeEntry(path, entry) {
-    if (entry.isDirectory()) {
+    const type = entryType(path, entry);
+    if (type === "directory") {
       if (!directoryMayContainAllowedPath(path)) return null;
       return { name: entry.name, path, type: "directory" };
     }
-    if (!fileAllowed(path)) return null;
+    if (type !== "file" || !fileAllowed(path)) return null;
     return treeFileEntry(path);
   }
 
@@ -238,18 +274,28 @@ export function createProjectReaderCore({ root, sourceContext }) {
   }
 
   function fileAllowed(path) {
-    const absolute = resolve(projectRoot, path);
-    return sourceContext.docSources.some((source) => (
-      pathBelongsToSource(absolute, source) && !pathIsSkipped(path, source) && pathExtAllowed(path, source)
-    ));
+    return Boolean(documentSource(path));
   }
 
   function kindForPath(path) {
+    return documentSource(path)?.kind || "other";
+  }
+
+  // The source that admits `path` as a document, if any: the most specific
+  // root that contains it decides (a wiki nested under the docs root keeps its
+  // own log.md/_site exclusions), and its extension and skip rules apply.
+  function documentSource(path) {
+    const source = owningSource(path);
+    return source && !pathIsSkipped(path, source) && pathExtAllowed(path, source) ? source : null;
+  }
+
+  function owningSource(path) {
     const absolute = resolve(projectRoot, path);
-    const match = sourceContext.docSources.find((source) => (
-      pathBelongsToSource(absolute, source) && !pathIsSkipped(path, source) && pathExtAllowed(path, source)
-    ));
-    return match?.kind || "other";
+    let owner = null;
+    for (const source of sourceContext.docSources) {
+      if (pathBelongsToSource(absolute, source) && (!owner || source.root.length > owner.root.length)) owner = source;
+    }
+    return owner;
   }
 
   function searchRootsForKind(kind) {
@@ -283,6 +329,17 @@ export function createProjectReaderCore({ root, sourceContext }) {
     if (relativePath.startsWith("..") || isAbsolute(relativePath)) throw new Error("Path outside repository");
     if (relativePath === ".git" || relativePath.startsWith(".git/")) throw new Error("Git internals are not valid targets");
     if (relativePath === "node_modules" || relativePath.startsWith("node_modules/")) throw new Error("node_modules is not a valid target");
+    // The lexical checks above see `docs/hosts.md`; only the real path reveals
+    // that it is a symlink to /etc/hosts.
+    if (existsSync(absolute) && !realPathInside(absolute)) throw httpError(403, "Path resolves outside the project root.");
+  }
+
+  function realPathInside(absolute) {
+    try {
+      return pathInside(realRoot, realpathSync(absolute));
+    } catch {
+      return false;
+    }
   }
 
   function pathBelongsToSource(absolute, source) {
@@ -295,7 +352,7 @@ export function createProjectReaderCore({ root, sourceContext }) {
 
   function documentRank(doc) {
     if (doc.path === PROJECT_INDEX_PATH) return -2;
-    if (doc.path === "wiki/index.md") return -1;
+    if (doc.path === wikiIndexPath) return -1;
     return sourceContext.kindRank?.(doc.kind) ?? 10;
   }
 
@@ -315,7 +372,7 @@ export function createProjectReaderCore({ root, sourceContext }) {
       kind: "project_doc",
       title: readerTitle,
       markdown,
-      html: renderDocument(markdown, PROJECT_INDEX_PATH),
+      html: renderDocument(markdown, PROJECT_INDEX_PATH, { wikiRoot }),
     };
   }
 
@@ -329,7 +386,7 @@ export function createProjectReaderCore({ root, sourceContext }) {
       : `Navigation is loading in the background. Loaded ${documentScan?.loadedCount || readableDocs.length} project files so far.`;
     return `# ${readerTitle}
 
-This generated index is shown because the project does not provide \`wiki/index.md\`.
+This generated index is shown because the project does not provide \`${wikiIndexPath}\`.
 Use it as a neutral entry point for project documents, source search, direct file opening, and file-based annotations.
 
 ${scanNote}
@@ -360,7 +417,7 @@ ${rows}
     return [...counts.entries()].sort((a, b) => (sourceContext.kindRank?.(a[0]) ?? 10) - (sourceContext.kindRank?.(b[0]) ?? 10) || a[0].localeCompare(b[0]));
   }
 
-  return { status, listDocuments, readDocument, listTree, search };
+  return { projectRoot, wikiRoot, status, listDocuments, readDocument, listTree, search, requireRepoPath };
 }
 
 function createDocumentScan() {
@@ -391,8 +448,23 @@ function looksBinary(buffer) {
   return sample.includes(0);
 }
 
-function hasWikiIndex(docs) {
-  return docs.some((doc) => doc.path === "wiki/index.md");
+function hasWikiIndex(docs, wikiIndexPath) {
+  return docs.some((doc) => doc.path === wikiIndexPath);
+}
+
+function resolveWikiRoot(sourceContext) {
+  const configured = normalizeRepoPath(sourceContext.wikiRoot || "");
+  if (configured) return configured;
+  const wikiSource = sourceContext.docSources.find((source) => source.kind === "wiki");
+  return normalizeRepoPath(wikiSource?.root || "") || "wiki";
+}
+
+function realPathOrSelf(path) {
+  try {
+    return realpathSync(path);
+  } catch {
+    return path;
+  }
 }
 
 function preferredStartDocuments(docs) {
@@ -412,13 +484,15 @@ function emptySearchResult(pattern, regex, maxResults) {
   return { query: pattern, regex: Boolean(regex), generatedAt: new Date().toISOString(), maxResults, resultCount: 0, truncated: false, results: [] };
 }
 
-function parseRgResult(output, pattern, regex, maxResults) {
+function parseRgResult(output, pattern, regex, maxResults, pathAllowed = () => true) {
   const matches = [];
   for (const line of output.split(/\r?\n/)) {
     if (!line.trim()) continue;
     const event = JSON.parse(line);
     if (event.type !== "match") continue;
-    matches.push(rgMatch(event.data));
+    const match = rgMatch(event.data);
+    if (!pathAllowed(match.path)) continue;
+    matches.push(match);
     if (matches.length >= maxResults) break;
   }
   return { query: pattern, regex: Boolean(regex), generatedAt: new Date().toISOString(), maxResults, resultCount: matches.length, truncated: matches.length >= maxResults, results: matches };
@@ -442,7 +516,7 @@ function compareTreeEntries(a, b) {
   return Number(a.type === "file") - Number(b.type === "file") || a.name.localeCompare(b.name);
 }
 
-function pathInside(parent, child) {
+export function pathInside(parent, child) {
   const relativePath = relative(parent, child);
   return !relativePath || (!relativePath.startsWith("..") && !isAbsolute(relativePath));
 }

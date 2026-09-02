@@ -4,11 +4,11 @@
 // YAML -> XState v5 MachineConfig JSON transformer. The contract lives in
 // docs/workflow-xstate-compatibility.md.
 
-import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import yaml from "../../../scripts/require-yaml.mjs";
+
+import { createHarness, makeSandbox, removeSandbox, runNode } from "../../lib/harness.mjs";
 
 const POM_ROOT = process.cwd();
 const SCRIPT = join("scripts", "to-xstate.mjs");
@@ -21,25 +21,10 @@ const WORKFLOW_INPUTS = [
 ];
 const PIPELINE_INPUT = join("templates", "PIPELINE_TEMPLATE.yaml");
 
-let passed = 0;
-let failed = 0;
-
-function assert(name, condition, detail) {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name} - ${detail}`);
-    failed++;
-  }
-}
+const { assert, section, banner, summary } = createHarness({ name: "Workflow Transformers: to-xstate Tests" });
 
 function runToXstate(args, options = {}) {
-  return spawnSync(process.execPath, [SCRIPT, ...args], {
-    cwd: POM_ROOT,
-    encoding: "utf8",
-    ...options,
-  });
+  return runNode([SCRIPT, ...args], { cwd: POM_ROOT, ...options });
 }
 
 function loadYaml(relativePath) {
@@ -66,7 +51,7 @@ function onTargets(onEntry) {
 }
 
 function scenarioWorkflow(relativePath) {
-  console.log(`\nScenario: workflow ${relativePath}`);
+  section(`Scenario: workflow ${relativePath}`);
   const model = loadYaml(relativePath);
   const result = runToXstate([relativePath]);
 
@@ -151,7 +136,7 @@ function scenarioWorkflow(relativePath) {
 }
 
 function scenarioPipeline() {
-  console.log(`\nScenario: pipeline ${PIPELINE_INPUT}`);
+  section(`Scenario: pipeline ${PIPELINE_INPUT}`);
   const model = loadYaml(PIPELINE_INPUT);
   const result = runToXstate([PIPELINE_INPUT]);
 
@@ -245,8 +230,8 @@ transitions:
 `;
 
 function scenarioSyntheticInvokes() {
-  console.log("\nScenario: synthetic fixture with state-invoke and event-invoke");
-  const dir = mkdtempSync(join(tmpdir(), "pom-to-xstate-synthetic-"));
+  section("Scenario: synthetic fixture with state-invoke and event-invoke");
+  const dir = makeSandbox("pom-to-xstate-synthetic-").dir;
   try {
     const file = join(dir, "synthetic-invokes.yaml");
     writeFileSync(file, SYNTHETIC_WORKFLOW);
@@ -286,13 +271,13 @@ function scenarioSyntheticInvokes() {
     assert("pure terminal has no on map", machine.states.done?.type === "final" && machine.states.done?.on === undefined, JSON.stringify(machine.states.done));
     assert("meta.pom.version is 3", machine.meta?.pom?.version === 3, JSON.stringify(machine.meta));
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
 function scenarioOutFlag() {
-  console.log("\nScenario: --out writes the JSON file and reports it");
-  const dir = mkdtempSync(join(tmpdir(), "pom-to-xstate-test-"));
+  section("Scenario: --out writes the JSON file and reports it");
+  const dir = makeSandbox("pom-to-xstate-test-").dir;
   try {
     const out = join(dir, "workflows", "generated", "spec-evolution.xstate.json");
     const result = runToXstate([WORKFLOW_INPUTS[2], "--out", out]);
@@ -312,13 +297,13 @@ function scenarioOutFlag() {
       `status=${stdoutResult.status}`,
     );
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
 function scenarioInvalidInputs() {
-  console.log("\nScenario: invalid inputs exit non-zero with a clear message");
-  const dir = mkdtempSync(join(tmpdir(), "pom-to-xstate-invalid-"));
+  section("Scenario: invalid inputs exit non-zero with a clear message");
+  const dir = makeSandbox("pom-to-xstate-invalid-").dir;
   try {
     const noArgs = runToXstate([]);
     assert("no arguments exits with 1", noArgs.status === 1, `status=${noArgs.status}`);
@@ -363,12 +348,11 @@ function scenarioInvalidInputs() {
     assert("unknown option exits non-zero", unknownOption.status !== 0, `status=${unknownOption.status}`);
     assert("unknown option is reported", unknownOption.stderr.includes("Unknown option: --bogus"), unknownOption.stderr);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
-console.log("Workflow Transformers: to-xstate Tests");
-console.log("======================================");
+banner();
 
 for (const input of WORKFLOW_INPUTS) scenarioWorkflow(input);
 scenarioPipeline();
@@ -376,5 +360,4 @@ scenarioSyntheticInvokes();
 scenarioOutFlag();
 scenarioInvalidInputs();
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

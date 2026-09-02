@@ -3,22 +3,13 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { createHarness } from "../../lib/harness.mjs";
+
 const POM_ROOT = process.cwd();
 const PAGE = "wiki/loop-goal-scope-examples.md";
 const text = readFileSync(join(POM_ROOT, PAGE), "utf8");
 
-let passed = 0;
-let failed = 0;
-
-function assert(name, condition, detail = "") {
-  if (condition) {
-    console.log(`  ✓ ${name}`);
-    passed++;
-  } else {
-    console.log(`  ✗ ${name}${detail ? ` - ${detail}` : ""}`);
-    failed++;
-  }
-}
+const { assert, banner, summary } = createHarness({ name: "Loop/Goal Scope Examples Wiki Tests" });
 
 function markdownTableRows(markdown) {
   return markdown
@@ -42,8 +33,7 @@ function sectionText(markdown, heading) {
   return next === -1 ? rest : rest.slice(0, next);
 }
 
-console.log("Loop/Goal Scope Examples Wiki Tests");
-console.log("===================================");
+banner();
 
 const headers = markdownTableRows(text).filter((cells) => cells[0] === "Example");
 const rows = exampleRows(text);
@@ -91,5 +81,4 @@ assert(
   "missing routing warning",
 );
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+summary();

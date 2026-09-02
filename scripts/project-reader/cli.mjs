@@ -3,10 +3,12 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
+import { hasArg, positionalArgs, readRawArg } from "../lib/cli-args.mjs";
 import { createSourceContext } from "./adapters/index.mjs";
 import { createProjectReaderCore } from "./core.mjs";
 import { parseOptions, startProjectReaderServer, usage as serverUsage } from "./server.mjs";
 
+const VALUE_OPTIONS = ["port", "host", "root", "profile", "kind", "max-results"];
 const args = process.argv.slice(2);
 const command = readCommand(args);
 
@@ -75,19 +77,13 @@ function searchCommand(inputArgs) {
 }
 
 function firstPositional(inputArgs) {
-  for (let index = 0; index < inputArgs.length; index += 1) {
-    const value = inputArgs[index];
-    if (!value.startsWith("--")) return value;
-    if (!isBooleanFlag(value)) index += 1;
-  }
-  return "";
+  return positionalArgs(inputArgs, VALUE_OPTIONS)[0] || "";
 }
 
 function readStringOption(inputArgs, name, fallback) {
-  const index = inputArgs.indexOf(name);
-  if (index === -1) return fallback;
-  const value = inputArgs[index + 1];
-  if (!value || value.startsWith("--")) throw new Error(`Missing value for ${name}`);
+  const value = readRawArg(name.replace(/^--/, ""), inputArgs);
+  if (value === undefined) return fallback;
+  if (!value) throw new Error(`Missing value for ${name}`);
   return value;
 }
 
@@ -98,11 +94,7 @@ function readNumberOption(inputArgs, name, fallback) {
 }
 
 function hasFlag(inputArgs, name) {
-  return inputArgs.includes(name);
-}
-
-function isBooleanFlag(name) {
-  return ["--cmux", "--json", "--regex"].includes(name);
+  return hasArg(name.replace(/^--/, ""), inputArgs);
 }
 
 function assertDirectory(path) {

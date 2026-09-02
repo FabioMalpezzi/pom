@@ -15,31 +15,21 @@
  *  3. genuine official documents under the docs root are still governed.
  */
 
-import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const POM_ROOT = process.cwd();
-let passed = 0;
-let failed = 0;
+import { createHarness, git, makeSandbox, removeSandbox, runNode } from "../../lib/harness.mjs";
 
-function assert(condition, message) {
-  if (condition) {
-    passed += 1;
-    console.log(`  ✓ ${message}`);
-  } else {
-    failed += 1;
-    console.log(`  ✗ ${message}`);
-  }
-}
+const POM_ROOT = process.cwd();
+const { assert, summary } = createHarness();
 
 const WIKI_ROOT = "doc/tech/wiki";
 
 function createProject({ brokenLink = false } = {}) {
-  const dir = mkdtempSync(join(tmpdir(), "pom-wiki-root-test-"));
+  const { dir } = makeSandbox("pom-wiki-root-test-");
   execFileSync("ln", ["-s", POM_ROOT, join(dir, "pom")]);
-  execFileSync("git", ["init"], { cwd: dir, stdio: "ignore" });
+  git(dir, ["init"]);
   writeFileSync(join(dir, "package.json"), JSON.stringify({ type: "module" }, null, 2) + "\n");
 
   writeFileSync(
@@ -133,10 +123,7 @@ function createProject({ brokenLink = false } = {}) {
 }
 
 function runLint(dir) {
-  const result = spawnSync("node", ["--experimental-strip-types", "pom/scripts/lint-doc-governance.ts"], {
-    cwd: dir,
-    encoding: "utf8",
-  });
+  const result = runNode(["--experimental-strip-types", "pom/scripts/lint-doc-governance.ts"], { cwd: dir });
   return `${result.stdout || ""}\n${result.stderr || ""}`;
 }
 
@@ -146,17 +133,17 @@ function runLint(dir) {
   try {
     const out = runLint(dir);
     assert(
+      "wiki pages nested under the docs root are not treated as official documents",
       !/Official document is missing required section/.test(
         out.split("\n").filter((line) => line.includes(WIKI_ROOT)).join("\n"),
       ),
-      "wiki pages nested under the docs root are not treated as official documents",
     );
     assert(
-      /Doc governance lint: (OK|0 errors)/.test(out),
       "lint reports no errors when the wiki is nested under the docs root",
+      /Doc governance lint: (OK|0 errors)/.test(out),
     );
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
@@ -166,13 +153,12 @@ function runLint(dir) {
   try {
     const out = runLint(dir);
     assert(
-      /wiki-broken-wikilink/.test(out) && out.includes(`${WIKI_ROOT}/overview.md`),
       "wiki governance applies at the configured root (broken wikilink reported)",
+      /wiki-broken-wikilink/.test(out) && out.includes(`${WIKI_ROOT}/overview.md`),
     );
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    removeSandbox(dir);
   }
 }
 
-console.log(`\nResults: ${passed} passed, ${failed} failed`);
-process.exit(failed === 0 ? 0 : 1);
+summary();
