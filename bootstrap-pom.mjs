@@ -170,6 +170,60 @@ function stopIfRunningFromPomSourceRoot(lang) {
   process.exit(1);
 }
 
+function updateExistingPom() {
+  // A vendored copy has no .git of its own: running git -C pom here would act
+  // on the enclosing project repository instead (checkout main, pull), so
+  // leave the copy alone and point at the updater.
+  if (!existsSync(`${POM_DIR}/.git`)) {
+    console.log(`${POM_DIR}/ exists as a vendored copy without Git metadata; leaving it unchanged.`);
+    console.log("To refresh a vendored copy, run: npm run pom:update");
+    return;
+  }
+
+  console.log(`${POM_DIR}/ already exists. Updating...`);
+  try {
+    execFileSync("git", ["-C", POM_DIR, "checkout", "main"], { stdio: "pipe" });
+  } catch {
+    // Ignore checkout errors (may already be on main)
+  }
+  try {
+    run("git", ["-C", POM_DIR, "pull", "origin", "main", "--ff-only"]);
+  } catch {
+    console.log("Pull failed. Trying submodule update...");
+    try {
+      run("git", ["submodule", "update", "--remote", POM_DIR]);
+    } catch {
+      console.log(`Warning: could not update ${POM_DIR}/. Continuing with existing version.`);
+    }
+  }
+}
+
+function clonePom(repo) {
+  // Ask for main explicitly: a local or forked source may have another branch
+  // checked out, and pom/ must start from the same line pom:update follows.
+  // Probe the remote first so an unreachable source is a clear error and a
+  // source without main falls back to its default branch.
+  let heads;
+  try {
+    heads = execFileSync("git", ["ls-remote", "--heads", repo, "main"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    const detail = (error.stderr?.toString() || error.message || "").trim().split("\n")[0];
+    console.error(`Cannot reach the POM source repository ${repo}.`);
+    if (detail) console.error(`  ${detail}`);
+    console.error("Check the URL or path, the network, and your Git credentials, then retry.");
+    process.exit(1);
+  }
+  if (heads.trim()) {
+    run("git", ["clone", "--branch", "main", repo, POM_DIR]);
+    return;
+  }
+  console.log("Branch main not found in the source; cloning its default branch instead.");
+  run("git", ["clone", repo, POM_DIR]);
+}
+
 function main() {
   const repo = readArg("repo") || DEFAULT_REPO;
   const profile = readArg("profile");
@@ -198,33 +252,10 @@ function main() {
   }
 
   if (existsSync(POM_DIR)) {
-    console.log(`${POM_DIR}/ already exists. Updating...`);
-    try {
-      // Try regular pull first (works for clones)
-      execFileSync("git", ["-C", POM_DIR, "checkout", "main"], { stdio: "pipe" });
-    } catch {
-      // Ignore checkout errors (may already be on main)
-    }
-    try {
-      run("git", ["-C", POM_DIR, "pull", "origin", "main", "--ff-only"]);
-    } catch {
-      console.log("Pull failed. Trying submodule update...");
-      try {
-        run("git", ["submodule", "update", "--remote", POM_DIR]);
-      } catch {
-        console.log(`Warning: could not update ${POM_DIR}/. Continuing with existing version.`);
-      }
-    }
+    updateExistingPom();
   } else {
     console.log(`Cloning POM from ${repo}...`);
-    // Ask for main explicitly: a local or forked source may have another branch
-    // checked out, and pom/ must start from the same line pom:update follows.
-    try {
-      run("git", ["clone", "--branch", "main", repo, POM_DIR]);
-    } catch {
-      console.log("Branch main not found in the source; cloning its default branch instead.");
-      run("git", ["clone", repo, POM_DIR]);
-    }
+    clonePom(repo);
   }
 
   const installScript = `${POM_DIR}/scripts/install-pom.ts`;
@@ -243,4 +274,9 @@ function main() {
   run("node", installArgs);
 }
 
-main();
+try {
+  main();
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+}
