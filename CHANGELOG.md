@@ -2,7 +2,7 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
-## Unreleased
+## 0.8.0 - 2026-09-02
 
 ### Added
 

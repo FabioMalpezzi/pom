@@ -1,5 +1,5 @@
 {
-  "pomVersion": "0.7.2",
+  "pomVersion": "0.8.0",
   "installation": {
     "pomRoot": ".",
     "note": "This is the POM Source repository running POM on itself. Templates, scripts, skills, and prompts live at the repository root, not under pom/."
