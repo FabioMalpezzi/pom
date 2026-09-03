@@ -291,3 +291,9 @@ Sources used: `CHANGELOG.md`, `decisions/ADR-0007-projects-declare-their-own-rul
 `pomVersion` in a target's `pom.config.json` was written once, at creation, and never refreshed afterwards, so a project that had been updating POM for months still declared the version it was adopted with. The installer now aligns it on every path, refresh included, taking the value from the config template that the release procedure keeps current. Found on a real target sitting at 0.2.0 with 0.9.0 installed.
 
 Sources used: `CHANGELOG.md`, `scripts/install-pom.ts`.
+
+## [2026-09-03] update | where a project's own rules live
+
+`adoption-and-installation.md` gains the distinction between the three artifacts that are easy to confuse: agent instruction files are what a harness loads and POM regenerates, `PROJECT_RULES.md` is the single source a project writes once and the installer injects into all of them, and decision records hold the reasoning that is opened when needed rather than loaded every session. With the table that says which of the three a given rule belongs to, and the measured cost of what goes into the always-loaded block.
+
+Sources used: `decisions/ADR-0007-projects-declare-their-own-rules-in-the-always-loaded-block.md`, `templates/PROJECT_RULES_TEMPLATE.md`, `experiments/pom-block-step-cost/EXPERIMENT.md`.

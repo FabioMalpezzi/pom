@@ -118,6 +118,31 @@ In a Git-managed install, `pom/` is a full checkout of the POM Source and may co
 
 When a target project has only `pom/`, agent instructions, `package.json`, `pom-update.mjs`, and `pom.config.json`, it is a valid day-zero project. Read `pom.config.json`, report that project memory has not started yet, and create memory folders only when the adoption profile enables them or current work needs them.
 
+### Where A Project's Own Rules Live
+
+Three artifacts are easy to confuse, and they have different jobs.
+
+**Agent instruction files** - `AGENTS.md`, `CLAUDE.md`, `.github/copilot-instructions.md`, and the tool-specific rule files - are what a harness loads by itself at session start. A project usually has several, one per ecosystem. POM writes its own section into each of them, between `<!-- POM:START -->` and `<!-- POM:END -->`.
+
+**`PROJECT_RULES.md`** is not loaded by any harness. It is the single source a project writes once, and the installer folds its content into the generated section of every instruction file on each install and update. It stands to the instruction files as a source stands to what is distributed from it.
+
+**Decision records** hold the reasoning: why a rule exists, which alternatives were rejected, and when the decision was taken. They are opened when needed, not loaded every session.
+
+Why the rules cannot simply be typed into an instruction file:
+
+- inside the POM markers the text is regenerated on every install and update, so anything written there is lost at the next `npm run pom:update`;
+- outside the markers it survives, but it has to be repeated by hand in every instruction file, forever. That duplication is not hypothetical: on the target project that motivated ADR-0007, `AGENTS.md` and `CLAUDE.md` held the same 962 words byte for byte while a third instruction file had none of them.
+
+Which artifact to use:
+
+| The rule... | Goes in |
+|---|---|
+| applies to any agent working on the project | `PROJECT_RULES.md` |
+| applies to one tool only, and to no other | that tool's file, outside the POM markers |
+| explains why something was decided, or which road was rejected | a decision record |
+
+What goes into `PROJECT_RULES.md` is paid for in every session: the always-loaded block costs about two extra tool calls and 15% more input tokens per session, measured on 100 real sessions in `experiments/pom-block-step-cost/`. So it holds the instructions that change what an agent does - local conventions, non-functional requirements, what must not happen without a decision - and nothing that the code, the README, or the tests already say. `pom:lint` reports the file while it is missing, still the untouched template, not yet injected into an instruction file, or above its word budget.
+
 ### Customize POM For A Project
 
 Project-specific customization belongs in `pom.config.json`, not in files under `pom/`. That separation lets the POM Source update safely while the target project keeps its own language, roots, templates, and thresholds.
@@ -301,6 +326,8 @@ Workflow modeling is separate from the adoption profile. Target projects opt in 
 | `skills/sync.md` | Safe refresh and synchronization workflow for existing POM installations. |
 | `prompts/17-sync-pom-framework.md` | Detailed sync procedure for submodules, nested Git checkouts, and vendored POM copies. |
 | `specs/SPEC-0004-external-project-overlay.md` | Overlay mode requirements and recommended posture. |
+| `templates/PROJECT_RULES_TEMPLATE.md` | What a project declares as its own rules, and what does not belong there. |
+| `decisions/ADR-0007-projects-declare-their-own-rules-in-the-always-loaded-block.md` | Why the rules live in one file and are injected, rather than typed into each instruction file. |
 
 ## Linked Decisions
 
@@ -309,6 +336,7 @@ Workflow modeling is separate from the adoption profile. Target projects opt in 
 | SPEC-0000 D4 | POM lives separately from project-owned memory products. |
 | SPEC-0000 D6 | Adoption profile determines which memory modules are active. |
 | SPEC-0004 | External overlay mode is local understanding memory, not upstream governance. |
+| ADR-0007 | A project declares its own conventions, non-functional requirements, and prohibitions in `PROJECT_RULES.md`, which POM injects into every agent instruction file. |
 
 ## Open Questions
 
