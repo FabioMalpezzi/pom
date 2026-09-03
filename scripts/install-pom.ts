@@ -402,6 +402,31 @@ function upsertPackageScripts(): void {
   console.log(`Updated package.json with ${Object.keys(expectedScripts).filter((name) => scripts[name] === expectedScripts[name]).join(", ")}.`);
 }
 
+/**
+ * Keeps `pomVersion` in a target's config honest. It is written once when the
+ * file is created and was never refreshed afterwards, so a project that had
+ * updated POM for months still declared the version it was adopted with. The
+ * value comes from the config template, which the release procedure aligns.
+ */
+function alignPomVersion(): void {
+  const configPath = "pom.config.json";
+  if (!pathExists(configPath)) return;
+
+  const template = JSON.parse(readText(resolveTemplate("POM_CONFIG_TEMPLATE.json"))) as Record<string, unknown>;
+  const version = typeof template.pomVersion === "string" ? template.pomVersion : undefined;
+  if (!version) return;
+
+  const config = readRequiredProjectConfig(configPath);
+  const current = typeof config.pomVersion === "string" ? config.pomVersion : undefined;
+  if (current === version) return;
+
+  // Rebuild with pomVersion first when the key is missing, so the file keeps
+  // the shape the template documents.
+  const next = current === undefined ? { pomVersion: version, ...config } : { ...config, pomVersion: version };
+  writeText(configPath, `${JSON.stringify(next, null, 2)}\n`);
+  console.log(current ? `Updated ${configPath} pomVersion ${current} -> ${version}.` : `Set ${configPath} pomVersion to ${version}.`);
+}
+
 function createOrUpdateConfig(adoption: AdoptionConfig, ownership: OwnershipMode | undefined): ProjectConfig {
   const configPath = "pom.config.json";
   if (!pathExists(configPath)) {
@@ -688,6 +713,10 @@ async function main(): Promise<void> {
   installCodingAgentFiles(buildPomInitCommand(presetName, profileName, ownership));
   installPomUpdateScript();
   upsertPackageScripts();
+
+  // Runs on every path, refresh included: the installed version is a fact about
+  // the project, not an adoption choice.
+  alignPomVersion();
 
   if (adoption.profile !== "refresh") {
     projectConfig = createOrUpdateConfig(adoption, ownership);

@@ -272,6 +272,38 @@ function scenarioHookStagesNewGeneratedFiles() {
   }
 }
 
+function scenarioPomVersionAlignedOnRefresh() {
+  section("Scenario 10: a refresh aligns pomVersion in an existing config");
+  const dir = makeTarget("pom-hardening-version-");
+  try {
+    const install = node(dir, [...INSTALLER, "--preset", "owned"]);
+    assert("install succeeds", install.status === 0, install.stderr);
+
+    const configPath = join(dir, "pom.config.json");
+    const template = JSON.parse(readFileSync(join(dir, "pom/templates/POM_CONFIG_TEMPLATE.json"), "utf8"));
+    const current = template.pomVersion;
+
+    // A project adopted long ago still declares the version it started with.
+    const stale = JSON.parse(readFileSync(configPath, "utf8"));
+    stale.pomVersion = "0.2.0";
+    const staleAdoption = JSON.stringify(stale.adoption);
+    writeFileSync(configPath, `${JSON.stringify(stale, null, 2)}\n`);
+
+    const refresh = node(dir, [...INSTALLER, "--profile", "refresh", "--no-pull"]);
+    assert("refresh succeeds", refresh.status === 0, refresh.stderr);
+    assert("refresh reports the version alignment", refresh.stdout.includes("pomVersion 0.2.0 ->"), refresh.stdout);
+
+    const aligned = JSON.parse(readFileSync(configPath, "utf8"));
+    assert("pomVersion now matches the installed POM", aligned.pomVersion === current, `${aligned.pomVersion} !== ${current}`);
+    assert("the adoption profile is untouched by the alignment", JSON.stringify(aligned.adoption) === staleAdoption);
+
+    const again = node(dir, [...INSTALLER, "--profile", "refresh", "--no-pull"]);
+    assert("a second refresh reports no version change", !again.stdout.includes("pomVersion"), again.stdout);
+  } finally {
+    removeSandbox(dir);
+  }
+}
+
 scenarioConfigRerun();
 scenarioHookRestagesRegeneratedIndex();
 scenarioUpdaterRefusesIgnoredVendoredPom();
@@ -281,5 +313,6 @@ scenarioBootstrapRerunOnVendoredCopy();
 scenarioHuskyHooksPath();
 scenarioConfiguredWikiRoot();
 scenarioHookStagesNewGeneratedFiles();
+scenarioPomVersionAlignedOnRefresh();
 
 summary();
