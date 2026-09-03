@@ -285,3 +285,9 @@ Sources used: `experiments/pom-block-step-cost/EXPERIMENT.md`, `experiments/usin
 A target project now declares its own conventions, non-functional requirements, and prohibitions in `PROJECT_RULES.md`, and the installer folds them into the generated block of every agent instruction file, so they are written once and loaded without an extra read (ADR-0007). The behavioral evaluator records steps, and 100 real sessions put the always-loaded block at +2.00 tool calls and +15.3% input tokens with turns unchanged; the same work fixed a token double-count that had made every absolute figure twice its true value, and showed that the July diet's 34-41% was the section's weight, not a session's cost. The outcome A/B bench was built and stopped by its own pilot, with the reasons recorded. Full notes in `CHANGELOG.md`.
 
 Sources used: `CHANGELOG.md`, `decisions/ADR-0007-projects-declare-their-own-rules-in-the-always-loaded-block.md`, `experiments/pom-block-step-cost/EXPERIMENT.md`.
+
+## [2026-09-03] update | POM 0.9.1
+
+`pomVersion` in a target's `pom.config.json` was written once, at creation, and never refreshed afterwards, so a project that had been updating POM for months still declared the version it was adopted with. The installer now aligns it on every path, refresh included, taking the value from the config template that the release procedure keeps current. Found on a real target sitting at 0.2.0 with 0.9.0 installed.
+
+Sources used: `CHANGELOG.md`, `scripts/install-pom.ts`.

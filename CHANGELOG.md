@@ -2,6 +2,12 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## 0.9.1 - 2026-09-03
+
+### Fixed
+
+- **`pomVersion` is aligned in an existing target config, refresh included** (`scripts/install-pom.ts`): the field was written once, when `pom.config.json` was created, and no path touched it afterwards - not a refresh, not a preset change - so a project that had been updating POM for months still declared the version it was adopted with. Found on a real target sitting at `0.2.0` with `0.9.0` installed. The installed version is a fact about the project, not an adoption choice, so the alignment now runs on every path and takes the value from the config template that the release procedure keeps current. Nothing else in the config is rewritten; a config missing the key receives it first, in the shape the template documents.
+
 ## 0.9.0 - 2026-09-03
 
 ### Added

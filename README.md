@@ -6,7 +6,7 @@ This README is POM's canonical entry point and operating overview. Detailed proc
 
 POM is designed to be reused on new or existing projects. It does not impose a single application structure and does not assume that every project has mockups, source code, tests, or official docs. For existing projects, POM should first map the current structure in `pom.config.json`; migration to canonical folders is a later explicit decision, not a prerequisite.
 
-Version: `0.9.0`
+Version: `0.9.1`
 
 Release notes: see `CHANGELOG.md`.
 
