@@ -72,7 +72,10 @@ export function createLintContext(root: string): LintContext {
     taskPlansGovernanceEnabled: !isExternalOverlay || config.adoption.tasks === "structured",
     testsGovernanceEnabled: config.adoption.tests !== "disabled" && !isExternalOverlay,
     loopGoalGovernanceEnabled: config.workflows.enabled && config.workflows.loopGoal.enabled,
-    allowedRootMarkdown: new Set(config.root.allowedMarkdown),
+    // POM seeds the project rules file at the root itself, so it is allowed
+    // there whatever a project's own allowedMarkdown list says: a project
+    // configured before the file existed must not get a root-markdown error.
+    allowedRootMarkdown: new Set([...config.root.allowedMarkdown, config.projectRules.path]),
     allowedAnalysisDirs: new Set(config.analysis.allowedDirs),
     add,
   };

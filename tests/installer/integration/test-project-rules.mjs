@@ -109,6 +109,19 @@ function scenarioLintReports() {
     const undeclared = node(dir, LINT);
     assert("an untouched template is reported as undeclared", undeclared.stdout.includes("project-rules-undeclared"), undeclared.stdout);
 
+    // A project configured before the rules file existed carries its own
+    // allowedMarkdown list; the file must not be reported as root clutter.
+    const configPath = join(dir, "pom.config.json");
+    const config = JSON.parse(readFileSync(configPath, "utf8"));
+    config.root = { allowedMarkdown: ["README.md", "AGENTS.md", "CLAUDE.md", "PROJECT_STATE.md"] };
+    writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+    const legacy = node(dir, LINT);
+    assert(
+      "the rules file is allowed at the root even with an older allowedMarkdown list",
+      !legacy.stdout.includes("root-markdown PROJECT_RULES.md"),
+      legacy.stdout,
+    );
+
     writeFileSync(join(dir, "PROJECT_RULES.md"), DECLARED_RULES);
     const notInjected = node(dir, LINT);
     assert(
