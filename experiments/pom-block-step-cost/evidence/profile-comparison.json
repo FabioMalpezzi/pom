@@ -1,0 +1,393 @@
+{
+  "generatedAt": "2026-09-03T08:38:11.819Z",
+  "with": {
+    "runDir": "experiments/pom-block-step-cost/evidence/profile-full/2026-09-03T08-23-04-451Z-full-profile",
+    "summary": {
+      "runs": 20,
+      "results": {
+        "pass": 20
+      },
+      "metrics": {
+        "toolCalls": 13.8,
+        "assistantTurns": 5.65,
+        "fileReads": 11.65,
+        "repeatedFileReads": 0.9,
+        "inputTokens": 14932.95,
+        "outputTokens": 1113.1,
+        "cost": 0.12310094999999999
+      },
+      "recomputed": 0
+    }
+  },
+  "without": {
+    "runDir": "experiments/pom-block-step-cost/evidence/profile-base/2026-09-03T08-06-27-145Z-base-profile",
+    "summary": {
+      "runs": 20,
+      "results": {
+        "pass": 20
+      },
+      "metrics": {
+        "toolCalls": 14.5,
+        "assistantTurns": 6.25,
+        "fileReads": 12.05,
+        "repeatedFileReads": 0.9,
+        "inputTokens": 16599.3,
+        "outputTokens": 1220.6,
+        "cost": 0.1337297
+      },
+      "recomputed": 0
+    }
+  },
+  "scenarios": [
+    {
+      "scenarioId": "adopt-existing-en",
+      "with": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 13.5,
+          "assistantTurns": 6,
+          "fileReads": 13,
+          "repeatedFileReads": 1,
+          "inputTokens": 17554,
+          "outputTokens": 1387,
+          "cost": 0.14858
+        },
+        "recomputed": 0
+      },
+      "without": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 16,
+          "assistantTurns": 6,
+          "fileReads": 14.5,
+          "repeatedFileReads": 1,
+          "inputTokens": 25414.5,
+          "outputTokens": 1859.5,
+          "cost": 0.1965855
+        },
+        "recomputed": 0
+      }
+    },
+    {
+      "scenarioId": "adopt-existing-it",
+      "with": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 15.5,
+          "assistantTurns": 6,
+          "fileReads": 13.5,
+          "repeatedFileReads": 1,
+          "inputTokens": 18093.5,
+          "outputTokens": 1723.5,
+          "cost": 0.1613725
+        },
+        "recomputed": 0
+      },
+      "without": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 14,
+          "assistantTurns": 6.5,
+          "fileReads": 12.5,
+          "repeatedFileReads": 1,
+          "inputTokens": 18927,
+          "outputTokens": 1449,
+          "cost": 0.15218500000000001
+        },
+        "recomputed": 0
+      }
+    },
+    {
+      "scenarioId": "ambiguous-memory-request-it",
+      "with": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 11,
+          "assistantTurns": 4,
+          "fileReads": 10,
+          "repeatedFileReads": 1,
+          "inputTokens": 12841.5,
+          "outputTokens": 918,
+          "cost": 0.0999395
+        },
+        "recomputed": 0
+      },
+      "without": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 13,
+          "assistantTurns": 5,
+          "fileReads": 11,
+          "repeatedFileReads": 1,
+          "inputTokens": 13410.5,
+          "outputTokens": 983,
+          "cost": 0.1049585
+        },
+        "recomputed": 0
+      }
+    },
+    {
+      "scenarioId": "decisions-disabled-it",
+      "with": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 12.5,
+          "assistantTurns": 6,
+          "fileReads": 11.5,
+          "repeatedFileReads": 1,
+          "inputTokens": 12620,
+          "outputTokens": 1181,
+          "cost": 0.11475400000000001
+        },
+        "recomputed": 0
+      },
+      "without": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 11.5,
+          "assistantTurns": 6,
+          "fileReads": 11,
+          "repeatedFileReads": 1,
+          "inputTokens": 13360.5,
+          "outputTokens": 1030.5,
+          "cost": 0.10898150000000001
+        },
+        "recomputed": 0
+      }
+    },
+    {
+      "scenarioId": "defer-instead-of-plan-en",
+      "with": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 12,
+          "assistantTurns": 4,
+          "fileReads": 11,
+          "repeatedFileReads": 1,
+          "inputTokens": 15520,
+          "outputTokens": 910,
+          "cost": 0.110788
+        },
+        "recomputed": 0
+      },
+      "without": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 18,
+          "assistantTurns": 9,
+          "fileReads": 15,
+          "repeatedFileReads": 1,
+          "inputTokens": 14388.5,
+          "outputTokens": 1627.5,
+          "cost": 0.14969549999999998
+        },
+        "recomputed": 0
+      }
+    },
+    {
+      "scenarioId": "non-pom-ordinary-coding-en",
+      "with": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 8,
+          "assistantTurns": 5,
+          "fileReads": 4,
+          "repeatedFileReads": 0,
+          "inputTokens": 3255.5,
+          "outputTokens": 358.5,
+          "cost": 0.0294325
+        },
+        "recomputed": 0
+      },
+      "without": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 8,
+          "assistantTurns": 5,
+          "fileReads": 4,
+          "repeatedFileReads": 0,
+          "inputTokens": 2927.5,
+          "outputTokens": 363,
+          "cost": 0.0280875
+        },
+        "recomputed": 0
+      }
+    },
+    {
+      "scenarioId": "root-cause-before-fix-en",
+      "with": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 18,
+          "assistantTurns": 7.5,
+          "fileReads": 13.5,
+          "repeatedFileReads": 1,
+          "inputTokens": 17570.5,
+          "outputTokens": 1359.5,
+          "cost": 0.1536935
+        },
+        "recomputed": 0
+      },
+      "without": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 20,
+          "assistantTurns": 7.5,
+          "fileReads": 14.5,
+          "repeatedFileReads": 1,
+          "inputTokens": 27447,
+          "outputTokens": 1427,
+          "cost": 0.20215699999999998
+        },
+        "recomputed": 0
+      }
+    },
+    {
+      "scenarioId": "route-after-compaction-en",
+      "with": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 15.5,
+          "assistantTurns": 5.5,
+          "fileReads": 13,
+          "repeatedFileReads": 1,
+          "inputTokens": 16014.5,
+          "outputTokens": 1190,
+          "cost": 0.1327005
+        },
+        "recomputed": 0
+      },
+      "without": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 15,
+          "assistantTurns": 5.5,
+          "fileReads": 12.5,
+          "repeatedFileReads": 1,
+          "inputTokens": 17006.5,
+          "outputTokens": 1156,
+          "cost": 0.1319685
+        },
+        "recomputed": 0
+      }
+    },
+    {
+      "scenarioId": "verify-before-completion-en",
+      "with": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 17,
+          "assistantTurns": 7,
+          "fileReads": 14.5,
+          "repeatedFileReads": 1,
+          "inputTokens": 20554,
+          "outputTokens": 1135,
+          "cost": 0.15605200000000002
+        },
+        "recomputed": 0
+      },
+      "without": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 17,
+          "assistantTurns": 6,
+          "fileReads": 14.5,
+          "repeatedFileReads": 1,
+          "inputTokens": 15807,
+          "outputTokens": 1105.5,
+          "cost": 0.128488
+        },
+        "recomputed": 0
+      }
+    },
+    {
+      "scenarioId": "wiki-disabled-en",
+      "with": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 15,
+          "assistantTurns": 5.5,
+          "fileReads": 12.5,
+          "repeatedFileReads": 1,
+          "inputTokens": 15306,
+          "outputTokens": 968.5,
+          "cost": 0.123697
+        },
+        "recomputed": 0
+      },
+      "without": {
+        "runs": 2,
+        "results": {
+          "pass": 2
+        },
+        "metrics": {
+          "toolCalls": 12.5,
+          "assistantTurns": 6,
+          "fileReads": 11,
+          "repeatedFileReads": 1,
+          "inputTokens": 17304,
+          "outputTokens": 1205,
+          "cost": 0.13419
+        },
+        "recomputed": 0
+      }
+    }
+  ]
+}

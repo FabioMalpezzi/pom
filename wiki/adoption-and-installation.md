@@ -131,7 +131,7 @@ Three artifacts are easy to confuse, and they have different jobs.
 Why the rules cannot simply be typed into an instruction file:
 
 - inside the POM markers the text is regenerated on every install and update, so anything written there is lost at the next `npm run pom:update`;
-- outside the markers it survives, but it has to be repeated by hand in every instruction file, forever. That duplication is not hypothetical: on the target project that motivated ADR-0007, `AGENTS.md` and `CLAUDE.md` held the same 962 words byte for byte while a third instruction file had none of them.
+- outside the markers it survives, but every instruction file needs its own copy. On the target project that motivated ADR-0007 the rules reached two of four targets, and only because `CLAUDE.md` is a symbolic link to `AGENTS.md`; the two files under `.github/` had none of them. A link solves one pair and leaves the general case open.
 
 Which artifact to use:
 

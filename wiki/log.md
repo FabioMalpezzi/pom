@@ -297,3 +297,9 @@ Sources used: `CHANGELOG.md`, `scripts/install-pom.ts`.
 `adoption-and-installation.md` gains the distinction between the three artifacts that are easy to confuse: agent instruction files are what a harness loads and POM regenerates, `PROJECT_RULES.md` is the single source a project writes once and the installer injects into all of them, and decision records hold the reasoning that is opened when needed rather than loaded every session. With the table that says which of the three a given rule belongs to, and the measured cost of what goes into the always-loaded block.
 
 Sources used: `decisions/ADR-0007-projects-declare-their-own-rules-in-the-always-loaded-block.md`, `templates/PROJECT_RULES_TEMPLATE.md`, `experiments/pom-block-step-cost/EXPERIMENT.md`.
+
+## [2026-09-03] fix | the two root instruction files were one file, not two copies
+
+`adoption-and-installation.md` and ADR-0007 said the target project held the same 962 words twice in `AGENTS.md` and `CLAUDE.md`. The filesystem says otherwise: `CLAUDE.md` is a symbolic link to `AGENTS.md`, created by that project on purpose. The rules reached two of its four instruction targets through that link, and the two files under `.github/` had none of them. The argument for injecting from one source stands - a link covers one pair and leaves the general case open - but the evidence behind it is now stated correctly.
+
+Sources used: `git ls-tree HEAD CLAUDE.md` on the target project (mode 120000), `decisions/ADR-0007-projects-declare-their-own-rules-in-the-always-loaded-block.md`.

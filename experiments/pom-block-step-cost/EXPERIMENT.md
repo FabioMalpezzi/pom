@@ -4,7 +4,7 @@
 |---|---|
 | Date | 2026-09-03 |
 | Type | benchmark / LLM model / research |
-| Status | closed — campaign run 2026-09-03; measurement recorded, no canonical change promoted |
+| Status | closed — campaign and both follow-ups run 2026-09-03; the block's only observed benefit did not reproduce |
 | Branch / Path | `main` / `experiments/pom-block-step-cost/` |
 | Isolation | experiment-local sections and evidence; reuses the frozen evaluator |
 | Owner | POM maintainer |
@@ -169,6 +169,37 @@ Reading:
 - **Turns did not move; tool calls did.** The block does not make the model talk more, it makes it look more. That distinction matters for anyone weighing the cost: the extra spend is exploration, not deliberation.
 - **The block held the result mix and the arm without it did not.** All 50 runs pass with the block; without it, `ambiguous-memory-request-it` fails 2 of 5 - the agent stops asking for clarification and acts. This is the only observed benefit in the whole campaign, it rests on one scenario and two failures, and it is far too thin to call the block's cost repaid. It is, however, exactly the kind of result the routing suite exists to catch, and it points at where a diet would be most dangerous.
 
+### Follow-up 1: the ambiguity benefit does not reproduce
+
+The campaign's one observed benefit rested on two failures out of five in `ambiguous-memory-request-it`. Rerun alone at ten repetitions per arm (20 sessions, 2026-09-03, `evidence/ambiguity-with` and `evidence/ambiguity-without`):
+
+| Metric | With block | Without block | Difference |
+|---|---|---|---|
+| Results | 7 pass / 3 fail | 7 pass / 3 fail | identical |
+| Tool calls | 13.70 | 9.60 | +4.10 (+42.7%) |
+| File reads | 12.40 | 9.50 | +2.90 (+30.5%) |
+| Input tokens | 15449 | 13469 | +1980 (+14.7%) |
+| Assistant turns | 5.40 | 6.50 | -1.10 |
+
+**The benefit was noise.** At five repetitions the arm without the block failed twice and the arm with it did not; at ten, both fail three times out of ten. The scenario is simply unstable, and the earlier reading - that the block "held a result mix the other arm lost" - does not survive its own retest. It is corrected here rather than left standing: on this bench the block costs steps and tokens, and nothing measured shows what it buys.
+
+That correction does not make POM's block useless. It makes the evidence for it absent, which is a different and weaker claim than the one the campaign appeared to support, and the one this experiment now reports.
+
+### Follow-up 2: the profile-conditional modules do not cost more
+
+A `full` profile loads eight modules the campaign never measured: 2017 words against the base block's 1048. Base against full, same scenarios, two repetitions per arm (40 sessions, 2026-09-03, `evidence/profile-base` and `evidence/profile-full`, summary in `evidence/profile-comparison.json`):
+
+| Metric | Full profile | Base block | Difference |
+|---|---|---|---|
+| Results | 20 pass / 0 fail | 20 pass / 0 fail | identical |
+| Tool calls | 13.80 | 14.50 | -0.70 (-4.8%) |
+| File reads | 11.65 | 12.05 | -0.40 |
+| Input tokens | 14933 | 16599 | -1666 (-10.0%) |
+
+Nearly a thousand extra words in the always-loaded block produced **fewer** total input tokens per session, not more, with tool calls and reads slightly down and the result mix unchanged. The plausible reading is the mirror image of the July diet finding: text that answers a question up front removes the exploration that would otherwise answer it, and here the saved exploration more than paid for the added text.
+
+Two cautions keep this from being a conclusion. Two repetitions per arm is thin - the campaign's negative control put the noise band at 0.6 tool calls, and the difference here is 0.7 - so the step figures are inside the noise. The token difference is larger and in the opposite direction from the added text, which is the part worth another round. What can be said now is narrow and useful: **there is no measured penalty for running a `full` profile instead of a minimal one**, which is the opposite of what the module count suggests.
+
 ## Risks
 
 | Area | Risk | Mitigation |
@@ -184,8 +215,8 @@ Reading:
 | Field | Value |
 |---|---|
 | Stop reason | reached: the agreed five repetitions per arm completed, 100 sessions, 11.84 USD against a budget of about 14 |
-| Technical verdict | confirmed - the always-loaded block costs about 2 extra tool calls (+16.3%) and 15.3% more input tokens per session, outside the negative control's noise band of 0.6 tool calls, at unchanged turns |
-| Decision | record the measurement; propose no diet from it. The block also held the result mix that the arm without it lost on one scenario, and that trade-off has to be understood before anything is cut |
+| Technical verdict | confirmed on cost, negative on benefit: the always-loaded block costs about 2 extra tool calls (+16.3%) and 15.3% more input tokens per session, and its one apparent benefit did not reproduce at ten repetitions. The profile-conditional modules add no measured cost |
+| Decision | record the measurement; propose no diet from it, and no expansion either. The cost is real and the benefit is unmeasured, not disproved: nothing here says the block is useless, only that this bench cannot show what it buys. A diet decided on cost alone would cut something whose value has never been measured |
 
 ## Consolidation
 
@@ -194,7 +225,7 @@ Nothing is consolidated into canonical POM from this experiment. The two evaluat
 ## Follow-up
 
 - [x] Run the full campaign on the `core` suite with the agreed repetition count and record the comparison table here (2026-09-03, five repetitions per arm).
-- [ ] Retest `ambiguous-memory-request-it` on its own with more repetitions: it is the only scenario where the block bought a better result, and two failures out of five is too thin to build on.
+- [x] Retest `ambiguous-memory-request-it` at ten repetitions per arm (2026-09-03): identical 7/3 in both arms. The benefit was noise, and the campaign's reading is corrected above.
 - [ ] If the block costs steps without improving the result mix, feed the finding into the block diet already recorded as a follow-up in ADR-0007.
-- [ ] Measure the profile-conditional modules separately: a `full` profile loads eight more modules whose step cost is entirely unmeasured.
+- [x] Measure the profile-conditional modules separately (2026-09-03): a `full` block costs no more than the base one and used 10% fewer session tokens at an identical result mix, on two repetitions per arm.
 - [ ] Re-examine `using-pom-bootstrap-diet`'s absolute token figures with the double-count fix in mind; its percentages stand, its absolute numbers are twice the truth.
