@@ -2,6 +2,28 @@
 
 This changelog records public-facing POM releases. Fine-grained development history remains in Git.
 
+## 0.9.0 - 2026-09-03
+
+### Added
+
+- **A project declares its own rules, and POM carries them into every instruction file** (`templates/PROJECT_RULES_TEMPLATE.md`, `scripts/lib/project-rules.ts`, `scripts/install-pom.ts`): the installer seeds `PROJECT_RULES.md` at the target root and folds its content into the generated block of every agent instruction target as a `Project Rules` section, on every install and update. One editable source, the rules inside the block the harness already loads instead of a separate read, and no drift between `AGENTS.md`, `CLAUDE.md`, and the tool-specific rule files. Guidance lives in HTML comments that the injection strips; the file's title is dropped and its headings demoted. An untouched template declares nothing and injects nothing. An `external_overlay` install seeds nothing, because POM must not add files to a repository it does not govern.
+- **Four lint findings for that file** (`scripts/lib/lint-project-rules.ts`, `projectRules` in `pom.config.json`): `project-rules-missing`, `project-rules-undeclared` while the file is still the scaffold, `project-rules-not-injected` when declared rules have not reached an instruction file, and `project-rules-too-long` above `projectRules.maxWords` (400 by default). All warnings at a configurable severity; the POM Source repository is skipped.
+- **The behavioral evaluator records steps** (`experiments/pom-skill-behavior-evals/run.mjs`, `schema/outcome.schema.json`): `outcome.json` now carries `steps` with tool calls, assistant turns, file reads, distinct and repeated reads, and a per-tool breakdown. The events were always in the log; nothing counted them.
+- **`experiments/pom-block-step-cost`**: 100 real sessions, five repetitions per arm, measuring the always-loaded block at +2.00 tool calls (+16.3%), +15.3% input tokens, turns unchanged, against a negative-control noise band of 0.6 tool calls. Recomputing the July diet experiment's own evidence shows its 34-41% saving was the section's own weight, not a session's cost: about 10% of session tokens, partly returned as extra exploration. No diet is promoted from the measurement.
+- **`experiments/pom-outcome-ab`**: the bench for the question every earlier measurement left open - does POM change the outcome, not only the route. Design, selection criterion fixed before the candidates were assessed, three-arm fixture, runner, and deterministic checks. Its own pilot invalidated both surviving tasks and the stop rule fired before any campaign; the failure and its two lessons are recorded rather than hidden.
+- **ADR-0007** records the decision, the research it answers to, the measured duplication on a real target, and the five alternatives rejected.
+
+### Changed
+
+- The always-loaded block gains a short `Project Rules Source` paragraph naming the file and stating that the markers are regenerated (`templates/agents/00-core.md` and the monolithic fallback).
+- `PROJECT_RULES.md` is part of a target's minimum setup, its root Markdown allowance, and the seed and adopt skills: an existing project usually already has those rules, written in a CONTRIBUTING file, a README section, or only in people's heads.
+- README, the installation guide, and `pom:help` in both languages describe the file, the injection, and what does not belong in it.
+
+### Fixed
+
+- **The evaluator counted every token twice** (`experiments/pom-skill-behavior-evals/run.mjs`): `message.usage` was summed on both `message_end` and `turn_end`, which Pi emits for the same message. Ratios between arms were unaffected; absolute per-run token figures recorded before 2026-09-03 are twice their true value, and the earlier experiment carries a dated correction note.
+- **A project configured before this release no longer gets an error for the seeded file** (`scripts/lib/lint-context.ts`): an existing target carries its own `root.allowedMarkdown` list, which a refresh does not rewrite, so the first update reported `PROJECT_RULES.md` as root clutter. The lint now allows the path from `projectRules.path` whatever that list says. Found on a real target while declaring its rules.
+
 ## 0.8.0 - 2026-09-02
 
 ### Added
