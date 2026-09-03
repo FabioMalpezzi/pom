@@ -712,8 +712,14 @@ function extractBehavior(events, scenario, fixtureRoot) {
   const actions = [];
   const reads = [];
   const transcriptParts = [];
-  const usage = { inputTokens: 0, outputTokens: 0, cost: 0, currency: null };
-  let usageSeen = false;
+  // Pi reports the same message usage twice, on message_end and again on turn_end.
+  // Accumulate the two separately and keep message_end, which is per message; turn_end
+  // is the fallback for a backend that only emits the coarser event. Adding both is what
+  // made every usage figure exactly double before 2026-09-03.
+  const perMessage = { inputTokens: 0, outputTokens: 0, cost: 0, currency: null, seen: false };
+  const perTurn = { inputTokens: 0, outputTokens: 0, cost: 0, currency: null, seen: false };
+  // Steps are what the research on context files measures: tool calls and turns, not tokens.
+  const steps = { toolCalls: 0, assistantTurns: 0, fileReads: 0, distinctFilesRead: 0, repeatedFileReads: 0, byTool: {} };
 
   // Skills supplied on the command line are loaded into the session by construction, so a
   // correctly routed run that never re-reads the bootstrap card must not be scored as if it
@@ -730,20 +736,32 @@ function extractBehavior(events, scenario, fixtureRoot) {
 
   for (const event of events) {
     if (event.type === "tool_execution_start") {
+      steps.toolCalls += 1;
+      const tool = String(event.toolName || "unknown");
+      steps.byTool[tool] = (steps.byTool[tool] || 0) + 1;
       classifyPathAction(actions, reads, event.toolName, event.args, fixtureRoot, scenario.expect.route);
     }
     const message = event.message;
     if (message?.role === "assistant" && (event.type === "message_end" || event.type === "turn_end")) {
+      if (event.type === "turn_end") steps.assistantTurns += 1;
       const text = textFromContent(message.content);
       if (text) transcriptParts.push(text);
       if (isObject(message.usage)) {
-        usageSeen = true;
-        usage.inputTokens += Number(message.usage.input || 0);
-        usage.outputTokens += Number(message.usage.output || 0);
-        usage.cost += Number(message.usage.cost?.total || 0);
+        const bucket = event.type === "message_end" ? perMessage : perTurn;
+        bucket.seen = true;
+        bucket.inputTokens += Number(message.usage.input || 0);
+        bucket.outputTokens += Number(message.usage.output || 0);
+        bucket.cost += Number(message.usage.cost?.total || 0);
       }
     }
   }
+
+  steps.fileReads = reads.length;
+  const distinct = new Set(reads);
+  steps.distinctFilesRead = distinct.size;
+  // A file read more than once is the behavior the ETH study observed directly: agents
+  // re-reading a context file they already hold. It is a signal, not a failure.
+  steps.repeatedFileReads = reads.length - distinct.size;
 
   // Normalize typographic apostrophes/quotes to ASCII so negation guards ("can't", "don't")
   // match regardless of whether the model emitted a straight or curly apostrophe.
@@ -760,7 +778,17 @@ function extractBehavior(events, scenario, fixtureRoot) {
     pushAction(actions, "claim_success", "transcript", claimLine.trim().slice(0, 200));
   }
 
-  return { actions, reads, transcript, usage: usageSeen ? usage : null };
+  const selected = perMessage.seen ? perMessage : perTurn;
+  const usage = selected.seen
+    ? {
+        inputTokens: selected.inputTokens,
+        outputTokens: selected.outputTokens,
+        cost: selected.cost,
+        currency: selected.currency,
+      }
+    : null;
+
+  return { actions, reads, transcript, usage, steps };
 }
 
 function actionNames(actions) {
@@ -932,6 +960,13 @@ function validateOutcomeShape(outcome) {
   if (outcome.schemaVersion !== "0.1") issues.push("outcome.schemaVersion: must equal 0.1");
   if (!OUTCOME_RESULTS.has(outcome.result)) issues.push(`outcome.result: unsupported ${outcome.result}`);
   if (!Array.isArray(outcome.checks)) issues.push("outcome.checks: must be an array");
+  if (outcome.steps !== null && outcome.steps !== undefined) {
+    for (const key of ["toolCalls", "assistantTurns", "fileReads", "distinctFilesRead", "repeatedFileReads"]) {
+      if (!Number.isInteger(outcome.steps[key]) || outcome.steps[key] < 0) {
+        issues.push(`outcome.steps.${key}: must be a non-negative integer`);
+      }
+    }
+  }
   if (outcome.evidence?.rawTranscriptCommitted !== false) issues.push("outcome.evidence.rawTranscriptCommitted: must be false");
   if (outcome.evidence?.sanitized !== true) issues.push("outcome.evidence.sanitized: must be true");
   return issues;
@@ -988,7 +1023,7 @@ async function runOneScenario(scenario, options, repetition, environment, runId)
   let commandResult;
   let events = [];
   let invalidLines = [];
-  let behavior = { actions: [], reads: [], transcript: "", usage: null };
+  let behavior = { actions: [], reads: [], transcript: "", usage: null, steps: null };
   commandResult = await runCommand(piBin, args, { cwd: workspace.fixtureRoot, env, timeoutMs: options.timeoutMs });
   const parsed = parseJsonLines(commandResult.stdout);
   events = parsed.events;
@@ -1015,6 +1050,7 @@ async function runOneScenario(scenario, options, repetition, environment, runId)
     result: evaluation.result,
     checks: evaluation.checks,
     usage: behavior.usage,
+    steps: behavior.steps,
     evidence: {
       // Store paths relative to the repository so evidence never embeds a home directory.
       summaryPath: relative(REPO_ROOT, paths.outcomePath).replaceAll(sep, "/"),

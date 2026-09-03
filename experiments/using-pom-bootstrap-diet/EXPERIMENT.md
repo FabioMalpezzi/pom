@@ -200,3 +200,11 @@ Promotion path:
 - [x] Author experiment-only candidates (compact router; aggressive modular; modular with key-routes cue).
 - [x] Run comparative behavior and usage measurements (`evidence/comparison`, `evidence/gate-5rep`, `evidence/modular-gate`, `evidence/modular-gate-v2`).
 - [ ] Broaden the Fix-E deferred-record detection in the evaluator (optional).
+
+## Later Correction (2026-09-03)
+
+Two facts about the measurements above were established after this experiment closed, in `experiments/pom-block-step-cost/`. The findings and the promotion decision stand; the numbers should be read with these two notes.
+
+1. **Absolute token figures in the evaluator's `outcome.json` were doubled.** `extractBehavior` summed `message.usage` on both `message_end` and `turn_end`, which Pi emits for the same message. Every ratio in this document is unaffected, because both arms doubled equally; absolute per-run token counts recorded before the fix are twice their true value. The section-cost figures measured differentially against a minimal prompt (3454 and 2042 tokens) come from that same instrument and carry the same caveat.
+
+2. **The 40.9% and 34% reductions are the section's own weight, not a session's cost.** Recomputing from the committed event logs, the promoted compact block lowers total session input tokens by about 10% against the modular baseline (45043 to 40385 on `modular-gate` vs `modular-gate-v2`), and by 2% on the earlier `gate-5rep` pair. It also raises tool calls by about 6% and file reads by about 9% at an identical result mix (49 pass / 1 fail in both arms): part of what left the always-loaded text is re-fetched from disk. That trade was never measured here because this experiment counted tokens, not steps.

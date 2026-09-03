@@ -50,6 +50,7 @@ Preset meanings:
 - Map existing structures in `pom.config.json` before proposing migrations.
 - Ask whether to adapt to the existing structure or use/adapt POM.
 - Do not move files without approval.
+- Collect the project's own conventions and non-functional requirements into `PROJECT_RULES.md`: an existing project usually already has them, written in a CONTRIBUTING file, a README section, or only in people's heads.
 - Configure `pom.config.json` according to approved choices.
 - In `external_overlay`, do not govern upstream `docs/`, `tests/`, ADRs, source layout, release process, or PR contents.
 - In `external_overlay`, keep overlay work on its own branch or worktree and transfer only selected non-POM changes to any contribution branch.
@@ -77,6 +78,7 @@ Preserve imported or service-local structures unless the user explicitly approve
 ## Output
 
 - mapping from existing structure to POM;
+- `PROJECT_RULES.md` declared from the project's existing conventions, or explicitly left empty;
 - highlighted conflicts/ambiguities;
 - approved minimal changes;
 - configured analysis/task/test namespace guidance;

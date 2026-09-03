@@ -55,6 +55,7 @@ function printHelp(): void {
   console.log("2. Refresh generated POM sections");
   console.log("   npm run pom:init -- --profile refresh");
   console.log("   Refresh instruction sections, scripts, hooks, and coding-agent files without changing project config.");
+  console.log("   Also injects PROJECT_RULES.md, this project's own conventions and non-functional requirements, into the generated sections.");
   console.log("");
   console.log("3. Install or reconfigure POM");
   console.log("   npm run pom:init -- --preset owned");
@@ -185,6 +186,7 @@ function printHelpIt(): void {
   console.log("2. Refresh delle sezioni generate");
   console.log("   npm run pom:init -- --profile refresh");
   console.log("   Rigenera sezioni, script, hook e file agente senza cambiare pom.config.json.");
+  console.log("   Inietta anche PROJECT_RULES.md, cioe le convenzioni e i requisiti non funzionali di questo progetto, nelle sezioni generate.");
   console.log("");
   console.log("3. Installare o riconfigurare POM");
   console.log("   npm run pom:init -- --preset owned");

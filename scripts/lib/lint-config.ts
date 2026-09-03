@@ -107,6 +107,11 @@ export type LintConfig = {
     triggerPaths: string[];
     forbiddenHeadings: string[];
   };
+  projectRules: {
+    path: string;
+    severity: Severity;
+    maxWords: number;
+  };
   workflows: {
     enabled: boolean;
     loopGoal: {
@@ -145,6 +150,7 @@ const defaultConfig: LintConfig = {
       "CONTEXT.md",
       "CHANGELOG.md",
       "PROJECT_STATE.md",
+      "PROJECT_RULES.md",
       "CURRENT_PLAN.md",
       "WIKI_METHOD.md",
     ],
@@ -237,6 +243,11 @@ const defaultConfig: LintConfig = {
     maxLines: 180,
     triggerPaths: [],
     forbiddenHeadings: ["## Log", "## Timeline", "## Changelog", "## History"],
+  },
+  projectRules: {
+    path: "PROJECT_RULES.md",
+    severity: "warning",
+    maxWords: 400,
   },
   workflows: {
     enabled: false,
@@ -417,6 +428,11 @@ function mergeConfig(base: LintConfig, raw: Record<string, unknown>, readers: Co
       maxLines: readNumber(raw, "handoff.maxLines", base.handoff.maxLines),
       triggerPaths: readStringArray(raw, "handoff.triggerPaths", base.handoff.triggerPaths),
       forbiddenHeadings: readStringArray(raw, "handoff.forbiddenHeadings", base.handoff.forbiddenHeadings),
+    },
+    projectRules: {
+      path: readString(raw, "projectRules.path", base.projectRules.path),
+      severity: readSeverity(raw, "projectRules.severity", base.projectRules.severity),
+      maxWords: readNumber(raw, "projectRules.maxWords", base.projectRules.maxWords),
     },
     workflows: {
       enabled: readBoolean(raw, "workflows.enabled", base.workflows.enabled),

@@ -2,7 +2,7 @@
 
 ## Last Updated
 
-2026-09-02
+2026-09-03
 
 ---
 
@@ -52,6 +52,8 @@ _Current operational state. Update at every significant session or when prioriti
 
 ### Current State
 
+Unreleased on `main` since 0.8.0, two connected pieces of work. First, a target project now declares its own rules - conventions, non-functional requirements, prohibitions - in `PROJECT_RULES.md`, which the installer seeds and injects as the final section of the generated block in every agent instruction file, with four `pom:lint` findings and a word budget (ADR-0007). Second, the behavioral evaluator now records steps, and a campaign of 100 real sessions measured what the always-loaded block costs: +2.00 tool calls (+16.3%), +15.3% input tokens, unchanged turns, against a negative-control noise band of 0.6 tool calls, while the block held a result mix the arm without it lost on the ambiguity scenario (`experiments/pom-block-step-cost/`). No diet is promoted from that measurement.
+
 POM 0.8.0 is released and tagged (synthesis pages declare their sources with `derivedFrom`/`verified` and `pom:lint` reports `wiki-stale-synthesis`; generated blocks for decisions, state, and pages inside wiki pages; ADR-0006); before it, 0.7.2 (installer messages list the scripts they manage); before it, 0.7.1 (tandem documented end to end: wiki page, HTML guides, README, installation guide, help, key routes); before it, 0.7.0 (tandem hardened after an adversarial review: first-line verdict, session recovery by explicit reset, guarded `--dir` and worktree paths, fingerprint that covers ignored files by size and date, closed-tandem guards, per-phase budget, `note`, `--done`, `--setup`, `--guard-ignore`); before it, 0.6.1 (the tandem coordinator relays every verdict and response verbatim in its chat; the script prints replies between delimiters); before it, 0.6.0 (`tandem`: two coding agents with separate sessions, one controller and one executor, coordinated by whoever runs the skill, with per-task cap and controller worktree isolation); before it, 0.5.0 (one experiment contract for spike and loop-goal, four loop-goal modes, evaluation frontmatter verified by lint, `loop_guard` and `timeout` in the workflow template); before it, 0.4.0 (installation guides in `docs/`, one routing table, shared test harness, hardened bootstrap and hook). The repository runs its own governance lint through the root `pom.config.json` (decisions, wiki, structured tasks enabled) and `pom:lint` reports no errors; `npm run pom:test` is green. The catalog holds 28 skills, generated into the README from `skills/README.md`, and every skill points to a canonical prompt.
 
 Stable and installed in target projects: the adoption installer and updater with presets (`owned`, `team`, `overlay`, `minimal`), the doc-governance lint with ADR, task-plan, and completion gates, the wiki with its generated reader, the Project Reader with file-based annotations, and the workflow tooling (validator with core, temporal, handle-lifecycle, guard-evidence, and runtime-loop rules; Mermaid and XState transformers).
@@ -91,6 +93,7 @@ Keep the 0.3.x line honest and portable: close the open follow-ups of TASK-0004,
 - **Fan-in accounting enforcement is intentionally limited**: the canonical prompt carries the supported procedure, while static fan-in schema and lint stay deferred because the experiment showed that structural validity alone does not prove semantic provenance or scenario truth.
 - **Contract ownership versus runtime ownership** can be confused for Dynamic Workflows: the contract belongs to the workflow control plane, real concurrent execution to the target data plane; validator coverage is partial, the contract is not.
 - **loop/goal is heavy** and opt-in: use `workflow` for ordinary domain workflows and `loop-goal` only when the controller is agent-shaped and measured criteria matter.
+- **Token figures recorded before 2026-09-03 are doubled**: the evaluator summed `message.usage` on both `message_end` and `turn_end`. Ratios between arms are unaffected; absolute per-run token counts in evidence older than that date are twice their true value, and the 34-41% bootstrap saving was the section's own weight, not a session's cost (about 10% of session tokens).
 - **Behavioral evidence is Pi-only**: the frozen baseline and the bootstrap gates were measured on Pi with one default model; claims about other harnesses rest on deterministic structural tests, not on real transcripts.
 - **Branch delivery guidance is procedural**, not a release policy: target projects own branch naming, PR templates, protected branches, and release automation.
 

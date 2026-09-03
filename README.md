@@ -183,6 +183,24 @@ POM does not use one universal source of truth. It uses source authority by doma
 
 The normative text is the Source Authority block of the installed POM section (`templates/agents/00-core.md`), which every target project loads at session start.
 
+## Project Rules
+
+The installed POM section is generic: it is the same text in every repository. What an agent cannot derive from a project - its local conventions, its non-functional requirements, what must not happen without a decision - is declared by the project itself in `PROJECT_RULES.md` at the target root.
+
+The installer seeds that file from `templates/PROJECT_RULES_TEMPLATE.md` and, on every install or update, folds its content into the generated block of every agent instruction file as a `Project Rules` section. That keeps one editable source while the rules stay inside the always-loaded block instead of costing a separate read, and keeps the copies from drifting apart when a project has several instruction files. An untouched template injects nothing.
+
+Rules:
+
+- write project instructions in `PROJECT_RULES.md`, never between the POM markers, which are regenerated;
+- keep it to instructions that change what the agent does: repository overviews and anything the README, the code, or the tests already state have no measured benefit and still cost context;
+- run `npm run pom:update` after editing it, so the generated blocks carry the current text;
+- `pom:lint` reports a missing file, one that still holds only the template scaffold, one whose rules have not reached the instruction files, and one above the `projectRules.maxWords` budget;
+- an `external_overlay` installation seeds nothing, because POM must not add files to a repository it does not govern.
+
+Evidence: repository-level context files show no measured gain in task success and cost roughly 20% more steps (Gloaguen and others, *Evaluating AGENTS.md*, arXiv 2602.11988). The content with a measured advantage is what a developer writes because nothing else in the repository states it, which is exactly what this file is for.
+
+POM's own block behaves the same way, measured on 100 real sessions on 2026-09-03 (`experiments/pom-block-step-cost/`): the always-loaded block costs about 2 extra tool calls (+16.3%) and 15.3% more input tokens per session, with turns unchanged - it makes the agent look more, not talk more. In the same campaign it held a result mix the arm without it lost on the ambiguity scenario. Both numbers are worth knowing before adding anything to what every session loads.
+
 ## Artifact Policy
 
 POM separates source authority from edit permission. Before changing a governed artifact, check project config or the file itself: `editable` may be changed directly when the source authority supports it; `approvalRequired` needs explicit user approval; `generated` must be regenerated from its source; `historical` should not be rewritten after closure.
@@ -341,6 +359,7 @@ Recommended minimum:
 
 ```text
 agent instruction file or rule
+PROJECT_RULES.md
 PROJECT_STATE.md
 wiki/index.md
 wiki/log.md
@@ -353,6 +372,7 @@ Rules:
 - use `skills/seed.md` for a new project or `skills/adopt.md` for an existing project;
 - create only the directories that are actually useful;
 - use `PROJECT_STATE.md` as restart memory;
+- declare the project's own conventions and non-functional requirements in `PROJECT_RULES.md`;
 - use `wiki/` only when there is knowledge worth maintaining over time;
 - use ADRs only for decisions that change direction or constrain the project;
 - add lint, mockups, docs, tests, or an extended roadmap when the project grows.
@@ -375,7 +395,7 @@ Lint reads the `tests`, `documentation`, and `source` sections of `pom.config.js
 | `WIKI_METHOD.md` | cited reference copy of the original LLM Wiki method |
 | `prompts/` | reusable prompts for applying the method |
 | `skills/` | short skill cards derived from the main POM prompts |
-| `templates/` | reusable templates for project state, tasks, specs, ADRs, wiki, docs, experiments, reconciliation, workflow YAML, optional workflow runtime seams, and the target-project updater |
+| `templates/` | reusable templates for project state, project rules, tasks, specs, ADRs, wiki, docs, experiments, reconciliation, workflow YAML, optional workflow runtime seams, and the target-project updater |
 | `scripts/` | installer, command help, documentation lint, wiki rendering, and Project Reader tooling |
 | `examples/` | concrete examples of filled POM documents (ADR, PROJECT_STATE, wiki page) |
 

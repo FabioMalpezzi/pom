@@ -152,6 +152,7 @@ The bootstrap script:
 - lets advanced users choose an adoption profile directly (minimal, wiki, decisions, full, adopt, refresh, custom);
 - updates the POM section in every existing supported agent instruction file, or creates `AGENTS.md` if none exists;
 - creates `package.json` scripts (`pom:init`, `pom:update`, `pom:help`, `pom:lint`, `pom:reader`, `pom:wiki:render`, `pom:workflow:lint`, `pom:workflow:mermaid`, `pom:workflow:xstate`, `pom:tandem`), `pom-update.mjs`, `pom.config.json`, and governance folders based on the chosen profile;
+- seeds `PROJECT_RULES.md` at the project root, unless the install is an `external_overlay`, and folds whatever it declares into the generated section of every instruction file;
 - installs or updates the Git pre-commit hook with POM checks when the target project root is the Git worktree root.
 
 Rerunning the bootstrap when `pom/` already exists updates a Git-managed checkout (checkout `main`, fast-forward pull, submodule fallback) and leaves a vendored copy without `.git` untouched, pointing at `npm run pom:update` instead: running Git inside a vendored copy would act on the project repository. When the source cannot be reached, the bootstrap stops with the Git error and no clone; when the source has no `main` branch, it clones the default branch and says so.
@@ -167,6 +168,8 @@ Supported instruction targets are deliberately conservative:
 POM does not create tool-specific folders just because the tool exists. It only writes into a tool-specific folder when that folder is already part of the project.
 
 The POM Source has its own `AGENTS.MD`, which governs work on the POM repository itself; it is never copied into target projects. The section written into a target project is assembled from `pom/templates/agents/*.md` according to the adoption profile, with `pom/templates/AGENTS_POM_SECTION_TEMPLATE.md` as the compact fallback, so different coding agents see the same POM rules.
+
+The last section of that assembled block is the project's own: `PROJECT_RULES.md` at the target root holds the conventions, non-functional requirements, and prohibitions an agent cannot derive from the code, and the installer injects it into every instruction target. Write the rules there and rerun `npm run pom:update`; never edit them between the POM markers, which are regenerated on every install. An untouched template injects nothing, and `pom:lint` reports the file until it is declared.
 
 For Claude Code, `.claude/agents/pom-post-action-validator.md` is optional. The installer creates or updates it only when `.claude/` already exists. If `.claude/` is missing, the installer prints the exact `mkdir -p .claude` and `npm run pom:init ...` commands to enable the helper with the same install mode.
 
@@ -307,6 +310,7 @@ my-project/
     scripts/
   AGENTS.md             <- project agent instructions, when used (references pom/)
   CLAUDE.md             <- also updated when already present
+  PROJECT_RULES.md      <- the project's own rules, injected into the generated sections
   pom.config.json       <- project-specific config
   wiki.html             <- shortcut to the generated wiki reader, if wiki profile enabled
   wiki/                 <- if wiki profile enabled

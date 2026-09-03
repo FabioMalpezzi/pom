@@ -16,6 +16,10 @@ In a target project, `pom/` is the POM Source (it may contain `.git`, `README.md
 
 There is no single source of truth. Each question has its best-qualified source: code and tests for current behavior; `wiki/` for current knowledge; the configured decisions root for rationale; `analysis/` for supporting analysis; Open Discussion for unresolved discussion; `mockups/` for intended experience; `docs/` for shareable documentation; `PROJECT_STATE.md` or the current plan for restart context. If sources diverge, surface it and propose reconciliation. Before editing a governed artifact, check whether it is editable, approval-required, generated, or historical; if the right document is unclear, write the smallest approved Open Discussion or analysis note before creating specs, ADRs, folders, or code.
 
+## Project Rules Source
+
+Rules this project needs and no source in it states - local conventions, non-functional requirements such as security and performance, and what must not happen without a decision - are declared in `PROJECT_RULES.md`. POM injects them as the `Project Rules` section at the end of this block, so edit that file: everything between the POM markers is regenerated on every install and update. When the section is absent, the project has not declared any.
+
 ## Agent Work Principles
 
 - Before non-trivial edits, state the goal, assumptions, success criteria, and shortest verification loop when not already explicit.

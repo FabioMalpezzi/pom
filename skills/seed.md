@@ -36,6 +36,7 @@ If only the installed POM baseline exists in the project root, treat the project
 - `pom/templates/WIKI_INDEX_TEMPLATE.md`
 - `pom/templates/WIKI_LOG_TEMPLATE.md`
 - `pom/templates/PROJECT_STATE_TEMPLATE.md`
+- `pom/templates/PROJECT_RULES_TEMPLATE.md`
 
 ## Config
 
@@ -51,10 +52,15 @@ tests/<analysis-or-workstream-or-module>/{e2e,integration,fixtures,evidence}
 
 If a module is disabled in `adoption`, do not create that folder. If a module is optional, create it only when the current work needs it or the user approves it.
 
+## Project Rules
+
+The installer seeds `PROJECT_RULES.md` at the project root and injects it into the generated POM section. Ask the user for the conventions, non-functional requirements, and prohibitions an agent cannot derive from the code, write them there, and rerun the refresh. Leave the file untouched rather than filling it with a repository overview: only project-specific instructions belong in the always-loaded block.
+
 ## Output
 
 - approved minimal structure;
 - agent rules;
+- `PROJECT_RULES.md` declared with the user, or explicitly left empty;
 - optional `pom.config.json` with analysis/task/test namespace guidance;
 - wiki index/log when enabled;
 - lint/tests run when available.

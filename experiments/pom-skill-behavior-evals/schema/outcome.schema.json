@@ -67,6 +67,22 @@
         "currency": { "type": ["string", "null"] }
       }
     },
+    "steps": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["toolCalls", "assistantTurns", "fileReads", "distinctFilesRead", "repeatedFileReads"],
+      "properties": {
+        "toolCalls": { "type": "integer", "minimum": 0 },
+        "assistantTurns": { "type": "integer", "minimum": 0 },
+        "fileReads": { "type": "integer", "minimum": 0 },
+        "distinctFilesRead": { "type": "integer", "minimum": 0 },
+        "repeatedFileReads": { "type": "integer", "minimum": 0 },
+        "byTool": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
     "evidence": {
       "type": "object",
       "additionalProperties": false,

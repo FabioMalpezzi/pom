@@ -12,6 +12,7 @@ import {
 import { chooseProfile, customizeAdoption, readNoPullArg, readOwnershipArg, readPresetArg, readProfileArg } from "./lib/install-cli.ts";
 import { pullPomIfGitRepo } from "./lib/install-git.ts";
 import { isPomSourceRoot } from "./lib/pom-source.mjs";
+import { PROJECT_RULES_FILE, PROJECT_RULES_TEMPLATE, projectRulesSection } from "./lib/project-rules.ts";
 import { configuredPath, defaultDecisionIndexPath, escapeRegex, isRecord } from "./lib/install-helpers.ts";
 import { installPreCommitHook } from "./lib/install-hook.ts";
 import {
@@ -227,7 +228,46 @@ function assembleAgentsTemplate(adoption: AdoptionConfig): string {
     }
   }
 
+  const projectRules = readProjectRulesSection();
+  if (projectRules) parts.push(projectRules);
+
   return parts.join("\n\n");
+}
+
+/**
+ * The project's own rules, folded into the generated block so they are loaded
+ * with it instead of costing a separate read. Nothing is injected while the
+ * file is still the untouched template.
+ */
+function readProjectRulesSection(): string | undefined {
+  if (!pathExists(PROJECT_RULES_FILE)) return undefined;
+  return projectRulesSection(readText(PROJECT_RULES_FILE));
+}
+
+/**
+ * Seeds the project-owned rules file. An overlay installation must not add
+ * files to a repository POM does not govern, so it is skipped there.
+ */
+function seedProjectRulesFile(ownership: OwnershipMode | undefined, config: ProjectConfig): void {
+  if (resolveEffectiveOwnership(ownership, config) === "external_overlay") return;
+  if (pathExists(PROJECT_RULES_FILE)) return;
+
+  const template = resolvePomAsset(`templates/${PROJECT_RULES_TEMPLATE}`);
+  if (!template) {
+    console.log(`Project rules template missing: templates/${PROJECT_RULES_TEMPLATE}. Skipped.`);
+    return;
+  }
+
+  writeText(PROJECT_RULES_FILE, readText(template));
+  console.log(`Created ${PROJECT_RULES_FILE}. Declare the project-specific rules there; POM injects them into the agent instruction files.`);
+}
+
+/** The ownership mode chosen for this run, or the installed one when a refresh did not pass it. */
+function resolveEffectiveOwnership(ownership: OwnershipMode | undefined, config: ProjectConfig): OwnershipMode | undefined {
+  if (ownership) return ownership;
+  if (!isRecord(config.ownership)) return undefined;
+  const mode = config.ownership.mode;
+  return typeof mode === "string" && isOwnershipMode(mode) ? mode : undefined;
 }
 
 function resolveModulesDir(): string | undefined {
@@ -641,6 +681,9 @@ async function main(): Promise<void> {
     pullPomIfGitRepo(ROOT);
   }
 
+  // Seeded before the section is assembled so a first install already injects
+  // whatever the project declares on a later run.
+  seedProjectRulesFile(ownership, projectConfig);
   upsertAgentInstructionSections(instructionAdoption);
   installCodingAgentFiles(buildPomInitCommand(presetName, profileName, ownership));
   installPomUpdateScript();

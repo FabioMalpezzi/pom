@@ -4,7 +4,7 @@ derivedFrom:
   - CONTEXT.md
   - specs/SPEC-0000-pom-founding-spec.md
   - WIKI_METHOD.md
-verified: 2026-09-02
+verified: 2026-09-03
 ---
 
 # POM Overview
@@ -32,6 +32,8 @@ The method is organized around three pillars from the founding spec:
 Memory preserves context. Verification makes that context reliable. Organization keeps it findable, so the next reader or agent does not have to rediscover the project from scratch.
 
 POM should start small. The README describes gradual adoption through profiles such as `minimal`, `wiki`, `decisions`, `full`, `adopt`, `refresh`, and `custom`. The same method can be applied to owned repositories, team repositories, or external repositories in overlay mode.
+
+What POM loads in every session is deliberately generic: identity, source authority, evidence discipline, and routing, assembled per adoption profile. What only the project knows - its own conventions, its non-functional requirements, and what must not happen without a decision - is declared by the project in `PROJECT_RULES.md` and folded into that same block by the installer, so it is written once and loaded without a further read (ADR-0007).
 
 The current repository already contains reader-oriented guides under `docs/`, but those guides are explanatory. Operational rules remain in `README.md`, `AGENTS.MD`, `prompts/`, `skills/`, and `templates/`.
 

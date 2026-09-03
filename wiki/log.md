@@ -267,3 +267,15 @@ Sources used: `templates/EXPERIMENT_TEMPLATE.md`, `skills/loop-goal.md`, `prompt
 `overview.md` now carries `derivedFrom` (README, CONTEXT, SPEC-0000, WIKI_METHOD) and `verified: 2026-09-02`, so `pom:lint` reports `wiki-stale-synthesis` when one of those sources changes after that date. The hand-written "Related Links" list became a `<!-- pom:generated pages -->` block that the lint fills with every page of this wiki. Both mechanisms are described in the README section "Synthesis Pages Stay Honest".
 
 Sources used: `scripts/lib/lint-wiki-freshness.ts`, `scripts/lib/wiki-generated-blocks.ts`, `README.md`.
+
+## [2026-09-03] update | projects declare their own rules in the always-loaded block
+
+The generated POM section is identical in every repository. A target now declares its own conventions, non-functional requirements, and prohibitions in `PROJECT_RULES.md`, which the installer seeds and injects as the final section of the block it writes into every agent instruction file; `pom:lint` reports the file while it is missing, undeclared, not yet injected, or over its word budget. Motivated by the ETH/LogicStar measurement that repository context files show no gain in task success and cost about 20% more steps, while developer-written project-specific instructions are the content with a measured advantage. Recorded in ADR-0007.
+
+Sources used: `decisions/ADR-0007-projects-declare-their-own-rules-in-the-always-loaded-block.md`, `scripts/lib/project-rules.ts`, `scripts/lib/lint-project-rules.ts`, `README.md`.
+
+## [2026-09-03] update | the always-loaded block costs about two extra tool calls per session
+
+Measured on 100 real sessions, five repetitions per arm of the behavioral core suite, with and without the always-loaded block: +2.00 tool calls (+16.3%), +1.58 file reads (+15.2%), +15.3% input tokens, and unchanged turns, against a negative-control noise band of 0.6 tool calls. The direction and size match what *Evaluating AGENTS.md* reports for context files. The block also held the result mix the other arm lost on the ambiguity scenario, which is the only benefit observed and rests on two failures out of five. Recomputing the July diet's own evidence showed its 34-41% saving was the section's weight, not a session's cost: about 10% of session tokens, partly returned as extra exploration. The evaluator's token figures were doubled by a summing bug until this work; ratios were unaffected, absolute values were not.
+
+Sources used: `experiments/pom-block-step-cost/EXPERIMENT.md`, `experiments/using-pom-bootstrap-diet/EXPERIMENT.md`, `experiments/pom-skill-behavior-evals/run.mjs`.

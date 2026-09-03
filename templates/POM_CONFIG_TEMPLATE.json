@@ -20,7 +20,7 @@
     "tests": "disabled"
   },
   "root": {
-    "allowedMarkdown": ["README.md", "AGENTS.md", "AGENTS.MD", "agents.md", "CLAUDE.md", "GEMINI.md", "CONVENTIONS.md", "CONTEXT.md", "CHANGELOG.md", "PROJECT_STATE.md", "CURRENT_PLAN.md"]
+    "allowedMarkdown": ["README.md", "AGENTS.md", "AGENTS.MD", "agents.md", "CLAUDE.md", "GEMINI.md", "CONVENTIONS.md", "CONTEXT.md", "CHANGELOG.md", "PROJECT_STATE.md", "PROJECT_RULES.md", "CURRENT_PLAN.md"]
   },
   "artifactPolicy": {
     "approvalRequired": [],
@@ -117,6 +117,12 @@
     "maxLines": 220,
     "triggerPaths": [],
     "forbiddenHeadings": ["## Log", "## Timeline", "## Changelog", "## History"]
+  },
+  "projectRules": {
+    "path": "PROJECT_RULES.md",
+    "severity": "warning",
+    "maxWords": 400,
+    "note": "The project's own instructions for agents: conventions, non-functional requirements, and prohibitions that cannot be derived from the code. POM injects this file into the generated section of every agent instruction file, so it is written once here and never inside the POM markers. maxWords keeps it to the instructions that change what the agent does."
   },
   "workflows": {
     "enabled": false,
